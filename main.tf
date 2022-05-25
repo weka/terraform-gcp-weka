@@ -1,18 +1,16 @@
 resource "google_compute_network" "vpc_network" {
   count                   = 5
-  project                 = "wekaio-rnd"
   name                    = "vpc-test-${count.index}"
   auto_create_subnetworks = false
   mtu                     = 1460
 }
 
-
+# ======================= subnet ==========================
 resource "google_compute_subnetwork" "public-subnetwork" {
-  project       = "wekaio-rnd"
   count         = length(google_compute_network.vpc_network)
   name          = "subnet-test-${count.index}"
   ip_cidr_range = "10.${count.index}.0.0/24"
-  region        = "us-central1"
+  region        = var.region
   network       = google_compute_network.vpc_network[count.index].name
 }
 
@@ -50,12 +48,32 @@ resource "google_compute_network_peering" "peering-4" {
   peer_network = google_compute_network.vpc_network[tonumber(each.key)].self_link
 }
 
+# ======================== ssh-key ============================
+
+data "google_client_openid_userinfo" "me" {}
+
+resource "tls_private_key" "ssh" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+resource "local_file" "ssh_private_key_pem" {
+  content         = tls_private_key.ssh.private_key_pem
+  filename        = ".ssh/google_compute_engine"
+  file_permission = "0600"
+}
+
+# ======================== instance ============================
 resource "google_compute_instance" "compute" {
-  project      = "wekaio-rnd"
   count        = length(google_compute_network.vpc_network)
   name         = "test-${count.index}"
   machine_type = "c2-standard-8"
-  zone         = "us-central1-a"
+  zone         = "${var.region}-a"
+  tags         = ["allow-ssh"] // this receives the firewall rule
+
+  metadata = {
+    ssh-keys = "${split("@", data.google_client_openid_userinfo.me.email)[0]}:${tls_private_key.ssh.public_key_openssh}"
+  }
 
   boot_disk {
     initialize_params {
@@ -64,29 +82,38 @@ resource "google_compute_instance" "compute" {
   }
 
   network_interface {
-    subnetwork_project = "wekaio-rnd"
     subnetwork         = google_compute_subnetwork.public-subnetwork[0].name
     access_config {}
   }
   network_interface {
-    subnetwork_project = "wekaio-rnd"
     subnetwork         = google_compute_subnetwork.public-subnetwork[1].name
     access_config {}
   }
   network_interface {
-    subnetwork_project = "wekaio-rnd"
     subnetwork         = google_compute_subnetwork.public-subnetwork[2].name
     access_config {}
   }
   network_interface {
-    subnetwork_project = "wekaio-rnd"
     subnetwork         = google_compute_subnetwork.public-subnetwork[3].name
     access_config {}
   }
   network_interface {
-    subnetwork_project = "wekaio-rnd"
     subnetwork         = google_compute_subnetwork.public-subnetwork[4].name
     access_config {}
   }
 
+  attached_disk {
+    source      = google_compute_disk.pd[count.index].self_link
+    device_name = "data"
+    mode        = "READ_WRITE"
+  }
+}
+# =================== Disk ==========================
+resource "google_compute_disk" "pd" {
+  count   = 5
+  name  = "disk-${count.index}"
+  type  = "pd-ssd"
+  zone  = "${var.region}-a"
+  image = "centos-7-v20210609"
+  size =  50
 }
