@@ -78,7 +78,7 @@ resource "google_compute_firewall" "sg" {
 resource "google_compute_instance" "compute" {
   count        = length(google_compute_network.vpc_network)
   name         = "test-${count.index}"
-  machine_type = "c2-standard-8"
+  machine_type = "c2-standard-16"
   zone         = "${var.region}-a"
   tags         = ["allow-ssh"] // this receives the firewall rule
 
@@ -114,6 +114,8 @@ resource "google_compute_instance" "compute" {
     device_name = "data"
     mode        = "READ_WRITE"
   }
+
+  metadata_startup_script = "curl https://${var.get_weka_io_token}@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}| sh"
 }
 # =================== Disk ==========================
 resource "google_compute_disk" "pd" {

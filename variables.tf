@@ -15,3 +15,15 @@ variable "username" {
   description = "username for login "
   default     = "weka"
 }
+
+variable "get_weka_io_token" {
+  type = string
+  description = "get.weka.io token for downloading weka"
+  default     = "must be set outside"
+}
+
+variable "weka_version" {
+  type = string
+  description = "weka version"
+  default     = "3.14.0"
+}
