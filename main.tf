@@ -49,9 +49,6 @@ resource "google_compute_network_peering" "peering-4" {
 }
 
 # ======================== ssh-key ============================
-
-data "google_client_openid_userinfo" "me" {}
-
 resource "tls_private_key" "ssh" {
   algorithm = "RSA"
   rsa_bits  = 4096
@@ -63,6 +60,20 @@ resource "local_file" "ssh_private_key_pem" {
   file_permission = "0600"
 }
 
+resource "google_compute_firewall" "sg" {
+  count = length(google_compute_network.vpc_network)
+  name    = "ssh-${count.index}"
+  network = google_compute_network.vpc_network[count.index].name
+  source_ranges = [ "0.0.0.0/0" ]
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+
+  source_tags = ["ssh"]
+}
+
+
 # ======================== instance ============================
 resource "google_compute_instance" "compute" {
   count        = length(google_compute_network.vpc_network)
@@ -72,7 +83,7 @@ resource "google_compute_instance" "compute" {
   tags         = ["allow-ssh"] // this receives the firewall rule
 
   metadata = {
-    ssh-keys = "${split("@", data.google_client_openid_userinfo.me.email)[0]}:${tls_private_key.ssh.public_key_openssh}"
+    ssh-keys = "${var.username}:${tls_private_key.ssh.public_key_openssh}"
   }
 
   boot_disk {
@@ -87,19 +98,15 @@ resource "google_compute_instance" "compute" {
   }
   network_interface {
     subnetwork         = google_compute_subnetwork.public-subnetwork[1].name
-    access_config {}
   }
   network_interface {
     subnetwork         = google_compute_subnetwork.public-subnetwork[2].name
-    access_config {}
   }
   network_interface {
     subnetwork         = google_compute_subnetwork.public-subnetwork[3].name
-    access_config {}
   }
   network_interface {
     subnetwork         = google_compute_subnetwork.public-subnetwork[4].name
-    access_config {}
   }
 
   attached_disk {
