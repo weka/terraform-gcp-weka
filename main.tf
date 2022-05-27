@@ -130,8 +130,8 @@ resource "google_compute_instance" "compute" {
 resource "null_resource" "generate_script_env_vars" {
   provisioner "local-exec" {
     command = <<-EOT
-      IPS=$(echo ${IPS} | tr -d '\n')
-      GWS=$(echo ${GWS} | tr -d '\n')
+      IPS=$(echo "$IPS" | tr -d '\n')
+      GWS=$(echo "$GWS" | tr -d '\n')
       echo "IPS=($IPS)"
       echo "GWS=($GWS)"
       echo "HOSTS_NUM=$HOSTS_NUM"
