@@ -16,34 +16,34 @@ resource "google_compute_subnetwork" "subnetwork" {
 
 resource "google_compute_network_peering" "peering-0" {
   for_each     = toset(["1", "2", "3", "4"])
-  name         = "peering-0-${each.key}"
+  name         = "${var.prefix}-peering-0-${each.key}"
   network      = google_compute_network.vpc_network[0].self_link
   peer_network = google_compute_network.vpc_network[tonumber(each.key)].self_link
 }
 
 resource "google_compute_network_peering" "peering-1" {
   for_each     = toset(["0", "2", "3", "4"])
-  name         = "peering-1-${each.key}"
+  name         = "${var.prefix}-peering-1-${each.key}"
   network      = google_compute_network.vpc_network[1].self_link
   peer_network = google_compute_network.vpc_network[tonumber(each.key)].self_link
 }
 
 resource "google_compute_network_peering" "peering-2" {
   for_each     = toset(["0", "1", "3", "4"])
-  name         = "peering-2-${each.key}"
+  name         = "${var.prefix}-peering-2-${each.key}"
   network      = google_compute_network.vpc_network[2].self_link
   peer_network = google_compute_network.vpc_network[tonumber(each.key)].self_link
 }
 
 resource "google_compute_network_peering" "peering-3" {
   for_each     = toset(["0", "1", "2", "4"])
-  name         = "peering-3-${each.key}"
+  name         = "${var.prefix}-peering-3-${each.key}"
   network      = google_compute_network.vpc_network[3].self_link
   peer_network = google_compute_network.vpc_network[tonumber(each.key)].self_link
 }
 resource "google_compute_network_peering" "peering-4" {
   for_each     = toset(["0", "1", "2", "3"])
-  name         = "peering-4-${each.key}"
+  name         = "${var.prefix}-peering-4-${each.key}"
   network      = google_compute_network.vpc_network[4].self_link
   peer_network = google_compute_network.vpc_network[tonumber(each.key)].self_link
 }
@@ -62,7 +62,7 @@ resource "local_file" "ssh_private_key_pem" {
 
 resource "google_compute_firewall" "sg" {
   count         = length(google_compute_network.vpc_network)
-  name          = "ssh-${count.index}"
+  name          = "${var.prefix}-sg-ssh-${count.index}"
   network       = google_compute_network.vpc_network[count.index].name
   source_ranges = ["0.0.0.0/0"]
   allow {
@@ -74,7 +74,7 @@ resource "google_compute_firewall" "sg" {
 
 resource "google_compute_firewall" "sg_private" {
   count         = length(google_compute_network.vpc_network)
-  name          = "all-${count.index}"
+  name          = "${var.prefix}-ag-all-${count.index}"
   network       = google_compute_network.vpc_network[count.index].name
   source_ranges = ["10.0.0.0/8"]
   allow {
