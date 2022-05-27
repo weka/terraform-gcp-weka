@@ -45,3 +45,15 @@ variable "nvmes_number" {
   description = "number of local nvmes per host"
   default     = 2
 }
+
+variable "cluster_name" {
+  type = string
+  description = "prefix for all resources"
+  default     = "poc"
+}
+
+variable "prefix" {
+  type = string
+  description = "prefix for all resources"
+  default     = "weka"
+}

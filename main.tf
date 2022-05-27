@@ -1,14 +1,14 @@
 resource "google_compute_network" "vpc_network" {
   count                   = var.cluster_size
-  name                    = "vpc-test-${count.index}"
+  name                    = "${var.prefix}-vpc-${count.index}"
   auto_create_subnetworks = false
   mtu                     = 1460
 }
 
 # ======================= subnet ==========================
-resource "google_compute_subnetwork" "public-subnetwork" {
+resource "google_compute_subnetwork" "subnetwork" {
   count         = length(google_compute_network.vpc_network)
-  name          = "subnet-test-${count.index}"
+  name          = "${var.prefix}-subnet-${count.index}"
   ip_cidr_range = "10.${count.index}.0.0/24"
   region        = var.region
   network       = google_compute_network.vpc_network[count.index].name
@@ -87,10 +87,10 @@ resource "google_compute_firewall" "sg_private" {
 # ======================== instance ============================
 resource "google_compute_instance" "compute" {
   count        = length(google_compute_network.vpc_network)
-  name         = "test-${count.index}"
+  name         = "${var.prefix}-compute-${count.index}"
   machine_type = "c2-standard-16"
   zone         = "${var.region}-a"
-  tags         = ["allow-ssh"] // this receives the firewall rule
+  tags         = ["${var.prefix}-compute"]
 
   metadata = {
     ssh-keys = "${var.username}:${tls_private_key.ssh.public_key_openssh}"
@@ -112,7 +112,7 @@ resource "google_compute_instance" "compute" {
 
   # nic with public ip
   network_interface {
-    subnetwork = google_compute_subnetwork.public-subnetwork[0].name
+    subnetwork = google_compute_subnetwork.subnetwork[0].name
     access_config {}
   }
 
@@ -120,9 +120,43 @@ resource "google_compute_instance" "compute" {
   dynamic "network_interface" {
     for_each = range(1, var.nics_number)
     content {
-      subnetwork = google_compute_subnetwork.public-subnetwork[network_interface.value].name
+      subnetwork = google_compute_subnetwork.subnetwork[network_interface.value].name
     }
   }
 
   metadata_startup_script = "curl https://${var.get_weka_io_token}@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}| sh"
+}
+
+resource "null_resource" "generate_script_env_vars" {
+  provisioner "local-exec" {
+    command = <<-EOT
+      IPS=$(echo ${IPS} | tr -d '\n')
+      GWS=$(echo ${GWS} | tr -d '\n')
+      echo "IPS=($IPS)"
+      echo "GWS=($GWS)"
+      echo "HOSTS_NUM=$HOSTS_NUM"
+      echo "GWS_NUM=$GWS_NUM"
+      echo "CLUSTER_NAME=$CLUSTER_NAME"
+      echo "NVMES_NUM=$NVMES_NUM"
+    EOT
+    interpreter = ["bash", "-ce"]
+    environment = {
+      IPS = <<-EOT
+        %{ for i in range(var.cluster_size) }
+          %{ for j in range(var.nics_number) }
+              ${google_compute_instance.compute[i].network_interface[j].network_ip}
+          %{ endfor ~}
+        %{ endfor ~}
+      EOT
+      HOSTS_NUM = var.cluster_size
+      GWS_NUM = var.nics_number
+      GWS = <<-EOT
+        %{ for i in range(var.nics_number) }
+            ${google_compute_subnetwork.subnetwork[i].gateway_address}
+        %{ endfor ~}
+      EOT
+      CLUSTER_NAME=var.cluster_name
+      NVMES_NUM=var.nvmes_number
+    }
+  }
 }
