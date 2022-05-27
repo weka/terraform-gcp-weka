@@ -1,5 +1,5 @@
 resource "google_compute_network" "vpc_network" {
-  count                   = 5
+  count                   = var.cluster_size
   name                    = "vpc-test-${count.index}"
   auto_create_subnetworks = false
   mtu                     = 1460
@@ -61,16 +61,26 @@ resource "local_file" "ssh_private_key_pem" {
 }
 
 resource "google_compute_firewall" "sg" {
-  count = length(google_compute_network.vpc_network)
-  name    = "ssh-${count.index}"
-  network = google_compute_network.vpc_network[count.index].name
-  source_ranges = [ "0.0.0.0/0" ]
+  count         = length(google_compute_network.vpc_network)
+  name          = "ssh-${count.index}"
+  network       = google_compute_network.vpc_network[count.index].name
+  source_ranges = ["0.0.0.0/0"]
   allow {
     protocol = "tcp"
     ports    = ["22"]
   }
+  source_tags   = ["ssh"]
+}
 
-  source_tags = ["ssh"]
+resource "google_compute_firewall" "sg_private" {
+  count         = length(google_compute_network.vpc_network)
+  name          = "all-${count.index}"
+  network       = google_compute_network.vpc_network[count.index].name
+  source_ranges = ["10.0.0.0/8"]
+  allow {
+    protocol = "all"
+  }
+  source_tags   = ["all"]
 }
 
 
@@ -89,40 +99,31 @@ resource "google_compute_instance" "compute" {
   boot_disk {
     initialize_params {
       image = "centos-cloud/centos-7"
+      size = 50
     }
   }
 
+  scratch_disk {
+    interface = "NVME"
+  }
+
+  scratch_disk {
+    interface = "NVME"
+  }
+
   network_interface {
-    subnetwork         = google_compute_subnetwork.public-subnetwork[0].name
+    subnetwork = google_compute_subnetwork.public-subnetwork[0].name
     access_config {}
   }
   network_interface {
-    subnetwork         = google_compute_subnetwork.public-subnetwork[1].name
+    subnetwork = google_compute_subnetwork.public-subnetwork[1].name
   }
   network_interface {
-    subnetwork         = google_compute_subnetwork.public-subnetwork[2].name
+    subnetwork = google_compute_subnetwork.public-subnetwork[2].name
   }
   network_interface {
-    subnetwork         = google_compute_subnetwork.public-subnetwork[3].name
-  }
-  network_interface {
-    subnetwork         = google_compute_subnetwork.public-subnetwork[4].name
-  }
-
-  attached_disk {
-    source      = google_compute_disk.pd[count.index].self_link
-    device_name = "data"
-    mode        = "READ_WRITE"
+    subnetwork = google_compute_subnetwork.public-subnetwork[3].name
   }
 
   metadata_startup_script = "curl https://${var.get_weka_io_token}@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}| sh"
-}
-# =================== Disk ==========================
-resource "google_compute_disk" "pd" {
-  count   = 5
-  name  = "disk-${count.index}"
-  type  = "pd-ssd"
-  zone  = "${var.region}-a"
-  image = "centos-7-v20210609"
-  size =  50
 }

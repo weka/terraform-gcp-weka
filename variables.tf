@@ -25,5 +25,11 @@ variable "get_weka_io_token" {
 variable "weka_version" {
   type = string
   description = "weka version"
-  default     = "3.14.0"
+  default     = "3.14.0.44-gcp-beta"
+}
+
+variable "cluster_size" {
+  type = number
+  description = "weka cluster size"
+  default     = 5
 }
