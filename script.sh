@@ -25,7 +25,7 @@ done
 
 sleep 15s
 for (( i=0; i<$HOSTS_NUM; i++ )); do
-    for (( j=0; i<$NVMES_NUM; j++ )); do
+    for (( j=1; j<=$NVMES_NUM; j++ )); do
         weka cluster drive add $i "/dev/nvme0n$j";
     done
 done
