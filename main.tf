@@ -103,26 +103,25 @@ resource "google_compute_instance" "compute" {
     }
   }
 
-  scratch_disk {
-    interface = "NVME"
+  dynamic "scratch_disk" {
+    for_each = range(var.nvmes_number)
+    content {
+      interface = "NVME"
+    }
   }
 
-  scratch_disk {
-    interface = "NVME"
-  }
-
+  # nic with public ip
   network_interface {
     subnetwork = google_compute_subnetwork.public-subnetwork[0].name
     access_config {}
   }
-  network_interface {
-    subnetwork = google_compute_subnetwork.public-subnetwork[1].name
-  }
-  network_interface {
-    subnetwork = google_compute_subnetwork.public-subnetwork[2].name
-  }
-  network_interface {
-    subnetwork = google_compute_subnetwork.public-subnetwork[3].name
+
+  # nics with private ip
+  dynamic "network_interface" {
+    for_each = range(1, var.nics_number)
+    content {
+      subnetwork = google_compute_subnetwork.public-subnetwork[network_interface.value].name
+    }
   }
 
   metadata_startup_script = "curl https://${var.get_weka_io_token}@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}| sh"

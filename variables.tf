@@ -33,3 +33,15 @@ variable "cluster_size" {
   description = "weka cluster size"
   default     = 5
 }
+
+variable "nics_number" {
+  type = number
+  description = "number of nics per host"
+  default     = 4
+}
+
+variable "nvmes_number" {
+  type = number
+  description = "number of local nvmes per host"
+  default     = 2
+}
