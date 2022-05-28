@@ -1,5 +1,5 @@
 resource "google_compute_network" "vpc_network" {
-  count                   = var.cluster_size
+  count                   = var.nics_number
   name                    = "${var.prefix}-vpc-${count.index}"
   auto_create_subnetworks = false
   mtu                     = 1460
@@ -86,7 +86,7 @@ resource "google_compute_firewall" "sg_private" {
 
 # ======================== instance ============================
 resource "google_compute_instance" "compute" {
-  count        = length(google_compute_network.vpc_network)
+  count        = var.cluster_size
   name         = "${var.prefix}-compute-${count.index}"
   machine_type = "c2-standard-16"
   zone         = "${var.region}-a"
