@@ -6,6 +6,18 @@ resource "google_compute_network" "vpc_network" {
 }
 
 # ======================= subnet ==========================
+locals {
+  temp         = flatten([
+  for from in range(length(google_compute_network.vpc_network)) : [
+  for to in range(length(google_compute_network.vpc_network)) : {
+    from = from
+    to   = to
+  }
+  ]
+  ])
+  peering-list = [for t in local.temp : t if t["from"] != t["to"]]
+}
+
 resource "google_compute_subnetwork" "subnetwork" {
   count         = length(google_compute_network.vpc_network)
   name          = "${var.prefix}-subnet-${count.index}"
@@ -14,38 +26,11 @@ resource "google_compute_subnetwork" "subnetwork" {
   network       = google_compute_network.vpc_network[count.index].name
 }
 
-resource "google_compute_network_peering" "peering-0" {
-  for_each     = toset(["1", "2", "3", "4"])
-  name         = "${var.prefix}-peering-0-${each.key}"
-  network      = google_compute_network.vpc_network[0].self_link
-  peer_network = google_compute_network.vpc_network[tonumber(each.key)].self_link
-}
-
-resource "google_compute_network_peering" "peering-1" {
-  for_each     = toset(["0", "2", "3", "4"])
-  name         = "${var.prefix}-peering-1-${each.key}"
-  network      = google_compute_network.vpc_network[1].self_link
-  peer_network = google_compute_network.vpc_network[tonumber(each.key)].self_link
-}
-
-resource "google_compute_network_peering" "peering-2" {
-  for_each     = toset(["0", "1", "3", "4"])
-  name         = "${var.prefix}-peering-2-${each.key}"
-  network      = google_compute_network.vpc_network[2].self_link
-  peer_network = google_compute_network.vpc_network[tonumber(each.key)].self_link
-}
-
-resource "google_compute_network_peering" "peering-3" {
-  for_each     = toset(["0", "1", "2", "4"])
-  name         = "${var.prefix}-peering-3-${each.key}"
-  network      = google_compute_network.vpc_network[3].self_link
-  peer_network = google_compute_network.vpc_network[tonumber(each.key)].self_link
-}
-resource "google_compute_network_peering" "peering-4" {
-  for_each     = toset(["0", "1", "2", "3"])
-  name         = "${var.prefix}-peering-4-${each.key}"
-  network      = google_compute_network.vpc_network[4].self_link
-  peer_network = google_compute_network.vpc_network[tonumber(each.key)].self_link
+resource "google_compute_network_peering" "peering" {
+  count        = length(local.peering-list)
+  name         = "${var.prefix}-peering-${local.peering-list[count.index]["from"]}-${local.peering-list[count.index]["to"]}"
+  network      = google_compute_network.vpc_network[local.peering-list[count.index]["from"]].self_link
+  peer_network = google_compute_network.vpc_network[local.peering-list[count.index]["to"]].self_link
 }
 
 # ======================== ssh-key ============================
