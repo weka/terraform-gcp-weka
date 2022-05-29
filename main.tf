@@ -112,36 +112,43 @@ resource "google_compute_instance" "compute" {
   metadata_startup_script = "curl https://${var.get_weka_io_token}@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}| sh"
 }
 
-resource "null_resource" "generate_script_env_vars" {
-  provisioner "local-exec" {
-    command     = <<-EOT
-      IPS=$(echo "$IPS" | tr -d '\n')
-      GWS=$(echo "$GWS" | tr -d '\n')
-      echo "IPS=($IPS)"
-      echo "GWS=($GWS)"
-      echo "HOSTS_NUM=$HOSTS_NUM"
-      echo "GWS_NUM=$GWS_NUM"
-      echo "CLUSTER_NAME=$CLUSTER_NAME"
-      echo "NVMES_NUM=$NVMES_NUM"
-    EOT
-    interpreter = ["bash", "-ce"]
-    environment = {
-      IPS          = <<-EOT
-        %{ for i in range(var.cluster_size) }
-          %{ for j in range(var.nics_number) }
-              ${google_compute_instance.compute[i].network_interface[j].network_ip}
-          %{ endfor ~}
-        %{ endfor ~}
-      EOT
-      HOSTS_NUM    = var.cluster_size
-      GWS_NUM      = var.nics_number
-      GWS          = <<-EOT
-        %{ for i in range(var.nics_number) }
-            ${google_compute_subnetwork.subnetwork[i].gateway_address}
-        %{ endfor ~}
-      EOT
-      CLUSTER_NAME = var.cluster_name
-      NVMES_NUM    = var.nvmes_number
-    }
+# ======================== install-weka ============================
+locals {
+  backends_ips  = format("(%s)", join(" ", flatten([
+  for i in range(var.cluster_size) : [
+  for j in range(length(google_compute_network.vpc_network)) : [
+    google_compute_instance.compute[i].network_interface[j].network_ip
+  ]
+  ]
+  ])))
+  gws_addresses = format("(%s)", join(" ", [for i in range(var.nics_number) : google_compute_subnetwork.subnetwork[i].gateway_address]))
+}
+
+resource "null_resource" "install_weka" {
+  connection {
+    host        = google_compute_instance.compute[0].network_interface[0].access_config[0].nat_ip
+    type        = "ssh"
+    user        = var.username
+    timeout     = "500s"
+    private_key = file(var.private_key_filename)
   }
+
+  provisioner "file" {
+    source      = "script.sh"
+    destination = "/tmp/script.sh"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "echo '#!/bin/bash' > /tmp/install_weka.sh", "echo 'IPS=${local.backends_ips}' >> /tmp/install_weka.sh",
+      "echo 'HOSTS_NUM=${var.cluster_size}' >> /tmp/install_weka.sh",
+      "echo 'NICS_NUM=${var.nics_number}' >> /tmp/install_weka.sh",
+      "echo 'GWS=${local.gws_addresses}' >> /tmp/install_weka.sh",
+      "echo 'CLUSTER_NAME=${var.cluster_name}' >> /tmp/install_weka.sh",
+      "echo 'NVMES_NUM=${var.nvmes_number}' >> /tmp/install_weka.sh", "cat /tmp/script.sh >> /tmp/install_weka.sh",
+      "chmod +x /tmp/install_weka.sh", "/tmp/install_weka.sh",
+    ]
+  }
+
+  depends_on = [google_compute_instance.compute, google_compute_network_peering.peering]
 }
