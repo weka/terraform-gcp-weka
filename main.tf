@@ -41,7 +41,7 @@ resource "tls_private_key" "ssh" {
 
 resource "local_file" "ssh_private_key_pem" {
   content         = tls_private_key.ssh.private_key_pem
-  filename        = ".ssh/google_compute_engine"
+  filename        = var.private_key_filename
   file_permission = "0600"
 }
 
@@ -73,7 +73,7 @@ resource "google_compute_firewall" "sg_private" {
 resource "google_compute_instance" "compute" {
   count        = var.cluster_size
   name         = "${var.prefix}-compute-${count.index}"
-  machine_type = "c2-standard-16"
+  machine_type = var.machine_type
   zone         = "${var.region}-a"
   tags         = ["${var.prefix}-compute"]
 

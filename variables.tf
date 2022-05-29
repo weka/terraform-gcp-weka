@@ -57,3 +57,15 @@ variable "prefix" {
   description = "prefix for all resources"
   default     = "weka"
 }
+
+variable "private_key_filename" {
+  type = string
+  description = "local private_key filename"
+  default     = ".ssh/google_compute_engine"
+}
+
+variable "machine_type" {
+  type = string
+  description = "weka cluster backends machines type"
+  default     = "c2-standard-16"
+}
