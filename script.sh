@@ -28,8 +28,6 @@ for (( i=0; i<$HOSTS_NUM; i++ )); do
     done
 done
 sleep 15s
-weka cluster update --data-drives=4 --parity-drives=2
-sleep 5s
 weka cluster hot-spare 1
 sleep 15s
 weka cluster update --cluster-name="$CLUSTER_NAME"

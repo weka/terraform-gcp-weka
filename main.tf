@@ -109,7 +109,29 @@ resource "google_compute_instance" "compute" {
     }
   }
 
-  metadata_startup_script = "curl https://${var.get_weka_io_token}@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}| sh"
+  metadata_startup_script = <<-EOT
+    # https://gist.github.com/fungusakafungus/1026804
+    function retry {
+        local retry_max=$1
+        local retry_sleep=$2
+        shift 2
+
+        local count=$retry_max
+        while [ $count -gt 0 ]; do
+            "$@" && break
+            count=$(($count - 1))
+            sleep $retry_sleep
+        done
+
+        [ $count -eq 0 ] && {
+            echo "Retry failed [$retry_max]: $@"
+            return 1
+        }
+        return 0
+    }
+
+  retry 300 2 curl --fail --max-time 10 https://${var.get_weka_io_token}@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}| sh
+ EOT
 }
 
 # ======================== install-weka ============================
@@ -140,6 +162,7 @@ resource "null_resource" "install_weka" {
 
   provisioner "remote-exec" {
     inline = [
+      "sleep 600",
       "echo '#!/bin/bash' > /tmp/install_weka.sh", "echo 'IPS=${local.backends_ips}' >> /tmp/install_weka.sh",
       "echo 'HOSTS_NUM=${var.cluster_size}' >> /tmp/install_weka.sh",
       "echo 'NICS_NUM=${var.nics_number}' >> /tmp/install_weka.sh",
@@ -150,5 +173,5 @@ resource "null_resource" "install_weka" {
     ]
   }
 
-  depends_on = [google_compute_instance.compute, google_compute_network_peering.peering]
+  depends_on = [google_compute_instance.compute, google_compute_network_peering.peering, google_compute_firewall.sg_private]
 }
