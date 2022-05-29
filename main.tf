@@ -84,7 +84,7 @@ resource "google_compute_instance" "compute" {
   boot_disk {
     initialize_params {
       image = "centos-cloud/centos-7"
-      size = 50
+      size  = 50
     }
   }
 
@@ -114,7 +114,7 @@ resource "google_compute_instance" "compute" {
 
 resource "null_resource" "generate_script_env_vars" {
   provisioner "local-exec" {
-    command = <<-EOT
+    command     = <<-EOT
       IPS=$(echo "$IPS" | tr -d '\n')
       GWS=$(echo "$GWS" | tr -d '\n')
       echo "IPS=($IPS)"
@@ -126,22 +126,22 @@ resource "null_resource" "generate_script_env_vars" {
     EOT
     interpreter = ["bash", "-ce"]
     environment = {
-      IPS = <<-EOT
+      IPS          = <<-EOT
         %{ for i in range(var.cluster_size) }
           %{ for j in range(var.nics_number) }
               ${google_compute_instance.compute[i].network_interface[j].network_ip}
           %{ endfor ~}
         %{ endfor ~}
       EOT
-      HOSTS_NUM = var.cluster_size
-      GWS_NUM = var.nics_number
-      GWS = <<-EOT
+      HOSTS_NUM    = var.cluster_size
+      GWS_NUM      = var.nics_number
+      GWS          = <<-EOT
         %{ for i in range(var.nics_number) }
             ${google_compute_subnetwork.subnetwork[i].gateway_address}
         %{ endfor ~}
       EOT
-      CLUSTER_NAME=var.cluster_name
-      NVMES_NUM=var.nvmes_number
+      CLUSTER_NAME = var.cluster_name
+      NVMES_NUM    = var.nvmes_number
     }
   }
 }

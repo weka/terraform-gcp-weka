@@ -17,55 +17,55 @@ variable "username" {
 }
 
 variable "get_weka_io_token" {
-  type = string
+  type        = string
   description = "get.weka.io token for downloading weka"
   default     = "must be set outside"
 }
 
 variable "weka_version" {
-  type = string
+  type        = string
   description = "weka version"
   default     = "3.14.0.44-gcp-beta"
 }
 
 variable "cluster_size" {
-  type = number
+  type        = number
   description = "weka cluster size"
   default     = 5
 }
 
 variable "nics_number" {
-  type = number
+  type        = number
   description = "number of nics per host"
   default     = 4
 }
 
 variable "nvmes_number" {
-  type = number
+  type        = number
   description = "number of local nvmes per host"
   default     = 2
 }
 
 variable "cluster_name" {
-  type = string
+  type        = string
   description = "prefix for all resources"
   default     = "poc"
 }
 
 variable "prefix" {
-  type = string
+  type        = string
   description = "prefix for all resources"
   default     = "weka"
 }
 
 variable "private_key_filename" {
-  type = string
+  type        = string
   description = "local private_key filename"
   default     = ".ssh/google_compute_engine"
 }
 
 variable "machine_type" {
-  type = string
+  type        = string
   description = "weka cluster backends machines type"
   default     = "c2-standard-16"
 }
