@@ -5,8 +5,9 @@
 - authentication: `gcloud auth application-default login`
 - **only on first run**, create bucket for TF state:`cd bucket && terraform init && terraform apply`
 - export your get.weka.io token: `export TF_VAR_get_weka_io_token="YOUR_GET_WEKA_IO_TOKEN"`
+- export your project_id: `export TF_VAR_project="YOUR_PROJECT_ID"`
 - from main repo: `terraform init && terraform apply -auto-approve`
-######the get_weka_io can be passed as var `terraform apply -var 'get_weka_io=value'` as well
+######the get_weka_io and project can be passed as var `terraform apply -var 'get_weka_io=value'` as well
 
 ###More info
 We allow to pass many variable to `terraform apply`: subnets, region, weka version etc.<br>
