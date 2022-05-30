@@ -40,6 +40,12 @@ variable "nics_number" {
   default     = 4
 }
 
+variable "subnets" {
+  type        = list(string)
+  description = "list of subnets to use for creating the cluster, the number of subnets must be 'nics_number'"
+  default     = ["10.0.0.0/24", "10.1.0.0/24", "10.2.0.0/24", "10.3.0.0/24"]
+}
+
 variable "nvmes_number" {
   type        = number
   description = "number of local nvmes per host"

@@ -21,7 +21,7 @@ locals {
 resource "google_compute_subnetwork" "subnetwork" {
   count         = length(google_compute_network.vpc_network)
   name          = "${var.prefix}-subnet-${count.index}"
-  ip_cidr_range = "10.${count.index}.0.0/24"
+  ip_cidr_range = var.subnets[count.index]
   region        = var.region
   network       = google_compute_network.vpc_network[count.index].name
 }
