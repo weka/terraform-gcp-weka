@@ -6,5 +6,5 @@ terraform {
 }
 
 provider "google" {
-  project = "wekaio-rnd"
+  project = var.project
 }
