@@ -7,7 +7,7 @@ resource "google_compute_network" "vpc_network" {
 
 # ======================= subnet ==========================
 locals {
-  temp         = flatten([
+  temp = flatten([
   for from in range(length(google_compute_network.vpc_network)) : [
   for to in range(length(google_compute_network.vpc_network)) : {
     from = from
@@ -54,7 +54,7 @@ resource "google_compute_firewall" "sg" {
     protocol = "tcp"
     ports    = ["22"]
   }
-  source_tags   = ["ssh"]
+  source_tags = ["ssh"]
 }
 
 resource "google_compute_firewall" "sg_private" {
@@ -65,34 +65,53 @@ resource "google_compute_firewall" "sg_private" {
   allow {
     protocol = "all"
   }
-  source_tags   = ["all"]
+  source_tags = ["all"]
 }
 
+# ======================== table ============================
+resource "google_bigtable_instance" "bigtable-instance" {
+  name = "${var.prefix}-bigtable-instance"
 
-# ======================== instance ============================
-resource "google_compute_instance" "compute" {
-  count        = var.cluster_size
-  name         = "${var.prefix}-compute-${count.index}"
-  machine_type = var.machine_type
-  zone         = var.zone
-  tags         = ["${var.prefix}-compute"]
-
-  metadata = {
-    ssh-keys = "${var.username}:${tls_private_key.ssh.public_key_openssh}"
+  cluster {
+    cluster_id   = "${var.prefix}-bigtable"
+    zone         = var.zone
+    num_nodes    = 3
+    storage_type = "HDD"
   }
+  deletion_protection=false
 
-  boot_disk {
-    initialize_params {
-      image = "centos-cloud/centos-7"
-      size  = 50
-    }
+  lifecycle {
+    prevent_destroy = false
   }
+}
 
-  dynamic "scratch_disk" {
-    for_each = range(var.nvmes_number)
-    content {
-      interface = "NVME"
-    }
+resource "google_bigtable_table" "table" {
+  name          = "${var.prefix}-bigtable"
+  instance_name = google_bigtable_instance.bigtable-instance.name
+  split_keys    = ["a", "b", "c"]
+
+  lifecycle {
+    prevent_destroy = false
+  }
+}
+
+# ======================== autoscaler ============================
+data "google_compute_image" "centos_7" {
+  family  = "centos-7"
+  project = "centos-cloud"
+}
+
+resource "google_compute_instance_template" "template" {
+  name           = "${var.prefix}-compute"
+  machine_type   = var.machine_type
+  can_ip_forward = false
+
+  tags = ["${var.prefix}-compute"]
+
+  disk {
+    source_image = data.google_compute_image.centos_7.id
+    disk_size_gb = 50
+    boot         = true
   }
 
   # nic with public ip
@@ -108,6 +127,22 @@ resource "google_compute_instance" "compute" {
       subnetwork = google_compute_subnetwork.subnetwork[network_interface.value].name
     }
   }
+
+  dynamic "disk" {
+    for_each = range(var.nvmes_number)
+    content {
+      interface    = "NVME"
+      boot         = false
+      type         = "SCRATCH"
+      disk_type    = "local-ssd"
+      disk_size_gb = 375
+    }
+  }
+
+  metadata = {
+    ssh-keys = "${var.username}:${tls_private_key.ssh.public_key_openssh}"
+  }
+
 
   metadata_startup_script = <<-EOT
     # https://gist.github.com/fungusakafungus/1026804
@@ -134,12 +169,65 @@ resource "google_compute_instance" "compute" {
  EOT
 }
 
+resource "google_compute_target_pool" "target_pool" {
+  name = "${var.prefix}-target-pool"
+}
+
+resource "google_compute_instance_group_manager" "igm" {
+  name = "${var.prefix}-igm"
+  zone = var.zone
+
+  version {
+    instance_template = google_compute_instance_template.template.id
+    name              = "primary"
+  }
+
+  target_pools       = [google_compute_target_pool.target_pool.id]
+  base_instance_name = "${var.prefix}-compute"
+}
+
+resource "google_compute_autoscaler" "auto-scaler" {
+  name   = "${var.prefix}-autoscaler"
+  zone   = var.zone
+  target = google_compute_instance_group_manager.igm.id
+
+  autoscaling_policy {
+    max_replicas = 24
+    min_replicas = var.cluster_size
+  }
+  depends_on = [google_bigtable_table.table]
+}
+
 # ======================== install-weka ============================
+resource "null_resource" "wait_for_compute" {
+  provisioner "local-exec" {
+    command = <<-EOT
+      compute=$(gcloud compute instance-groups list-instances weka-igm --zone europe-west1-b 2>&1 | grep RUNNING | wc -l)
+      while [ $compute != ${var.cluster_size} ]
+      do
+        echo "waiting for computes to be up..."
+        sleep 10s
+      done
+    EOT
+    interpreter = ["bash", "-ce"]
+  }
+}
+
+data "google_compute_instance_group" "node_instance_groups" {
+  self_link = google_compute_instance_group_manager.igm.instance_group
+}
+
+data "google_compute_instance" "compute" {
+  count     = var.cluster_size
+  self_link = tolist(data.google_compute_instance_group.node_instance_groups.instances)[count.index]
+  depends_on = [google_compute_autoscaler.auto-scaler, null_resource.wait_for_compute]
+}
+
 locals {
-  backends_ips  = format("(%s)", join(" ", flatten([
+  backends_ips = format("(%s)", join(" ", flatten([
   for i in range(var.cluster_size) : [
   for j in range(length(google_compute_network.vpc_network)) : [
-    google_compute_instance.compute[i].network_interface[j].network_ip
+    data.google_compute_instance.compute[i].network_interface[j].network_ip
   ]
   ]
   ])))
@@ -148,7 +236,7 @@ locals {
 
 resource "null_resource" "install_weka" {
   connection {
-    host        = google_compute_instance.compute[0].network_interface[0].access_config[0].nat_ip
+    host        = data.google_compute_instance.compute[0].network_interface[0].access_config[0].nat_ip
     type        = "ssh"
     user        = var.username
     timeout     = "500s"
@@ -173,5 +261,60 @@ resource "null_resource" "install_weka" {
     ]
   }
 
-  depends_on = [google_compute_instance.compute, google_compute_network_peering.peering, google_compute_firewall.sg_private]
+  depends_on = [
+    data.google_compute_instance.compute, google_compute_network_peering.peering, google_compute_firewall.sg_private
+  ]
+}
+
+# ======================== cloud function ============================
+
+resource "null_resource" "generate_cloud_functions_zips" {
+  provisioner "local-exec" {
+    command = <<-EOT
+      cd cloud-functions
+      cp join.py main.py
+      mkdir -p ../cloud-functions-zip
+      zip -r ../cloud-functions-zip/join.zip main.py requirements.txt
+      rm main.py
+    EOT
+    interpreter = ["bash", "-ce"]
+  }
+}
+
+resource "google_storage_bucket" "cloud_functions" {
+  name     = "${var.prefix}-cloud-functions"
+  location = "EU"
+}
+
+resource "google_storage_bucket_object" "archive" {
+  name   = "join.zip"
+  bucket = google_storage_bucket.cloud_functions.name
+  source = "cloud-functions-zip/join.zip"
+  depends_on = [null_resource.generate_cloud_functions_zips]
+}
+
+resource "google_cloudfunctions_function" "function" {
+  name        = "join"
+  description = "join new instance"
+  runtime     = "python39"
+
+  available_memory_mb   = 128
+  source_archive_bucket = google_storage_bucket.cloud_functions.name
+  source_archive_object = google_storage_bucket_object.archive.name
+  trigger_http          = true
+  entry_point           = "join"
+}
+
+# IAM entry for all users to invoke the function
+resource "google_cloudfunctions_function_iam_member" "invoker" {
+  project        = google_cloudfunctions_function.function.project
+  region         = google_cloudfunctions_function.function.region
+  cloud_function = google_cloudfunctions_function.function.name
+
+  role   = "roles/cloudfunctions.invoker"
+  member = "allUsers"
+}
+
+output "outputs" {
+  value = "${var.cluster_name}, ${var.project}, ${google_bigtable_instance.bigtable-instance.id}, ${google_bigtable_table.table.id}"
 }
