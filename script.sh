@@ -35,3 +35,5 @@ sleep 15s
 weka cluster host activate
 sleep 15s
 weka cluster host apply --all --force
+sleep 30s
+weka cluster start-io

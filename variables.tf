@@ -7,7 +7,13 @@ variable "project" {
 variable "region" {
   type        = string
   description = "region name"
-  default     = "europe-north1"
+  default     = "europe-west1"
+}
+
+variable "zone" {
+  type        = string
+  description = "zone name"
+  default     = "europe-west1-b"
 }
 
 variable "username" {
@@ -25,7 +31,7 @@ variable "get_weka_io_token" {
 variable "weka_version" {
   type        = string
   description = "weka version"
-  default     = "3.14.0.44-gcp-beta"
+  default     = "3.14.0.50-gcp-beta"
 }
 
 variable "cluster_size" {

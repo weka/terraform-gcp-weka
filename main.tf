@@ -74,7 +74,7 @@ resource "google_compute_instance" "compute" {
   count        = var.cluster_size
   name         = "${var.prefix}-compute-${count.index}"
   machine_type = var.machine_type
-  zone         = "${var.region}-a"
+  zone         = var.zone
   tags         = ["${var.prefix}-compute"]
 
   metadata = {
