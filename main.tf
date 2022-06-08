@@ -68,45 +68,18 @@ resource "google_compute_firewall" "sg_private" {
   source_tags = ["all"]
 }
 
-# ======================== table ============================
-resource "google_bigtable_instance" "bigtable-instance" {
-  name = "${var.prefix}-bigtable-instance"
-
-  cluster {
-    cluster_id   = "${var.prefix}-bigtable"
-    zone         = var.zone
-    num_nodes    = 3
-    storage_type = "HDD"
-  }
-  deletion_protection=false
-
-  lifecycle {
-    prevent_destroy = false
-  }
-}
-
-resource "google_bigtable_table" "table" {
-  name          = "${var.prefix}-bigtable"
-  instance_name = google_bigtable_instance.bigtable-instance.name
-  split_keys    = ["a", "b", "c"]
-
-  lifecycle {
-    prevent_destroy = false
-  }
-}
-
 # ======================== autoscaler ============================
 data "google_compute_image" "centos_7" {
   family  = "centos-7"
   project = "centos-cloud"
 }
 
-resource "google_compute_instance_template" "template" {
-  name           = "${var.prefix}-compute"
+resource "google_compute_instance_template" "backends-template" {
+  name           = "${var.prefix}-backends"
   machine_type   = var.machine_type
   can_ip_forward = false
 
-  tags = ["${var.prefix}-compute"]
+  tags = ["${var.prefix}-backends"]
 
   disk {
     source_image = data.google_compute_image.centos_7.id
@@ -169,6 +142,63 @@ resource "google_compute_instance_template" "template" {
  EOT
 }
 
+resource "random_password" "password" {
+  length           = 16
+  lower = true
+  upper = true
+  numeric = true
+  special = false
+}
+
+resource "google_compute_instance_template" "join-template" {
+  name           = "${var.prefix}-join"
+  machine_type   = var.machine_type
+  can_ip_forward = false
+
+  tags = ["${var.prefix}-backends"]
+
+  disk {
+    source_image = data.google_compute_image.centos_7.id
+    disk_size_gb = 50
+    boot         = true
+  }
+
+  # nic with public ip
+  network_interface {
+    subnetwork = google_compute_subnetwork.subnetwork[0].name
+    access_config {}
+  }
+
+  # nics with private ip
+  dynamic "network_interface" {
+    for_each = range(1, var.nics_number)
+    content {
+      subnetwork = google_compute_subnetwork.subnetwork[network_interface.value].name
+    }
+  }
+
+  dynamic "disk" {
+    for_each = range(var.nvmes_number)
+    content {
+      interface    = "NVME"
+      boot         = false
+      type         = "SCRATCH"
+      disk_type    = "local-ssd"
+      disk_size_gb = 375
+    }
+  }
+
+  metadata = {
+    ssh-keys = "${var.username}:${tls_private_key.ssh.public_key_openssh}"
+  }
+
+  metadata_startup_script = <<-EOT
+    curl -X POST https://${var.region}-${var.project}.cloudfunctions.net/join -H "Content-Type:application/json"  -d '{"project": "${var.project}", "zone": "${var.zone}","username": "${var.weka_username}", "password": "${random_password.password.result}", "tag": "${var.prefix}-backends"}' > /tmp/join.sh
+    chmod +x /tmp/join.sh
+    /tmp/join.sh
+ EOT
+}
+
 resource "google_compute_target_pool" "target_pool" {
   name = "${var.prefix}-target-pool"
 }
@@ -178,7 +208,7 @@ resource "google_compute_instance_group_manager" "igm" {
   zone = var.zone
 
   version {
-    instance_template = google_compute_instance_template.template.id
+    instance_template = google_compute_instance_template.backends-template.id
     name              = "primary"
   }
 
@@ -195,7 +225,6 @@ resource "google_compute_autoscaler" "auto-scaler" {
     max_replicas = 24
     min_replicas = var.cluster_size
   }
-  depends_on = [google_bigtable_table.table]
 }
 
 # ======================== install-weka ============================
@@ -205,16 +234,19 @@ resource "null_resource" "wait_for_compute" {
       compute=$(gcloud compute instance-groups list-instances weka-igm --zone europe-west1-b 2>&1 | grep RUNNING | wc -l)
       while [ $compute != ${var.cluster_size} ]
       do
-        echo "waiting for computes to be up..."
+        echo "waiting for computes to be up ($compute/${var.cluster_size})..."
         sleep 10s
+        compute=$(gcloud compute instance-groups list-instances weka-igm --zone europe-west1-b 2>&1 | grep RUNNING | wc -l)
       done
     EOT
     interpreter = ["bash", "-ce"]
   }
+  depends_on = [google_compute_autoscaler.auto-scaler]
 }
 
 data "google_compute_instance_group" "node_instance_groups" {
   self_link = google_compute_instance_group_manager.igm.instance_group
+  depends_on = [google_compute_autoscaler.auto-scaler, null_resource.wait_for_compute]
 }
 
 data "google_compute_instance" "compute" {
@@ -256,7 +288,10 @@ resource "null_resource" "install_weka" {
       "echo 'NICS_NUM=${var.nics_number}' >> /tmp/install_weka.sh",
       "echo 'GWS=${local.gws_addresses}' >> /tmp/install_weka.sh",
       "echo 'CLUSTER_NAME=${var.cluster_name}' >> /tmp/install_weka.sh",
-      "echo 'NVMES_NUM=${var.nvmes_number}' >> /tmp/install_weka.sh", "cat /tmp/script.sh >> /tmp/install_weka.sh",
+      "echo 'NVMES_NUM=${var.nvmes_number}' >> /tmp/install_weka.sh",
+      "echo 'ADMIN_USERNAME=${var.weka_username}' >> /tmp/install_weka.sh",
+      "echo 'ADMIN_PASSWORD=${random_password.password.result}' >> /tmp/install_weka.sh",
+      "cat /tmp/script.sh >> /tmp/install_weka.sh",
       "chmod +x /tmp/install_weka.sh", "/tmp/install_weka.sh",
     ]
   }
@@ -264,6 +299,16 @@ resource "null_resource" "install_weka" {
   depends_on = [
     data.google_compute_instance.compute, google_compute_network_peering.peering, google_compute_firewall.sg_private
   ]
+}
+
+resource "null_resource" "replace-template" {
+  provisioner "local-exec" {
+    command = <<-EOT
+            gcloud compute instance-groups managed set-instance-template ${google_compute_instance_group_manager.igm.name} --template=${google_compute_instance_template.join-template.name} --zone ${var.zone}
+    EOT
+    interpreter = ["bash", "-ce"]
+  }
+  depends_on = [null_resource.install_weka, google_cloudfunctions_function.function]
 }
 
 # ======================== cloud function ============================
@@ -315,6 +360,15 @@ resource "google_cloudfunctions_function_iam_member" "invoker" {
   member = "allUsers"
 }
 
-output "outputs" {
-  value = "${var.cluster_name}, ${var.project}, ${google_bigtable_instance.bigtable-instance.id}, ${google_bigtable_table.table.id}"
+resource "null_resource" "write_weka_password_to_local_file" {
+  provisioner "local-exec" {
+    command = <<-EOT
+      echo "${random_password.password.result}" > weka_cluster_admin_password
+    EOT
+    interpreter = ["bash", "-ce"]
+  }
+}
+
+output "remote-exec-machine" {
+  value = data.google_compute_instance.compute[0].network_interface[0].access_config[0].nat_ip
 }

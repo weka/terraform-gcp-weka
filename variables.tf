@@ -81,3 +81,10 @@ variable "machine_type" {
   description = "weka cluster backends machines type"
   default     = "c2-standard-16"
 }
+
+
+variable "weka_username" {
+  type        = string
+  description = "weka cluster username"
+  default     = ""
+}

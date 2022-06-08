@@ -7,7 +7,9 @@ for (( i=0; i<$HOSTS_NUM; i++ )); do
     cluster_creation_str="$cluster_creation_str${IPS[$i*$NICS_NUM]},"
 done
 cluster_creation_str=${cluster_creation_str::-1}
-eval "$cluster_creation_str"
+eval "$cluster_creation_str --admin-password $ADMIN_PASSWORD"
+
+weka user login "$ADMIN_USERNAME" "$ADMIN_PASSWORD"
 
 sleep 15s
 cores_num=`expr $NICS_NUM - 1`
