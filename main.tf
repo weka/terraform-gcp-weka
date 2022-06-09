@@ -80,6 +80,9 @@ resource "google_compute_instance_template" "backends-template" {
   can_ip_forward = false
 
   tags = ["${var.prefix}-backends"]
+  labels = {
+    cluster_name = var.cluster_name
+  }
 
   disk {
     source_image = data.google_compute_image.centos_7.id
@@ -156,6 +159,9 @@ resource "google_compute_instance_template" "join-template" {
   can_ip_forward = false
 
   tags = ["${var.prefix}-backends"]
+  labels = {
+    cluster_name = var.cluster_name
+  }
 
   disk {
     source_image = data.google_compute_image.centos_7.id
@@ -308,7 +314,7 @@ resource "null_resource" "replace-template" {
     EOT
     interpreter = ["bash", "-ce"]
   }
-  depends_on = [null_resource.install_weka, google_cloudfunctions_function.function]
+  depends_on = [null_resource.install_weka, google_cloudfunctions_function.join_function]
 }
 
 # ======================== cloud function ============================
@@ -316,11 +322,18 @@ resource "null_resource" "replace-template" {
 resource "null_resource" "generate_cloud_functions_zips" {
   provisioner "local-exec" {
     command = <<-EOT
-      cd cloud-functions
+      mkdir -p cloud-functions-zip
+
+      cd cloud-functions/join
       cp join.py main.py
-      mkdir -p ../cloud-functions-zip
-      zip -r ../cloud-functions-zip/join.zip main.py requirements.txt
+      zip -r join.zip main.py requirements.txt
+      mv join.zip ../../cloud-functions-zip/
       rm main.py
+
+      cd ../fetch
+      zip -r fetch.zip fetch.go go.mod
+      mv fetch.zip ../../cloud-functions-zip/
+
     EOT
     interpreter = ["bash", "-ce"]
   }
@@ -331,34 +344,71 @@ resource "google_storage_bucket" "cloud_functions" {
   location = "EU"
 }
 
-resource "google_storage_bucket_object" "archive" {
+# ======================== join ============================
+resource "google_storage_bucket_object" "join_zip" {
   name   = "join.zip"
   bucket = google_storage_bucket.cloud_functions.name
   source = "cloud-functions-zip/join.zip"
   depends_on = [null_resource.generate_cloud_functions_zips]
 }
 
-resource "google_cloudfunctions_function" "function" {
+
+resource "google_cloudfunctions_function" "join_function" {
   name        = "join"
   description = "join new instance"
   runtime     = "python39"
 
   available_memory_mb   = 128
   source_archive_bucket = google_storage_bucket.cloud_functions.name
-  source_archive_object = google_storage_bucket_object.archive.name
+  source_archive_object = google_storage_bucket_object.join_zip.name
   trigger_http          = true
   entry_point           = "join"
 }
 
+
 # IAM entry for all users to invoke the function
-resource "google_cloudfunctions_function_iam_member" "invoker" {
-  project        = google_cloudfunctions_function.function.project
-  region         = google_cloudfunctions_function.function.region
-  cloud_function = google_cloudfunctions_function.function.name
+resource "google_cloudfunctions_function_iam_member" "join_invoker" {
+  project        = google_cloudfunctions_function.join_function.project
+  region         = google_cloudfunctions_function.join_function.region
+  cloud_function = google_cloudfunctions_function.join_function.name
 
   role   = "roles/cloudfunctions.invoker"
   member = "allUsers"
 }
+
+# ======================== fetch ============================
+
+resource "google_storage_bucket_object" "fetch_zip" {
+  name   = "fetch.zip"
+  bucket = google_storage_bucket.cloud_functions.name
+  source = "cloud-functions-zip/fetch.zip"
+  depends_on = [null_resource.generate_cloud_functions_zips]
+}
+
+resource "google_cloudfunctions_function" "fetch_function" {
+  name        = "fetch"
+  description = "fetch cluster info"
+  runtime     = "go116"
+
+  available_memory_mb   = 128
+  source_archive_bucket = google_storage_bucket.cloud_functions.name
+  source_archive_object = google_storage_bucket_object.fetch_zip.name
+  trigger_http          = true
+  entry_point           = "Fetch"
+}
+
+
+# IAM entry for all users to invoke the function
+resource "google_cloudfunctions_function_iam_member" "fetch_invoker" {
+  project        = google_cloudfunctions_function.fetch_function.project
+  region         = google_cloudfunctions_function.fetch_function.region
+  cloud_function = google_cloudfunctions_function.fetch_function.name
+
+  role   = "roles/cloudfunctions.invoker"
+  member = "allUsers"
+}
+
+
 
 resource "null_resource" "write_weka_password_to_local_file" {
   provisioner "local-exec" {
