@@ -1,0 +1,12 @@
+This is a copy of golang.org/x/tools/internal/jsonrpc2 575de47986ce07f39826bf8d5e365d5ebf51ee63 (tree hash: 69698c9f1c72f0834a343c74928885d6e5910534)
+Grabbed from https://go.googlesource.com/tools/+archive/refs/heads/release-branch.go1.14/internal/jsonrpc2.tar.gz
+
+It is copied directly and not vendored because it is an internal package.
+
+According to https://github.com/golang/go/issues/31080 (x/tools/gopls: make jsonrpc2, lsp, span and friends non-internal),
+jsonrpc2 might have been refactored outside but they've decided against it.
+
+Weka changes:
+-------------
+- modified to use string IDs.
+- cherry-pick 8fe064f891f2084bc046f3ebf13b0c2258993b8c, 88be01311a71af0cda63cfee99fafd9f44e84fe1 (internal/jsonrpc2: fix races in cancellation)
