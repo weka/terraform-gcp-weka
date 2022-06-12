@@ -399,6 +399,12 @@ resource "google_cloudfunctions_function" "fetch_function" {
   source_archive_object = google_storage_bucket_object.fetch_zip.name
   trigger_http          = true
   entry_point           = "Fetch"
+  environment_variables = {
+    project: var.project
+    zone: var.zone
+    instance_group: google_compute_instance_group_manager.igm.name
+    cluster_name: var.cluster_name
+  }
 }
 
 
