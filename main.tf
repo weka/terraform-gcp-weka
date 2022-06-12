@@ -334,6 +334,10 @@ resource "null_resource" "generate_cloud_functions_zips" {
       zip -r fetch.zip fetch.go go.mod
       mv fetch.zip ../../cloud-functions-zip/
 
+      cd ../scale
+      zip -r scale.zip connectors lib protocol scale.go  go.mod
+      mv scale.zip ../../cloud-functions-zip/
+
     EOT
     interpreter = ["bash", "-ce"]
   }
@@ -408,7 +412,36 @@ resource "google_cloudfunctions_function_iam_member" "fetch_invoker" {
   member = "allUsers"
 }
 
+# ======================== fetch ============================
 
+resource "google_storage_bucket_object" "scale_zip" {
+  name   = "scale.zip"
+  bucket = google_storage_bucket.cloud_functions.name
+  source = "cloud-functions-zip/scale.zip"
+  depends_on = [null_resource.generate_cloud_functions_zips]
+}
+
+resource "google_cloudfunctions_function" "scale_function" {
+  name        = "scale"
+  description = "scale cluster"
+  runtime     = "go116"
+
+  available_memory_mb   = 128
+  source_archive_bucket = google_storage_bucket.cloud_functions.name
+  source_archive_object = google_storage_bucket_object.scale_zip.name
+  trigger_http          = true
+  entry_point           = "Scale"
+}
+
+# IAM entry for all users to invoke the function
+resource "google_cloudfunctions_function_iam_member" "scale_invoker" {
+  project        = google_cloudfunctions_function.scale_function.project
+  region         = google_cloudfunctions_function.scale_function.region
+  cloud_function = google_cloudfunctions_function.scale_function.name
+
+  role   = "roles/cloudfunctions.invoker"
+  member = "allUsers"
+}
 
 resource "null_resource" "write_weka_password_to_local_file" {
   provisioner "local-exec" {

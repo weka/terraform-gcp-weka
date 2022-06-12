@@ -1,4 +1,4 @@
-module github.com/weka/gcp-tf
+module github.com/weka/gcp-tf/cloud-functions/scale/
 
 go 1.16
 
