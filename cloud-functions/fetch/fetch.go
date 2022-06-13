@@ -41,7 +41,7 @@ func GetFetchDataParams(project, zone, instanceGroup, clusterName string) HostGr
 		DesiredCapacity: getCapacity(project, zone, instanceGroup),
 		Instances:       getHostGroupInfoInstances(getInstanceGroupInstances(project, zone, instanceGroup)),
 		BackendIps:      getBackendsIps(project, zone, clusterName),
-		Role:            "Backend",
+		Role:            "backend",
 		Version:         1,
 	}
 }
@@ -99,16 +99,12 @@ func getInstancesNames(project, zone, instanceGroup string) (instanceNames []str
 
 	for {
 		resp, err := it.Next()
-
-		if resp == nil {
-			log.Fatal().Err(err)
-		}
-
 		if err == iterator.Done {
 			break
 		}
 		if err != nil {
 			log.Fatal().Err(err)
+			break
 		}
 		split := strings.Split(resp.GetInstance(), "/")
 		instanceNames = append(instanceNames, split[len(split)-1])
@@ -151,17 +147,12 @@ func getInstanceGroupInstances(project, zone, instanceGroup string) (instances [
 
 	for {
 		resp, err := listInstanceIter.Next()
-
-		if resp == nil {
-			log.Fatal().Err(
-				errors.New("something went wrong, resp shouldn't be nil, check ListInstancesRequest values"))
-		}
-
 		if err == iterator.Done {
 			break
 		}
 		if err != nil {
 			log.Fatal().Err(err)
+			break
 		}
 		log.Info().Msgf("%s %d %s", *resp.Name, resp.Id, *resp.NetworkInterfaces[0].NetworkIP)
 		instances = append(instances, resp)
@@ -190,17 +181,12 @@ func getBackendsIps(project, zone, clusterName string) (backendsIps []string) {
 
 	for {
 		resp, err := listInstanceIter.Next()
-
-		if resp == nil {
-			log.Fatal().Err(
-				errors.New("something went wrong, resp shouldn't be nil, check ListInstancesRequest values"))
-		}
-
 		if err == iterator.Done {
 			break
 		}
 		if err != nil {
 			log.Fatal().Err(err)
+			break
 		}
 		backendsIps = append(backendsIps, *resp.NetworkInterfaces[0].NetworkIP)
 
@@ -221,20 +207,7 @@ func Fetch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	b, err := json.Marshal(GetFetchDataParams(d.Project, d.Zone, d.InstanceGroup, d.ClusterName))
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Fprintf(w, "%s", b)
+	fmt.Println("Writing scale result")
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(GetFetchDataParams(d.Project, d.Zone, d.InstanceGroup, d.ClusterName))
 }
-
-//func main() {
-//	b, err := json.Marshal(GetFetchDataParams("wekaio-rnd", "europe-west1-b", "weka-igm", "poc"))
-//	if err != nil {
-//		fmt.Println(err)
-//		return
-//	}
-//
-//	log.Info().Msgf("res:%s", string(b))
-//}
