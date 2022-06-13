@@ -418,7 +418,7 @@ resource "google_cloudfunctions_function_iam_member" "fetch_invoker" {
   member = "allUsers"
 }
 
-# ======================== fetch ============================
+# ======================== scale ============================
 
 resource "google_storage_bucket_object" "scale_zip" {
   name   = "scale.zip"
@@ -437,6 +437,11 @@ resource "google_cloudfunctions_function" "scale_function" {
   source_archive_object = google_storage_bucket_object.scale_zip.name
   trigger_http          = true
   entry_point           = "Scale"
+  vpc_connector         = google_vpc_access_connector.connector.name
+  ingress_settings      = "ALLOW_ALL"
+  vpc_connector_egress_settings = "PRIVATE_RANGES_ONLY"
+
+
 }
 
 # IAM entry for all users to invoke the function
@@ -457,6 +462,21 @@ resource "null_resource" "write_weka_password_to_local_file" {
     interpreter = ["bash", "-ce"]
   }
 }
+
+
+#================ Vpc connector ==========================
+resource "google_project_service" "vpc-access-api" {
+  project = var.project
+  service = "vpcaccess.googleapis.com"
+}
+
+
+resource "google_vpc_access_connector" "connector" {
+  name          = "${var.prefix}-vpc-connector"
+  ip_cidr_range = var.connector
+  network       = google_compute_network.vpc_network[0].name
+}
+
 
 output "remote-exec-machine" {
   value = data.google_compute_instance.compute[0].network_interface[0].access_config[0].nat_ip

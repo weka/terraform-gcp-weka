@@ -88,3 +88,11 @@ variable "weka_username" {
   description = "weka cluster username"
   default     = ""
 }
+
+
+variable "connector" {
+  type        = string
+  description = "list of connector to use for serverless vpc access"
+  default     = "10.8.0.0/28"
+}
+
