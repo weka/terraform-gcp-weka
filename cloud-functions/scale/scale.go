@@ -323,13 +323,9 @@ func Scale(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	b, err := json.Marshal(response)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Fprintf(w, "%s", b)
-
+	fmt.Println("Writing scale result")
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 	return
 }
 
