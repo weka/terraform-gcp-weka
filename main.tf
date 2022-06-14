@@ -220,6 +220,11 @@ resource "google_compute_instance_group_manager" "igm" {
 
   target_pools       = [google_compute_target_pool.target_pool.id]
   base_instance_name = "${var.prefix}-compute"
+
+  auto_healing_policies {
+    health_check      = google_compute_health_check.autohealing.id
+    initial_delay_sec = 0
+  }
 }
 
 resource "google_compute_autoscaler" "auto-scaler" {
@@ -230,6 +235,19 @@ resource "google_compute_autoscaler" "auto-scaler" {
   autoscaling_policy {
     max_replicas = 24
     min_replicas = var.cluster_size
+  }
+}
+
+resource "google_compute_health_check" "autohealing" {
+  name                = "autohealing-health-check"
+  check_interval_sec  = 5
+  timeout_sec         = 5
+  healthy_threshold   = 2
+  unhealthy_threshold = 10 # 50 seconds
+
+  http_health_check {
+    request_path = "/api/v2/healthcheck/"
+    port         = "14000"
   }
 }
 
