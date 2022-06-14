@@ -3,16 +3,14 @@ resource "google_project_service" "workflows" {
   disable_on_destroy = false
 }
 
-resource "google_service_account" "workflows_service_account" {
-  account_id   = "workflows-sa"
-  display_name = "Workflows Service Account"
+data "google_compute_default_service_account" "default" {
 }
 
 resource "google_workflows_workflow" "workflows" {
   name            = "${var.prefix}-workflow-fetch"
   region          = var.region
   description     = "Fetch workflow"
-  service_account = google_service_account.workflows_service_account.id
+  service_account = data.google_compute_default_service_account.default.id
   source_contents = <<-EOF
   - fetch:
       call: http.post
