@@ -10,19 +10,20 @@ resource "google_secret_manager_secret" "secret_weka_password" {
   depends_on = [google_project_service.secret_manager]
 }
 
-resource "google_secret_manager_secret_version" "secret-key" {
+resource "google_secret_manager_secret_version" "password_secret_key" {
   secret      = google_secret_manager_secret.secret_weka_password.id
   secret_data = random_password.password.result
 }
 
-resource "null_resource" "get_secret_from_secret_manager" {
-  provisioner "local-exec" {
-    command = <<-EOT
-            secret_name=$(echo "${google_secret_manager_secret.secret_weka_password.id}" |awk -F"/" '{print $4}' )
-            gcloud secrets versions access latest --secret=$secret_name
-      EOT
-    interpreter = ["bash", "-ce"]
+resource "google_secret_manager_secret" "secret_weka_username" {
+  secret_id = "weka_username"
+  replication {
+    automatic = true
   }
+  depends_on = [google_project_service.secret_manager]
+}
 
-  depends_on = [google_secret_manager_secret.secret_weka_password,google_secret_manager_secret_version.secret-key ]
+resource "google_secret_manager_secret_version" "user_secret_key" {
+  secret      = google_secret_manager_secret.secret_weka_username.id
+  secret_data = var.weka_username
 }
