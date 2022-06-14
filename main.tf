@@ -343,10 +343,8 @@ resource "null_resource" "generate_cloud_functions_zips" {
       mkdir -p cloud-functions-zip
 
       cd cloud-functions/join
-      cp join.py main.py
-      zip -r join.zip main.py requirements.txt
+      zip -r join.zip join.go go.mod
       mv join.zip ../../cloud-functions-zip/
-      rm main.py
 
       cd ../fetch
       zip -r fetch.zip fetch.go go.mod
@@ -378,13 +376,13 @@ resource "google_storage_bucket_object" "join_zip" {
 resource "google_cloudfunctions_function" "join_function" {
   name        = "join"
   description = "join new instance"
-  runtime     = "python39"
+  runtime     = "go116"
 
   available_memory_mb   = 128
   source_archive_bucket = google_storage_bucket.cloud_functions.name
   source_archive_object = google_storage_bucket_object.join_zip.name
   trigger_http          = true
-  entry_point           = "join"
+  entry_point           = "Join"
 }
 
 
