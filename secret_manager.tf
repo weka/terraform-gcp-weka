@@ -3,7 +3,7 @@ resource "google_project_service" "secret_manager" {
 }
 
 resource "google_secret_manager_secret" "secret_weka_password" {
-  secret_id = "${var.prefix}_password"
+  secret_id = "weka_password"
   replication {
     automatic = true
   }
@@ -16,7 +16,7 @@ resource "google_secret_manager_secret_version" "password_secret_key" {
 }
 
 resource "google_secret_manager_secret" "secret_weka_username" {
-  secret_id = "${var.prefix}_username"
+  secret_id = "weka_username"
   replication {
     automatic = true
   }
