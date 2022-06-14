@@ -207,7 +207,7 @@ func Fetch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("Writing scale result")
+	fmt.Println("Writing fetch result")
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(GetFetchDataParams(d.Project, d.Zone, d.InstanceGroup, d.ClusterName))
 }
