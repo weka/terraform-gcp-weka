@@ -396,6 +396,23 @@ resource "google_cloudfunctions_function_iam_member" "join_invoker" {
   member = "allUsers"
 }
 
+
+resource "google_secret_manager_secret_iam_member" "member-sa-username-secret" {
+  project = google_secret_manager_secret.secret_weka_username.project
+  secret_id = google_secret_manager_secret.secret_weka_username.id
+  role = "roles/secretmanager.secretAccessor"
+  member = "serviceAccount:${var.project}@appspot.gserviceaccount.com"
+}
+
+
+resource "google_secret_manager_secret_iam_member" "member-sa-password-secret" {
+  project = google_secret_manager_secret.secret_weka_password.project
+  secret_id = google_secret_manager_secret.secret_weka_password.id
+  role = "roles/secretmanager.secretAccessor"
+  member = "serviceAccount:${var.project}@appspot.gserviceaccount.com"
+}
+
+
 # ======================== fetch ============================
 
 resource "google_storage_bucket_object" "fetch_zip" {
