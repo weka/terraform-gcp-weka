@@ -68,7 +68,7 @@ resource "google_compute_firewall" "sg_private" {
   source_tags = ["all"]
 }
 
-# ======================== autoscaler ============================
+# ======================== instances ============================
 data "google_compute_image" "centos_7" {
   family  = "centos-7"
   project = "centos-cloud"
@@ -205,85 +205,32 @@ resource "google_compute_instance_template" "join-template" {
  EOT
 }
 
+resource "google_compute_instance_from_template" "instances" {
+  count = var.cluster_size
+  name = "weka-${count.index}"
+  zone = var.zone
+  source_instance_template = google_compute_instance_template.backends-template.id
+}
+
+# ======================== instance-group ============================
 resource "google_compute_target_pool" "target_pool" {
   name = "${var.prefix}-target-pool"
 }
 
-resource "google_compute_instance_group_manager" "igm" {
-  name = "${var.prefix}-igm"
+resource "google_compute_instance_group" "instance_group" {
+  name = "${var.prefix}-instance-group"
   zone = var.zone
 
-  version {
-    instance_template = google_compute_instance_template.backends-template.id
-    name              = "primary"
-  }
-
-  target_pools       = [google_compute_target_pool.target_pool.id]
-  base_instance_name = "${var.prefix}-compute"
-
-  auto_healing_policies {
-    health_check      = google_compute_health_check.autohealing.id
-    initial_delay_sec = 0
-  }
-}
-
-resource "google_compute_autoscaler" "auto-scaler" {
-  name   = "${var.prefix}-autoscaler"
-  zone   = var.zone
-  target = google_compute_instance_group_manager.igm.id
-
-  autoscaling_policy {
-    max_replicas = 24
-    min_replicas = var.cluster_size
-  }
-}
-
-resource "google_compute_health_check" "autohealing" {
-  name                = "autohealing-health-check"
-  check_interval_sec  = 5
-  timeout_sec         = 5
-  healthy_threshold   = 2
-  unhealthy_threshold = 10 # 50 seconds
-
-  http_health_check {
-    request_path = "/api/v2/healthcheck/"
-    port         = "14000"
-  }
+  instances = [for instance in google_compute_instance_from_template.instances: instance.id]
 }
 
 # ======================== install-weka ============================
-resource "null_resource" "wait_for_compute" {
-  provisioner "local-exec" {
-    command = <<-EOT
-      compute=$(gcloud compute instance-groups list-instances weka-igm --zone europe-west1-b 2>&1 | grep RUNNING | wc -l)
-      while [ $compute != ${var.cluster_size} ]
-      do
-        echo "waiting for computes to be up ($compute/${var.cluster_size})..."
-        sleep 10s
-        compute=$(gcloud compute instance-groups list-instances weka-igm --zone europe-west1-b 2>&1 | grep RUNNING | wc -l)
-      done
-    EOT
-    interpreter = ["bash", "-ce"]
-  }
-  depends_on = [google_compute_autoscaler.auto-scaler]
-}
-
-data "google_compute_instance_group" "node_instance_groups" {
-  self_link = google_compute_instance_group_manager.igm.instance_group
-  depends_on = [google_compute_autoscaler.auto-scaler, null_resource.wait_for_compute]
-}
-
-data "google_compute_instance" "compute" {
-  count     = var.cluster_size
-  self_link = tolist(data.google_compute_instance_group.node_instance_groups.instances)[count.index]
-  depends_on = [google_compute_autoscaler.auto-scaler, null_resource.wait_for_compute]
-}
 
 locals {
   backends_ips = format("(%s)", join(" ", flatten([
   for i in range(var.cluster_size) : [
   for j in range(length(google_compute_network.vpc_network)) : [
-    data.google_compute_instance.compute[i].network_interface[j].network_ip
+    google_compute_instance_from_template.instances[i].network_interface[j].network_ip
   ]
   ]
   ])))
@@ -292,7 +239,7 @@ locals {
 
 resource "null_resource" "install_weka" {
   connection {
-    host        = data.google_compute_instance.compute[0].network_interface[0].access_config[0].nat_ip
+    host        = google_compute_instance_from_template.instances[0].network_interface[0].access_config[0].nat_ip
     type        = "ssh"
     user        = var.username
     timeout     = "500s"
@@ -321,18 +268,8 @@ resource "null_resource" "install_weka" {
   }
 
   depends_on = [
-    data.google_compute_instance.compute, google_compute_network_peering.peering, google_compute_firewall.sg_private
+    google_compute_instance_from_template.instances, google_compute_network_peering.peering, google_compute_firewall.sg_private
   ]
-}
-
-resource "null_resource" "replace-template" {
-  provisioner "local-exec" {
-    command = <<-EOT
-            gcloud compute instance-groups managed set-instance-template ${google_compute_instance_group_manager.igm.name} --template=${google_compute_instance_template.join-template.name} --zone ${var.zone}
-    EOT
-    interpreter = ["bash", "-ce"]
-  }
-  depends_on = [null_resource.install_weka, google_cloudfunctions_function.join_function]
 }
 
 # ======================== cloud function ============================
@@ -435,7 +372,7 @@ resource "google_cloudfunctions_function" "fetch_function" {
   environment_variables = {
     project: var.project
     zone: var.zone
-    instance_group: google_compute_instance_group_manager.igm.name
+    instance_group: google_compute_instance_group.instance_group.name
     cluster_name: var.cluster_name
   }
 }
@@ -513,5 +450,5 @@ resource "google_vpc_access_connector" "connector" {
 
 
 output "remote-exec-machine" {
-  value = data.google_compute_instance.compute[0].network_interface[0].access_config[0].nat_ip
+  value = google_compute_instance_from_template.instances[0].network_interface[0].access_config[0].nat_ip
 }
