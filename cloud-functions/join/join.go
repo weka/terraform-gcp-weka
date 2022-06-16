@@ -13,6 +13,7 @@ import (
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 	"math/rand"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
@@ -181,17 +182,11 @@ func GetJoinParams(project, zone, clusterName string) string {
 }
 
 func Join(w http.ResponseWriter, r *http.Request) {
-	var d struct {
-		Project     string `json:"project"`
-		Zone        string `json:"zone"`
-		ClusterName string `json:"cluster_name"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
-		fmt.Fprint(w, "Failed decoding request body")
-		return
-	}
+	project := os.Getenv("PROJECT")
+	zone := os.Getenv("ZONE")
+	clusterName := os.Getenv("CLUSTER_NAME")
 
 	fmt.Println("Getting join params")
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(GetJoinParams(d.Project, d.Zone, d.ClusterName))
+	json.NewEncoder(w).Encode(GetJoinParams(project, zone, clusterName))
 }
