@@ -96,3 +96,10 @@ variable "connector" {
   default     = "10.8.0.0/28"
 }
 
+
+variable "firestore_count" {
+  type        = number
+  description = ""
+  default     = 0
+}
+

@@ -1,7 +1,14 @@
 resource "google_project_service" "workflows" {
   service            = "workflows.googleapis.com"
-  disable_on_destroy = false
+  disable_on_destroy = true
+  depends_on = [google_project_service.workflows_api]
 }
+resource "google_project_service" "workflows_api" {
+  service = "workflowexecutions.googleapis.com"
+  disable_on_destroy = true
+  disable_dependent_services=true
+}
+
 
 data "google_compute_default_service_account" "default" {
 }

@@ -411,7 +411,7 @@ resource "google_cloudfunctions_function" "scale_function" {
   ingress_settings      = "ALLOW_ALL"
   vpc_connector_egress_settings = "PRIVATE_RANGES_ONLY"
 
-
+  depends_on = [google_vpc_access_connector.connector]
 }
 
 # IAM entry for all users to invoke the function
@@ -438,7 +438,7 @@ resource "null_resource" "write_weka_password_to_local_file" {
 resource "google_project_service" "vpc-access-api" {
   project = var.project
   service = "vpcaccess.googleapis.com"
-  disable_on_destroy = false
+  disable_on_destroy = true
 }
 
 
@@ -446,6 +446,7 @@ resource "google_vpc_access_connector" "connector" {
   name          = "${var.prefix}-vpc-connector"
   ip_cidr_range = var.connector
   network       = google_compute_network.vpc_network[0].name
+  depends_on = [google_project_service.vpc-access-api, google_compute_network.vpc_network]
 }
 
 
