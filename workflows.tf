@@ -1,12 +1,11 @@
 resource "google_project_service" "workflows" {
   service            = "workflows.googleapis.com"
-  disable_on_destroy = true
-  depends_on = [google_project_service.workflows_api]
+  disable_on_destroy = false
 }
 resource "google_project_service" "workflows_api" {
   service = "workflowexecutions.googleapis.com"
-  disable_on_destroy = true
-  disable_dependent_services=true
+  disable_on_destroy = false
+  disable_dependent_services=false
 }
 
 

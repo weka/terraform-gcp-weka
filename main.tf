@@ -286,7 +286,7 @@ resource "null_resource" "write_weka_password_to_local_file" {
 resource "google_project_service" "vpc-access-api" {
   project = var.project
   service = "vpcaccess.googleapis.com"
-  disable_on_destroy = true
+  disable_on_destroy = false
 }
 
 

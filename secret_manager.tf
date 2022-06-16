@@ -1,5 +1,6 @@
 resource "google_project_service" "secret_manager" {
   service  = "secretmanager.googleapis.com"
+  disable_on_destroy = false
 }
 
 resource "google_secret_manager_secret" "secret_weka_password" {
