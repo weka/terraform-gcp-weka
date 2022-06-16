@@ -199,7 +199,7 @@ resource "google_compute_instance_template" "join-template" {
   }
 
   metadata_startup_script = <<-EOT
-    curl -X POST https://${var.region}-${var.project}.cloudfunctions.net/join -H "Content-Type:application/json"  -d '{"project": "${var.project}", "zone": "${var.zone}","username": "${var.weka_username}", "password": "${random_password.password.result}", "tag": "${var.prefix}-backends"}' > /tmp/join.sh
+    curl -X POST https://${var.region}-${var.project}.cloudfunctions.net/join -H "Content-Type:application/json" > /tmp/join.sh
     chmod +x /tmp/join.sh
     /tmp/join.sh
  EOT
@@ -320,6 +320,11 @@ resource "google_cloudfunctions_function" "join_function" {
   source_archive_object = google_storage_bucket_object.join_zip.name
   trigger_http          = true
   entry_point           = "Join"
+  environment_variables = {
+    PROJECT: var.project
+    ZONE: var.zone
+    CLUSTER_NAME: var.cluster_name
+  }
 }
 
 
@@ -370,10 +375,10 @@ resource "google_cloudfunctions_function" "fetch_function" {
   trigger_http          = true
   entry_point           = "Fetch"
   environment_variables = {
-    project: var.project
-    zone: var.zone
-    instance_group: google_compute_instance_group.instance_group.name
-    cluster_name: var.cluster_name
+    PROJECT: var.project
+    ZONE: var.zone
+    INSTANCE_GROUP: google_compute_instance_group.instance_group.name
+    CLUSTER_NAME: var.cluster_name
   }
 }
 
