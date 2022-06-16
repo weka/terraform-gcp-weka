@@ -17,6 +17,10 @@ resource "null_resource" "generate_cloud_functions_zips" {
       zip -r scale.zip connectors lib protocol scale.go  go.mod
       mv scale.zip ../../cloud-functions-zip/
 
+      cd ../scale_up
+      zip -r scale_up.zip scale_up.go go.mod
+      mv scale_up.zip ../../cloud-functions-zip/
+
     EOT
     interpreter = ["bash", "-ce"]
   }
@@ -150,6 +154,46 @@ resource "google_cloudfunctions_function_iam_member" "scale_invoker" {
   project        = google_cloudfunctions_function.scale_function.project
   region         = google_cloudfunctions_function.scale_function.region
   cloud_function = google_cloudfunctions_function.scale_function.name
+
+  role   = "roles/cloudfunctions.invoker"
+  member = "allUsers"
+}
+
+
+# ======================== scale_up ============================
+
+resource "google_storage_bucket_object" "scale_up_zip" {
+  name   = "scale_up.zip"
+  bucket = google_storage_bucket.cloud_functions.name
+  source = "cloud-functions-zip/scale_up.zip"
+  depends_on = [null_resource.generate_cloud_functions_zips]
+}
+
+resource "google_cloudfunctions_function" "scale_up_function" {
+  name        = "scale_up"
+  description = "scale cluster up"
+  runtime     = "go116"
+
+  available_memory_mb   = 128
+  source_archive_bucket = google_storage_bucket.cloud_functions.name
+  source_archive_object = google_storage_bucket_object.scale_up_zip.name
+  trigger_http          = true
+  entry_point           = "ScaleUp"
+  environment_variables = {
+    PROJECT: var.project
+    ZONE: var.zone
+    INSTANCE_GROUP: google_compute_instance_group.instance_group.name
+    CLUSTER_NAME: var.cluster_name
+    BACKEND_TEMPLATE: google_compute_instance_template.backends-template.id
+    JOIN_TEMPLATE: google_compute_instance_template.join-template.id
+  }
+}
+
+# IAM entry for all users to invoke the function
+resource "google_cloudfunctions_function_iam_member" "scale_up_invoker" {
+  project        = google_cloudfunctions_function.scale_up_function.project
+  region         = google_cloudfunctions_function.scale_up_function.region
+  cloud_function = google_cloudfunctions_function.scale_up_function.name
 
   role   = "roles/cloudfunctions.invoker"
   member = "allUsers"
