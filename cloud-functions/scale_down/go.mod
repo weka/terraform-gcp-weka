@@ -1,4 +1,4 @@
-module github.com/weka/gcp-tf/cloud-functions/scale
+module github.com/weka/gcp-tf/cloud-functions/scale_down
 
 go 1.16
 

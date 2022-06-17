@@ -8,7 +8,11 @@ import (
 )
 
 func Test_join(t *testing.T) {
-	b, err := json.Marshal(GetJoinParams("wekaio-rnd", "europe-west1-b", "poc"))
+	bashScript, err := GetJoinParams("wekaio-rnd", "europe-west1-b", "poc")
+	if err != nil {
+		panic(err)
+	}
+	b, err := json.Marshal(bashScript)
 	if err != nil {
 		fmt.Println(err)
 		return
