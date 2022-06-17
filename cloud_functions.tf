@@ -13,9 +13,9 @@ resource "null_resource" "generate_cloud_functions_zips" {
       zip -r fetch.zip fetch.go go.mod
       mv fetch.zip ../../cloud-functions-zip/
 
-      cd ../scale
-      zip -r scale.zip connectors lib protocol scale.go  go.mod
-      mv scale.zip ../../cloud-functions-zip/
+      cd ../scale_down
+      zip -r scale_down.zip connectors lib protocol scale_down.go  go.mod
+      mv scale_down.zip ../../cloud-functions-zip/
 
       cd ../scale_up
       zip -r scale_up.zip scale_up.go go.mod
@@ -54,6 +54,8 @@ resource "google_cloudfunctions_function" "join_function" {
     PROJECT: var.project
     ZONE: var.zone
     CLUSTER_NAME: var.cluster_name
+    GATEWAYS: local.gws_addresses
+    SUBNETS: format("(%s)", join(" ",var.subnets))
   }
 }
 
@@ -123,23 +125,23 @@ resource "google_cloudfunctions_function_iam_member" "fetch_invoker" {
   member = "allUsers"
 }
 
-# ======================== scale ============================
+# ======================== scale_down ============================
 
-resource "google_storage_bucket_object" "scale_zip" {
-  name   = "scale.zip"
+resource "google_storage_bucket_object" "scale_down_zip" {
+  name   = "scale_down.zip"
   bucket = google_storage_bucket.cloud_functions.name
-  source = "cloud-functions-zip/scale.zip"
+  source = "cloud-functions-zip/scale_down.zip"
   depends_on = [null_resource.generate_cloud_functions_zips]
 }
 
-resource "google_cloudfunctions_function" "scale_function" {
-  name        = "scale"
-  description = "scale cluster"
+resource "google_cloudfunctions_function" "scale_down_function" {
+  name        = "scale_down"
+  description = "scale cluster down"
   runtime     = "go116"
 
   available_memory_mb   = 128
   source_archive_bucket = google_storage_bucket.cloud_functions.name
-  source_archive_object = google_storage_bucket_object.scale_zip.name
+  source_archive_object = google_storage_bucket_object.scale_down_zip.name
   trigger_http          = true
   entry_point           = "Scale"
   vpc_connector         = google_vpc_access_connector.connector.name
@@ -151,9 +153,9 @@ resource "google_cloudfunctions_function" "scale_function" {
 
 # IAM entry for all users to invoke the function
 resource "google_cloudfunctions_function_iam_member" "scale_invoker" {
-  project        = google_cloudfunctions_function.scale_function.project
-  region         = google_cloudfunctions_function.scale_function.region
-  cloud_function = google_cloudfunctions_function.scale_function.name
+  project        = google_cloudfunctions_function.scale_down_function.project
+  region         = google_cloudfunctions_function.scale_down_function.region
+  cloud_function = google_cloudfunctions_function.scale_down_function.name
 
   role   = "roles/cloudfunctions.invoker"
   member = "allUsers"
@@ -173,6 +175,7 @@ resource "google_cloudfunctions_function" "scale_up_function" {
   name        = "scale_up"
   description = "scale cluster up"
   runtime     = "go116"
+  timeout     = 540
 
   available_memory_mb   = 128
   source_archive_bucket = google_storage_bucket.cloud_functions.name

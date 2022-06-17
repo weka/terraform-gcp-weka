@@ -22,16 +22,11 @@ resource "google_workflows_workflow" "workflows" {
       call: http.post
       args:
           url: ${google_cloudfunctions_function.fetch_function.https_trigger_url}
-          body:
-              project: ${var.project}
-              zone: ${var.zone}
-              instance_group: weka-igm
-              cluster_name: ${var.cluster_name}
       result: FetchResult
-  - scale:
+  - scale_down:
       call: http.post
       args:
-          url: ${google_cloudfunctions_function.scale_function.https_trigger_url}
+          url: ${google_cloudfunctions_function.scale_down_function.https_trigger_url}
           body: $${FetchResult.body}
       result: ScaleResult
   - returnOutput:

@@ -2,6 +2,7 @@ package fetch
 
 import (
 	compute "cloud.google.com/go/compute/apiv1"
+	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	"context"
 	"encoding/json"
 	"errors"
@@ -9,7 +10,9 @@ import (
 	"github.com/rs/zerolog/log"
 	"google.golang.org/api/iterator"
 	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
+	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -28,16 +31,42 @@ type HostGroupInfoResponse struct {
 	Version         int          `json:"version"`
 }
 
-func GetFetchDataParams(project, zone, instanceGroup, clusterName string) HostGroupInfoResponse {
+type ClusterCreds struct {
+	Username string
+	Password string
+}
 
-	//creds, err := getUsernameAndPassword(tableName)
-	//if err != nil {
-	//	return
-	//}
+func getUsernameAndPassword() (clusterCreds ClusterCreds, err error) {
+	ctx := context.Background()
+	client, err := secretmanager.NewClient(ctx)
+	if err != nil {
+		return
+	}
+	defer client.Close()
+
+	res, err := client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{Name: "projects/896245720241/secrets/weka_username/versions/1"})
+	if err != nil {
+		return
+	}
+	clusterCreds.Username = string(res.Payload.Data)
+	res, err = client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{Name: "projects/896245720241/secrets/weka_password/versions/1"})
+	if err != nil {
+		return
+	}
+	clusterCreds.Password = string(res.Payload.Data)
+	return
+}
+
+func GetFetchDataParams(project, zone, instanceGroup, clusterName string) (hostGroupInfoResponse HostGroupInfoResponse) {
+
+	creds, err := getUsernameAndPassword()
+	if err != nil {
+		return
+	}
 
 	return HostGroupInfoResponse{
-		Username:        "username-placeholder",
-		Password:        "password-placeholder",
+		Username:        creds.Username,
+		Password:        creds.Password,
 		DesiredCapacity: getCapacity(project, zone, instanceGroup),
 		Instances:       getHostGroupInfoInstances(getInstanceGroupInstances(project, zone, instanceGroup)),
 		BackendIps:      getBackendsIps(project, zone, clusterName),
@@ -61,16 +90,16 @@ func getHostGroupInfoInstances(instances []*computepb.Instance) (ret []HgInstanc
 func getCapacity(project, zone, instanceGroup string) int {
 	ctx := context.Background()
 
-	c, err := compute.NewInstanceGroupManagersRESTClient(ctx)
+	c, err := compute.NewInstanceGroupsRESTClient(ctx)
 	if err != nil {
 		log.Fatal().Err(err)
 	}
 	defer c.Close()
 
-	req := &computepb.GetInstanceGroupManagerRequest{
-		Project:              project,
-		Zone:                 zone,
-		InstanceGroupManager: instanceGroup,
+	req := &computepb.GetInstanceGroupRequest{
+		Project:       project,
+		Zone:          zone,
+		InstanceGroup: instanceGroup,
 	}
 
 	resp, err := c.Get(ctx, req)
@@ -78,7 +107,7 @@ func getCapacity(project, zone, instanceGroup string) int {
 		log.Fatal().Err(err)
 	}
 
-	return int(*resp.TargetSize)
+	return int(*resp.Size)
 }
 
 func getInstancesNames(project, zone, instanceGroup string) (instanceNames []string) {
@@ -196,18 +225,12 @@ func getBackendsIps(project, zone, clusterName string) (backendsIps []string) {
 }
 
 func Fetch(w http.ResponseWriter, r *http.Request) {
-	var d struct {
-		Project       string `json:"project"`
-		Zone          string `json:"zone"`
-		InstanceGroup string `json:"instance_group"`
-		ClusterName   string `json:"cluster_name"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
-		fmt.Fprint(w, "Failed decoding request body")
-		return
-	}
+	project := os.Getenv("PROJECT")
+	zone := os.Getenv("ZONE")
+	instanceGroup := os.Getenv("INSTANCE_GROUP")
+	clusterName := os.Getenv("CLUSTER_NAME")
 
 	fmt.Println("Writing fetch result")
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(GetFetchDataParams(d.Project, d.Zone, d.InstanceGroup, d.ClusterName))
+	json.NewEncoder(w).Encode(GetFetchDataParams(project, zone, instanceGroup, clusterName))
 }

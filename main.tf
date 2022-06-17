@@ -199,7 +199,7 @@ resource "google_compute_instance_template" "join-template" {
   }
 
   metadata_startup_script = <<-EOT
-    curl -X POST https://${var.region}-${var.project}.cloudfunctions.net/join -H "Content-Type:application/json" > /tmp/join.sh
+    curl https://${var.region}-${var.project}.cloudfunctions.net/join > /tmp/join.sh
     chmod +x /tmp/join.sh
     /tmp/join.sh
  EOT

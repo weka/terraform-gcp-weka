@@ -8,7 +8,7 @@ import (
 )
 
 func Test_fetch(t *testing.T) {
-	b, err := json.Marshal(GetFetchDataParams("wekaio-rnd", "europe-west1-b", "weka-igm", "poc"))
+	b, err := json.Marshal(GetFetchDataParams("wekaio-rnd", "europe-west1-b", "weka-instance-group", "poc"))
 	if err != nil {
 		fmt.Println(err)
 		return

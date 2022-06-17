@@ -3,8 +3,8 @@ package jrpc
 import (
 	"context"
 	"github.com/rs/zerolog/log"
-	strings2 "github.com/weka/gcp-tf/cloud-functions/scale/lib/strings"
-	"github.com/weka/gcp-tf/cloud-functions/scale/lib/weka"
+	strings2 "github.com/weka/gcp-tf/cloud-functions/scale_down/lib/strings"
+	"github.com/weka/gcp-tf/cloud-functions/scale_down/lib/weka"
 	"sync"
 )
 
