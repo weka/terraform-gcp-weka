@@ -21,6 +21,10 @@ resource "null_resource" "generate_cloud_functions_zips" {
       zip -r scale_up.zip scale_up.go go.mod
       mv scale_up.zip ../../cloud-functions-zip/
 
+      cd ../clusterize
+      zip -r clusterize.zip clusterize.go go.mod
+      mv clusterize.zip ../../cloud-functions-zip/
+
     EOT
     interpreter = ["bash", "-ce"]
   }
@@ -85,7 +89,6 @@ resource "google_secret_manager_secret_iam_member" "member-sa-password-secret" {
   role = "roles/secretmanager.secretAccessor"
   member = "serviceAccount:${var.project}@appspot.gserviceaccount.com"
 }
-
 
 # ======================== fetch ============================
 
@@ -186,8 +189,8 @@ resource "google_cloudfunctions_function" "scale_up_function" {
     PROJECT: var.project
     ZONE: var.zone
     INSTANCE_GROUP: google_compute_instance_group.instance_group.name
-    CLUSTER_NAME: var.cluster_name
     BACKEND_TEMPLATE: google_compute_instance_template.backends-template.id
+    CLUSTERIZE_TEMPLATE: google_compute_instance_template.clusterize-template.id
     JOIN_TEMPLATE: google_compute_instance_template.join-template.id
   }
 }
@@ -197,6 +200,47 @@ resource "google_cloudfunctions_function_iam_member" "scale_up_invoker" {
   project        = google_cloudfunctions_function.scale_up_function.project
   region         = google_cloudfunctions_function.scale_up_function.region
   cloud_function = google_cloudfunctions_function.scale_up_function.name
+
+  role   = "roles/cloudfunctions.invoker"
+  member = "allUsers"
+}
+
+# ======================== clusterize ============================
+
+resource "google_storage_bucket_object" "clusterize_zip" {
+  name   = "clusterize.zip"
+  bucket = google_storage_bucket.cloud_functions.name
+  source = "cloud-functions-zip/clusterize.zip"
+  depends_on = [null_resource.generate_cloud_functions_zips]
+}
+
+resource "google_cloudfunctions_function" "clusterize_function" {
+  name        = "clusterize"
+  description = "return clusterize scipt"
+  runtime     = "go116"
+  timeout     = 540
+
+  available_memory_mb   = 128
+  source_archive_bucket = google_storage_bucket.cloud_functions.name
+  source_archive_object = google_storage_bucket_object.clusterize_zip.name
+  trigger_http          = true
+  entry_point           = "Clusterize"
+  environment_variables = {
+    PROJECT: var.project
+    ZONE: var.zone
+    HOSTS_NUM: var.cluster_size
+    NICS_NUM: var.nics_number
+    GWS: local.gws_addresses
+    CLUSTER_NAME: var.cluster_name
+    NVMES_NUM: var.nvmes_number
+  }
+}
+
+# IAM entry for all users to invoke the function
+resource "google_cloudfunctions_function_iam_member" "clusterize_invoker" {
+  project        = google_cloudfunctions_function.clusterize_function.project
+  region         = google_cloudfunctions_function.clusterize_function.region
+  cloud_function = google_cloudfunctions_function.clusterize_function.name
 
   role   = "roles/cloudfunctions.invoker"
   member = "allUsers"
