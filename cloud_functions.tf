@@ -25,6 +25,14 @@ resource "null_resource" "generate_cloud_functions_zips" {
       zip -r clusterize.zip clusterize.go go.mod
       mv clusterize.zip ../../cloud-functions-zip/
 
+      cd ../terminate
+      zip -r terminate.zip lib protocol terminate.go go.mod
+      mv terminate.zip ../../cloud-functions-zip/
+
+      cd ../transient
+      zip -r transient.zip lib protocol transient.go go.mod
+      mv transient.zip ../../cloud-functions-zip/
+
     EOT
     interpreter = ["bash", "-ce"]
   }
@@ -241,6 +249,75 @@ resource "google_cloudfunctions_function_iam_member" "clusterize_invoker" {
   project        = google_cloudfunctions_function.clusterize_function.project
   region         = google_cloudfunctions_function.clusterize_function.region
   cloud_function = google_cloudfunctions_function.clusterize_function.name
+
+  role   = "roles/cloudfunctions.invoker"
+  member = "allUsers"
+}
+
+# ======================== terminate ============================
+
+resource "google_storage_bucket_object" "terminate_zip" {
+  name   = "terminate.zip"
+  bucket = google_storage_bucket.cloud_functions.name
+  source = "cloud-functions-zip/terminate.zip"
+  depends_on = [null_resource.generate_cloud_functions_zips]
+}
+
+resource "google_cloudfunctions_function" "terminate_function" {
+  name        = "terminate"
+  description = "terminate instances"
+  runtime     = "go116"
+  timeout     = 540
+
+  available_memory_mb   = 128
+  source_archive_bucket = google_storage_bucket.cloud_functions.name
+  source_archive_object = google_storage_bucket_object.terminate_zip.name
+  trigger_http          = true
+  entry_point           = "Terminate"
+  environment_variables = {
+    PROJECT: var.project
+    ZONE: var.zone
+    INSTANCE_GROUP: google_compute_instance_group.instance_group.name
+  }
+}
+
+# IAM entry for all users to invoke the function
+resource "google_cloudfunctions_function_iam_member" "terminate_invoker" {
+  project        = google_cloudfunctions_function.terminate_function.project
+  region         = google_cloudfunctions_function.terminate_function.region
+  cloud_function = google_cloudfunctions_function.terminate_function.name
+
+  role   = "roles/cloudfunctions.invoker"
+  member = "allUsers"
+}
+
+# ======================== transient ============================
+
+resource "google_storage_bucket_object" "transient_zip" {
+  name   = "transient.zip"
+  bucket = google_storage_bucket.cloud_functions.name
+  source = "cloud-functions-zip/transient.zip"
+  depends_on = [null_resource.generate_cloud_functions_zips]
+}
+
+resource "google_cloudfunctions_function" "transient_function" {
+  name        = "transient"
+  description = "transient errors"
+  runtime     = "go116"
+  timeout     = 540
+
+  available_memory_mb   = 128
+  source_archive_bucket = google_storage_bucket.cloud_functions.name
+  source_archive_object = google_storage_bucket_object.transient_zip.name
+  trigger_http          = true
+  entry_point           = "Transient"
+}
+
+# IAM entry for all users to invoke the function
+resource "google_cloudfunctions_function_iam_member" "transient_invoker" {
+  project        = google_cloudfunctions_function.transient_function.project
+  region         = google_cloudfunctions_function.transient_function.region
+  cloud_function = google_cloudfunctions_function.transient_function.name
 
   role   = "roles/cloudfunctions.invoker"
   member = "allUsers"

@@ -29,8 +29,20 @@ resource "google_workflows_workflow" "workflows" {
           url: ${google_cloudfunctions_function.scale_down_function.https_trigger_url}
           body: $${FetchResult.body}
       result: ScaleResult
+  - terminate:
+      call: http.post
+      args:
+          url: ${google_cloudfunctions_function.terminate_function.https_trigger_url}
+          body: $${ScaleResult.body}
+      result: TerminateResult
+  - transient:
+      call: http.post
+      args:
+          url: ${google_cloudfunctions_function.transient_function.https_trigger_url}
+          body: $${TerminateResult.body}
+      result: TransientResult
   - returnOutput:
-      return: $${ScaleResult}
+      return: $${TransientResult}
 EOF
 
   depends_on = [google_project_service.workflows]
