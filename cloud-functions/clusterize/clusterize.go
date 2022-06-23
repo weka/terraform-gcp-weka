@@ -89,7 +89,7 @@ func generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, cluster
 	#!/bin/bash
 		
 	set -ex
-
+	sleep 600
 	IPS=%s
 	HOSTS_NUM=%s
 	NICS_NUM=%s

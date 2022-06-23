@@ -33,6 +33,10 @@ resource "null_resource" "generate_cloud_functions_zips" {
       zip -r transient.zip lib protocol transient.go go.mod
       mv transient.zip ../../cloud-functions-zip/
 
+      cd ../bunch
+      zip -r bunch.zip bunch.go go.mod
+      mv bunch.zip ../../cloud-functions-zip/
+
     EOT
     interpreter = ["bash", "-ce"]
   }
@@ -322,3 +326,42 @@ resource "google_cloudfunctions_function_iam_member" "transient_invoker" {
   role   = "roles/cloudfunctions.invoker"
   member = "allUsers"
 }
+
+# ======================== bunch ============================
+
+resource "google_storage_bucket_object" "bunch_zip" {
+  name   = "bunch.zip"
+  bucket = google_storage_bucket.cloud_functions.name
+  source = "cloud-functions-zip/bunch.zip"
+  depends_on = [null_resource.generate_cloud_functions_zips]
+}
+
+resource "google_cloudfunctions_function" "bunch_function" {
+  name        = "bunch"
+  description = "bunch instances"
+  runtime     = "go116"
+  timeout     = 540
+
+  available_memory_mb   = 128
+  source_archive_bucket = google_storage_bucket.cloud_functions.name
+  source_archive_object = google_storage_bucket_object.bunch_zip.name
+  trigger_http          = true
+  entry_point           = "Bunch"
+  environment_variables = {
+    PROJECT: var.project
+    ZONE: var.zone
+    CLUSTER_NAME: var.cluster_name
+    INSTANCE_GROUP: google_compute_instance_group.instance_group.name
+  }
+}
+
+# IAM entry for all users to invoke the function
+resource "google_cloudfunctions_function_iam_member" "bunch_invoker" {
+  project        = google_cloudfunctions_function.bunch_function.project
+  region         = google_cloudfunctions_function.bunch_function.region
+  cloud_function = google_cloudfunctions_function.bunch_function.name
+
+  role   = "roles/cloudfunctions.invoker"
+  member = "allUsers"
+}
+
