@@ -83,53 +83,11 @@ func createInstance(project, zone, template, instanceGroup, instanceName string)
 		SourceInstanceTemplate: &template,
 	}
 
-	op, err := instancesClient.Insert(ctx, req)
+	_, err = instancesClient.Insert(ctx, req)
 	if err != nil {
 		log.Error().Msgf("%s", err)
 		return
 	}
-
-	if err = op.Wait(ctx); err != nil {
-		log.Error().Msgf("%s", err)
-		return
-	}
-	log.Info().Msgf("Instance creation completed successfully")
-
-	instance, err := instancesClient.Get(ctx, &computepb.GetInstanceRequest{
-		Instance: instanceName,
-		Project:  project,
-		Zone:     zone,
-	})
-	if err != nil {
-		log.Error().Msgf("%s", err)
-		return
-	}
-
-	instancesGroupClient, err := compute.NewInstanceGroupsRESTClient(ctx)
-	if err != nil {
-		log.Error().Msgf("%s", err)
-		return
-	}
-	defer instancesGroupClient.Close()
-	op, err = instancesGroupClient.AddInstances(ctx, &computepb.AddInstancesInstanceGroupRequest{
-		InstanceGroup: instanceGroup,
-		InstanceGroupsAddInstancesRequestResource: &computepb.InstanceGroupsAddInstancesRequest{
-			Instances: []*computepb.InstanceReference{&computepb.InstanceReference{Instance: instance.SelfLink}},
-		},
-		Project: project,
-		Zone:    zone,
-	})
-
-	if err != nil {
-		log.Error().Msgf("%s", err)
-		return
-	}
-
-	if err = op.Wait(ctx); err != nil {
-		log.Error().Msgf("%s", err)
-		return
-	}
-	log.Info().Msgf("Instance was added to instance group successfully")
 
 	return
 }
@@ -147,10 +105,11 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 	clusterInfo := getClusterSizeInfo(project)
 	initialSize := int32(clusterInfo["initial_size"].(int64))
 	desiredSize := int32(clusterInfo["desired_size"].(int64))
+	counter := int32(clusterInfo["counter"].(int64))
 	log.Info().Msgf("Desired size is: %d", desiredSize)
 
-	instanceName := fmt.Sprintf("weka-%d", instanceGroupSize)
 	if clusterInfo["clusterized"].(bool) {
+		instanceName := fmt.Sprintf("weka-%d", instanceGroupSize)
 		if desiredSize > instanceGroupSize {
 			log.Info().Msg("weka is clusterized joining new instance")
 			if err := createInstance(project, zone, joinTemplate, instanceGroup, instanceName); err != nil {
@@ -160,20 +119,24 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 			}
 			return
 		}
-	} else if initialSize == instanceGroupSize+1 {
+	} else {
+		i := counter
+		for ; i < initialSize-1; i++ {
+			instanceName := fmt.Sprintf("weka-%d", i)
+			log.Info().Msg("weka is not clusterized, creating new instance")
+			if err := createInstance(project, zone, backendTemplate, instanceGroup, instanceName); err != nil {
+				fmt.Fprintf(w, "Instance %s creation failed %s", instanceName, err)
+			} else {
+				fmt.Fprintf(w, "Backend instance %s was created successfully", instanceName)
+
+			}
+		}
+		instanceName := fmt.Sprintf("weka-%d", i)
 		log.Info().Msg("weka is not clusterized, creating new instance and clusterizing")
 		if err := createInstance(project, zone, clusterizeTemplate, instanceGroup, instanceName); err != nil {
 			fmt.Fprintf(w, "Instance %s creation failed %s", instanceName, err)
 		} else {
 			fmt.Fprintf(w, "Backend instance %s was created successfully, clusterization has started", instanceName)
-		}
-		return
-	} else {
-		log.Info().Msg("weka is not clusterized, creating new instance")
-		if err := createInstance(project, zone, backendTemplate, instanceGroup, instanceName); err != nil {
-			fmt.Fprintf(w, "Instance %s creation failed %s", instanceName, err)
-		} else {
-			fmt.Fprintf(w, "Backend instance %s was created successfully", instanceName)
 		}
 		return
 	}
