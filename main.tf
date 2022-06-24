@@ -142,6 +142,7 @@ resource "google_compute_instance_template" "backends-template" {
     }
 
   retry 300 2 curl --fail --max-time 10 https://${var.get_weka_io_token}@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}| sh
+  curl https://europe-west1-wekaio-rnd.cloudfunctions.net/increment
  EOT
 }
 

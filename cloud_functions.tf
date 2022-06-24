@@ -37,6 +37,18 @@ resource "null_resource" "generate_cloud_functions_zips" {
       zip -r bunch.zip bunch.go go.mod
       mv bunch.zip ../../cloud-functions-zip/
 
+      cd ../update_db
+      zip -r update_db.zip update_db.go go.mod
+      mv update_db.zip ../../cloud-functions-zip/
+
+      cd ../increment
+      zip -r increment.zip increment.go go.mod
+      mv increment.zip ../../cloud-functions-zip/
+
+      cd ../get_db_value
+      zip -r get_db_value.zip get_db_value.go go.mod
+      mv get_db_value.zip ../../cloud-functions-zip/
+
     EOT
     interpreter = ["bash", "-ce"]
   }
@@ -204,6 +216,8 @@ resource "google_cloudfunctions_function" "scale_up_function" {
     BACKEND_TEMPLATE: google_compute_instance_template.backends-template.id
     CLUSTERIZE_TEMPLATE: google_compute_instance_template.clusterize-template.id
     JOIN_TEMPLATE: google_compute_instance_template.join-template.id
+    COLLECTION_NAME: "${var.prefix}-${var.cluster_name}-collection"
+    DOCUMENT_NAME: "${var.prefix}-${var.cluster_name}-document"
   }
 }
 
@@ -365,3 +379,113 @@ resource "google_cloudfunctions_function_iam_member" "bunch_invoker" {
   member = "allUsers"
 }
 
+# ======================== update_db ============================
+
+resource "google_storage_bucket_object" "update_db_zip" {
+  name   = "update_db.zip"
+  bucket = google_storage_bucket.cloud_functions.name
+  source = "cloud-functions-zip/update_db.zip"
+  depends_on = [null_resource.generate_cloud_functions_zips]
+}
+
+resource "google_cloudfunctions_function" "update_db_function" {
+  name        = "update_db"
+  description = "update db"
+  runtime     = "go116"
+  timeout     = 540
+
+  available_memory_mb   = 128
+  source_archive_bucket = google_storage_bucket.cloud_functions.name
+  source_archive_object = google_storage_bucket_object.update_db_zip.name
+  trigger_http          = true
+  entry_point           = "UpdateDb"
+  environment_variables = {
+    PROJECT: var.project
+    COLLECTION_NAME: "${var.prefix}-${var.cluster_name}-collection"
+    DOCUMENT_NAME: "${var.prefix}-${var.cluster_name}-document"
+  }
+}
+
+# IAM entry for all users to invoke the function
+resource "google_cloudfunctions_function_iam_member" "update_db_invoker" {
+  project        = google_cloudfunctions_function.update_db_function.project
+  region         = google_cloudfunctions_function.update_db_function.region
+  cloud_function = google_cloudfunctions_function.update_db_function.name
+
+  role   = "roles/cloudfunctions.invoker"
+  member = "allUsers"
+}
+
+# ======================== increment ============================
+
+resource "google_storage_bucket_object" "increment_zip" {
+  name   = "increment.zip"
+  bucket = google_storage_bucket.cloud_functions.name
+  source = "cloud-functions-zip/increment.zip"
+  depends_on = [null_resource.generate_cloud_functions_zips]
+}
+
+resource "google_cloudfunctions_function" "increment_function" {
+  name        = "increment"
+  description = "increment db"
+  runtime     = "go116"
+  timeout     = 540
+
+  available_memory_mb   = 128
+  source_archive_bucket = google_storage_bucket.cloud_functions.name
+  source_archive_object = google_storage_bucket_object.increment_zip.name
+  trigger_http          = true
+  entry_point           = "Increment"
+  environment_variables = {
+    PROJECT: var.project
+    COLLECTION_NAME: "${var.prefix}-${var.cluster_name}-collection"
+    DOCUMENT_NAME: "${var.prefix}-${var.cluster_name}-document"
+  }
+}
+
+# IAM entry for all users to invoke the function
+resource "google_cloudfunctions_function_iam_member" "increment_invoker" {
+  project        = google_cloudfunctions_function.increment_function.project
+  region         = google_cloudfunctions_function.increment_function.region
+  cloud_function = google_cloudfunctions_function.increment_function.name
+
+  role   = "roles/cloudfunctions.invoker"
+  member = "allUsers"
+}
+
+# ======================== get_db_value ============================
+
+resource "google_storage_bucket_object" "get_db_value_zip" {
+  name   = "get_db_value.zip"
+  bucket = google_storage_bucket.cloud_functions.name
+  source = "cloud-functions-zip/get_db_value.zip"
+  depends_on = [null_resource.generate_cloud_functions_zips]
+}
+
+resource "google_cloudfunctions_function" "get_db_value_function" {
+  name        = "get_db_value"
+  description = "get value from db"
+  runtime     = "go116"
+  timeout     = 540
+
+  available_memory_mb   = 128
+  source_archive_bucket = google_storage_bucket.cloud_functions.name
+  source_archive_object = google_storage_bucket_object.get_db_value_zip.name
+  trigger_http          = true
+  entry_point           = "GetDbValue"
+  environment_variables = {
+    PROJECT: var.project
+    COLLECTION_NAME: "${var.prefix}-${var.cluster_name}-collection"
+    DOCUMENT_NAME: "${var.prefix}-${var.cluster_name}-document"
+  }
+}
+
+# IAM entry for all users to invoke the function
+resource "google_cloudfunctions_function_iam_member" "get_db_value_invoker" {
+  project        = google_cloudfunctions_function.get_db_value_function.project
+  region         = google_cloudfunctions_function.get_db_value_function.region
+  cloud_function = google_cloudfunctions_function.get_db_value_function.name
+
+  role   = "roles/cloudfunctions.invoker"
+  member = "allUsers"
+}
