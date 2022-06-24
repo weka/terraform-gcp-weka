@@ -133,7 +133,11 @@ func GetJoinParams(project, zone, clusterName string) (bashScript string, err er
 	SUBNETS_NUM=${#SUBNETS[@]}
 	gws=""
 	for (( i=1; i<$SUBNETS_NUM; i++ )); do
-		ip=$(ifconfig eth$i | grep -m1 inet | awk '{ print $2}')
+		ip=$(ifconfig eth$i | grep "inet " | awk '{ print $2}')
+		while [ ! $ip ] ; do
+			sleep 1
+			ip=$(ifconfig eth$i | grep "inet " | awk '{ print $2}')
+		done
 		subnet=${SUBNETS[0]}
 		mask=$(echo ${subnet##*/})
 		gws="$gws --net eth$i/$ip/$mask/${GATEWAYS[$i]}"
@@ -173,6 +177,7 @@ func GetJoinParams(project, zone, clusterName string) (bashScript string, err er
 	done
 	sleep 60
 	weka cluster drive scan $host_id
+	curl https://europe-west1-wekaio-rnd.cloudfunctions.net/increment
 	`
 	var cores, frontend, drive int
 	if role == "backend" {

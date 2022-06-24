@@ -6,9 +6,9 @@ resource "google_project_service" "firestore" {
 
 resource "google_firestore_document" "firestore_doc" {
   project     = var.project
-  collection  = "${var.prefix}-collection"
-  document_id = "${var.prefix}-document"
-  fields      = "{\"counter\":{\"integerValue\":\"0\"}, \"initial_size\":{\"integerValue\":\"5\"}, \"desired_size\":{\"integerValue\":\"5\"}, \"clusterized\":{\"booleanValue\":\"false\"}}"
+  collection  = "${var.prefix}-${var.cluster_name}-collection"
+  document_id = "${var.prefix}-${var.cluster_name}-document"
+  fields      = "{\"counter\":{\"integerValue\":\"0\"}, \"initial_size\":{\"integerValue\":\"${var.cluster_size}\"}, \"desired_size\":{\"integerValue\":\"${var.cluster_size}\"}}"
 
   depends_on = [google_project_service.firestore]
 }
