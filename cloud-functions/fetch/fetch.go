@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	firebase "firebase.google.com/go"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/api/iterator"
@@ -57,7 +58,7 @@ func getUsernameAndPassword() (clusterCreds ClusterCreds, err error) {
 	return
 }
 
-func GetFetchDataParams(project, zone, instanceGroup, clusterName string) (hostGroupInfoResponse HostGroupInfoResponse) {
+func GetFetchDataParams(project, zone, instanceGroup, clusterName, collectionName, documentName string) (hostGroupInfoResponse HostGroupInfoResponse) {
 
 	creds, err := getUsernameAndPassword()
 	if err != nil {
@@ -67,7 +68,7 @@ func GetFetchDataParams(project, zone, instanceGroup, clusterName string) (hostG
 	return HostGroupInfoResponse{
 		Username:        creds.Username,
 		Password:        creds.Password,
-		DesiredCapacity: getCapacity(project, zone, instanceGroup),
+		DesiredCapacity: getCapacity(project, collectionName, documentName),
 		Instances:       getHostGroupInfoInstances(getInstanceGroupInstances(project, zone, instanceGroup)),
 		BackendIps:      getBackendsIps(project, zone, clusterName),
 		Role:            "backend",
@@ -87,27 +88,30 @@ func getHostGroupInfoInstances(instances []*computepb.Instance) (ret []HgInstanc
 	return
 }
 
-func getCapacity(project, zone, instanceGroup string) int {
+func getCapacity(project, collectionName, documentName string) int {
+	log.Debug().Msg("Retrieving value from DB")
+
 	ctx := context.Background()
-
-	c, err := compute.NewInstanceGroupsRESTClient(ctx)
+	conf := &firebase.Config{ProjectID: project}
+	app, err := firebase.NewApp(ctx, conf)
 	if err != nil {
-		log.Fatal().Err(err)
-	}
-	defer c.Close()
-
-	req := &computepb.GetInstanceGroupRequest{
-		Project:       project,
-		Zone:          zone,
-		InstanceGroup: instanceGroup,
+		log.Error().Msgf("%s", err)
+		return -1
 	}
 
-	resp, err := c.Get(ctx, req)
+	client, err := app.Firestore(ctx)
 	if err != nil {
-		log.Fatal().Err(err)
+		log.Error().Msgf("%s", err)
+		return -1
 	}
-
-	return int(*resp.Size)
+	defer client.Close()
+	doc := client.Collection(collectionName).Doc(documentName)
+	res, err := doc.Get(ctx)
+	if err != nil {
+		log.Error().Msgf("%s", err)
+		return -1
+	}
+	return int(res.Data()["desired_size"].(int64))
 }
 
 func getInstancesNames(project, zone, instanceGroup string) (instanceNames []string) {
@@ -230,8 +234,10 @@ func Fetch(w http.ResponseWriter, r *http.Request) {
 	zone := os.Getenv("ZONE")
 	instanceGroup := os.Getenv("INSTANCE_GROUP")
 	clusterName := os.Getenv("CLUSTER_NAME")
+	collectionName := os.Getenv("COLLECTION_NAME")
+	documentName := os.Getenv("DOCUMENT_NAME")
 
 	fmt.Println("Writing fetch result")
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(GetFetchDataParams(project, zone, instanceGroup, clusterName))
+	json.NewEncoder(w).Encode(GetFetchDataParams(project, zone, instanceGroup, clusterName, collectionName, documentName))
 }
