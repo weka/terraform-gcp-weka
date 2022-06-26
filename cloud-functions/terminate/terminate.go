@@ -151,7 +151,7 @@ func terminateUnneededInstances(asgName string, instances []*computepb.Instance,
 
 	for _, instance := range instances {
 		if !setForExplicitRemoval(instance, explicitRemoval) {
-			date, err := time.Parse("2022-06-21T21:59:55.156-07:00", *instance.CreationTimestamp)
+			date, err := time.Parse(time.RFC3339, *instance.CreationTimestamp)
 
 			if err != nil {
 				log.Error().Msgf("error formatting creation time %s", err.Error())
@@ -359,7 +359,7 @@ func Terminate(w http.ResponseWriter, r *http.Request) {
 	//detachTerminated(asgName)
 
 	for _, instance := range terminatedInstances {
-		date, err := time.Parse("2022-06-21T21:59:55.156-07:00", *instance.CreationTimestamp)
+		date, err := time.Parse(time.RFC3339, *instance.CreationTimestamp)
 
 		if err != nil {
 			log.Error().Msgf("error formatting creation time %s", err.Error())
