@@ -5,6 +5,7 @@ import (
 	"context"
 	firebase "firebase.google.com/go"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
 	"google.golang.org/protobuf/proto"
@@ -113,7 +114,7 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 	if counter >= initialSize {
 		if desiredSize > counter {
 			for i := counter; i < desiredSize; i++ {
-				instanceName := fmt.Sprintf("weka-%d", counter)
+				instanceName := fmt.Sprintf("weka-%s", uuid.New().String())
 				log.Info().Msg("weka is clusterized joining new instance")
 				if err := createInstance(project, zone, joinTemplate, instanceGroup, instanceName); err != nil {
 					fmt.Fprintf(w, "Instance %s creation failed %s.", instanceName, err)
