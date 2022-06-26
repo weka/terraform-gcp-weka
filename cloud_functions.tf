@@ -138,6 +138,8 @@ resource "google_cloudfunctions_function" "fetch_function" {
     ZONE: var.zone
     INSTANCE_GROUP: google_compute_instance_group.instance_group.name
     CLUSTER_NAME: var.cluster_name
+    COLLECTION_NAME: "${var.prefix}-${var.cluster_name}-collection"
+    DOCUMENT_NAME: "${var.prefix}-${var.cluster_name}-document"
   }
 }
 
