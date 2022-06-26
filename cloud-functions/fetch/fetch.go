@@ -146,6 +146,7 @@ func getInstancesNames(project, zone, instanceGroup string) (instanceNames []str
 func generateInstanceNamesFilter(instanceNames []string) (namesFilter string) {
 	if len(instanceNames) == 0 {
 		log.Fatal().Err(errors.New("no instances found in instance group"))
+		return
 	}
 
 	namesFilter = fmt.Sprintf("name=%s", instanceNames[0])
