@@ -12,7 +12,6 @@ import (
 	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -39,7 +38,7 @@ func getInstancePrivateIpsSet(scaleResponse protocol.ScaleResponse) InstancePriv
 func instancesToMap(instances []*computepb.Instance) instancesMap {
 	im := make(instancesMap)
 	for _, instance := range instances {
-		im[strconv.FormatUint(*instance.Id, 10)] = instance
+		im[*instance.Name] = instance
 	}
 	return im
 }
@@ -139,6 +138,7 @@ func terminateInstances(instanceIds []string) (terminatingInstances []string, er
 		})
 		if err != nil {
 			log.Error().Msgf("error terminating instances %s", err.Error())
+			continue
 		}
 		terminatingInstances = append(terminatingInstances, instanceId)
 	}
@@ -195,7 +195,7 @@ func terminateAsgInstances(asgName string, terminateInstanceIds []string) (termi
 	//	errs = append(errs, err)
 	//}
 
-	setToTerminate := terminatedInstances
+	setToTerminate := terminateInstanceIds
 	terminatedInstances, err := terminateInstances(setToTerminate)
 	if err != nil {
 		log.Error().Err(err)
