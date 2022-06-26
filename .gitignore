@@ -3,3 +3,13 @@ cloud-functions-zip
 weka_cluster_admin_password
 .idea
 google-cloud-sdk
+.terraform.lock.hcl
+.terraform
+errored.tfstate
+terraform.tfstate
+terraform.tfstate.backup
+.terraform/modules/modules.json
+.terraform/terraform.tfstate
+bucket/.terraform.lock.hcl
+bucket/terraform.tfstate
+bucket/terraform.tfstate.backup

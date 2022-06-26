@@ -1,37 +1,31 @@
 variable "project" {
   type        = string
   description = "project name"
-  default     = "wekaio-rnd"
 }
 
 variable "region" {
   type        = string
   description = "region name"
-  default     = "europe-west1"
 }
 
 variable "zone" {
   type        = string
   description = "zone name"
-  default     = "europe-west1-b"
 }
 
 variable "username" {
   type        = string
   description = "username for login "
-  default     = "weka"
 }
 
 variable "get_weka_io_token" {
   type        = string
   description = "get.weka.io token for downloading weka"
-  default     = "must be set outside"
 }
 
 variable "weka_version" {
   type        = string
   description = "weka version"
-  default     = "3.14.0.50-gcp-beta"
 }
 
 variable "cluster_size" {
@@ -46,10 +40,26 @@ variable "nics_number" {
   default     = 4
 }
 
-variable "subnets" {
+variable "vpcs" {
+  type        = list(string)
+  description = "List of vpcs name"
+  default    = []
+}
+
+variable "subnets-cidr-range" {
   type        = list(string)
   description = "list of subnets to use for creating the cluster, the number of subnets must be 'nics_number'"
-  default     = ["10.0.0.0/24", "10.1.0.0/24", "10.2.0.0/24", "10.3.0.0/24"]
+  default    = []
+}
+
+variable "subnets" {
+  description = "Details of existing subnets, the key is contain subnet name"
+  type = map(object({
+    gateway-address =  string
+    vpc-name        = string
+    cidr_range      = string
+  }))
+ default = {}
 }
 
 variable "nvmes_number" {
@@ -61,13 +71,11 @@ variable "nvmes_number" {
 variable "cluster_name" {
   type        = string
   description = "prefix for all resources"
-  default     = "poc"
 }
 
 variable "prefix" {
   type        = string
   description = "prefix for all resources"
-  default     = "weka"
 }
 
 variable "private_key_filename" {
@@ -79,23 +87,14 @@ variable "private_key_filename" {
 variable "machine_type" {
   type        = string
   description = "weka cluster backends machines type"
-  default     = "c2-standard-16"
+  default     = "c2-standard-8"
 }
 
 
 variable "weka_username" {
   type        = string
   description = "weka cluster username"
-  default     = ""
 }
-
-
-variable "connector" {
-  type        = string
-  description = "list of connector to use for serverless vpc access"
-  default     = "10.8.0.0/28"
-}
-
 
 variable "firestore_count" {
   type        = number
@@ -103,3 +102,31 @@ variable "firestore_count" {
   default     = 0
 }
 
+variable "set_peering" {
+  type = bool
+  description = "apply peering connection between subnets and subnets "
+  default = true
+}
+
+variable "bucket-location" {
+  type = string
+  description = "bucket function location"
+  default = "EU"
+}
+
+variable "vpc_connector_range" {
+  type = string
+  description = "list of connector to use for serverless vpc access"
+}
+
+variable "create_vpc_connector" {
+  type = bool
+  description = " "
+  default = true
+}
+
+variable "vpc_connector_name" {
+  type = string
+  description = ""
+  default = ""
+}
