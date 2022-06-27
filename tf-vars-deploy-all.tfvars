@@ -17,12 +17,10 @@ cluster_name = "poc"
 
 ### Deploy weka module ###
 username = "weka"
-get_weka_io_token = ""
 weka_version = "3.14.0.50-gcp-beta"
 cluster_size = 5
 nvmes_number = 2
 private_key_filename = ".ssh/google_compute_engine"
 machine_type = "c2-standard-8"
-weka_username  = ""
 firestore_count = 0
 bucket-location = "EU"
