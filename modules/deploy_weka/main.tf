@@ -64,6 +64,7 @@ resource "google_compute_instance_template" "backends-template" {
 
 
   metadata_startup_script = <<-EOT
+    set -ex
     # https://gist.github.com/fungusakafungus/1026804
     function retry {
         local retry_max=$1
@@ -81,8 +82,9 @@ resource "google_compute_instance_template" "backends-template" {
         }
         return 0
     }
-  retry 300 2 curl --fail --max-time 10 https://${var.get_weka_io_token}@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}| sh
   curl https://${var.region}-${var.project}.cloudfunctions.net/${var.prefix}-${var.cluster_name}-increment
+  retry 300 2 curl --fail --max-time 10 https://${var.get_weka_io_token}@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}| sh
+  curl https://${var.region}-${var.project}.cloudfunctions.net/${var.prefix}-${var.cluster_name}-bunch
  EOT
 }
 
@@ -133,6 +135,7 @@ resource "google_compute_instance_template" "clusterize-template" {
 
 
   metadata_startup_script = <<-EOT
+    set -ex
     # https://gist.github.com/fungusakafungus/1026804
     function retry {
         local retry_max=$1
@@ -150,11 +153,12 @@ resource "google_compute_instance_template" "clusterize-template" {
         }
         return 0
     }
+  curl https://${var.region}-${var.project}.cloudfunctions.net/${var.prefix}-${var.cluster_name}-increment
   retry 300 2 curl --fail --max-time 10 https://${var.get_weka_io_token}@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}| sh
   curl https://${var.region}-${var.project}.cloudfunctions.net/${var.prefix}-${var.cluster_name}-clusterize > /tmp/clusterize.sh
   chmod +x /tmp/clusterize.sh
   /tmp/clusterize.sh
-  curl https://${var.region}-${var.project}.cloudfunctions.net/${var.prefix}-${var.cluster_name}-increment
+  curl https://${var.region}-${var.project}.cloudfunctions.net/${var.prefix}-${var.cluster_name}-bunch
  EOT
 }
 
@@ -212,10 +216,12 @@ resource "google_compute_instance_template" "join-template" {
   }
 
   metadata_startup_script = <<-EOT
+    set -ex
+    curl https://${var.region}-${var.project}.cloudfunctions.net/${var.prefix}-${var.cluster_name}-increment
     curl https://${var.region}-${var.project}.cloudfunctions.net/${var.prefix}-${var.cluster_name}-join > /tmp/join.sh
     chmod +x /tmp/join.sh
     /tmp/join.sh
-    curl https://${var.region}-${var.project}.cloudfunctions.net/${var.prefix}-${var.cluster_name}-increment
+    curl https://${var.region}-${var.project}.cloudfunctions.net/${var.prefix}-${var.cluster_name}-bunch
  EOT
 }
 
