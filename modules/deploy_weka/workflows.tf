@@ -8,7 +8,7 @@ data "google_compute_default_service_account" "default" {
 }
 
 resource "google_workflows_workflow" "workflows" {
-  name            = "${var.prefix}-${var.cluster_name}-workflow-fetch"
+  name            = "${var.prefix}-${var.cluster_name}-scale-down-workflow"
   region          = var.region
   description     = "Fetch workflow"
   service_account = data.google_compute_default_service_account.default.id
