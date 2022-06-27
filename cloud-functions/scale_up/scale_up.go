@@ -102,6 +102,7 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 	joinTemplate := os.Getenv("JOIN_TEMPLATE")
 	collectionName := os.Getenv("COLLECTION_NAME")
 	documentName := os.Getenv("DOCUMENT_NAME")
+	instanceBaseName := os.Getenv("INSTANCE_BASE_NAME")
 
 	instanceGroupSize := getInstanceGroupSize(project, zone, instanceGroup)
 	log.Info().Msgf("Instance group size is: %d", instanceGroupSize)
@@ -114,7 +115,7 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 	if counter >= initialSize {
 		if desiredSize > counter {
 			for i := counter; i < desiredSize; i++ {
-				instanceName := fmt.Sprintf("weka-%s", uuid.New().String())
+				instanceName := fmt.Sprintf("%s-%s", instanceBaseName, uuid.New().String())
 				log.Info().Msg("weka is clusterized joining new instance")
 				if err := createInstance(project, zone, joinTemplate, instanceGroup, instanceName); err != nil {
 					fmt.Fprintf(w, "Instance %s creation failed %s.", instanceName, err)
@@ -127,7 +128,7 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 	} else {
 		i := counter
 		for ; i < initialSize-1; i++ {
-			instanceName := fmt.Sprintf("weka-%d", i)
+			instanceName := fmt.Sprintf("%s-%d", instanceBaseName, i)
 			log.Info().Msg("weka is not clusterized, creating new instance")
 			if err := createInstance(project, zone, backendTemplate, instanceGroup, instanceName); err != nil {
 				fmt.Fprintf(w, "Instance %s creation failed %s.", instanceName, err)
@@ -136,7 +137,7 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 
 			}
 		}
-		instanceName := fmt.Sprintf("weka-%d", i)
+		instanceName := fmt.Sprintf("%s-%d", instanceBaseName, i)
 		log.Info().Msg("weka is not clusterized, creating new instance and clusterizing")
 		if err := createInstance(project, zone, clusterizeTemplate, instanceGroup, instanceName); err != nil {
 			fmt.Fprintf(w, "Instance %s creation failed %s", instanceName, err)

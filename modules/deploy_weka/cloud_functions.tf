@@ -90,6 +90,8 @@ resource "google_cloudfunctions_function" "join_function" {
     CLUSTER_NAME: var.cluster_name
     GATEWAYS: local.gws_addresses
     SUBNETS: format("(%s)", join(" ", var.subnets_range ))
+    USER_NAME_ID: google_secret_manager_secret_version.user_secret_key.id
+    PASSWORD_ID: google_secret_manager_secret_version.password_secret_key.id
   }
 
   depends_on = [google_project_service.project-function-api]
@@ -229,6 +231,7 @@ resource "google_cloudfunctions_function" "scale_up_function" {
     JOIN_TEMPLATE: google_compute_instance_template.join-template.id
     COLLECTION_NAME: "${var.prefix}-${var.cluster_name}-collection"
     DOCUMENT_NAME: "${var.prefix}-${var.cluster_name}-document"
+    INSTANCE_BASE_NAME: "${var.prefix}-${var.cluster_name}-vm"
   }
 }
 
@@ -271,6 +274,9 @@ resource "google_cloudfunctions_function" "clusterize_function" {
     GWS: local.gws_addresses
     CLUSTER_NAME: var.cluster_name
     NVMES_NUM: var.nvmes_number
+    USER_NAME_ID: google_secret_manager_secret_version.user_secret_key.id
+    PASSWORD_ID: google_secret_manager_secret_version.password_secret_key.id
+    INSTANCE_BASE_NAME: "${var.prefix}-${var.cluster_name}-vm"
   }
 }
 
