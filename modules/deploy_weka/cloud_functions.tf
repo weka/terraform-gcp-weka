@@ -150,6 +150,8 @@ resource "google_cloudfunctions_function" "fetch_function" {
     CLUSTER_NAME: var.cluster_name
     COLLECTION_NAME: "${var.prefix}-${var.cluster_name}-collection"
     DOCUMENT_NAME: "${var.prefix}-${var.cluster_name}-document"
+    USER_NAME_ID: google_secret_manager_secret_version.user_secret_key.id
+    PASSWORD_ID: google_secret_manager_secret_version.password_secret_key.id
   }
 
   depends_on = [google_project_service.project-function-api]
