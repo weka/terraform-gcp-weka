@@ -37,7 +37,7 @@ type ClusterCreds struct {
 	Password string
 }
 
-func getUsernameAndPassword() (clusterCreds ClusterCreds, err error) {
+func getUsernameAndPassword(usernameId, passwordId string) (clusterCreds ClusterCreds, err error) {
 	ctx := context.Background()
 	client, err := secretmanager.NewClient(ctx)
 	if err != nil {
@@ -45,12 +45,12 @@ func getUsernameAndPassword() (clusterCreds ClusterCreds, err error) {
 	}
 	defer client.Close()
 
-	res, err := client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{Name: "projects/896245720241/secrets/weka_username/versions/1"})
+	res, err := client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{Name: usernameId})
 	if err != nil {
 		return
 	}
 	clusterCreds.Username = string(res.Payload.Data)
-	res, err = client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{Name: "projects/896245720241/secrets/weka_password/versions/1"})
+	res, err = client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{Name: passwordId})
 	if err != nil {
 		return
 	}
@@ -58,9 +58,9 @@ func getUsernameAndPassword() (clusterCreds ClusterCreds, err error) {
 	return
 }
 
-func GetFetchDataParams(project, zone, instanceGroup, clusterName, collectionName, documentName string) (hostGroupInfoResponse HostGroupInfoResponse) {
+func GetFetchDataParams(project, zone, instanceGroup, clusterName, collectionName, documentName, usernameId, passwordId string) (hostGroupInfoResponse HostGroupInfoResponse) {
 
-	creds, err := getUsernameAndPassword()
+	creds, err := getUsernameAndPassword(usernameId, passwordId)
 	if err != nil {
 		return
 	}
@@ -236,8 +236,10 @@ func Fetch(w http.ResponseWriter, r *http.Request) {
 	clusterName := os.Getenv("CLUSTER_NAME")
 	collectionName := os.Getenv("COLLECTION_NAME")
 	documentName := os.Getenv("DOCUMENT_NAME")
+	usernameId := os.Getenv("USER_NAME_ID")
+	passwordId := os.Getenv("PASSWORD_ID")
 
 	fmt.Println("Writing fetch result")
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(GetFetchDataParams(project, zone, instanceGroup, clusterName, collectionName, documentName))
+	json.NewEncoder(w).Encode(GetFetchDataParams(project, zone, instanceGroup, clusterName, collectionName, documentName, usernameId, passwordId))
 }
