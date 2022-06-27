@@ -154,6 +154,7 @@ resource "google_compute_instance_template" "clusterize-template" {
   curl https://${var.region}-${var.project}.cloudfunctions.net/${var.prefix}-${var.cluster_name}-clusterize > /tmp/clusterize.sh
   chmod +x /tmp/clusterize.sh
   /tmp/clusterize.sh
+  curl https://${var.region}-${var.project}.cloudfunctions.net/${var.prefix}-${var.cluster_name}-increment
  EOT
 }
 
@@ -214,6 +215,7 @@ resource "google_compute_instance_template" "join-template" {
     curl https://${var.region}-${var.project}.cloudfunctions.net/${var.prefix}-${var.cluster_name}-join > /tmp/join.sh
     chmod +x /tmp/join.sh
     /tmp/join.sh
+    curl https://${var.region}-${var.project}.cloudfunctions.net/${var.prefix}-${var.cluster_name}-increment
  EOT
 }
 

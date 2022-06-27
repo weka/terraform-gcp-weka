@@ -140,8 +140,7 @@ func generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, cluster
 	weka cluster host apply --all --force
 	sleep 30s
 	weka cluster start-io
-	curl https://europe-west1-wekaio-rnd.cloudfunctions.net/increment
-	echo "completed successfully" > /tmp/weka_completion_validation
+	echo "completed successfully" > /tmp/weka_clusterization_completion_validation
 	`
 	ips := fmt.Sprintf("(%s)", strings.Join(getBackendsIps(project, zone, clusterName), " "))
 	log.Info().Msgf("Formatting clusterization script template")
