@@ -10,4 +10,8 @@ resource "google_firestore_document" "firestore_doc" {
   document_id = "${var.prefix}-${var.cluster_name}-document"
   fields      = "{\"counter\":{\"integerValue\":\"0\"}, \"initial_size\":{\"integerValue\":\"${var.cluster_size}\"}, \"desired_size\":{\"integerValue\":\"${var.cluster_size}\"}}"
   depends_on = [google_project_service.firestore]
+
+  lifecycle {
+    ignore_changes = [fields]
+  }
 }
