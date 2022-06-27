@@ -177,7 +177,7 @@ func GetJoinParams(project, zone, clusterName, usernameId, passwordId string) (b
 	done
 	sleep 60
 	weka cluster drive scan $host_id
-	curl https://europe-west1-wekaio-rnd.cloudfunctions.net/increment
+	echo "completed successfully" > /tmp/weka_join_completion_validation
 	`
 	var cores, frontend, drive int
 	if role == "backend" {
