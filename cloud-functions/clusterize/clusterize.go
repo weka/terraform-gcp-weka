@@ -76,7 +76,7 @@ func getBackendsIps(project, zone, clusterName string) (backendsIps []string) {
 	return
 }
 
-func generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, instanceBaseName string) (clusterizeScript string) {
+func generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, instanceBaseName, cloudFunctionUrl string) (clusterizeScript string) {
 	log.Info().Msg("Generating clusterization scrtipt")
 	creds, err := getUsernameAndPassword(usernameId, passwordId)
 	if err != nil {
@@ -87,9 +87,8 @@ func generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, cluster
 
 	clusterizeScriptTemplate := `
 	#!/bin/bash
-		
+
 	set -ex
-	sleep 600
 	IPS=%s
 	HOSTS_NUM=%s
 	NICS_NUM=%s
@@ -99,6 +98,14 @@ func generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, cluster
 	ADMIN_USERNAME=%s
 	ADMIN_PASSWORD=%s
 	INSTANCE_NAME=%s
+	CLOUD_FUNCTION_URL=%s
+
+	other_hosts_num=$(expr $HOSTS_NUM - 1)
+	while [ $(curl --silent $CLOUD_FUNCTION_URL) -lt $other_hosts_num ] ; do
+		echo "waiting for other hosts before clusterizing..."
+		sleep 10
+	done
+
 	cluster_creation_str="weka cluster create"
 	for (( i=0; i<$HOSTS_NUM; i++ )); do
 		cluster_creation_str="$cluster_creation_str $INSTANCE_NAME-$i"
@@ -144,7 +151,7 @@ func generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, cluster
 	`
 	ips := fmt.Sprintf("(%s)", strings.Join(getBackendsIps(project, zone, clusterName), " "))
 	log.Info().Msgf("Formatting clusterization script template")
-	clusterizeScript = fmt.Sprintf(dedent.Dedent(clusterizeScriptTemplate), ips, hostsNum, nicsNum, gws, clusterName, nvmesMumber, creds.Username, creds.Password, instanceBaseName)
+	clusterizeScript = fmt.Sprintf(dedent.Dedent(clusterizeScriptTemplate), ips, hostsNum, nicsNum, gws, clusterName, nvmesMumber, creds.Username, creds.Password, instanceBaseName, cloudFunctionUrl)
 	return
 }
 
@@ -159,6 +166,7 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 	usernameId := os.Getenv("USER_NAME_ID")
 	passwordId := os.Getenv("PASSWORD_ID")
 	instanceBaseName := os.Getenv("INSTANCE_BASE_NAME")
+	cloudFunctionUrl := os.Getenv("CLOUD_FUNCTION_URL")
 
-	fmt.Fprintf(w, generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, instanceBaseName))
+	fmt.Fprintf(w, generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, instanceBaseName, cloudFunctionUrl))
 }
