@@ -14,6 +14,10 @@ resource "google_secret_manager_secret" "secret_weka_password" {
 resource "google_secret_manager_secret_version" "password_secret_key" {
   secret      = google_secret_manager_secret.secret_weka_password.id
   secret_data = random_password.password.result
+
+   lifecycle {
+    ignore_changes = [secret_data]
+  }
 }
 
 resource "google_secret_manager_secret" "secret_weka_username" {
@@ -27,4 +31,8 @@ resource "google_secret_manager_secret" "secret_weka_username" {
 resource "google_secret_manager_secret_version" "user_secret_key" {
   secret      = google_secret_manager_secret.secret_weka_username.id
   secret_data = var.weka_username
+
+  lifecycle {
+    ignore_changes = [secret_data]
+  }
 }
