@@ -50,6 +50,10 @@ resource "null_resource" "generate_cloud_functions_zips" {
       zip -r get-db-value.zip get_db_value.go go.mod
       mv get-db-value.zip ../../cloud-functions-zip/
 
+      cd ../get_size
+      zip -r get-size.zip get_size.go go.mod
+      mv get-size.zip ../../cloud-functions-zip/
+
     EOT
     interpreter = ["bash", "-ce"]
   }
@@ -234,7 +238,9 @@ resource "google_cloudfunctions_function" "scale_up_function" {
     COLLECTION_NAME: "${var.prefix}-${var.cluster_name}-collection"
     DOCUMENT_NAME: "${var.prefix}-${var.cluster_name}-document"
     INSTANCE_BASE_NAME: "${var.prefix}-${var.cluster_name}-vm"
+    CLOUD_FUNCTION_URL: google_cloudfunctions_function.get_size_function.https_trigger_url
   }
+  depends_on = [google_cloudfunctions_function.get_size_function]
 }
 
 # IAM entry for all users to invoke the function
@@ -505,6 +511,43 @@ resource "google_cloudfunctions_function_iam_member" "get_db_value_invoker" {
   project        = google_cloudfunctions_function.get_db_value_function.project
   region         = google_cloudfunctions_function.get_db_value_function.region
   cloud_function = google_cloudfunctions_function.get_db_value_function.name
+
+  role   = "roles/cloudfunctions.invoker"
+  member = "allUsers"
+}
+
+# ======================== get_size ============================
+
+resource "google_storage_bucket_object" "get_size_zip" {
+  name   = "${var.prefix}-${var.cluster_name}-get-size.zip"
+  bucket = data.google_storage_bucket.cloud_functions_bucket.name
+  source = "cloud-functions-zip/get-size.zip"
+  depends_on = [null_resource.generate_cloud_functions_zips]
+}
+
+resource "google_cloudfunctions_function" "get_size_function" {
+  name        = "${var.prefix}-${var.cluster_name}-get-size"
+  description = "get cluster instance group size"
+  runtime     = "go116"
+  timeout     = 540
+
+  available_memory_mb   = 128
+  source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
+  source_archive_object = google_storage_bucket_object.get_size_zip.name
+  trigger_http          = true
+  entry_point           = "GetSize"
+  environment_variables = {
+    PROJECT: var.project
+    ZONE: var.zone
+    INSTANCE_GROUP: google_compute_instance_group.instance_group.name
+  }
+}
+
+# IAM entry for all users to invoke the function
+resource "google_cloudfunctions_function_iam_member" "get_size_invoker" {
+  project        = google_cloudfunctions_function.get_size_function.project
+  region         = google_cloudfunctions_function.get_size_function.region
+  cloud_function = google_cloudfunctions_function.get_size_function.name
 
   role   = "roles/cloudfunctions.invoker"
   member = "allUsers"
