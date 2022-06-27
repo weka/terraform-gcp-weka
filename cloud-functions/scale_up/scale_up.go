@@ -114,6 +114,11 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 
 	if counter >= initialSize {
 		if desiredSize > counter {
+			if instanceGroupSize < initialSize {
+				fmt.Fprintf(w, "Can't join new instance, clusterization isn't done")
+				return
+			}
+
 			for i := counter; i < desiredSize; i++ {
 				instanceName := fmt.Sprintf("%s-%s", instanceBaseName, uuid.New().String())
 				log.Info().Msg("weka is clusterized joining new instance")
