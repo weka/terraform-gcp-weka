@@ -222,6 +222,7 @@ resource "google_compute_instance_template" "join-template" {
 resource "google_compute_instance_group" "instance_group" {
   name = "${var.prefix}-${var.cluster_name}-instance-group"
   zone = var.zone
+  network = "https://www.googleapis.com/compute/v1/projects/${var.project}/global/networks/${var.vpcs[0]}"
 }
 
 
