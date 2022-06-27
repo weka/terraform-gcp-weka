@@ -20,7 +20,7 @@ type ClusterCreds struct {
 	Password string
 }
 
-func getUsernameAndPassword() (clusterCreds ClusterCreds, err error) {
+func getUsernameAndPassword(usernameId, passwordId string) (clusterCreds ClusterCreds, err error) {
 	ctx := context.Background()
 	client, err := secretmanager.NewClient(ctx)
 	if err != nil {
@@ -28,12 +28,12 @@ func getUsernameAndPassword() (clusterCreds ClusterCreds, err error) {
 	}
 	defer client.Close()
 
-	res, err := client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{Name: "projects/896245720241/secrets/weka_username/versions/1"})
+	res, err := client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{Name: usernameId})
 	if err != nil {
 		return
 	}
 	clusterCreds.Username = string(res.Payload.Data)
-	res, err = client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{Name: "projects/896245720241/secrets/weka_password/versions/1"})
+	res, err = client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{Name: passwordId})
 	if err != nil {
 		return
 	}
@@ -76,9 +76,9 @@ func getBackendsIps(project, zone, clusterName string) (backendsIps []string) {
 	return
 }
 
-func generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber string) (clusterizeScript string) {
+func generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, instanceBaseName string) (clusterizeScript string) {
 	log.Info().Msg("Generating clusterization scrtipt")
-	creds, err := getUsernameAndPassword()
+	creds, err := getUsernameAndPassword(usernameId, passwordId)
 	if err != nil {
 		log.Error().Msgf("%s", err)
 		return
@@ -98,9 +98,10 @@ func generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, cluster
 	NVMES_NUM=%s
 	ADMIN_USERNAME=%s
 	ADMIN_PASSWORD=%s
+	INSTANCE_NAME=%s
 	cluster_creation_str="weka cluster create"
 	for (( i=0; i<$HOSTS_NUM; i++ )); do
-		cluster_creation_str="$cluster_creation_str weka-$i"
+		cluster_creation_str="$cluster_creation_str $INSTANCE_NAME-$i"
 	done
 	cluster_creation_str="$cluster_creation_str --host-ips "
 	for (( i=0; i<$HOSTS_NUM; i++ )); do
@@ -144,7 +145,7 @@ func generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, cluster
 	`
 	ips := fmt.Sprintf("(%s)", strings.Join(getBackendsIps(project, zone, clusterName), " "))
 	log.Info().Msgf("Formatting clusterization script template")
-	clusterizeScript = fmt.Sprintf(dedent.Dedent(clusterizeScriptTemplate), ips, hostsNum, nicsNum, gws, clusterName, nvmesMumber, creds.Username, creds.Password)
+	clusterizeScript = fmt.Sprintf(dedent.Dedent(clusterizeScriptTemplate), ips, hostsNum, nicsNum, gws, clusterName, nvmesMumber, creds.Username, creds.Password, instanceBaseName)
 	return
 }
 
@@ -156,6 +157,9 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 	gws := os.Getenv("GWS")
 	clusterName := os.Getenv("CLUSTER_NAME")
 	nvmesMumber := os.Getenv("NVMES_NUM")
+	usernameId := os.Getenv("USER_NAME_ID")
+	passwordId := os.Getenv("PASSWORD_ID")
+	instanceBaseName := os.Getenv("INSTANCE_BASE_NAME")
 
-	fmt.Fprintf(w, generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber))
+	fmt.Fprintf(w, generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, instanceBaseName))
 }

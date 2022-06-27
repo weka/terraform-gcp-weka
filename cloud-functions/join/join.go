@@ -44,7 +44,7 @@ func getBackendCoreCounts() BackendCoreCounts {
 	return backendCoreCounts
 }
 
-func getUsernameAndPassword() (clusterCreds ClusterCreds, err error) {
+func getUsernameAndPassword(usernameId, passwordId string) (clusterCreds ClusterCreds, err error) {
 	ctx := context.Background()
 	client, err := secretmanager.NewClient(ctx)
 	if err != nil {
@@ -52,12 +52,12 @@ func getUsernameAndPassword() (clusterCreds ClusterCreds, err error) {
 	}
 	defer client.Close()
 
-	res, err := client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{Name: "projects/896245720241/secrets/weka_username/versions/1"})
+	res, err := client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{Name: usernameId})
 	if err != nil {
 		return
 	}
 	clusterCreds.Username = string(res.Payload.Data)
-	res, err = client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{Name: "projects/896245720241/secrets/weka_password/versions/1"})
+	res, err = client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{Name: passwordId})
 	if err != nil {
 		return
 	}
@@ -65,7 +65,7 @@ func getUsernameAndPassword() (clusterCreds ClusterCreds, err error) {
 	return
 }
 
-func GetJoinParams(project, zone, clusterName string) (bashScript string, err error) {
+func GetJoinParams(project, zone, clusterName, usernameId, passwordId string) (bashScript string, err error) {
 	role := "backend"
 	ctx := context.Background()
 	instanceClient, err := compute.NewInstancesRESTClient(ctx)
@@ -102,7 +102,7 @@ func GetJoinParams(project, zone, clusterName string) (bashScript string, err er
 	instanceTypeParts := strings.Split(*instances[0].MachineType, "/")
 	instanceType := instanceTypeParts[len(instanceTypeParts)-1]
 	shuffleSlice(ips)
-	creds, err := getUsernameAndPassword()
+	creds, err := getUsernameAndPassword(usernameId, passwordId)
 	if err != nil {
 		log.Error().Msgf("%s", err)
 		return
@@ -210,9 +210,11 @@ func Join(w http.ResponseWriter, r *http.Request) {
 	project := os.Getenv("PROJECT")
 	zone := os.Getenv("ZONE")
 	clusterName := os.Getenv("CLUSTER_NAME")
+	usernameId := os.Getenv("USER_NAME_ID")
+	passwordId := os.Getenv("PASSWORD_ID")
 
 	fmt.Println("Getting join params")
-	bashScript, err := GetJoinParams(project, zone, clusterName)
+	bashScript, err := GetJoinParams(project, zone, clusterName, usernameId, passwordId)
 	if err != nil {
 		fmt.Fprintf(w, "%s", err)
 	} else {
