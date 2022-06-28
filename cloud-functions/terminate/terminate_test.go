@@ -15,5 +15,18 @@ func Test_Terminate(t *testing.T) {
 		t.Log("Formatting succeeded")
 	}
 
+	project := "wekaio-rnd"
+	zone := "europe-west1-b"
+	instanceGroup := "weka-poc-instance-group"
+	loadBalancerName := "weka-poc-lb-backend"
+
+	errs := terminateUnhealthyInstances(project, zone, instanceGroup, loadBalancerName)
+
+	if len(errs) > 0 {
+		t.Logf("error calling terminateUnhealthyInstances %s", errs)
+	} else {
+		t.Log("terminateUnhealthyInstances succeeded")
+	}
+
 	fmt.Println("ToDo: write test")
 }
