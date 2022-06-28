@@ -84,7 +84,7 @@ resource "google_compute_instance_template" "backends-template" {
     }
   curl https://${var.region}-${var.project}.cloudfunctions.net/${var.prefix}-${var.cluster_name}-increment
   retry 300 2 curl --fail --max-time 10 https://${var.get_weka_io_token}@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}| sh
-  curl https://${var.region}-${var.project}.cloudfunctions.net/${var.prefix}-${var.cluster_name}-bunch
+  curl https://${var.region}-${var.project}.cloudfunctions.net/${var.prefix}-${var.cluster_name}-bunch -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
  EOT
 }
 
@@ -158,7 +158,7 @@ resource "google_compute_instance_template" "clusterize-template" {
   curl https://${var.region}-${var.project}.cloudfunctions.net/${var.prefix}-${var.cluster_name}-clusterize > /tmp/clusterize.sh
   chmod +x /tmp/clusterize.sh
   /tmp/clusterize.sh
-  curl https://${var.region}-${var.project}.cloudfunctions.net/${var.prefix}-${var.cluster_name}-bunch
+  curl https://${var.region}-${var.project}.cloudfunctions.net/${var.prefix}-${var.cluster_name}-bunch -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
  EOT
 }
 
@@ -221,7 +221,7 @@ resource "google_compute_instance_template" "join-template" {
     curl https://${var.region}-${var.project}.cloudfunctions.net/${var.prefix}-${var.cluster_name}-join > /tmp/join.sh
     chmod +x /tmp/join.sh
     /tmp/join.sh
-    curl https://${var.region}-${var.project}.cloudfunctions.net/${var.prefix}-${var.cluster_name}-bunch
+    curl https://${var.region}-${var.project}.cloudfunctions.net/${var.prefix}-${var.cluster_name}-bunch -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
  EOT
 }
 
