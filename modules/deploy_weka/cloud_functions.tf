@@ -322,6 +322,8 @@ resource "google_cloudfunctions_function" "terminate_function" {
     PROJECT: var.project
     ZONE: var.zone
     INSTANCE_GROUP: google_compute_instance_group.instance_group.name
+    COLLECTION_NAME: "${var.prefix}-${var.cluster_name}-collection"
+    DOCUMENT_NAME: "${var.prefix}-${var.cluster_name}-document"
   }
 }
 
