@@ -121,12 +121,13 @@ func setForExplicitRemoval(instance *computepb.Instance, toRemove []protocol.HgI
 	return false
 }
 
-func terminateInstances(instanceIds []string) (terminatingInstances []string, err error) {
+func terminateInstances(instanceIds []string) (terminatingInstances []string, errs []error) {
 
 	ctx := context.Background()
 	instanceClient, err := compute.NewInstancesRESTClient(ctx)
 	if err != nil {
 		log.Fatal().Err(err)
+		errs = append(errs, err)
 		return
 	}
 	defer instanceClient.Close()
@@ -140,6 +141,7 @@ func terminateInstances(instanceIds []string) (terminatingInstances []string, er
 		})
 		if err != nil {
 			log.Error().Msgf("error terminating instances %s", err.Error())
+			errs = append(errs, err)
 			continue
 		}
 		terminatingInstances = append(terminatingInstances, instanceId)
@@ -225,12 +227,7 @@ func terminateAsgInstances(asgName string, terminateInstanceIds []string) (termi
 		}
 	}
 
-	terminatedInstances, err := terminateInstances(setToTerminate)
-	if err != nil {
-		log.Error().Err(err)
-		errs = append(errs, err)
-		return
-	}
+	terminatedInstances, errs = terminateInstances(setToTerminate)
 	return
 }
 
@@ -357,6 +354,7 @@ func Terminate(w http.ResponseWriter, r *http.Request) {
 	project := os.Getenv("PROJECT")
 	collectionName := os.Getenv("COLLECTION_NAME")
 	documentName := os.Getenv("DOCUMENT_NAME")
+	loadBalancerName := os.Getenv("LOAD_BALANCER_NAME")
 
 	var response protocol.TerminatedInstancesResponse
 	var err error
@@ -390,10 +388,10 @@ func Terminate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//errs := detachUnhealthyInstances(asgInstances, instanceGroup)
-	//if len(errs) != 0 {
-	//	response.AddTransientErrors(errs)
-	//}
+	errs := terminateUnhealthyInstances(Project, Zone, instanceGroup, loadBalancerName)
+	if len(errs) != 0 {
+		response.AddTransientErrors(errs)
+	}
 
 	deltaInstanceIds, err := getDeltaInstancesIds(asgInstanceIds, scaleResponse)
 	if err != nil {
@@ -439,61 +437,87 @@ func Terminate(w http.ResponseWriter, r *http.Request) {
 	writeResponse(w, response)
 }
 
-//
-//func detachUnhealthyInstances(instances []*computepb.InstanceWithNamedPorts, asgName string) (errs []error) {
-//	toDetach := []string{}
-//	toTerminate := []string{}
-//	for _, instance := range instances {
-//		if *instance.Status == "UNHEALTHY" {
-//			log.Info().Msgf("handling unhealthy instance %s", *instance.InstanceId)
-//			toDelete := false
-//			if !*instance.ProtectedFromScaleIn {
-//				toDelete = true
-//			}
-//
-//			if !toDelete {
-//				instances, ec2err := common.GetInstances([]*string{instance.InstanceId})
-//				if ec2err != nil {
-//					errs = append(errs, ec2err)
-//					continue
-//				}
-//				if len(instances) == 0 {
-//					log.Debug().Msgf("didn't find instance %s, assuming it is terminated", *instance.InstanceId)
-//					toDelete = true
-//				} else {
-//					inst := instances[0]
-//					log.Debug().Msgf("instance state: %s", *inst.State.Name)
-//					if *inst.State.Name == ec2.InstanceStateNameStopped {
-//						toTerminate = append(toTerminate, *inst.InstanceId)
-//					}
-//					if *inst.State.Name == ec2.InstanceStateNameTerminated {
-//						toDelete = true
-//					}
-//				}
-//
-//			}
-//			if toDelete {
-//				log.Info().Msgf("detaching %s", *instance.InstanceId)
-//				toDetach = append(toDetach, *instance.InstanceId)
-//			}
-//		}
-//	}
-//
-//	log.Debug().Msgf("found %d stopped instances", len(toTerminate))
-//	terminatedInstances, terminateErrors := terminateAsgInstances(asgName, toTerminate)
-//	errs = append(errs, terminateErrors...)
-//	for _, inst := range terminatedInstances {
-//		log.Info().Msgf("detaching %s", inst)
-//		toDetach = append(toDetach, inst)
-//	}
-//
-//	if len(toDetach) == 0 {
-//		return nil
-//	}
-//
-//	err := autoscaling2.DetachInstancesFromASG(toDetach, asgName)
-//	if err != nil {
-//		errs = append(errs, err)
-//	}
-//	return
-//}
+func terminateUnhealthyInstances(project, zone, instanceGroup, loadBalancerName string) (errs []error) {
+	var toTerminate []string
+
+	ctx := context.Background()
+
+	c, err := compute.NewRegionBackendServicesRESTClient(ctx)
+	if err != nil {
+		log.Error().Msgf("%s", err)
+		errs = append(errs, err)
+		return
+	}
+	defer c.Close()
+
+	instanceGroupClient, err := compute.NewInstanceGroupsRESTClient(ctx)
+	if err != nil {
+		log.Fatal().Err(err)
+		errs = append(errs, err)
+		return
+	}
+	defer instanceGroupClient.Close()
+
+	instanceGroupObject, err := instanceGroupClient.Get(ctx, &computepb.GetInstanceGroupRequest{
+		Project:       project,
+		Zone:          zone,
+		InstanceGroup: instanceGroup,
+	})
+	if err != nil {
+		log.Fatal().Err(err)
+		errs = append(errs, err)
+		return
+	}
+
+	req := &computepb.GetHealthRegionBackendServiceRequest{
+		Project:        project,
+		Region:         zone[:len(zone)-2],
+		BackendService: loadBalancerName,
+		ResourceGroupReferenceResource: &computepb.ResourceGroupReference{
+			Group: instanceGroupObject.SelfLink,
+		},
+	}
+
+	resp, err := c.GetHealth(ctx, req)
+	if err != nil {
+		log.Error().Msgf("%s", err)
+		errs = append(errs, err)
+		return
+	}
+
+	instancesClient, err := compute.NewInstancesRESTClient(ctx)
+	if err != nil {
+		log.Error().Msgf("%s", err)
+		return
+	}
+	defer instancesClient.Close()
+
+	for _, healthStatus := range resp.HealthStatus {
+		instanceNameParts := strings.Split(*healthStatus.Instance, "/")
+		instanceName := instanceNameParts[len(instanceNameParts)-1]
+		log.Info().Msgf("handling instance %s(%s)", instanceName, *healthStatus.HealthState)
+		if *healthStatus.HealthState == "UNHEALTHY" {
+			instance, err := instancesClient.Get(ctx, &computepb.GetInstanceRequest{
+				Instance: instanceName,
+				Project:  project,
+				Zone:     zone,
+			})
+			if err != nil {
+				log.Error().Msgf("%s", err)
+				return
+			}
+
+			log.Debug().Msgf("instance state: %s", *instance.Status)
+			if *instance.Status == "SUSPENDED" {
+				toTerminate = append(toTerminate, instanceName)
+			}
+
+		}
+	}
+
+	log.Debug().Msgf("found %d suspended instances", len(toTerminate))
+	_, terminateErrors := terminateInstances(toTerminate)
+	errs = append(errs, terminateErrors...)
+
+	return
+}

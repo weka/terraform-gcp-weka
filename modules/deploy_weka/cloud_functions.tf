@@ -328,6 +328,7 @@ resource "google_cloudfunctions_function" "terminate_function" {
     INSTANCE_GROUP: google_compute_instance_group.instance_group.name
     COLLECTION_NAME: "${var.prefix}-${var.cluster_name}-collection"
     DOCUMENT_NAME: "${var.prefix}-${var.cluster_name}-document"
+    LOAD_BALANCER_NAME: google_compute_region_backend_service.backend_service.name
   }
 }
 
