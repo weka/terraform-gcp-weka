@@ -296,7 +296,7 @@ func writeResponse(w http.ResponseWriter, response protocol.TerminatedInstancesR
 	json.NewEncoder(w).Encode(response)
 }
 
-func deccrement(project, collectionName, documentName string, amount int) (err error) {
+func decrement(project, collectionName, documentName string, amount int) (err error) {
 	log.Info().Msg("updating DB")
 
 	ctx := context.Background()
@@ -391,7 +391,7 @@ func Terminate(w http.ResponseWriter, r *http.Request) {
 	terminatedInstances, errs := terminateUnneededInstances(instanceGroup, candidatesToTerminate, scaleResponse.ToTerminate)
 	response.AddTransientErrors(errs)
 
-	deccrement(project, collectionName, documentName, len(terminatedInstances))
+	decrement(project, collectionName, documentName, len(terminatedInstances))
 
 	//detachTerminated(asgName)
 
