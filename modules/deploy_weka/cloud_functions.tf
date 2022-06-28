@@ -396,7 +396,6 @@ resource "google_cloudfunctions_function" "bunch_function" {
   environment_variables = {
     PROJECT: var.project
     ZONE: var.zone
-    CLUSTER_NAME: var.cluster_name
     INSTANCE_GROUP: google_compute_instance_group.instance_group.name
   }
 }
