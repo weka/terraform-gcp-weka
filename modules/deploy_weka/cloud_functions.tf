@@ -54,6 +54,10 @@ resource "null_resource" "generate_cloud_functions_zips" {
       zip -r get-size.zip get_size.go go.mod
       mv get-size.zip ../../cloud-functions-zip/
 
+      cd ../protect
+      zip -r protect.zip protect.go go.mod
+      mv protect.zip ../../cloud-functions-zip/
+
     EOT
     interpreter = ["bash", "-ce"]
   }
@@ -550,6 +554,42 @@ resource "google_cloudfunctions_function_iam_member" "get_size_invoker" {
   project        = google_cloudfunctions_function.get_size_function.project
   region         = google_cloudfunctions_function.get_size_function.region
   cloud_function = google_cloudfunctions_function.get_size_function.name
+
+  role   = "roles/cloudfunctions.invoker"
+  member = "allUsers"
+}
+
+# ======================== protect ============================
+
+resource "google_storage_bucket_object" "protect_zip" {
+  name   = "${var.prefix}-${var.cluster_name}-protect.zip"
+  bucket = data.google_storage_bucket.cloud_functions_bucket.name
+  source = "cloud-functions-zip/protect.zip"
+  depends_on = [null_resource.generate_cloud_functions_zips]
+}
+
+resource "google_cloudfunctions_function" "protect_function" {
+  name        = "${var.prefix}-${var.cluster_name}-protect"
+  description = "add instance deletion protection"
+  runtime     = "go116"
+  timeout     = 540
+
+  available_memory_mb   = 128
+  source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
+  source_archive_object = google_storage_bucket_object.protect_zip.name
+  trigger_http          = true
+  entry_point           = "Protect"
+  environment_variables = {
+    PROJECT: var.project
+    ZONE: var.zone
+  }
+}
+
+# IAM entry for all users to invoke the function
+resource "google_cloudfunctions_function_iam_member" "protect_invoker" {
+  project        = google_cloudfunctions_function.protect_function.project
+  region         = google_cloudfunctions_function.protect_function.region
+  cloud_function = google_cloudfunctions_function.protect_function.name
 
   role   = "roles/cloudfunctions.invoker"
   member = "allUsers"
