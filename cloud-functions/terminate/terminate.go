@@ -178,26 +178,53 @@ func terminateUnneededInstances(asgName string, instances []*computepb.Instance,
 	return
 }
 
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func unsetDeletionProtection(project, zone, instanceName string) (err error) {
+	log.Info().Msgf("Setting deletion protection on %s", instanceName)
+	ctx := context.Background()
+
+	c, err := compute.NewInstancesRESTClient(ctx)
+	if err != nil {
+		log.Error().Msgf("%s", err)
+		return
+	}
+	defer c.Close()
+
+	value := false
+	req := &computepb.SetDeletionProtectionInstanceRequest{
+		Project:            project,
+		Zone:               zone,
+		Resource:           instanceName,
+		DeletionProtection: &value,
+	}
+
+	_, err = c.SetDeletionProtection(ctx, req)
+	if err != nil {
+		log.Error().Msgf("%s", err)
+		return
+	}
+
+	return
+}
+
 func terminateAsgInstances(asgName string, terminateInstanceIds []string) (terminatedInstances []string, errs []error) {
 	if len(terminateInstanceIds) == 0 {
 		return
 	}
-	//setToTerminate, errs := common.SetDisableInstancesApiTermination(
-	//	terminateInstanceIds[:common.Min(len(terminateInstanceIds), 50)],
-	//	false,
-	//)
-	//
-	//err := removeAutoScalingProtection(asgName, setToTerminate)
-	//if err != nil {
-	//	// WARNING: This is debatable if error here is transient or not
-	//	//	Specifically now we can return empty list of what we were able to terminate because this API call failed
-	//	//   But in future with adding more lambdas into state machine this might become wrong decision
-	//	log.Error().Err(err)
-	//	setToTerminate = setToTerminate[:0]
-	//	errs = append(errs, err)
-	//}
+	setToTerminate := terminateInstanceIds[:min(len(terminateInstanceIds), 50)]
+	for _, instanceId := range setToTerminate {
+		err := unsetDeletionProtection(Project, Zone, instanceId)
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}
 
-	setToTerminate := terminateInstanceIds
 	terminatedInstances, err := terminateInstances(setToTerminate)
 	if err != nil {
 		log.Error().Err(err)
