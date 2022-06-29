@@ -1,3 +1,13 @@
+module "create_service_account" {
+  source = "./modules/service_account"
+  project = var.project
+  prefix = var.prefix
+  sa_name = var.sa_name
+  providers = {
+    google = google.main
+  }
+}
+
 module "setup_network" {
   source               = "./modules/setup_network"
   cluster_name         = var.cluster_name
@@ -12,6 +22,10 @@ module "setup_network" {
   zone                 = var.zone
   create_vpc_connector = var.create_vpc_connector
   vpc_connector_range  = var.vpc_connector_range
+  providers = {
+    google = google.deployment
+  }
+  depends_on = [ module.create_service_account]
 }
 
 
@@ -39,4 +53,11 @@ module "deploy_weka" {
   bucket-location      = var.bucket-location
   subnets              = var.subnets
   vpc-connector        = module.setup_network.output-vpc-connector-name
+  sa_email             = module.create_service_account.outputs-service-account-email
+
+  providers = {
+    google = google.deployment
+  }
+
+  depends_on = [module.create_service_account]
 }

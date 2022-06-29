@@ -4,14 +4,12 @@ resource "google_project_service" "workflows" {
   disable_dependent_services=false
 }
 
-data "google_compute_default_service_account" "default" {
-}
 
 resource "google_workflows_workflow" "workflows" {
   name            = "${var.prefix}-${var.cluster_name}-scale-down-workflow"
   region          = var.region
   description     = "Fetch workflow"
-  service_account = data.google_compute_default_service_account.default.id
+  service_account = var.sa_email
   source_contents = <<-EOF
   - fetch:
       call: http.post

@@ -13,3 +13,7 @@ output "subnetwork-name-list" {
 output "subnets-range-list" {
   value = module.setup_network.output-subnets-range
 }
+
+output "service-account-email" {
+  value = module.create_service_account.outputs-service-account-email
+}

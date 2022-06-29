@@ -108,3 +108,8 @@ variable "vpc-connector" {
   type        = string
   description = "connector name to use for serverless vpc access"
 }
+
+variable "sa_email" {
+  type = string
+  description = "service account email"
+}
