@@ -12,7 +12,6 @@ import (
 	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 	"math/rand"
-	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -205,20 +204,4 @@ func GetJoinParams(project, zone, clusterName, usernameId, passwordId string) (b
 	bashScript = fmt.Sprintf(dedent.Dedent(bashScriptTemplate), creds.Username, creds.Password, strings.Join(ips, "\" \""), os.Getenv("GATEWAYS"), os.Getenv("SUBNETS"), cores, frontend, drive, strings.Join(ips, ","))
 
 	return
-}
-
-func Join(w http.ResponseWriter, r *http.Request) {
-	project := os.Getenv("PROJECT")
-	zone := os.Getenv("ZONE")
-	clusterName := os.Getenv("CLUSTER_NAME")
-	usernameId := os.Getenv("USER_NAME_ID")
-	passwordId := os.Getenv("PASSWORD_ID")
-
-	fmt.Println("Getting join params")
-	bashScript, err := GetJoinParams(project, zone, clusterName, usernameId, passwordId)
-	if err != nil {
-		fmt.Fprintf(w, "%s", err)
-	} else {
-		fmt.Fprintf(w, bashScript)
-	}
 }
