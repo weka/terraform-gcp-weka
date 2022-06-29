@@ -26,7 +26,10 @@ resource "google_compute_instance_template" "backends-template" {
   labels = {
     cluster_name = var.cluster_name
   }
-
+  service_account {
+    email = var.sa_email
+    scopes = []
+  }
   disk {
     source_image = data.google_compute_image.centos_7.id
     disk_size_gb = 50
