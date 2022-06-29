@@ -130,3 +130,14 @@ variable "vpc_connector_name" {
   description = ""
   default = ""
 }
+
+variable "sa_name" {
+  type = string
+  description = "service account name"
+}
+
+variable "sa_email" {
+  type = string
+  description = "service account email"
+  default = ""
+}

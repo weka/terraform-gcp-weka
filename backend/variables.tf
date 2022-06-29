@@ -15,3 +15,8 @@ variable "location" {
   description = "location"
   default     = "EU"
 }
+
+variable "prefix" {
+  type = string
+  default = "weka"
+}

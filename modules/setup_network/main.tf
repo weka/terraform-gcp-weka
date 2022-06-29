@@ -27,6 +27,13 @@ resource "google_project_service" "project-gcp-api" {
   disable_dependent_services = false
 }
 
+resource "google_project_service" "service-cloud-api" {
+  project = var.project
+  service = "cloudresourcemanager.googleapis.com"
+  disable_on_destroy = false
+  disable_dependent_services = false
+}
+
 resource "google_compute_network" "vpc_network" {
   count                   = length(var.vpcs) == 0 ? var.nics_number :0
   name                    = "${var.prefix}-vpc-${count.index}"
@@ -86,6 +93,7 @@ resource "google_vpc_access_connector" "connector" {
   count         = var.create_vpc_connector ? 1 :0
   name          = "${var.prefix}-connector"
   ip_cidr_range = var.vpc_connector_range
+  region        = var.region
   network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[0].id : "https://www.googleapis.com/compute/v1/projects/${var.project}/global/networks/${var.vpcs[0]}"
 }
 

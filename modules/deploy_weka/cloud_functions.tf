@@ -16,13 +16,9 @@ resource "google_storage_bucket" "cloud_functions" {
   location = var.bucket-location
 }
 
-data "google_storage_bucket" "cloud_functions_bucket" {
-  name = google_storage_bucket.cloud_functions.name
-}
-
 resource "google_storage_bucket_object" "cloud_functions_zip" {
   name   = "${var.prefix}-${var.cluster_name}-cloud-functions.zip"
-  bucket = data.google_storage_bucket.cloud_functions_bucket.name
+  bucket = google_storage_bucket.cloud_functions.name
   source = "cloud-functions.zip"
   depends_on = [null_resource.generate_cloud_functions_zips]
 }
@@ -34,7 +30,7 @@ resource "google_cloudfunctions_function" "deploy_function" {
   runtime     = "go116"
 
   available_memory_mb   = 128
-  source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
+  source_archive_bucket = google_storage_bucket.cloud_functions.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "Deploy"
@@ -56,7 +52,7 @@ resource "google_cloudfunctions_function" "deploy_function" {
     BUNCH_URL:google_cloudfunctions_function.bunch_function.https_trigger_url
     GET_INSTANCES_URL: google_cloudfunctions_function.get_instances_function.https_trigger_url
   }
-
+  service_account_email = var.sa_email
   depends_on = [google_project_service.project-function-api]
 }
 
@@ -68,30 +64,30 @@ resource "google_cloudfunctions_function_iam_member" "join_invoker" {
   cloud_function = google_cloudfunctions_function.deploy_function.name
 
   role   = "roles/cloudfunctions.invoker"
-  member = "allUsers"
+  member = "allAuthenticatedUsers"
 }
 
 
-resource "google_secret_manager_secret_iam_member" "member-sa-username-secret" {
+resource "google_secret_manager_secret_iam_binding" "member-sa-username-secret" {
   project   = google_secret_manager_secret.secret_weka_username.project
   secret_id = google_secret_manager_secret.secret_weka_username.id
   role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${var.project}@appspot.gserviceaccount.com"
+  members    = ["serviceAccount:${var.sa_email}"]
 }
 
 
-resource "google_secret_manager_secret_iam_member" "member-sa-password-secret" {
+resource "google_secret_manager_secret_iam_binding" "member-sa-password-secret" {
   project   = google_secret_manager_secret.secret_weka_password.project
   secret_id = google_secret_manager_secret.secret_weka_password.id
   role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${var.project}@appspot.gserviceaccount.com"
+  members   = ["serviceAccount:${var.sa_email}"]
 }
 
 resource "google_secret_manager_secret_iam_member" "member-sa-token" {
   project   = google_secret_manager_secret.secret_token.project
   secret_id = google_secret_manager_secret.secret_token.id
   role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${var.project}@appspot.gserviceaccount.com"
+  member    = "serviceAccount:${var.sa_email}"
 }
 
 # ======================== fetch ============================
@@ -101,7 +97,7 @@ resource "google_cloudfunctions_function" "fetch_function" {
   runtime     = "go116"
 
   available_memory_mb   = 128
-  source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
+  source_archive_bucket = google_storage_bucket.cloud_functions.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "Fetch"
@@ -115,7 +111,7 @@ resource "google_cloudfunctions_function" "fetch_function" {
     USER_NAME_ID: google_secret_manager_secret_version.user_secret_key.id
     PASSWORD_ID: google_secret_manager_secret_version.password_secret_key.id
   }
-
+  service_account_email = var.sa_email
   depends_on = [google_project_service.project-function-api]
 }
 
@@ -127,7 +123,7 @@ resource "google_cloudfunctions_function_iam_member" "fetch_invoker" {
   cloud_function = google_cloudfunctions_function.fetch_function.name
 
   role   = "roles/cloudfunctions.invoker"
-  member = "allUsers"
+  member = "allAuthenticatedUsers"
 }
 
 # ======================== scale_down ============================
@@ -137,14 +133,14 @@ resource "google_cloudfunctions_function" "scale_down_function" {
   runtime     = "go116"
 
   available_memory_mb   = 128
-  source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
+  source_archive_bucket = google_storage_bucket.cloud_functions.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "ScaleDown"
   vpc_connector         = var.vpc-connector
   ingress_settings      = "ALLOW_ALL"
   vpc_connector_egress_settings = "PRIVATE_RANGES_ONLY"
-
+  service_account_email = var.sa_email
   depends_on = [google_project_service.project-function-api]
 }
 
@@ -155,7 +151,7 @@ resource "google_cloudfunctions_function_iam_member" "scale_invoker" {
   cloud_function = google_cloudfunctions_function.scale_down_function.name
 
   role   = "roles/cloudfunctions.invoker"
-  member = "allUsers"
+  member = "allAuthenticatedUsers"
 }
 # ======================== scale_up ============================
 resource "google_cloudfunctions_function" "scale_up_function" {
@@ -165,7 +161,7 @@ resource "google_cloudfunctions_function" "scale_up_function" {
   timeout     = 540
 
   available_memory_mb   = 128
-  source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
+  source_archive_bucket = google_storage_bucket.cloud_functions.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "ScaleUp"
@@ -178,6 +174,7 @@ resource "google_cloudfunctions_function" "scale_up_function" {
     DOCUMENT_NAME: "${var.prefix}-${var.cluster_name}-document"
     INSTANCE_BASE_NAME: "${var.prefix}-${var.cluster_name}-vm"
   }
+  service_account_email = var.sa_email
 }
 
 # IAM entry for all users to invoke the function
@@ -187,7 +184,7 @@ resource "google_cloudfunctions_function_iam_member" "scale_up_invoker" {
   cloud_function = google_cloudfunctions_function.scale_up_function.name
 
   role   = "roles/cloudfunctions.invoker"
-  member = "allUsers"
+  member = "allAuthenticatedUsers"
 }
 
 
@@ -199,7 +196,7 @@ resource "google_cloudfunctions_function" "clusterize_function" {
   timeout     = 540
 
   available_memory_mb   = 128
-  source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
+  source_archive_bucket = google_storage_bucket.cloud_functions.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "Clusterize"
@@ -215,6 +212,7 @@ resource "google_cloudfunctions_function" "clusterize_function" {
     PASSWORD_ID: google_secret_manager_secret_version.password_secret_key.id
     INSTANCE_BASE_NAME: "${var.prefix}-${var.cluster_name}-vm"
   }
+  service_account_email = var.sa_email
 }
 
 # IAM entry for all users to invoke the function
@@ -224,7 +222,7 @@ resource "google_cloudfunctions_function_iam_member" "clusterize_invoker" {
   cloud_function = google_cloudfunctions_function.clusterize_function.name
 
   role   = "roles/cloudfunctions.invoker"
-  member = "allUsers"
+  member = "allAuthenticatedUsers"
 }
 
 # ======================== terminate ============================
@@ -235,7 +233,7 @@ resource "google_cloudfunctions_function" "terminate_function" {
   timeout     = 540
 
   available_memory_mb   = 128
-  source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
+  source_archive_bucket = google_storage_bucket.cloud_functions.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "Terminate"
@@ -247,6 +245,7 @@ resource "google_cloudfunctions_function" "terminate_function" {
     DOCUMENT_NAME: "${var.prefix}-${var.cluster_name}-document"
     LOAD_BALANCER_NAME: google_compute_region_backend_service.backend_service.name
   }
+  service_account_email = var.sa_email
 }
 
 # IAM entry for all users to invoke the function
@@ -256,7 +255,7 @@ resource "google_cloudfunctions_function_iam_member" "terminate_invoker" {
   cloud_function = google_cloudfunctions_function.terminate_function.name
 
   role   = "roles/cloudfunctions.invoker"
-  member = "allUsers"
+  member = "allAuthenticatedUsers"
 }
 
 # ======================== transient ============================
@@ -267,10 +266,11 @@ resource "google_cloudfunctions_function" "transient_function" {
   timeout     = 540
 
   available_memory_mb   = 128
-  source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
+  source_archive_bucket = google_storage_bucket.cloud_functions.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "Transient"
+  service_account_email = var.sa_email
 }
 
 # IAM entry for all users to invoke the function
@@ -280,7 +280,7 @@ resource "google_cloudfunctions_function_iam_member" "transient_invoker" {
   cloud_function = google_cloudfunctions_function.transient_function.name
 
   role   = "roles/cloudfunctions.invoker"
-  member = "allUsers"
+  member = "allAuthenticatedUsers"
 }
 
 # ======================== bunch ============================
@@ -291,7 +291,7 @@ resource "google_cloudfunctions_function" "bunch_function" {
   timeout     = 540
 
   available_memory_mb   = 128
-  source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
+  source_archive_bucket = google_storage_bucket.cloud_functions.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "Bunch"
@@ -300,6 +300,7 @@ resource "google_cloudfunctions_function" "bunch_function" {
     ZONE: var.zone
     INSTANCE_GROUP: google_compute_instance_group.instance_group.name
   }
+  service_account_email = var.sa_email
 }
 
 # IAM entry for all users to invoke the function
@@ -309,7 +310,7 @@ resource "google_cloudfunctions_function_iam_member" "bunch_invoker" {
   cloud_function = google_cloudfunctions_function.bunch_function.name
 
   role   = "roles/cloudfunctions.invoker"
-  member = "allUsers"
+  member = "allAuthenticatedUsers"
 }
 
 # ======================== update_db ============================
@@ -320,7 +321,7 @@ resource "google_cloudfunctions_function" "update_db_function" {
   timeout     = 540
 
   available_memory_mb   = 128
-  source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
+  source_archive_bucket = google_storage_bucket.cloud_functions.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "UpdateDb"
@@ -329,6 +330,7 @@ resource "google_cloudfunctions_function" "update_db_function" {
     COLLECTION_NAME: "${var.prefix}-${var.cluster_name}-collection"
     DOCUMENT_NAME: "${var.prefix}-${var.cluster_name}-document"
   }
+  service_account_email = var.sa_email
 }
 
 # IAM entry for all users to invoke the function
@@ -338,7 +340,7 @@ resource "google_cloudfunctions_function_iam_member" "update_db_invoker" {
   cloud_function = google_cloudfunctions_function.update_db_function.name
 
   role   = "roles/cloudfunctions.invoker"
-  member = "allUsers"
+  member = "allAuthenticatedUsers"
 }
 
 # ======================== increment ============================
@@ -349,7 +351,7 @@ resource "google_cloudfunctions_function" "increment_function" {
   timeout     = 540
 
   available_memory_mb   = 128
-  source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
+  source_archive_bucket = google_storage_bucket.cloud_functions.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "Increment"
@@ -358,6 +360,7 @@ resource "google_cloudfunctions_function" "increment_function" {
     COLLECTION_NAME: "${var.prefix}-${var.cluster_name}-collection"
     DOCUMENT_NAME: "${var.prefix}-${var.cluster_name}-document"
   }
+  service_account_email = var.sa_email
 }
 
 # IAM entry for all users to invoke the function
@@ -367,7 +370,7 @@ resource "google_cloudfunctions_function_iam_member" "increment_invoker" {
   cloud_function = google_cloudfunctions_function.increment_function.name
 
   role   = "roles/cloudfunctions.invoker"
-  member = "allUsers"
+  member = "allAuthenticatedUsers"
 }
 
 # ======================== get_instances ============================
@@ -378,7 +381,7 @@ resource "google_cloudfunctions_function" "get_instances_function" {
   timeout     = 540
 
   available_memory_mb   = 128
-  source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
+  source_archive_bucket = google_storage_bucket.cloud_functions.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "GetInstances"
@@ -387,6 +390,7 @@ resource "google_cloudfunctions_function" "get_instances_function" {
     COLLECTION_NAME: "${var.prefix}-${var.cluster_name}-collection"
     DOCUMENT_NAME: "${var.prefix}-${var.cluster_name}-document"
   }
+  service_account_email = var.sa_email
 }
 
 # IAM entry for all users to invoke the function
@@ -396,7 +400,7 @@ resource "google_cloudfunctions_function_iam_member" "get_instances_invoker" {
   cloud_function = google_cloudfunctions_function.get_instances_function.name
 
   role   = "roles/cloudfunctions.invoker"
-  member = "allUsers"
+  member = "allAuthenticatedUsers"
 }
 
 # ======================== protect ============================
@@ -407,7 +411,7 @@ resource "google_cloudfunctions_function" "protect_function" {
   timeout     = 540
 
   available_memory_mb   = 128
-  source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
+  source_archive_bucket = google_storage_bucket.cloud_functions.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "Protect"
@@ -415,6 +419,7 @@ resource "google_cloudfunctions_function" "protect_function" {
     PROJECT: var.project
     ZONE: var.zone
   }
+  service_account_email = var.sa_email
 }
 
 # IAM entry for all users to invoke the function
@@ -424,5 +429,5 @@ resource "google_cloudfunctions_function_iam_member" "protect_invoker" {
   cloud_function = google_cloudfunctions_function.protect_function.name
 
   role   = "roles/cloudfunctions.invoker"
-  member = "allUsers"
+  member = "allAuthenticatedUsers"
 }

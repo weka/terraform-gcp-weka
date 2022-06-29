@@ -33,7 +33,7 @@ region = "europe-west1"
 zone = "europe-west1-b"
 prefix = "weka"
 cluster_name = "poc"
-
+sa_name = "deploy-sa"
 
 ## Deploy weka module
 username = "weka"
