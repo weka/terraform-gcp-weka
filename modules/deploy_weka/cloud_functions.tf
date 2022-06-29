@@ -202,6 +202,7 @@ resource "google_cloudfunctions_function" "clusterize_function" {
     USER_NAME_ID: google_secret_manager_secret_version.user_secret_key.id
     PASSWORD_ID: google_secret_manager_secret_version.password_secret_key.id
     INSTANCE_BASE_NAME: "${var.prefix}-${var.cluster_name}-vm"
+    GET_SIZE_URL: google_cloudfunctions_function.get_size_function.https_trigger_url
   }
 }
 

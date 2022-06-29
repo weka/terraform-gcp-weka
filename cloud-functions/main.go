@@ -56,9 +56,9 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 	usernameId := os.Getenv("USER_NAME_ID")
 	passwordId := os.Getenv("PASSWORD_ID")
 	instanceBaseName := os.Getenv("INSTANCE_BASE_NAME")
-	cloudFunctionUrl := os.Getenv("CLOUD_FUNCTION_URL")
+	getSizeUrl := os.Getenv("GET_SIZE_URL")
 
-	fmt.Fprintf(w, clusterize.GenerateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, instanceBaseName, cloudFunctionUrl))
+	fmt.Fprintf(w, clusterize.GenerateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, instanceBaseName, getSizeUrl))
 }
 
 func Fetch(w http.ResponseWriter, r *http.Request) {
