@@ -4,13 +4,10 @@ import (
 	"cloud.google.com/go/firestore"
 	"context"
 	firebase "firebase.google.com/go"
-	"fmt"
 	"github.com/rs/zerolog/log"
-	"net/http"
-	"os"
 )
 
-func increment(project, collectionName, documentName string) (err error) {
+func IncrementCounter(project, collectionName, documentName string) (err error) {
 	log.Info().Msg("updating DB")
 
 	ctx := context.Background()
@@ -38,17 +35,4 @@ func increment(project, collectionName, documentName string) (err error) {
 	}
 
 	return
-}
-
-func Increment(w http.ResponseWriter, r *http.Request) {
-	project := os.Getenv("PROJECT")
-	collectionName := os.Getenv("COLLECTION_NAME")
-	documentName := os.Getenv("DOCUMENT_NAME")
-
-	err := increment(project, collectionName, documentName)
-	if err != nil {
-		fmt.Fprintf(w, "Increment failed: %s", err)
-	} else {
-		fmt.Fprintf(w, "Increment completed successfully")
-	}
 }

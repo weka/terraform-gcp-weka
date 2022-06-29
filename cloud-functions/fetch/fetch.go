@@ -4,7 +4,6 @@ import (
 	compute "cloud.google.com/go/compute/apiv1"
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	"context"
-	"encoding/json"
 	"errors"
 	firebase "firebase.google.com/go"
 	"fmt"
@@ -12,8 +11,6 @@ import (
 	"google.golang.org/api/iterator"
 	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
-	"net/http"
-	"os"
 	"strings"
 )
 
@@ -227,19 +224,4 @@ func getBackendsIps(project, zone, clusterName string) (backendsIps []string) {
 		_ = resp
 	}
 	return
-}
-
-func Fetch(w http.ResponseWriter, r *http.Request) {
-	project := os.Getenv("PROJECT")
-	zone := os.Getenv("ZONE")
-	instanceGroup := os.Getenv("INSTANCE_GROUP")
-	clusterName := os.Getenv("CLUSTER_NAME")
-	collectionName := os.Getenv("COLLECTION_NAME")
-	documentName := os.Getenv("DOCUMENT_NAME")
-	usernameId := os.Getenv("USER_NAME_ID")
-	passwordId := os.Getenv("PASSWORD_ID")
-
-	fmt.Println("Writing fetch result")
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(GetFetchDataParams(project, zone, instanceGroup, clusterName, collectionName, documentName, usernameId, passwordId))
 }

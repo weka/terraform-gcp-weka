@@ -10,8 +10,6 @@ import (
 	"google.golang.org/api/iterator"
 	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
-	"net/http"
-	"os"
 	"strings"
 )
 
@@ -76,7 +74,7 @@ func getBackendsIps(project, zone, clusterName string) (backendsIps []string) {
 	return
 }
 
-func generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, instanceBaseName, cloudFunctionUrl string) (clusterizeScript string) {
+func GenerateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, instanceBaseName, cloudFunctionUrl string) (clusterizeScript string) {
 	log.Info().Msg("Generating clusterization scrtipt")
 	creds, err := getUsernameAndPassword(usernameId, passwordId)
 	if err != nil {
@@ -153,20 +151,4 @@ func generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, cluster
 	log.Info().Msgf("Formatting clusterization script template")
 	clusterizeScript = fmt.Sprintf(dedent.Dedent(clusterizeScriptTemplate), ips, hostsNum, nicsNum, gws, clusterName, nvmesMumber, creds.Username, creds.Password, instanceBaseName, cloudFunctionUrl)
 	return
-}
-
-func Clusterize(w http.ResponseWriter, r *http.Request) {
-	project := os.Getenv("PROJECT")
-	zone := os.Getenv("ZONE")
-	hostsNum := os.Getenv("HOSTS_NUM")
-	nicsNum := os.Getenv("NICS_NUM")
-	gws := os.Getenv("GWS")
-	clusterName := os.Getenv("CLUSTER_NAME")
-	nvmesMumber := os.Getenv("NVMES_NUM")
-	usernameId := os.Getenv("USER_NAME_ID")
-	passwordId := os.Getenv("PASSWORD_ID")
-	instanceBaseName := os.Getenv("INSTANCE_BASE_NAME")
-	cloudFunctionUrl := os.Getenv("CLOUD_FUNCTION_URL")
-
-	fmt.Fprintf(w, generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, instanceBaseName, cloudFunctionUrl))
 }

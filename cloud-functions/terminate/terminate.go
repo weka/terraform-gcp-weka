@@ -9,7 +9,7 @@ import (
 	firebase "firebase.google.com/go"
 	"fmt"
 	"github.com/rs/zerolog/log"
-	"github.com/weka/gcp-tf/cloud-functions/terminate/protocol"
+	"github.com/weka/gcp-tf/cloud-functions/protocol"
 	"google.golang.org/api/iterator"
 	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
 	"net/http"
@@ -350,94 +350,7 @@ func decrement(project, collectionName, documentName string, amount int) (err er
 	return
 }
 
-func Terminate(w http.ResponseWriter, r *http.Request) {
-	project := os.Getenv("PROJECT")
-	collectionName := os.Getenv("COLLECTION_NAME")
-	documentName := os.Getenv("DOCUMENT_NAME")
-	loadBalancerName := os.Getenv("LOAD_BALANCER_NAME")
-
-	var response protocol.TerminatedInstancesResponse
-	var err error
-	var scaleResponse protocol.ScaleResponse
-	if err := json.NewDecoder(r.Body).Decode(&scaleResponse); err != nil {
-		fmt.Fprint(w, "Failed decoding request body")
-		return
-	}
-	response.Version = protocol.Version
-
-	if scaleResponse.Version != protocol.Version {
-		log.Error().Msgf("Incompatible scale response version")
-		writeResponse(w, response)
-		return
-	}
-
-	instanceGroup := os.Getenv("INSTANCE_GROUP")
-	if instanceGroup == "" {
-		log.Error().Msgf("ASG_NAME env var is mandatory")
-		writeResponse(w, response)
-		return
-	}
-	response.TransientErrors = scaleResponse.TransientErrors[0:len(scaleResponse.TransientErrors):len(scaleResponse.TransientErrors)]
-
-	asgInstances := getAsgInstances(Project, Zone, instanceGroup)
-	asgInstanceIds := unpackASGInstanceIds(asgInstances)
-	log.Info().Msgf("Found %d instances on ASG", len(asgInstanceIds))
-	if err != nil {
-		log.Error().Msgf("%s", err)
-		writeResponse(w, response)
-		return
-	}
-
-	errs := terminateUnhealthyInstances(Project, Zone, instanceGroup, loadBalancerName)
-	if len(errs) != 0 {
-		response.AddTransientErrors(errs)
-	}
-
-	deltaInstanceIds, err := getDeltaInstancesIds(asgInstanceIds, scaleResponse)
-	if err != nil {
-		log.Error().Msgf("%s", err)
-		writeResponse(w, response)
-		return
-	}
-
-	if len(deltaInstanceIds) == 0 {
-		log.Info().Msgf("No delta instances ids")
-		writeResponse(w, response)
-		return
-	}
-
-	candidatesToTerminate, err := getInstances(deltaInstanceIds)
-	if err != nil {
-		log.Error().Msgf("%s", err)
-		writeResponse(w, response)
-		return
-	}
-
-	terminatedInstances, errs := terminateUnneededInstances(instanceGroup, candidatesToTerminate, scaleResponse.ToTerminate)
-	response.AddTransientErrors(errs)
-
-	decrement(project, collectionName, documentName, len(terminatedInstances))
-
-	//detachTerminated(asgName)
-
-	for _, instance := range terminatedInstances {
-		date, err := time.Parse(time.RFC3339, *instance.CreationTimestamp)
-
-		if err != nil {
-			log.Error().Msgf("error formatting creation time %s", err.Error())
-			continue
-		}
-
-		response.Instances = append(response.Instances, protocol.TerminatedInstance{
-			InstanceId: *instance.Name,
-			Creation:   date,
-		})
-	}
-
-	writeResponse(w, response)
-}
-
-func terminateUnhealthyInstances(project, zone, instanceGroup, loadBalancerName string) (errs []error) {
+func TerminateUnhealthyInstances(project, zone, instanceGroup, loadBalancerName string) (errs []error) {
 	var toTerminate []string
 
 	ctx := context.Background()
@@ -518,6 +431,86 @@ func terminateUnhealthyInstances(project, zone, instanceGroup, loadBalancerName 
 	log.Debug().Msgf("found %d suspended instances", len(toTerminate))
 	_, terminateErrors := terminateInstances(toTerminate)
 	errs = append(errs, terminateErrors...)
+
+	return
+}
+
+func Terminate(w http.ResponseWriter, scaleResponse protocol.ScaleResponse, project, collectionName, documentName, loadBalancerName string) {
+	var response protocol.TerminatedInstancesResponse
+	var err error
+
+	response.Version = protocol.Version
+
+	if scaleResponse.Version != protocol.Version {
+		log.Error().Msgf("Incompatible scale response version")
+		writeResponse(w, response)
+		return
+	}
+
+	instanceGroup := os.Getenv("INSTANCE_GROUP")
+	if instanceGroup == "" {
+		log.Error().Msgf("ASG_NAME env var is mandatory")
+		writeResponse(w, response)
+		return
+	}
+	response.TransientErrors = scaleResponse.TransientErrors[0:len(scaleResponse.TransientErrors):len(scaleResponse.TransientErrors)]
+
+	asgInstances := getAsgInstances(Project, Zone, instanceGroup)
+	asgInstanceIds := unpackASGInstanceIds(asgInstances)
+	log.Info().Msgf("Found %d instances on ASG", len(asgInstanceIds))
+	if err != nil {
+		log.Error().Msgf("%s", err)
+		writeResponse(w, response)
+		return
+	}
+
+	errs := TerminateUnhealthyInstances(Project, Zone, instanceGroup, loadBalancerName)
+	if len(errs) != 0 {
+		response.AddTransientErrors(errs)
+	}
+
+	deltaInstanceIds, err := getDeltaInstancesIds(asgInstanceIds, scaleResponse)
+	if err != nil {
+		log.Error().Msgf("%s", err)
+		writeResponse(w, response)
+		return
+	}
+
+	if len(deltaInstanceIds) == 0 {
+		log.Info().Msgf("No delta instances ids")
+		writeResponse(w, response)
+		return
+	}
+
+	candidatesToTerminate, err := getInstances(deltaInstanceIds)
+	if err != nil {
+		log.Error().Msgf("%s", err)
+		writeResponse(w, response)
+		return
+	}
+
+	terminatedInstances, errs := terminateUnneededInstances(instanceGroup, candidatesToTerminate, scaleResponse.ToTerminate)
+	response.AddTransientErrors(errs)
+
+	decrement(project, collectionName, documentName, len(terminatedInstances))
+
+	//detachTerminated(asgName)
+
+	for _, instance := range terminatedInstances {
+		date, err := time.Parse(time.RFC3339, *instance.CreationTimestamp)
+
+		if err != nil {
+			log.Error().Msgf("error formatting creation time %s", err.Error())
+			continue
+		}
+
+		response.Instances = append(response.Instances, protocol.TerminatedInstance{
+			InstanceId: *instance.Name,
+			Creation:   date,
+		})
+	}
+
+	writeResponse(w, response)
 
 	return
 }

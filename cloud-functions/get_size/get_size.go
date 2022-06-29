@@ -3,14 +3,11 @@ package get_size
 import (
 	compute "cloud.google.com/go/compute/apiv1"
 	"context"
-	"fmt"
 	"github.com/rs/zerolog/log"
 	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
-	"net/http"
-	"os"
 )
 
-func getInstanceGroupSize(project, zone, instanceGroup string) int32 {
+func GetInstanceGroupSize(project, zone, instanceGroup string) int32 {
 	log.Info().Msg("Retrieving instance group size")
 	ctx := context.Background()
 
@@ -34,12 +31,4 @@ func getInstanceGroupSize(project, zone, instanceGroup string) int32 {
 	}
 
 	return *resp.Size
-}
-
-func GetSize(w http.ResponseWriter, r *http.Request) {
-	project := os.Getenv("PROJECT")
-	zone := os.Getenv("ZONE")
-	instanceGroup := os.Getenv("INSTANCE_GROUP")
-
-	fmt.Fprintf(w, "%d", getInstanceGroupSize(project, zone, instanceGroup))
 }

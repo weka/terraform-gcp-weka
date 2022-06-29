@@ -3,61 +3,8 @@
 resource "null_resource" "generate_cloud_functions_zips" {
   provisioner "local-exec" {
     command = <<-EOT
-      mkdir -p cloud-functions-zip
-
-      cd cloud-functions/join
-      zip -r join.zip join.go go.mod
-      mv join.zip ../../cloud-functions-zip/
-
-      cd ../fetch
-      zip -r fetch.zip fetch.go go.mod
-      mv fetch.zip ../../cloud-functions-zip/
-
-      cd ../scale_down
-      zip -r scale-down.zip connectors lib protocol scale_down.go  go.mod
-      mv scale-down.zip ../../cloud-functions-zip/
-
-      cd ../scale_up
-      zip -r scale-up.zip scale_up.go go.mod
-      zip -r scale-up.zip scale_up.go go.mod
-      mv scale-up.zip ../../cloud-functions-zip/
-
-      cd ../clusterize
-      zip -r clusterize.zip clusterize.go go.mod
-      mv clusterize.zip ../../cloud-functions-zip/
-
-      cd ../terminate
-      zip -r terminate.zip lib protocol terminate.go go.mod
-      mv terminate.zip ../../cloud-functions-zip/
-
-      cd ../transient
-      zip -r transient.zip lib protocol transient.go go.mod
-      mv transient.zip ../../cloud-functions-zip/
-
-      cd ../bunch
-      zip -r bunch.zip bunch.go go.mod
-      mv bunch.zip ../../cloud-functions-zip/
-
-      cd ../update_db
-      zip -r update-db.zip update_db.go go.mod
-      mv update-db.zip ../../cloud-functions-zip/
-
-      cd ../increment
-      zip -r increment.zip increment.go go.mod
-      mv increment.zip ../../cloud-functions-zip/
-
-      cd ../get_db_value
-      zip -r get-db-value.zip get_db_value.go go.mod
-      mv get-db-value.zip ../../cloud-functions-zip/
-
-      cd ../get_size
-      zip -r get-size.zip get_size.go go.mod
-      mv get-size.zip ../../cloud-functions-zip/
-
-      cd ../protect
-      zip -r protect.zip protect.go go.mod
-      mv protect.zip ../../cloud-functions-zip/
-
+      cd cloud-functions
+      zip -r ../cloud-functions.zip * -x cloud-functions/cloud_functions_test.go
     EOT
     interpreter = ["bash", "-ce"]
   }
@@ -73,15 +20,14 @@ data "google_storage_bucket" "cloud_functions_bucket" {
   name = google_storage_bucket.cloud_functions.name
 }
 
-# ======================== join ============================
-resource "google_storage_bucket_object" "join_zip" {
-  name   = "${var.prefix}-${var.cluster_name}-join.zip"
+resource "google_storage_bucket_object" "cloud_functions_zip" {
+  name   = "${var.prefix}-${var.cluster_name}-cloud-functions.zip"
   bucket = data.google_storage_bucket.cloud_functions_bucket.name
-  source = "cloud-functions-zip/join.zip"
+  source = "cloud-functions.zip"
   depends_on = [null_resource.generate_cloud_functions_zips]
 }
 
-
+# ======================== join ============================
 resource "google_cloudfunctions_function" "join_function" {
   name        = "${var.prefix}-${var.cluster_name}-join"
   description = "join new instance"
@@ -89,7 +35,7 @@ resource "google_cloudfunctions_function" "join_function" {
 
   available_memory_mb   = 128
   source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
-  source_archive_object = google_storage_bucket_object.join_zip.name
+  source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "Join"
   environment_variables = {
@@ -133,14 +79,6 @@ resource "google_secret_manager_secret_iam_member" "member-sa-password-secret" {
 }
 
 # ======================== fetch ============================
-
-resource "google_storage_bucket_object" "fetch_zip" {
-  name   = "${var.prefix}-${var.cluster_name}-fetch.zip"
-  bucket = data.google_storage_bucket.cloud_functions_bucket.name
-  source = "cloud-functions-zip/fetch.zip"
-  depends_on = [null_resource.generate_cloud_functions_zips]
-}
-
 resource "google_cloudfunctions_function" "fetch_function" {
   name        = "${var.prefix}-${var.cluster_name}-fetch"
   description = "fetch cluster info"
@@ -148,7 +86,7 @@ resource "google_cloudfunctions_function" "fetch_function" {
 
   available_memory_mb   = 128
   source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
-  source_archive_object = google_storage_bucket_object.fetch_zip.name
+  source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "Fetch"
   environment_variables = {
@@ -177,15 +115,6 @@ resource "google_cloudfunctions_function_iam_member" "fetch_invoker" {
 }
 
 # ======================== scale_down ============================
-
-resource "google_storage_bucket_object" "scale_down_zip" {
-  name   = "${var.prefix}-${var.cluster_name}-scale-down.zip"
-  bucket = data.google_storage_bucket.cloud_functions_bucket.name
-  source = "cloud-functions-zip/scale-down.zip"
-  depends_on = [null_resource.generate_cloud_functions_zips]
-}
-
-
 resource "google_cloudfunctions_function" "scale_down_function" {
   name        = "${var.prefix}-${var.cluster_name}-scale-down"
   description = "scale cluster down"
@@ -193,9 +122,9 @@ resource "google_cloudfunctions_function" "scale_down_function" {
 
   available_memory_mb   = 128
   source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
-  source_archive_object = google_storage_bucket_object.scale_down_zip.name
+  source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
-  entry_point           = "Scale"
+  entry_point           = "ScaleDown"
   vpc_connector         = var.vpc-connector
   ingress_settings      = "ALLOW_ALL"
   vpc_connector_egress_settings = "PRIVATE_RANGES_ONLY"
@@ -213,14 +142,6 @@ resource "google_cloudfunctions_function_iam_member" "scale_invoker" {
   member = "allUsers"
 }
 # ======================== scale_up ============================
-
-resource "google_storage_bucket_object" "scale_up_zip" {
-  name   = "${var.prefix}-${var.cluster_name}-scale-up.zip"
-  bucket = data.google_storage_bucket.cloud_functions_bucket.name
-  source = "cloud-functions-zip/scale-up.zip"
-  depends_on = [null_resource.generate_cloud_functions_zips]
-}
-
 resource "google_cloudfunctions_function" "scale_up_function" {
   name        = "${var.prefix}-${var.cluster_name}-scale-up"
   description = "scale cluster up"
@@ -229,7 +150,7 @@ resource "google_cloudfunctions_function" "scale_up_function" {
 
   available_memory_mb   = 128
   source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
-  source_archive_object = google_storage_bucket_object.scale_up_zip.name
+  source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "ScaleUp"
   environment_variables = {
@@ -259,14 +180,6 @@ resource "google_cloudfunctions_function_iam_member" "scale_up_invoker" {
 
 
 # ======================== clusterize ============================
-
-resource "google_storage_bucket_object" "clusterize_zip" {
-  name   = "${var.prefix}-${var.cluster_name}-clusterize.zip"
-  bucket = data.google_storage_bucket.cloud_functions_bucket.name
-  source = "cloud-functions-zip/clusterize.zip"
-  depends_on = [null_resource.generate_cloud_functions_zips]
-}
-
 resource "google_cloudfunctions_function" "clusterize_function" {
   name        = "${var.prefix}-${var.cluster_name}-clusterize"
   description = "return clusterize scipt"
@@ -275,7 +188,7 @@ resource "google_cloudfunctions_function" "clusterize_function" {
 
   available_memory_mb   = 128
   source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
-  source_archive_object = google_storage_bucket_object.clusterize_zip.name
+  source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "Clusterize"
   environment_variables = {
@@ -303,14 +216,6 @@ resource "google_cloudfunctions_function_iam_member" "clusterize_invoker" {
 }
 
 # ======================== terminate ============================
-
-resource "google_storage_bucket_object" "terminate_zip" {
-  name   = "${var.prefix}-${var.cluster_name}-terminate.zip"
-  bucket = data.google_storage_bucket.cloud_functions_bucket.name
-  source = "cloud-functions-zip/terminate.zip"
-  depends_on = [null_resource.generate_cloud_functions_zips]
-}
-
 resource "google_cloudfunctions_function" "terminate_function" {
   name        = "${var.prefix}-${var.cluster_name}-terminate"
   description = "terminate instances"
@@ -319,7 +224,7 @@ resource "google_cloudfunctions_function" "terminate_function" {
 
   available_memory_mb   = 128
   source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
-  source_archive_object = google_storage_bucket_object.terminate_zip.name
+  source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "Terminate"
   environment_variables = {
@@ -343,14 +248,6 @@ resource "google_cloudfunctions_function_iam_member" "terminate_invoker" {
 }
 
 # ======================== transient ============================
-
-resource "google_storage_bucket_object" "transient_zip" {
-  name   = "${var.prefix}-${var.cluster_name}-transient.zip"
-  bucket = data.google_storage_bucket.cloud_functions_bucket.name
-  source = "cloud-functions-zip/transient.zip"
-  depends_on = [null_resource.generate_cloud_functions_zips]
-}
-
 resource "google_cloudfunctions_function" "transient_function" {
   name        = "${var.prefix}-${var.cluster_name}-transient"
   description = "transient errors"
@@ -359,7 +256,7 @@ resource "google_cloudfunctions_function" "transient_function" {
 
   available_memory_mb   = 128
   source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
-  source_archive_object = google_storage_bucket_object.transient_zip.name
+  source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "Transient"
 }
@@ -375,14 +272,6 @@ resource "google_cloudfunctions_function_iam_member" "transient_invoker" {
 }
 
 # ======================== bunch ============================
-
-resource "google_storage_bucket_object" "bunch_zip" {
-  name   = "${var.prefix}-${var.cluster_name}-bunch.zip"
-  bucket = data.google_storage_bucket.cloud_functions_bucket.name
-  source = "cloud-functions-zip/bunch.zip"
-  depends_on = [null_resource.generate_cloud_functions_zips]
-}
-
 resource "google_cloudfunctions_function" "bunch_function" {
   name        = "${var.prefix}-${var.cluster_name}-bunch"
   description = "bunch instances"
@@ -391,7 +280,7 @@ resource "google_cloudfunctions_function" "bunch_function" {
 
   available_memory_mb   = 128
   source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
-  source_archive_object = google_storage_bucket_object.bunch_zip.name
+  source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "Bunch"
   environment_variables = {
@@ -412,14 +301,6 @@ resource "google_cloudfunctions_function_iam_member" "bunch_invoker" {
 }
 
 # ======================== update_db ============================
-
-resource "google_storage_bucket_object" "update_db_zip" {
-  name   = "${var.prefix}-${var.cluster_name}-update-db.zip"
-  bucket = data.google_storage_bucket.cloud_functions_bucket.name
-  source = "cloud-functions-zip/update-db.zip"
-  depends_on = [null_resource.generate_cloud_functions_zips]
-}
-
 resource "google_cloudfunctions_function" "update_db_function" {
   name        = "${var.prefix}-${var.cluster_name}-update-db"
   description = "update db"
@@ -428,7 +309,7 @@ resource "google_cloudfunctions_function" "update_db_function" {
 
   available_memory_mb   = 128
   source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
-  source_archive_object = google_storage_bucket_object.update_db_zip.name
+  source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "UpdateDb"
   environment_variables = {
@@ -449,14 +330,6 @@ resource "google_cloudfunctions_function_iam_member" "update_db_invoker" {
 }
 
 # ======================== increment ============================
-
-resource "google_storage_bucket_object" "increment_zip" {
-  name   = "${var.prefix}-${var.cluster_name}-increment.zip"
-  bucket = data.google_storage_bucket.cloud_functions_bucket.name
-  source = "cloud-functions-zip/increment.zip"
-  depends_on = [null_resource.generate_cloud_functions_zips]
-}
-
 resource "google_cloudfunctions_function" "increment_function" {
   name        = "${var.prefix}-${var.cluster_name}-increment"
   description = "increment db"
@@ -465,7 +338,7 @@ resource "google_cloudfunctions_function" "increment_function" {
 
   available_memory_mb   = 128
   source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
-  source_archive_object = google_storage_bucket_object.increment_zip.name
+  source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "Increment"
   environment_variables = {
@@ -486,14 +359,6 @@ resource "google_cloudfunctions_function_iam_member" "increment_invoker" {
 }
 
 # ======================== get_db_value ============================
-
-resource "google_storage_bucket_object" "get_db_value_zip" {
-  name   = "${var.prefix}-${var.cluster_name}-get-db-value.zip"
-  bucket = data.google_storage_bucket.cloud_functions_bucket.name
-  source = "cloud-functions-zip/get-db-value.zip"
-  depends_on = [null_resource.generate_cloud_functions_zips]
-}
-
 resource "google_cloudfunctions_function" "get_db_value_function" {
   name        = "${var.prefix}-${var.cluster_name}-get-db-value"
   description = "get value from db"
@@ -502,7 +367,7 @@ resource "google_cloudfunctions_function" "get_db_value_function" {
 
   available_memory_mb   = 128
   source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
-  source_archive_object = google_storage_bucket_object.get_db_value_zip.name
+  source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "GetDbValue"
   environment_variables = {
@@ -523,14 +388,6 @@ resource "google_cloudfunctions_function_iam_member" "get_db_value_invoker" {
 }
 
 # ======================== get_size ============================
-
-resource "google_storage_bucket_object" "get_size_zip" {
-  name   = "${var.prefix}-${var.cluster_name}-get-size.zip"
-  bucket = data.google_storage_bucket.cloud_functions_bucket.name
-  source = "cloud-functions-zip/get-size.zip"
-  depends_on = [null_resource.generate_cloud_functions_zips]
-}
-
 resource "google_cloudfunctions_function" "get_size_function" {
   name        = "${var.prefix}-${var.cluster_name}-get-size"
   description = "get cluster instance group size"
@@ -539,7 +396,7 @@ resource "google_cloudfunctions_function" "get_size_function" {
 
   available_memory_mb   = 128
   source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
-  source_archive_object = google_storage_bucket_object.get_size_zip.name
+  source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "GetSize"
   environment_variables = {
@@ -560,14 +417,6 @@ resource "google_cloudfunctions_function_iam_member" "get_size_invoker" {
 }
 
 # ======================== protect ============================
-
-resource "google_storage_bucket_object" "protect_zip" {
-  name   = "${var.prefix}-${var.cluster_name}-protect.zip"
-  bucket = data.google_storage_bucket.cloud_functions_bucket.name
-  source = "cloud-functions-zip/protect.zip"
-  depends_on = [null_resource.generate_cloud_functions_zips]
-}
-
 resource "google_cloudfunctions_function" "protect_function" {
   name        = "${var.prefix}-${var.cluster_name}-protect"
   description = "add instance deletion protection"
@@ -576,7 +425,7 @@ resource "google_cloudfunctions_function" "protect_function" {
 
   available_memory_mb   = 128
   source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
-  source_archive_object = google_storage_bucket_object.protect_zip.name
+  source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "Protect"
   environment_variables = {

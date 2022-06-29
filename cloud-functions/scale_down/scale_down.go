@@ -1,21 +1,19 @@
-package scale
+package scale_down
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
-	"github.com/weka/gcp-tf/cloud-functions/scale_down/connectors"
-	"github.com/weka/gcp-tf/cloud-functions/scale_down/lib/jrpc"
-	"github.com/weka/gcp-tf/cloud-functions/scale_down/lib/math"
-	"github.com/weka/gcp-tf/cloud-functions/scale_down/lib/strings"
-	"github.com/weka/gcp-tf/cloud-functions/scale_down/lib/types"
-	"github.com/weka/gcp-tf/cloud-functions/scale_down/lib/weka"
-	"github.com/weka/gcp-tf/cloud-functions/scale_down/protocol"
+	"github.com/weka/gcp-tf/cloud-functions/connectors"
+	"github.com/weka/gcp-tf/cloud-functions/lib/jrpc"
+	"github.com/weka/gcp-tf/cloud-functions/lib/math"
+	"github.com/weka/gcp-tf/cloud-functions/lib/strings"
+	"github.com/weka/gcp-tf/cloud-functions/lib/types"
+	"github.com/weka/gcp-tf/cloud-functions/lib/weka"
+	"github.com/weka/gcp-tf/cloud-functions/protocol"
 	"math/rand"
-	"net/http"
 	"sort"
 	"time"
 )
@@ -124,7 +122,138 @@ func (host hostInfo) managementTimedOut(timeout time.Duration) bool {
 	return false
 }
 
-func Scale(w http.ResponseWriter, r *http.Request) {
+func remoteDownHosts(hosts []hostInfo, jpool *jrpc.Pool) {
+
+}
+
+func getNumToDeactivate(hostInfo []hostInfo, desired int) int {
+	/*
+		A - Fully active, healthy
+		T - Target state
+		U - Unhealthy, we want to remove it for whatever reason. DOWN host, FAILED drive, so on
+		D - Drives/hosts being deactivated
+		new_D - Decision to start deactivating, i.e transition to D, basing on U. Never more then 2 for U
+
+		new_D = func(A, U, T, D)
+
+		new_D = max(A+U+D-T, min(2-D, U), 0)
+	*/
+
+	nHealthy := 0
+	nUnhealthy := 0
+	nDeactivating := 0
+
+	for _, host := range hostInfo {
+		switch host.scaleState {
+		case HEALTHY:
+			nHealthy++
+		case UNHEALTHY:
+			nUnhealthy++
+		case DEACTIVATING:
+			nDeactivating++
+		}
+	}
+
+	toDeactivate := CalculateDeactivateTarget(nHealthy, nUnhealthy, nDeactivating, desired)
+	log.Info().Msgf("%d hosts set to deactivate. nHealthy: %d nUnhealthy:%d nDeactivating: %d desired:%d", toDeactivate, nHealthy, nUnhealthy, nDeactivating, desired)
+	return toDeactivate
+}
+
+func CalculateDeactivateTarget(nHealthy int, nUnhealthy int, nDeactivating int, desired int) int {
+	ret := math.Max(nHealthy+nUnhealthy+nDeactivating-desired, math.Min(2-nDeactivating, nUnhealthy))
+	ret = math.Max(nDeactivating, ret)
+	return ret
+}
+
+func isAllowedToScale(status weka.StatusResponse) error {
+	if status.IoStatus != "STARTED" {
+		return errors.New(fmt.Sprintf("io status:%s, aborting scale", status.IoStatus))
+	}
+
+	if status.Upgrade != "" {
+		return errors.New("upgrade is running, aborting scale")
+	}
+	return nil
+}
+
+func deriveHostState(host *hostInfo) hostState {
+	if host.allDisksBeingRemoved() {
+		log.Info().Msgf("Marking %s as deactivating due to unhealthy disks", host.id.String())
+		return DEACTIVATING
+	}
+	if strings.AnyOf(host.State, "DEACTIVATING", "REMOVING", "INACTIVE") {
+		return DEACTIVATING
+	}
+	if strings.AnyOf(host.Status, "DOWN", "DEGRADED") && host.managementTimedOut(unhealthyDeactivateTimeout) {
+		log.Info().Msgf("Marking %s as unhealthy due to DOWN", host.id.String())
+		return UNHEALTHY
+	}
+	if host.numNotHealthyDrives() > 0 || host.anyDiskBeingRemoved() {
+		log.Info().Msgf("Marking %s as unhealthy due to unhealthy drives", host.id.String())
+		return UNHEALTHY
+	}
+	return HEALTHY
+}
+
+func calculateHostsState(hosts []hostInfo) {
+	for i := range hosts {
+		host := &hosts[i]
+		host.scaleState = deriveHostState(host)
+	}
+}
+
+func selectInstanceByIp(ip string, instances []protocol.HgInstance) *protocol.HgInstance {
+	for _, i := range instances {
+		if i.PrivateIp == ip {
+			return &i
+		}
+	}
+	return nil
+}
+
+func removeInactive(hosts []hostInfo, jpool *jrpc.Pool, instances []protocol.HgInstance, p *protocol.ScaleResponse) {
+	for _, host := range hosts {
+		jpool.Drop(host.HostIp)
+		err := jpool.Call(weka.JrpcRemoveHost, types.JsonDict{
+			"host_id": host.id.Int(),
+			"no_wait": true,
+		}, nil)
+		if err != nil {
+			log.Error().Err(err)
+			p.AddTransientError(err, "removeInactive")
+			continue
+		}
+		instance := selectInstanceByIp(host.HostIp, instances)
+		if instance != nil {
+			p.ToTerminate = append(p.ToTerminate, *instance)
+		}
+
+		for _, drive := range host.drives {
+			removeDrive(jpool, drive, p)
+		}
+	}
+	return
+}
+
+func removeOldDrives(drives weka.DriveListResponse, jpool *jrpc.Pool, p *protocol.ScaleResponse) {
+	for _, drive := range drives {
+		if drive.HostId.Int() == -1 && drive.Status == "INACTIVE" {
+			removeDrive(jpool, drive, p)
+		}
+	}
+}
+
+func removeDrive(jpool *jrpc.Pool, drive weka.Drive, p *protocol.ScaleResponse) {
+	err := jpool.Call(weka.JrpcRemoveDrive, types.JsonDict{
+		"drive_uuids": []uuid.UUID{drive.Uuid},
+	}, nil)
+	if err != nil {
+		log.Error().Err(err)
+		p.AddTransientError(err, "removeDrive")
+	}
+}
+
+func ScaleDown(info protocol.HostGroupInfoResponse) (response protocol.ScaleResponse) {
 	/*
 		Code in here based on following logic:
 
@@ -140,14 +269,6 @@ func Scale(w http.ResponseWriter, r *http.Request) {
 	*/
 
 	ctx := context.Background()
-
-	var info protocol.HostGroupInfoResponse
-	if err := json.NewDecoder(r.Body).Decode(&info); err != nil {
-		fmt.Fprint(w, "Failed decoding request body")
-		return
-	}
-
-	var response protocol.ScaleResponse
 
 	response.Version = protocol.Version
 
@@ -323,139 +444,5 @@ func Scale(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	fmt.Println("Writing scale result")
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
 	return
-}
-
-func remoteDownHosts(hosts []hostInfo, jpool *jrpc.Pool) {
-
-}
-
-func getNumToDeactivate(hostInfo []hostInfo, desired int) int {
-	/*
-		A - Fully active, healthy
-		T - Target state
-		U - Unhealthy, we want to remove it for whatever reason. DOWN host, FAILED drive, so on
-		D - Drives/hosts being deactivated
-		new_D - Decision to start deactivating, i.e transition to D, basing on U. Never more then 2 for U
-
-		new_D = func(A, U, T, D)
-
-		new_D = max(A+U+D-T, min(2-D, U), 0)
-	*/
-
-	nHealthy := 0
-	nUnhealthy := 0
-	nDeactivating := 0
-
-	for _, host := range hostInfo {
-		switch host.scaleState {
-		case HEALTHY:
-			nHealthy++
-		case UNHEALTHY:
-			nUnhealthy++
-		case DEACTIVATING:
-			nDeactivating++
-		}
-	}
-
-	toDeactivate := calculateDeactivateTarget(nHealthy, nUnhealthy, nDeactivating, desired)
-	log.Info().Msgf("%d hosts set to deactivate. nHealthy: %d nUnhealthy:%d nDeactivating: %d desired:%d", toDeactivate, nHealthy, nUnhealthy, nDeactivating, desired)
-	return toDeactivate
-}
-
-func calculateDeactivateTarget(nHealthy int, nUnhealthy int, nDeactivating int, desired int) int {
-	ret := math.Max(nHealthy+nUnhealthy+nDeactivating-desired, math.Min(2-nDeactivating, nUnhealthy))
-	ret = math.Max(nDeactivating, ret)
-	return ret
-}
-
-func isAllowedToScale(status weka.StatusResponse) error {
-	if status.IoStatus != "STARTED" {
-		return errors.New(fmt.Sprintf("io status:%s, aborting scale", status.IoStatus))
-	}
-
-	if status.Upgrade != "" {
-		return errors.New("upgrade is running, aborting scale")
-	}
-	return nil
-}
-
-func deriveHostState(host *hostInfo) hostState {
-	if host.allDisksBeingRemoved() {
-		log.Info().Msgf("Marking %s as deactivating due to unhealthy disks", host.id.String())
-		return DEACTIVATING
-	}
-	if strings.AnyOf(host.State, "DEACTIVATING", "REMOVING", "INACTIVE") {
-		return DEACTIVATING
-	}
-	if strings.AnyOf(host.Status, "DOWN", "DEGRADED") && host.managementTimedOut(unhealthyDeactivateTimeout) {
-		log.Info().Msgf("Marking %s as unhealthy due to DOWN", host.id.String())
-		return UNHEALTHY
-	}
-	if host.numNotHealthyDrives() > 0 || host.anyDiskBeingRemoved() {
-		log.Info().Msgf("Marking %s as unhealthy due to unhealthy drives", host.id.String())
-		return UNHEALTHY
-	}
-	return HEALTHY
-}
-
-func calculateHostsState(hosts []hostInfo) {
-	for i := range hosts {
-		host := &hosts[i]
-		host.scaleState = deriveHostState(host)
-	}
-}
-
-func selectInstanceByIp(ip string, instances []protocol.HgInstance) *protocol.HgInstance {
-	for _, i := range instances {
-		if i.PrivateIp == ip {
-			return &i
-		}
-	}
-	return nil
-}
-
-func removeInactive(hosts []hostInfo, jpool *jrpc.Pool, instances []protocol.HgInstance, p *protocol.ScaleResponse) {
-	for _, host := range hosts {
-		jpool.Drop(host.HostIp)
-		err := jpool.Call(weka.JrpcRemoveHost, types.JsonDict{
-			"host_id": host.id.Int(),
-			"no_wait": true,
-		}, nil)
-		if err != nil {
-			log.Error().Err(err)
-			p.AddTransientError(err, "removeInactive")
-			continue
-		}
-		instance := selectInstanceByIp(host.HostIp, instances)
-		if instance != nil {
-			p.ToTerminate = append(p.ToTerminate, *instance)
-		}
-
-		for _, drive := range host.drives {
-			removeDrive(jpool, drive, p)
-		}
-	}
-	return
-}
-
-func removeOldDrives(drives weka.DriveListResponse, jpool *jrpc.Pool, p *protocol.ScaleResponse) {
-	for _, drive := range drives {
-		if drive.HostId.Int() == -1 && drive.Status == "INACTIVE" {
-			removeDrive(jpool, drive, p)
-		}
-	}
-}
-
-func removeDrive(jpool *jrpc.Pool, drive weka.Drive, p *protocol.ScaleResponse) {
-	err := jpool.Call(weka.JrpcRemoveDrive, types.JsonDict{
-		"drive_uuids": []uuid.UUID{drive.Uuid},
-	}, nil)
-	if err != nil {
-		log.Error().Err(err)
-		p.AddTransientError(err, "removeDrive")
-	}
 }
