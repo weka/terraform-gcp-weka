@@ -27,17 +27,17 @@ resource "google_storage_bucket_object" "cloud_functions_zip" {
   depends_on = [null_resource.generate_cloud_functions_zips]
 }
 
-# ======================== join ============================
-resource "google_cloudfunctions_function" "join_function" {
-  name        = "${var.prefix}-${var.cluster_name}-join"
-  description = "join new instance"
+# ======================== deploy ============================
+resource "google_cloudfunctions_function" "deploy_function" {
+  name        = "${var.prefix}-${var.cluster_name}-deploy"
+  description = "deploy new instance"
   runtime     = "go116"
 
   available_memory_mb   = 128
   source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
-  entry_point           = "Join"
+  entry_point           = "Deploy"
   environment_variables = {
     PROJECT: var.project
     ZONE: var.zone
@@ -46,6 +46,15 @@ resource "google_cloudfunctions_function" "join_function" {
     SUBNETS: format("(%s)", join(" ", var.subnets_range ))
     USER_NAME_ID: google_secret_manager_secret_version.user_secret_key.id
     PASSWORD_ID: google_secret_manager_secret_version.password_secret_key.id
+    TOKEN_ID: google_secret_manager_secret_version.token_secret_key.id
+    COLLECTION_NAME: "${var.prefix}-${var.cluster_name}-collection"
+    DOCUMENT_NAME: "${var.prefix}-${var.cluster_name}-document"
+    INSTALL_URL: "https://$TOKEN@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}"
+    CLUSTERIZE_URL:google_cloudfunctions_function.clusterize_function.https_trigger_url
+    INCREMENT_URL:google_cloudfunctions_function.increment_function.https_trigger_url
+    PROTECT_URL:google_cloudfunctions_function.protect_function.https_trigger_url
+    BUNCH_URL:google_cloudfunctions_function.bunch_function.https_trigger_url
+    GET_SIZE_URL: google_cloudfunctions_function.get_size_function.https_trigger_url
   }
 
   depends_on = [google_project_service.project-function-api]
@@ -54,9 +63,9 @@ resource "google_cloudfunctions_function" "join_function" {
 
 # IAM entry for all users to invoke the function
 resource "google_cloudfunctions_function_iam_member" "join_invoker" {
-  project        = google_cloudfunctions_function.join_function.project
-  region         = google_cloudfunctions_function.join_function.region
-  cloud_function = google_cloudfunctions_function.join_function.name
+  project        = google_cloudfunctions_function.deploy_function.project
+  region         = google_cloudfunctions_function.deploy_function.region
+  cloud_function = google_cloudfunctions_function.deploy_function.name
 
   role   = "roles/cloudfunctions.invoker"
   member = "allUsers"
@@ -74,6 +83,13 @@ resource "google_secret_manager_secret_iam_member" "member-sa-username-secret" {
 resource "google_secret_manager_secret_iam_member" "member-sa-password-secret" {
   project   = google_secret_manager_secret.secret_weka_password.project
   secret_id = google_secret_manager_secret.secret_weka_password.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${var.project}@appspot.gserviceaccount.com"
+}
+
+resource "google_secret_manager_secret_iam_member" "member-sa-token" {
+  project   = google_secret_manager_secret.secret_token.project
+  secret_id = google_secret_manager_secret.secret_token.id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${var.project}@appspot.gserviceaccount.com"
 }
@@ -158,8 +174,6 @@ resource "google_cloudfunctions_function" "scale_up_function" {
     ZONE: var.zone
     INSTANCE_GROUP: google_compute_instance_group.instance_group.name
     BACKEND_TEMPLATE: google_compute_instance_template.backends-template.id
-    CLUSTERIZE_TEMPLATE: google_compute_instance_template.clusterize-template.id
-    JOIN_TEMPLATE: google_compute_instance_template.join-template.id
     COLLECTION_NAME: "${var.prefix}-${var.cluster_name}-collection"
     DOCUMENT_NAME: "${var.prefix}-${var.cluster_name}-document"
     INSTANCE_BASE_NAME: "${var.prefix}-${var.cluster_name}-vm"
@@ -402,8 +416,8 @@ resource "google_cloudfunctions_function" "get_size_function" {
   entry_point           = "GetSize"
   environment_variables = {
     PROJECT: var.project
-    ZONE: var.zone
-    INSTANCE_GROUP: google_compute_instance_group.instance_group.name
+    COLLECTION_NAME: "${var.prefix}-${var.cluster_name}-collection"
+    DOCUMENT_NAME: "${var.prefix}-${var.cluster_name}-document"
   }
 }
 

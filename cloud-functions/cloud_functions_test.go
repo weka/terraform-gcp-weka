@@ -5,16 +5,17 @@ import (
 	"fmt"
 	"github.com/weka/gcp-tf/cloud-functions/bunch"
 	"github.com/weka/gcp-tf/cloud-functions/clusterize"
+	"github.com/weka/gcp-tf/cloud-functions/deploy"
 	"github.com/weka/gcp-tf/cloud-functions/fetch"
 	"github.com/weka/gcp-tf/cloud-functions/get_db_value"
 	"github.com/weka/gcp-tf/cloud-functions/get_size"
 	"github.com/weka/gcp-tf/cloud-functions/increment"
-	"github.com/weka/gcp-tf/cloud-functions/join"
 	"github.com/weka/gcp-tf/cloud-functions/protect"
 	"github.com/weka/gcp-tf/cloud-functions/scale_down"
 	"github.com/weka/gcp-tf/cloud-functions/scale_up"
 	"github.com/weka/gcp-tf/cloud-functions/terminate"
 	"github.com/weka/gcp-tf/cloud-functions/update_db"
+	"os"
 	"testing"
 	"time"
 )
@@ -70,38 +71,59 @@ func Test_get_db_value(t *testing.T) {
 	collectionName := "weka-poc-collection"
 	documentName := "weka-poc-document"
 	clusterInfo := get_db_value.GetValue(project, collectionName, documentName)
-	fmt.Printf("%d\n", clusterInfo["counter"].(int64))
+	fmt.Printf("%d\n", clusterInfo["desired_size"].(int64))
 }
 
 func Test_get_size(t *testing.T) {
 	project := "wekaio-rnd"
-	zone := "europe-west1-b"
-	instanceGroup := "weka-poc-instance-group"
-	fmt.Printf("%d\n", get_size.GetInstanceGroupSize(project, zone, instanceGroup))
+	collectionName := "weka-poc-collection"
+	documentName := "weka-poc-document"
+	fmt.Printf("%d\n", get_size.GetSize(project, collectionName, documentName))
 }
 
 func Test_increment(t *testing.T) {
 	project := "wekaio-rnd"
 	collectionName := "weka-poc-collection"
 	documentName := "weka-poc-document"
-	increment.IncrementCounter(project, collectionName, documentName)
+	instanceName := "weka-poc-vm-test"
+	increment.Add(project, collectionName, documentName, instanceName)
 	t.Log("increment test passed")
 }
 
-func Test_join(t *testing.T) {
+func Test_deploy(t *testing.T) {
+	project := "wekaio-rnd"
+	zone := "europe-west1-b"
+	clusterName := "poc"
 	usernameId := "projects/896245720241/secrets/weka-poc-username/versions/1"
 	passwordId := "projects/896245720241/secrets/weka-poc-password/versions/1"
-	bashScript, err := join.GetJoinParams("wekaio-rnd", "europe-west1-b", "poc", usernameId, passwordId)
+	tokenId := "projects/896245720241/secrets/weka-poc-token/versions/1"
+	bashScript, err := deploy.GetJoinParams(project, zone, clusterName, usernameId, passwordId)
 	if err != nil {
-		panic(err)
-	}
-	b, err := json.Marshal(bashScript)
-	if err != nil {
-		fmt.Println(err)
+		t.Logf("Generating join scripts failed: %s", err)
 		return
+	} else {
+		t.Logf("%s", bashScript)
 	}
 
-	t.Logf("res:%s", string(b))
+	token := os.Getenv("GET_WEKA_IO_TOKEN")
+	version := "3.14.0.50-gcp-beta"
+
+	collectionName := "weka-poc-collection"
+	documentName := "weka-poc-document"
+	installUrl := fmt.Sprintf("https://%s@get.weka.io/dist/v1/install/%s/%s", token, version, version)
+	clusterizeUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-clusterize"
+	incrementUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-increment"
+	protectUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-protect"
+	bunchUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-bunch"
+	getSizeUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-get-size"
+
+	bashScript, err = deploy.GetDeployScript(project, zone, clusterName, usernameId, passwordId, tokenId, collectionName, documentName, installUrl, clusterizeUrl, incrementUrl, protectUrl, bunchUrl, getSizeUrl)
+	if err != nil {
+		t.Logf("Generating deploy scripts failed: %s", err)
+	} else {
+		t.Logf("%s", bashScript)
+	}
+
 }
 
 func Test_protect(t *testing.T) {
@@ -151,7 +173,7 @@ func Test_scaleUp(t *testing.T) {
 	documentName := "weka-poc-document"
 	instanceGroupSize := scale_up.GetInstanceGroupSize(project, zone, instanceGroup)
 	t.Logf("Instance group size is: %d", instanceGroupSize)
-	desiredSize := int32(scale_up.GetClusterSizeInfo(project, collectionName, documentName)["counter"].(int64))
+	desiredSize := int32(scale_up.GetClusterSizeInfo(project, collectionName, documentName)["desired_size"].(int64))
 	t.Logf("Desired size is: %d", desiredSize)
 }
 

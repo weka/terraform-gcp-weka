@@ -1,10 +1,11 @@
-package join
+package deploy
 
 import (
 	compute "cloud.google.com/go/compute/apiv1"
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	"context"
 	"errors"
+	firebase "firebase.google.com/go"
 	"fmt"
 	"github.com/lithammer/dedent"
 	"github.com/rs/zerolog/log"
@@ -62,6 +63,22 @@ func getUsernameAndPassword(usernameId, passwordId string) (clusterCreds Cluster
 		return
 	}
 	clusterCreds.Password = string(res.Payload.Data)
+	return
+}
+
+func getToken(tokenId string) (token string, err error) {
+	ctx := context.Background()
+	client, err := secretmanager.NewClient(ctx)
+	if err != nil {
+		return
+	}
+	defer client.Close()
+
+	res, err := client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{Name: tokenId})
+	if err != nil {
+		return
+	}
+	token = string(res.Payload.Data)
 	return
 }
 
@@ -201,7 +218,103 @@ func GetJoinParams(project, zone, clusterName, usernameId, passwordId string) (b
 		drive = 0
 	}
 
-	bashScript = fmt.Sprintf(dedent.Dedent(bashScriptTemplate), creds.Username, creds.Password, strings.Join(ips, "\" \""), os.Getenv("GATEWAYS"), os.Getenv("SUBNETS"), cores, frontend, drive, strings.Join(ips, ","))
+	bashScript = fmt.Sprintf(bashScriptTemplate, creds.Username, creds.Password, strings.Join(ips, "\" \""), os.Getenv("GATEWAYS"), os.Getenv("SUBNETS"), cores, frontend, drive, strings.Join(ips, ","))
 
+	return
+}
+
+func GetClusterSizeInfo(project, collectionName, documentName string) (info map[string]interface{}) {
+	log.Info().Msg("Retrieving desired group size from DB")
+
+	ctx := context.Background()
+	conf := &firebase.Config{ProjectID: project}
+	app, err := firebase.NewApp(ctx, conf)
+	if err != nil {
+		log.Error().Msgf("%s", err)
+		return
+	}
+
+	client, err := app.Firestore(ctx)
+	if err != nil {
+		log.Error().Msgf("%s", err)
+		return
+	}
+	defer client.Close()
+	doc := client.Collection(collectionName).Doc(documentName)
+	res, err := doc.Get(ctx)
+	if err != nil {
+		log.Error().Msgf("%s", err)
+		return
+	}
+	return res.Data()
+}
+
+func GetDeployScript(project, zone, clusterName, usernameId, passwordId, tokenId, collectionName, documentName, installUrl, clusterizeUrl, incrementUrl, protectUrl, bunchUrl, getSizeUrl string) (bashScript string, err error) {
+	clusterInfo := GetClusterSizeInfo(project, collectionName, documentName)
+	instancesInterfaces := clusterInfo["instances"].([]interface{})
+	instances := make([]string, len(instancesInterfaces))
+	for i, v := range instancesInterfaces {
+		instances[i] = v.(string)
+	}
+	initial_size := int(clusterInfo["initial_size"].(int64))
+
+	installTemplate := `
+	#!/bin/bash
+	set -ex
+	HOSTS_NUM=%d
+	TOKEN=%s
+	INSTALL_URL=%s
+	INCREMENT_URL=%s
+	PROTECT_URL=%s
+	BUNCH_URL=%s
+	CLUSTERIZE_URL=%s
+	GET_SIZE_URL=%s
+
+	# https://gist.github.com/fungusakafungus/1026804
+	function retry {
+		local retry_max=$1
+		local retry_sleep=$2
+		shift 2
+		local count=$retry_max
+		while [ $count -gt 0 ]; do
+			"$@" && break
+			count=$(($count - 1))
+			sleep $retry_sleep
+		done
+		[ $count -eq 0 ] && {
+			echo "Retry failed [$retry_max]: $@"
+			return 1
+		}
+		return 0
+	}
+	
+	retry 300 2 curl --fail --max-time 10 $INSTALL_URL | sh
+
+	curl $INCREMENT_URL -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
+	curl $PROTECT_URL -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
+	curl $BUNCH_URL -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
+
+	if [ $(curl --silent $GET_SIZE_URL) == $HOSTS_NUM ] ; then
+		curl $CLUSTERIZE_URL > /tmp/clusterize.sh
+		chmod +x /tmp/clusterize.sh
+		/tmp/clusterize.sh
+	fi
+	`
+
+	token, err := getToken(tokenId)
+	if err != nil {
+		return
+	}
+
+	if len(instances) < initial_size {
+		bashScript = fmt.Sprintf(installTemplate, initial_size, token, installUrl, incrementUrl, protectUrl, bunchUrl, clusterizeUrl, getSizeUrl)
+	} else {
+		bashScript, err = GetJoinParams(project, zone, clusterName, usernameId, passwordId)
+		if err != nil {
+			return
+		}
+	}
+
+	bashScript = dedent.Dedent(bashScript)
 	return
 }
