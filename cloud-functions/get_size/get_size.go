@@ -1,34 +1,33 @@
 package get_size
 
 import (
-	compute "cloud.google.com/go/compute/apiv1"
 	"context"
+	firebase "firebase.google.com/go"
 	"github.com/rs/zerolog/log"
-	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
 )
 
-func GetInstanceGroupSize(project, zone, instanceGroup string) int32 {
-	log.Info().Msg("Retrieving instance group size")
+func GetSize(project, collectionName, documentName string) int {
+	log.Info().Msg("Retrieving desired group size from DB")
+
 	ctx := context.Background()
-
-	c, err := compute.NewInstanceGroupsRESTClient(ctx)
-	if err != nil {
-		log.Error().Msgf("%s", err)
-		return -1
-	}
-	defer c.Close()
-
-	req := &computepb.GetInstanceGroupRequest{
-		Project:       project,
-		Zone:          zone,
-		InstanceGroup: instanceGroup,
-	}
-
-	resp, err := c.Get(ctx, req)
+	conf := &firebase.Config{ProjectID: project}
+	app, err := firebase.NewApp(ctx, conf)
 	if err != nil {
 		log.Error().Msgf("%s", err)
 		return -1
 	}
 
-	return *resp.Size
+	client, err := app.Firestore(ctx)
+	if err != nil {
+		log.Error().Msgf("%s", err)
+		return -1
+	}
+	defer client.Close()
+	doc := client.Collection(collectionName).Doc(documentName)
+	res, err := doc.Get(ctx)
+	if err != nil {
+		log.Error().Msgf("%s", err)
+		return -1
+	}
+	return len(res.Data()["instances"].([]interface{}))
 }

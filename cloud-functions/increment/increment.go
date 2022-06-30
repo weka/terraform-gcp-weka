@@ -7,7 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func IncrementCounter(project, collectionName, documentName string) (err error) {
+func Add(project, collectionName, documentName, instanceName string) (err error) {
 	log.Info().Msg("updating DB")
 
 	ctx := context.Background()
@@ -27,7 +27,7 @@ func IncrementCounter(project, collectionName, documentName string) (err error) 
 	doc := client.Collection(collectionName).Doc(documentName)
 
 	_, err = doc.Update(ctx, []firestore.Update{
-		{Path: "counter", Value: firestore.Increment(1)},
+		{Path: "instances", Value: firestore.ArrayUnion(instanceName)},
 	})
 
 	if err != nil {
