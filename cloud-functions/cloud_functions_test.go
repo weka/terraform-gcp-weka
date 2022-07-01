@@ -159,7 +159,7 @@ func Test_calculateDeactivateTarget(t *testing.T) {
 func Test_scaleUp(t *testing.T) {
 	project := "wekaio-rnd"
 	zone := "europe-west1-b"
-	instanceGroup := "weka-instance-group"
+	instanceGroup := "weka-poc-instance-group"
 	collectionName := "weka-poc-collection"
 	documentName := "weka-poc-document"
 	instanceGroupSize := scale_up.GetInstanceGroupSize(project, zone, instanceGroup)
