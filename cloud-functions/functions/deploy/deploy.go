@@ -56,7 +56,7 @@ func getToken(tokenId string) (token string, err error) {
 	return
 }
 
-func GetJoinParams(project, zone, clusterName, usernameId, passwordId string) (bashScript string, err error) {
+func GetJoinParams(project, zone, clusterName, usernameId, passwordId, protectUrl, bunchUrl string) (bashScript string, err error) {
 	role := "backend"
 	ctx := context.Background()
 	instanceClient, err := compute.NewInstancesRESTClient(ctx)
@@ -150,6 +150,8 @@ func GetJoinParams(project, zone, clusterName, usernameId, passwordId string) (b
 	`
 
 	addDrives := `
+	PROTECT_URL=%s
+	BUNCH_URL=%s
 	host_id=$(weka local run $WEKA_RUN_CREDS manhole getServerInfo | grep hostIdValue: | awk '{print $2}')
 	mkdir -p /opt/weka/tmp
 	cat >/opt/weka/tmp/find_drives.py <<EOL
@@ -168,9 +170,8 @@ func GetJoinParams(project, zone, clusterName, usernameId, passwordId string) (b
 	done
 	sleep 60
 	weka cluster drive scan $host_id
-	curl $INCREMENT_URL -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
 	curl $PROTECT_URL -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
-	curl $BUNCH_URL -H "Content-Type:application/json"  -d "{\"name\": \"$instance\"}"
+	curl $BUNCH_URL -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
 	echo "completed successfully" > /tmp/weka_join_completion_validation
 	`
 	var cores, frontend, drive int
@@ -187,7 +188,7 @@ func GetJoinParams(project, zone, clusterName, usernameId, passwordId string) (b
 		if !instanceParams.converged {
 			bashScriptTemplate += " --dedicate"
 		}
-		bashScriptTemplate += isReady + addDrives
+		bashScriptTemplate += isReady + fmt.Sprintf(addDrives, protectUrl, bunchUrl)
 	} else {
 		bashScriptTemplate += isReady
 		cores = 1
@@ -245,6 +246,7 @@ func GetDeployScript(project, zone, clusterName, usernameId, passwordId, tokenId
 	curl $PROTECT_URL -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
 
 	eval instances=$(curl --silent $GET_INSTANCES_URL)
+	echo "${instances[*]}" > /tmp/instances.txt # for debug purposes
 	if [ ${#instances[@]} == $HOSTS_NUM ] ; then
 		curl $CLUSTERIZE_URL > /tmp/clusterize.sh
 		chmod +x /tmp/clusterize.sh
@@ -263,7 +265,7 @@ func GetDeployScript(project, zone, clusterName, usernameId, passwordId, tokenId
 	if len(instances) < initial_size {
 		bashScript = fmt.Sprintf(installTemplate, initial_size, token, installUrl, incrementUrl, protectUrl, bunchUrl, clusterizeUrl, getInstancesUrl)
 	} else {
-		bashScript, err = GetJoinParams(project, zone, clusterName, usernameId, passwordId)
+		bashScript, err = GetJoinParams(project, zone, clusterName, usernameId, passwordId, protectUrl, bunchUrl)
 		if err != nil {
 			return
 		}
