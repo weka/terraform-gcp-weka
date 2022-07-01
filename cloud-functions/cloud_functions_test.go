@@ -8,7 +8,7 @@ import (
 	"github.com/weka/gcp-tf/cloud-functions/deploy"
 	"github.com/weka/gcp-tf/cloud-functions/fetch"
 	"github.com/weka/gcp-tf/cloud-functions/get_db_value"
-	"github.com/weka/gcp-tf/cloud-functions/get_size"
+	"github.com/weka/gcp-tf/cloud-functions/get_instances"
 	"github.com/weka/gcp-tf/cloud-functions/increment"
 	"github.com/weka/gcp-tf/cloud-functions/protect"
 	"github.com/weka/gcp-tf/cloud-functions/scale_down"
@@ -44,8 +44,7 @@ func Test_clusterize(t *testing.T) {
 	usernameId := "projects/896245720241/secrets/weka-poc-username/versions/1"
 	passwordId := "projects/896245720241/secrets/weka-poc-password/versions/1"
 	instanceBaseName := "weka-poc-vm"
-	cloudFunctionUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-get-size"
-	fmt.Printf("res:%s", clusterize.GenerateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesNumber, usernameId, passwordId, instanceBaseName, cloudFunctionUrl))
+	fmt.Printf("res:%s", clusterize.GenerateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesNumber, usernameId, passwordId, instanceBaseName))
 }
 
 func Test_fetch(t *testing.T) {
@@ -74,11 +73,11 @@ func Test_get_db_value(t *testing.T) {
 	fmt.Printf("%d\n", clusterInfo["desired_size"].(int64))
 }
 
-func Test_get_size(t *testing.T) {
+func Test_get_instances(t *testing.T) {
 	project := "wekaio-rnd"
 	collectionName := "weka-poc-collection"
 	documentName := "weka-poc-document"
-	fmt.Printf("%d\n", get_size.GetSize(project, collectionName, documentName))
+	fmt.Printf("%s\n", get_instances.GetInstancesBashList(project, collectionName, documentName))
 }
 
 func Test_increment(t *testing.T) {
@@ -115,9 +114,9 @@ func Test_deploy(t *testing.T) {
 	incrementUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-increment"
 	protectUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-protect"
 	bunchUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-bunch"
-	getSizeUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-get-size"
+	getInstancesUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-get-instances"
 
-	bashScript, err = deploy.GetDeployScript(project, zone, clusterName, usernameId, passwordId, tokenId, collectionName, documentName, installUrl, clusterizeUrl, incrementUrl, protectUrl, bunchUrl, getSizeUrl)
+	bashScript, err = deploy.GetDeployScript(project, zone, clusterName, usernameId, passwordId, tokenId, collectionName, documentName, installUrl, clusterizeUrl, incrementUrl, protectUrl, bunchUrl, getInstancesUrl)
 	if err != nil {
 		t.Logf("Generating deploy scripts failed: %s", err)
 	} else {

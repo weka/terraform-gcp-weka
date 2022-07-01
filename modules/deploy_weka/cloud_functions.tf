@@ -54,7 +54,7 @@ resource "google_cloudfunctions_function" "deploy_function" {
     INCREMENT_URL:google_cloudfunctions_function.increment_function.https_trigger_url
     PROTECT_URL:google_cloudfunctions_function.protect_function.https_trigger_url
     BUNCH_URL:google_cloudfunctions_function.bunch_function.https_trigger_url
-    GET_SIZE_URL: google_cloudfunctions_function.get_size_function.https_trigger_url
+    GET_INSTANCES_URL: google_cloudfunctions_function.get_instances_function.https_trigger_url
   }
 
   depends_on = [google_project_service.project-function-api]
@@ -177,9 +177,7 @@ resource "google_cloudfunctions_function" "scale_up_function" {
     COLLECTION_NAME: "${var.prefix}-${var.cluster_name}-collection"
     DOCUMENT_NAME: "${var.prefix}-${var.cluster_name}-document"
     INSTANCE_BASE_NAME: "${var.prefix}-${var.cluster_name}-vm"
-    CLOUD_FUNCTION_URL: google_cloudfunctions_function.get_size_function.https_trigger_url
   }
-  depends_on = [google_cloudfunctions_function.get_size_function]
 }
 
 # IAM entry for all users to invoke the function
@@ -196,7 +194,7 @@ resource "google_cloudfunctions_function_iam_member" "scale_up_invoker" {
 # ======================== clusterize ============================
 resource "google_cloudfunctions_function" "clusterize_function" {
   name        = "${var.prefix}-${var.cluster_name}-clusterize"
-  description = "return clusterize scipt"
+  description = "return clusterize script"
   runtime     = "go116"
   timeout     = 540
 
@@ -216,7 +214,6 @@ resource "google_cloudfunctions_function" "clusterize_function" {
     USER_NAME_ID: google_secret_manager_secret_version.user_secret_key.id
     PASSWORD_ID: google_secret_manager_secret_version.password_secret_key.id
     INSTANCE_BASE_NAME: "${var.prefix}-${var.cluster_name}-vm"
-    GET_SIZE_URL: google_cloudfunctions_function.get_size_function.https_trigger_url
   }
 }
 
@@ -402,9 +399,9 @@ resource "google_cloudfunctions_function_iam_member" "get_db_value_invoker" {
   member = "allUsers"
 }
 
-# ======================== get_size ============================
-resource "google_cloudfunctions_function" "get_size_function" {
-  name        = "${var.prefix}-${var.cluster_name}-get-size"
+# ======================== get_instances ============================
+resource "google_cloudfunctions_function" "get_instances_function" {
+  name        = "${var.prefix}-${var.cluster_name}-get-instances"
   description = "get cluster instance group size"
   runtime     = "go116"
   timeout     = 540
@@ -413,7 +410,7 @@ resource "google_cloudfunctions_function" "get_size_function" {
   source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
-  entry_point           = "GetSize"
+  entry_point           = "GetInstances"
   environment_variables = {
     PROJECT: var.project
     COLLECTION_NAME: "${var.prefix}-${var.cluster_name}-collection"
@@ -422,10 +419,10 @@ resource "google_cloudfunctions_function" "get_size_function" {
 }
 
 # IAM entry for all users to invoke the function
-resource "google_cloudfunctions_function_iam_member" "get_size_invoker" {
-  project        = google_cloudfunctions_function.get_size_function.project
-  region         = google_cloudfunctions_function.get_size_function.region
-  cloud_function = google_cloudfunctions_function.get_size_function.name
+resource "google_cloudfunctions_function_iam_member" "get_instances_invoker" {
+  project        = google_cloudfunctions_function.get_instances_function.project
+  region         = google_cloudfunctions_function.get_instances_function.region
+  cloud_function = google_cloudfunctions_function.get_instances_function.name
 
   role   = "roles/cloudfunctions.invoker"
   member = "allUsers"

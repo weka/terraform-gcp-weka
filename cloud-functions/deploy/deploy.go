@@ -194,6 +194,9 @@ func GetJoinParams(project, zone, clusterName, usernameId, passwordId string) (b
 	done
 	sleep 60
 	weka cluster drive scan $host_id
+	curl $INCREMENT_URL -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
+	curl $PROTECT_URL -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
+	curl $BUNCH_URL -H "Content-Type:application/json"  -d "{\"name\": \"$instance\"}"
 	echo "completed successfully" > /tmp/weka_join_completion_validation
 	`
 	var cores, frontend, drive int
@@ -249,7 +252,7 @@ func GetClusterSizeInfo(project, collectionName, documentName string) (info map[
 	return res.Data()
 }
 
-func GetDeployScript(project, zone, clusterName, usernameId, passwordId, tokenId, collectionName, documentName, installUrl, clusterizeUrl, incrementUrl, protectUrl, bunchUrl, getSizeUrl string) (bashScript string, err error) {
+func GetDeployScript(project, zone, clusterName, usernameId, passwordId, tokenId, collectionName, documentName, installUrl, clusterizeUrl, incrementUrl, protectUrl, bunchUrl, getInstancesUrl string) (bashScript string, err error) {
 	clusterInfo := GetClusterSizeInfo(project, collectionName, documentName)
 	instancesInterfaces := clusterInfo["instances"].([]interface{})
 	instances := make([]string, len(instancesInterfaces))
@@ -268,7 +271,7 @@ func GetDeployScript(project, zone, clusterName, usernameId, passwordId, tokenId
 	PROTECT_URL=%s
 	BUNCH_URL=%s
 	CLUSTERIZE_URL=%s
-	GET_SIZE_URL=%s
+	GET_INSTANCES_URL=%s
 
 	# https://gist.github.com/fungusakafungus/1026804
 	function retry {
@@ -292,12 +295,15 @@ func GetDeployScript(project, zone, clusterName, usernameId, passwordId, tokenId
 
 	curl $INCREMENT_URL -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
 	curl $PROTECT_URL -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
-	curl $BUNCH_URL -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
 
-	if [ $(curl --silent $GET_SIZE_URL) == $HOSTS_NUM ] ; then
+	eval instances=$(curl --silent $GET_INSTANCES_URL)
+	if [ ${#instances[@]} == $HOSTS_NUM ] ; then
 		curl $CLUSTERIZE_URL > /tmp/clusterize.sh
 		chmod +x /tmp/clusterize.sh
 		/tmp/clusterize.sh
+		for instance in ${instances[@]}; do
+			curl $BUNCH_URL -H "Content-Type:application/json"  -d "{\"name\": \"$instance\"}"
+		done
 	fi
 	`
 
@@ -307,7 +313,7 @@ func GetDeployScript(project, zone, clusterName, usernameId, passwordId, tokenId
 	}
 
 	if len(instances) < initial_size {
-		bashScript = fmt.Sprintf(installTemplate, initial_size, token, installUrl, incrementUrl, protectUrl, bunchUrl, clusterizeUrl, getSizeUrl)
+		bashScript = fmt.Sprintf(installTemplate, initial_size, token, installUrl, incrementUrl, protectUrl, bunchUrl, clusterizeUrl, getInstancesUrl)
 	} else {
 		bashScript, err = GetJoinParams(project, zone, clusterName, usernameId, passwordId)
 		if err != nil {
