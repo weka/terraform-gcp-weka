@@ -3,18 +3,18 @@ package cloud_functions
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/weka/gcp-tf/cloud-functions/bunch"
-	"github.com/weka/gcp-tf/cloud-functions/clusterize"
-	"github.com/weka/gcp-tf/cloud-functions/deploy"
-	"github.com/weka/gcp-tf/cloud-functions/fetch"
-	"github.com/weka/gcp-tf/cloud-functions/get_db_value"
-	"github.com/weka/gcp-tf/cloud-functions/get_instances"
-	"github.com/weka/gcp-tf/cloud-functions/increment"
-	"github.com/weka/gcp-tf/cloud-functions/protect"
-	"github.com/weka/gcp-tf/cloud-functions/scale_down"
-	"github.com/weka/gcp-tf/cloud-functions/scale_up"
-	"github.com/weka/gcp-tf/cloud-functions/terminate"
-	"github.com/weka/gcp-tf/cloud-functions/update_db"
+	"github.com/weka/gcp-tf/cloud-functions/common"
+	"github.com/weka/gcp-tf/cloud-functions/functions/bunch"
+	"github.com/weka/gcp-tf/cloud-functions/functions/clusterize"
+	"github.com/weka/gcp-tf/cloud-functions/functions/deploy"
+	"github.com/weka/gcp-tf/cloud-functions/functions/fetch"
+	"github.com/weka/gcp-tf/cloud-functions/functions/get_instances"
+	"github.com/weka/gcp-tf/cloud-functions/functions/increment"
+	"github.com/weka/gcp-tf/cloud-functions/functions/protect"
+	"github.com/weka/gcp-tf/cloud-functions/functions/scale_down"
+	"github.com/weka/gcp-tf/cloud-functions/functions/scale_up"
+	"github.com/weka/gcp-tf/cloud-functions/functions/terminate"
+	"github.com/weka/gcp-tf/cloud-functions/functions/update_db"
 	"os"
 	"testing"
 	"time"
@@ -63,14 +63,6 @@ func Test_fetch(t *testing.T) {
 	}
 
 	t.Logf("res:%s", string(b))
-}
-
-func Test_get_db_value(t *testing.T) {
-	project := "wekaio-rnd"
-	collectionName := "weka-poc-collection"
-	documentName := "weka-poc-document"
-	clusterInfo := get_db_value.GetValue(project, collectionName, documentName)
-	fmt.Printf("%d\n", clusterInfo["desired_size"].(int64))
 }
 
 func Test_get_instances(t *testing.T) {
@@ -172,7 +164,7 @@ func Test_scaleUp(t *testing.T) {
 	documentName := "weka-poc-document"
 	instanceGroupSize := scale_up.GetInstanceGroupSize(project, zone, instanceGroup)
 	t.Logf("Instance group size is: %d", instanceGroupSize)
-	desiredSize := int32(scale_up.GetClusterSizeInfo(project, collectionName, documentName)["desired_size"].(int64))
+	desiredSize := int32(common.GetClusterSizeInfo(project, collectionName, documentName)["desired_size"].(int64))
 	t.Logf("Desired size is: %d", desiredSize)
 }
 

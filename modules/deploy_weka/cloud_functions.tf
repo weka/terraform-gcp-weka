@@ -370,35 +370,6 @@ resource "google_cloudfunctions_function_iam_member" "increment_invoker" {
   member = "allUsers"
 }
 
-# ======================== get_db_value ============================
-resource "google_cloudfunctions_function" "get_db_value_function" {
-  name        = "${var.prefix}-${var.cluster_name}-get-db-value"
-  description = "get value from db"
-  runtime     = "go116"
-  timeout     = 540
-
-  available_memory_mb   = 128
-  source_archive_bucket = data.google_storage_bucket.cloud_functions_bucket.name
-  source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
-  trigger_http          = true
-  entry_point           = "GetDbValue"
-  environment_variables = {
-    PROJECT: var.project
-    COLLECTION_NAME: "${var.prefix}-${var.cluster_name}-collection"
-    DOCUMENT_NAME: "${var.prefix}-${var.cluster_name}-document"
-  }
-}
-
-# IAM entry for all users to invoke the function
-resource "google_cloudfunctions_function_iam_member" "get_db_value_invoker" {
-  project        = google_cloudfunctions_function.get_db_value_function.project
-  region         = google_cloudfunctions_function.get_db_value_function.region
-  cloud_function = google_cloudfunctions_function.get_db_value_function.name
-
-  role   = "roles/cloudfunctions.invoker"
-  member = "allUsers"
-}
-
 # ======================== get_instances ============================
 resource "google_cloudfunctions_function" "get_instances_function" {
   name        = "${var.prefix}-${var.cluster_name}-get-instances"

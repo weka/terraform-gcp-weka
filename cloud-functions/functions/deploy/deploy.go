@@ -5,10 +5,10 @@ import (
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	"context"
 	"errors"
-	firebase "firebase.google.com/go"
 	"fmt"
 	"github.com/lithammer/dedent"
 	"github.com/rs/zerolog/log"
+	"github.com/weka/gcp-tf/cloud-functions/common"
 	"google.golang.org/api/iterator"
 	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
@@ -25,11 +25,6 @@ type BackendCoreCount struct {
 	converged bool
 }
 
-type ClusterCreds struct {
-	Username string
-	Password string
-}
-
 type BackendCoreCounts map[string]BackendCoreCount
 
 func shuffleSlice(slice []string) {
@@ -43,27 +38,6 @@ func getBackendCoreCounts() BackendCoreCounts {
 		"c2-standard-8":  BackendCoreCount{total: 3, frontend: 1, drive: 1},
 	}
 	return backendCoreCounts
-}
-
-func getUsernameAndPassword(usernameId, passwordId string) (clusterCreds ClusterCreds, err error) {
-	ctx := context.Background()
-	client, err := secretmanager.NewClient(ctx)
-	if err != nil {
-		return
-	}
-	defer client.Close()
-
-	res, err := client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{Name: usernameId})
-	if err != nil {
-		return
-	}
-	clusterCreds.Username = string(res.Payload.Data)
-	res, err = client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{Name: passwordId})
-	if err != nil {
-		return
-	}
-	clusterCreds.Password = string(res.Payload.Data)
-	return
 }
 
 func getToken(tokenId string) (token string, err error) {
@@ -119,7 +93,7 @@ func GetJoinParams(project, zone, clusterName, usernameId, passwordId string) (b
 	instanceTypeParts := strings.Split(*instances[0].MachineType, "/")
 	instanceType := instanceTypeParts[len(instanceTypeParts)-1]
 	shuffleSlice(ips)
-	creds, err := getUsernameAndPassword(usernameId, passwordId)
+	creds, err := common.GetUsernameAndPassword(usernameId, passwordId)
 	if err != nil {
 		log.Error().Msgf("%s", err)
 		return
@@ -226,34 +200,8 @@ func GetJoinParams(project, zone, clusterName, usernameId, passwordId string) (b
 	return
 }
 
-func GetClusterSizeInfo(project, collectionName, documentName string) (info map[string]interface{}) {
-	log.Info().Msg("Retrieving desired group size from DB")
-
-	ctx := context.Background()
-	conf := &firebase.Config{ProjectID: project}
-	app, err := firebase.NewApp(ctx, conf)
-	if err != nil {
-		log.Error().Msgf("%s", err)
-		return
-	}
-
-	client, err := app.Firestore(ctx)
-	if err != nil {
-		log.Error().Msgf("%s", err)
-		return
-	}
-	defer client.Close()
-	doc := client.Collection(collectionName).Doc(documentName)
-	res, err := doc.Get(ctx)
-	if err != nil {
-		log.Error().Msgf("%s", err)
-		return
-	}
-	return res.Data()
-}
-
 func GetDeployScript(project, zone, clusterName, usernameId, passwordId, tokenId, collectionName, documentName, installUrl, clusterizeUrl, incrementUrl, protectUrl, bunchUrl, getInstancesUrl string) (bashScript string, err error) {
-	clusterInfo := GetClusterSizeInfo(project, collectionName, documentName)
+	clusterInfo := common.GetClusterSizeInfo(project, collectionName, documentName)
 	instancesInterfaces := clusterInfo["instances"].([]interface{})
 	instances := make([]string, len(instancesInterfaces))
 	for i, v := range instancesInterfaces {

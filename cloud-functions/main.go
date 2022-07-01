@@ -4,19 +4,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/rs/zerolog/log"
-	"github.com/weka/gcp-tf/cloud-functions/bunch"
-	"github.com/weka/gcp-tf/cloud-functions/clusterize"
-	"github.com/weka/gcp-tf/cloud-functions/deploy"
-	"github.com/weka/gcp-tf/cloud-functions/fetch"
-	"github.com/weka/gcp-tf/cloud-functions/get_db_value"
-	"github.com/weka/gcp-tf/cloud-functions/get_instances"
-	"github.com/weka/gcp-tf/cloud-functions/increment"
-	"github.com/weka/gcp-tf/cloud-functions/protect"
+	"github.com/weka/gcp-tf/cloud-functions/common"
+	"github.com/weka/gcp-tf/cloud-functions/functions/bunch"
+	"github.com/weka/gcp-tf/cloud-functions/functions/clusterize"
+	"github.com/weka/gcp-tf/cloud-functions/functions/deploy"
+	"github.com/weka/gcp-tf/cloud-functions/functions/fetch"
+	"github.com/weka/gcp-tf/cloud-functions/functions/get_instances"
+	"github.com/weka/gcp-tf/cloud-functions/functions/increment"
+	"github.com/weka/gcp-tf/cloud-functions/functions/protect"
+	"github.com/weka/gcp-tf/cloud-functions/functions/scale_down"
+	"github.com/weka/gcp-tf/cloud-functions/functions/scale_up"
+	"github.com/weka/gcp-tf/cloud-functions/functions/terminate"
+	"github.com/weka/gcp-tf/cloud-functions/functions/update_db"
 	"github.com/weka/gcp-tf/cloud-functions/protocol"
-	"github.com/weka/gcp-tf/cloud-functions/scale_down"
-	"github.com/weka/gcp-tf/cloud-functions/scale_up"
-	"github.com/weka/gcp-tf/cloud-functions/terminate"
-	"github.com/weka/gcp-tf/cloud-functions/update_db"
 	"net/http"
 	"os"
 	"strconv"
@@ -72,17 +72,6 @@ func Fetch(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Writing fetch result")
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(fetch.GetFetchDataParams(project, zone, instanceGroup, clusterName, collectionName, documentName, usernameId, passwordId))
-}
-
-func GetDbValue(w http.ResponseWriter, r *http.Request) {
-	project := os.Getenv("PROJECT")
-	collectionName := os.Getenv("COLLECTION_NAME")
-	documentName := os.Getenv("DOCUMENT_NAME")
-
-	clusterInfo := get_db_value.GetValue(project, collectionName, documentName)
-	desiredSize := clusterInfo["desired_size"].(int64)
-
-	fmt.Fprintf(w, "%d", desiredSize)
 }
 
 func GetInstances(w http.ResponseWriter, r *http.Request) {
@@ -184,7 +173,7 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 
 	instanceGroupSize := scale_up.GetInstanceGroupSize(project, zone, instanceGroup)
 	log.Info().Msgf("Instance group size is: %d", instanceGroupSize)
-	clusterInfo := scale_up.GetClusterSizeInfo(project, collectionName, documentName)
+	clusterInfo := common.GetClusterSizeInfo(project, collectionName, documentName)
 	desiredSize := int32(clusterInfo["desired_size"].(int64))
 	log.Info().Msgf("Desired size is: %d", desiredSize)
 
@@ -205,6 +194,8 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 
 func Terminate(w http.ResponseWriter, r *http.Request) {
 	project := os.Getenv("PROJECT")
+	zone := os.Getenv("ZONE")
+	instanceGroup := os.Getenv("INSTANCE_GROUP")
 	collectionName := os.Getenv("COLLECTION_NAME")
 	documentName := os.Getenv("DOCUMENT_NAME")
 	loadBalancerName := os.Getenv("LOAD_BALANCER_NAME")
@@ -216,7 +207,7 @@ func Terminate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	terminate.Terminate(w, scaleResponse, project, collectionName, documentName, loadBalancerName)
+	terminate.Terminate(w, scaleResponse, project, zone, instanceGroup, collectionName, documentName, loadBalancerName)
 }
 
 func Transient(w http.ResponseWriter, r *http.Request) {

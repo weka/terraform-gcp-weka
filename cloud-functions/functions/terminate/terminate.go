@@ -5,15 +5,14 @@ import (
 	"cloud.google.com/go/firestore"
 	"context"
 	"encoding/json"
-	"errors"
 	firebase "firebase.google.com/go"
 	"fmt"
 	"github.com/rs/zerolog/log"
+	"github.com/weka/gcp-tf/cloud-functions/common"
 	"github.com/weka/gcp-tf/cloud-functions/protocol"
 	"google.golang.org/api/iterator"
 	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 )
@@ -25,9 +24,6 @@ var Nilv = Nilt{}
 type instancesMap map[string]*computepb.Instance
 type InstanceIdsSet map[string]Nilt
 type InstancePrivateIpsSet map[string]Nilt
-
-var Project = os.Getenv("PROJECT")
-var Zone = os.Getenv("ZONE")
 
 func getInstancePrivateIpsSet(scaleResponse protocol.ScaleResponse) InstancePrivateIpsSet {
 	instancePrivateIpsSet := make(InstancePrivateIpsSet)
@@ -45,55 +41,9 @@ func instancesToMap(instances []*computepb.Instance) instancesMap {
 	return im
 }
 
-func generateInstanceNamesFilter(instanceNames []string) (namesFilter string) {
-	if len(instanceNames) == 0 {
-		log.Fatal().Err(errors.New("no instances found in instance group"))
-	}
-
-	namesFilter = fmt.Sprintf("name=%s", instanceNames[0])
-	for _, instanceName := range instanceNames[1:] {
-		namesFilter = fmt.Sprintf("%s OR name=%s", namesFilter, instanceName)
-	}
-	log.Info().Msgf("%s", namesFilter)
-	return
-}
-
-func getInstances(instanceIds []string) (instances []*computepb.Instance, err error) {
-	idsFilter := generateInstanceNamesFilter(instanceIds)
-
-	ctx := context.Background()
-	instanceClient, err := compute.NewInstancesRESTClient(ctx)
-	if err != nil {
-		log.Fatal().Err(err)
-	}
-	defer instanceClient.Close()
-
-	listInstanceRequest := &computepb.ListInstancesRequest{
-		Project: Project,
-		Zone:    Zone,
-		Filter:  &idsFilter,
-	}
-
-	listInstanceIter := instanceClient.List(ctx, listInstanceRequest)
-
-	for {
-		resp, err := listInstanceIter.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			log.Error().Msgf("%s", err)
-			return nil, err
-		}
-		log.Info().Msgf("%s %d %s", *resp.Name, resp.Id, *resp.NetworkInterfaces[0].NetworkIP)
-		instances = append(instances, resp)
-	}
-	return
-}
-
-func getDeltaInstancesIds(asgInstanceIds []string, scaleResponse protocol.ScaleResponse) (deltaInstanceIDs []string, err error) {
+func getDeltaInstancesIds(project, zone string, asgInstanceIds []string, scaleResponse protocol.ScaleResponse) (deltaInstanceIDs []string, err error) {
 	log.Info().Msg("Getting delta instances")
-	asgInstances, err := getInstances(asgInstanceIds)
+	asgInstances, err := common.GetInstances(project, zone, asgInstanceIds)
 	if err != nil {
 		return
 	}
@@ -121,7 +71,7 @@ func setForExplicitRemoval(instance *computepb.Instance, toRemove []protocol.HgI
 	return false
 }
 
-func terminateInstances(instanceIds []string) (terminatingInstances []string, errs []error) {
+func terminateInstances(project, zone string, instanceIds []string) (terminatingInstances []string, errs []error) {
 
 	ctx := context.Background()
 	instanceClient, err := compute.NewInstancesRESTClient(ctx)
@@ -135,8 +85,8 @@ func terminateInstances(instanceIds []string) (terminatingInstances []string, er
 	log.Info().Msgf("Terminating instances %s", instanceIds)
 	for _, instanceId := range instanceIds {
 		_, err := instanceClient.Delete(ctx, &computepb.DeleteInstanceRequest{
-			Project:  Project,
-			Zone:     Zone,
+			Project:  project,
+			Zone:     zone,
 			Instance: instanceId,
 		})
 		if err != nil {
@@ -149,7 +99,7 @@ func terminateInstances(instanceIds []string) (terminatingInstances []string, er
 	return
 }
 
-func terminateUnneededInstances(asgName string, instances []*computepb.Instance, explicitRemoval []protocol.HgInstance) (terminated []*computepb.Instance, errs []error) {
+func terminateUnneededInstances(project, zone string, instances []*computepb.Instance, explicitRemoval []protocol.HgInstance) (terminated []*computepb.Instance, errs []error) {
 	terminateInstanceIds := make([]string, 0, 0)
 	imap := instancesToMap(instances)
 
@@ -172,7 +122,7 @@ func terminateUnneededInstances(asgName string, instances []*computepb.Instance,
 		}
 	}
 
-	terminatedInstances, errs := terminateAsgInstances(asgName, terminateInstanceIds)
+	terminatedInstances, errs := terminateAsgInstances(project, zone, terminateInstanceIds)
 
 	for _, id := range terminatedInstances {
 		terminated = append(terminated, imap[id])
@@ -215,19 +165,19 @@ func unsetDeletionProtection(project, zone, instanceName string) (err error) {
 	return
 }
 
-func terminateAsgInstances(asgName string, terminateInstanceIds []string) (terminatedInstances []string, errs []error) {
+func terminateAsgInstances(project, zone string, terminateInstanceIds []string) (terminatedInstances []string, errs []error) {
 	if len(terminateInstanceIds) == 0 {
 		return
 	}
 	setToTerminate := terminateInstanceIds[:min(len(terminateInstanceIds), 50)]
 	for _, instanceId := range setToTerminate {
-		err := unsetDeletionProtection(Project, Zone, instanceId)
+		err := unsetDeletionProtection(project, zone, instanceId)
 		if err != nil {
 			errs = append(errs, err)
 		}
 	}
 
-	terminatedInstances, errs = terminateInstances(setToTerminate)
+	terminatedInstances, errs = terminateInstances(project, zone, setToTerminate)
 	return
 }
 
@@ -267,49 +217,6 @@ func unpackASGInstanceIds(instances []*computepb.InstanceWithNamedPorts) (instan
 	for _, instance := range instances {
 		split := strings.Split(*instance.Instance, "/")
 		instanceIds = append(instanceIds, split[len(split)-1])
-	}
-	return
-}
-
-//func InstanceIdsToNames(instanceIds []string) (instanceNames []string) {
-//
-//	for _, instance := range instanceIds {
-//		//split := strings.Split(instance.Instance, "/")
-//		//instanceNames = append(instanceNames, split[len(split)-1])
-//	}
-//	return
-//}
-
-func getInstanceGroupInstances(project, zone string, instanceNames []string) (instances []*computepb.Instance) {
-	namesFilter := generateInstanceNamesFilter(instanceNames)
-
-	ctx := context.Background()
-	instanceClient, err := compute.NewInstancesRESTClient(ctx)
-	if err != nil {
-		log.Fatal().Err(err)
-	}
-	defer instanceClient.Close()
-
-	listInstanceRequest := &computepb.ListInstancesRequest{
-		Project: project,
-		Zone:    zone,
-		Filter:  &namesFilter,
-	}
-
-	listInstanceIter := instanceClient.List(ctx, listInstanceRequest)
-
-	for {
-		resp, err := listInstanceIter.Next()
-
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			log.Error().Msgf("%s", err)
-			return
-		}
-		log.Info().Msgf("%s %d %s", *resp.Name, resp.Id, *resp.NetworkInterfaces[0].NetworkIP)
-		instances = append(instances, resp)
 	}
 	return
 }
@@ -429,13 +336,13 @@ func TerminateUnhealthyInstances(project, zone, instanceGroup, loadBalancerName 
 	}
 
 	log.Debug().Msgf("found %d suspended instances", len(toTerminate))
-	_, terminateErrors := terminateInstances(toTerminate)
+	_, terminateErrors := terminateInstances(project, zone, toTerminate)
 	errs = append(errs, terminateErrors...)
 
 	return
 }
 
-func Terminate(w http.ResponseWriter, scaleResponse protocol.ScaleResponse, project, collectionName, documentName, loadBalancerName string) {
+func Terminate(w http.ResponseWriter, scaleResponse protocol.ScaleResponse, project, zone, instanceGroup, collectionName, documentName, loadBalancerName string) {
 	var response protocol.TerminatedInstancesResponse
 	var err error
 
@@ -447,7 +354,6 @@ func Terminate(w http.ResponseWriter, scaleResponse protocol.ScaleResponse, proj
 		return
 	}
 
-	instanceGroup := os.Getenv("INSTANCE_GROUP")
 	if instanceGroup == "" {
 		log.Error().Msgf("ASG_NAME env var is mandatory")
 		writeResponse(w, response)
@@ -455,7 +361,7 @@ func Terminate(w http.ResponseWriter, scaleResponse protocol.ScaleResponse, proj
 	}
 	response.TransientErrors = scaleResponse.TransientErrors[0:len(scaleResponse.TransientErrors):len(scaleResponse.TransientErrors)]
 
-	asgInstances := getAsgInstances(Project, Zone, instanceGroup)
+	asgInstances := getAsgInstances(project, zone, instanceGroup)
 	asgInstanceIds := unpackASGInstanceIds(asgInstances)
 	log.Info().Msgf("Found %d instances on ASG", len(asgInstanceIds))
 	if err != nil {
@@ -464,12 +370,12 @@ func Terminate(w http.ResponseWriter, scaleResponse protocol.ScaleResponse, proj
 		return
 	}
 
-	errs := TerminateUnhealthyInstances(Project, Zone, instanceGroup, loadBalancerName)
+	errs := TerminateUnhealthyInstances(project, zone, instanceGroup, loadBalancerName)
 	if len(errs) != 0 {
 		response.AddTransientErrors(errs)
 	}
 
-	deltaInstanceIds, err := getDeltaInstancesIds(asgInstanceIds, scaleResponse)
+	deltaInstanceIds, err := getDeltaInstancesIds(project, zone, asgInstanceIds, scaleResponse)
 	if err != nil {
 		log.Error().Msgf("%s", err)
 		writeResponse(w, response)
@@ -482,14 +388,14 @@ func Terminate(w http.ResponseWriter, scaleResponse protocol.ScaleResponse, proj
 		return
 	}
 
-	candidatesToTerminate, err := getInstances(deltaInstanceIds)
+	candidatesToTerminate, err := common.GetInstances(project, zone, deltaInstanceIds)
 	if err != nil {
 		log.Error().Msgf("%s", err)
 		writeResponse(w, response)
 		return
 	}
 
-	terminatedInstances, errs := terminateUnneededInstances(instanceGroup, candidatesToTerminate, scaleResponse.ToTerminate)
+	terminatedInstances, errs := terminateUnneededInstances(project, zone, candidatesToTerminate, scaleResponse.ToTerminate)
 	response.AddTransientErrors(errs)
 
 	decrement(project, collectionName, documentName, len(terminatedInstances))
