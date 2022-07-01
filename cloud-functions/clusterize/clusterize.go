@@ -74,7 +74,7 @@ func getBackendsIps(project, zone, clusterName string) (backendsIps []string) {
 	return
 }
 
-func GenerateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, instanceBaseName, getSizeUrl string) (clusterizeScript string) {
+func GenerateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, instanceBaseName string) (clusterizeScript string) {
 	log.Info().Msg("Generating clusterization scrtipt")
 	creds, err := getUsernameAndPassword(usernameId, passwordId)
 	if err != nil {
@@ -96,13 +96,6 @@ func GenerateClusterizationScript(project, zone, hostsNum, nicsNum, gws, cluster
 	ADMIN_USERNAME=%s
 	ADMIN_PASSWORD=%s
 	INSTANCE_NAME=%s
-	GET_SIZE_URL=%s
-
-	other_hosts_num=$(expr $HOSTS_NUM - 1)
-	while [ $(curl --silent $GET_SIZE_URL) -lt $other_hosts_num ] ; do
-		echo "waiting for other hosts before clusterizing..."
-		sleep 10
-	done
 
 	cluster_creation_str="weka cluster create"
 	for (( i=0; i<$HOSTS_NUM; i++ )); do
@@ -149,6 +142,6 @@ func GenerateClusterizationScript(project, zone, hostsNum, nicsNum, gws, cluster
 	`
 	ips := fmt.Sprintf("(%s)", strings.Join(getBackendsIps(project, zone, clusterName), " "))
 	log.Info().Msgf("Formatting clusterization script template")
-	clusterizeScript = fmt.Sprintf(dedent.Dedent(clusterizeScriptTemplate), ips, hostsNum, nicsNum, gws, clusterName, nvmesMumber, creds.Username, creds.Password, instanceBaseName, getSizeUrl)
+	clusterizeScript = fmt.Sprintf(dedent.Dedent(clusterizeScriptTemplate), ips, hostsNum, nicsNum, gws, clusterName, nvmesMumber, creds.Username, creds.Password, instanceBaseName)
 	return
 }

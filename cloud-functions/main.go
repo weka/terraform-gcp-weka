@@ -9,7 +9,7 @@ import (
 	"github.com/weka/gcp-tf/cloud-functions/deploy"
 	"github.com/weka/gcp-tf/cloud-functions/fetch"
 	"github.com/weka/gcp-tf/cloud-functions/get_db_value"
-	"github.com/weka/gcp-tf/cloud-functions/get_size"
+	"github.com/weka/gcp-tf/cloud-functions/get_instances"
 	"github.com/weka/gcp-tf/cloud-functions/increment"
 	"github.com/weka/gcp-tf/cloud-functions/protect"
 	"github.com/weka/gcp-tf/cloud-functions/protocol"
@@ -55,9 +55,8 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 	usernameId := os.Getenv("USER_NAME_ID")
 	passwordId := os.Getenv("PASSWORD_ID")
 	instanceBaseName := os.Getenv("INSTANCE_BASE_NAME")
-	getSizeUrl := os.Getenv("GET_SIZE_URL")
 
-	fmt.Fprintf(w, clusterize.GenerateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, instanceBaseName, getSizeUrl))
+	fmt.Fprintf(w, clusterize.GenerateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, instanceBaseName))
 }
 
 func Fetch(w http.ResponseWriter, r *http.Request) {
@@ -86,12 +85,12 @@ func GetDbValue(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%d", desiredSize)
 }
 
-func GetSize(w http.ResponseWriter, r *http.Request) {
+func GetInstances(w http.ResponseWriter, r *http.Request) {
 	project := os.Getenv("PROJECT")
 	collectionName := os.Getenv("COLLECTION_NAME")
 	documentName := os.Getenv("DOCUMENT_NAME")
 
-	fmt.Fprintf(w, "%d", get_size.GetSize(project, collectionName, documentName))
+	fmt.Fprintf(w, "%s", get_instances.GetInstancesBashList(project, collectionName, documentName))
 }
 
 func Increment(w http.ResponseWriter, r *http.Request) {
@@ -131,9 +130,9 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 	incrementUrl := os.Getenv("INCREMENT_URL")
 	protectUrl := os.Getenv("PROTECT_URL")
 	bunchUrl := os.Getenv("BUNCH_URL")
-	getSizeUrl := os.Getenv("GET_SIZE_URL")
+	getInstancesUrl := os.Getenv("GET_INSTANCES_URL")
 
-	bashScript, err := deploy.GetDeployScript(project, zone, clusterName, usernameId, passwordId, tokenId, collectionName, documentName, installUrl, clusterizeUrl, incrementUrl, protectUrl, bunchUrl, getSizeUrl)
+	bashScript, err := deploy.GetDeployScript(project, zone, clusterName, usernameId, passwordId, tokenId, collectionName, documentName, installUrl, clusterizeUrl, incrementUrl, protectUrl, bunchUrl, getInstancesUrl)
 	if err != nil {
 		fmt.Fprintf(w, "%s", err)
 	} else {
