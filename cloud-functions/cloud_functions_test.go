@@ -88,7 +88,9 @@ func Test_deploy(t *testing.T) {
 	usernameId := "projects/896245720241/secrets/weka-poc-username/versions/1"
 	passwordId := "projects/896245720241/secrets/weka-poc-password/versions/1"
 	tokenId := "projects/896245720241/secrets/weka-poc-token/versions/1"
-	bashScript, err := deploy.GetJoinParams(project, zone, clusterName, usernameId, passwordId)
+	protectUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-protect"
+	bunchUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-bunch"
+	bashScript, err := deploy.GetJoinParams(project, zone, clusterName, usernameId, passwordId, protectUrl, bunchUrl)
 	if err != nil {
 		t.Logf("Generating join scripts failed: %s", err)
 		return
@@ -102,10 +104,8 @@ func Test_deploy(t *testing.T) {
 	collectionName := "weka-poc-collection"
 	documentName := "weka-poc-document"
 	installUrl := fmt.Sprintf("https://%s@get.weka.io/dist/v1/install/%s/%s", token, version, version)
-	clusterizeUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-clusterize"
 	incrementUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-increment"
-	protectUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-protect"
-	bunchUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-bunch"
+	clusterizeUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-clusterize"
 	getInstancesUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-get-instances"
 
 	bashScript, err = deploy.GetDeployScript(project, zone, clusterName, usernameId, passwordId, tokenId, collectionName, documentName, installUrl, clusterizeUrl, incrementUrl, protectUrl, bunchUrl, getInstancesUrl)
