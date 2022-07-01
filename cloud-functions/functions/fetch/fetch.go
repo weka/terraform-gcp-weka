@@ -1,14 +1,9 @@
 package fetch
 
 import (
-	compute "cloud.google.com/go/compute/apiv1"
-	"context"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"github.com/weka/gcp-tf/cloud-functions/common"
-	"google.golang.org/api/iterator"
 	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
-	"strings"
 )
 
 type HgInstance struct {
@@ -26,6 +21,13 @@ type HostGroupInfoResponse struct {
 	Version         int          `json:"version"`
 }
 
+func getInstanceGroupBackendsIps(instances []*computepb.Instance) (instanceGroupBackendsIps []string) {
+	for _, instance := range instances {
+		instanceGroupBackendsIps = append(instanceGroupBackendsIps, *instance.NetworkInterfaces[0].NetworkIP)
+	}
+	return
+}
+
 func GetFetchDataParams(project, zone, instanceGroup, clusterName, collectionName, documentName, usernameId, passwordId string) (hostGroupInfoResponse HostGroupInfoResponse) {
 
 	creds, err := common.GetUsernameAndPassword(usernameId, passwordId)
@@ -33,7 +35,7 @@ func GetFetchDataParams(project, zone, instanceGroup, clusterName, collectionNam
 		return
 	}
 
-	instances, err := common.GetInstances(project, zone, getInstancesNames(project, zone, instanceGroup))
+	instances, err := common.GetInstances(project, zone, common.GetInstanceGroupInstanceNames(project, zone, instanceGroup))
 	if err != nil {
 		return
 	}
@@ -43,7 +45,7 @@ func GetFetchDataParams(project, zone, instanceGroup, clusterName, collectionNam
 		Password:        creds.Password,
 		DesiredCapacity: getCapacity(project, collectionName, documentName),
 		Instances:       getHostGroupInfoInstances(instances),
-		BackendIps:      common.GetBackendsIps(project, zone, clusterName),
+		BackendIps:      getInstanceGroupBackendsIps(instances),
 		Role:            "backend",
 		Version:         1,
 	}
@@ -64,37 +66,4 @@ func getHostGroupInfoInstances(instances []*computepb.Instance) (ret []HgInstanc
 func getCapacity(project, collectionName, documentName string) int {
 	info := common.GetClusterSizeInfo(project, collectionName, documentName)
 	return int(info["desired_size"].(int64))
-}
-
-func getInstancesNames(project, zone, instanceGroup string) (instanceNames []string) {
-	ctx := context.Background()
-
-	c, err := compute.NewInstanceGroupsRESTClient(ctx)
-	if err != nil {
-		log.Fatal().Err(err)
-	}
-	defer c.Close()
-
-	req := &computepb.ListInstancesInstanceGroupsRequest{
-		Project:       project,
-		Zone:          zone,
-		InstanceGroup: instanceGroup,
-	}
-	it := c.ListInstances(ctx, req)
-
-	for {
-		resp, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			log.Fatal().Err(err)
-			break
-		}
-		split := strings.Split(resp.GetInstance(), "/")
-		instanceNames = append(instanceNames, split[len(split)-1])
-		log.Info().Msgf("%s", split[len(split)-1])
-		_ = resp
-	}
-	return
 }

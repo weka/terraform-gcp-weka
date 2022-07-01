@@ -1,12 +1,51 @@
 package clusterize
 
 import (
+	compute "cloud.google.com/go/compute/apiv1"
+	"context"
 	"fmt"
 	"github.com/lithammer/dedent"
 	"github.com/rs/zerolog/log"
 	"github.com/weka/gcp-tf/cloud-functions/common"
+	"google.golang.org/api/iterator"
+	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
 	"strings"
 )
+
+func getAllBackendsIps(project, zone, clusterName string) (backendsIps []string) {
+	ctx := context.Background()
+	instanceClient, err := compute.NewInstancesRESTClient(ctx)
+	if err != nil {
+		log.Error().Msgf("%s", err)
+	}
+	defer instanceClient.Close()
+
+	clusterNameFilter := fmt.Sprintf("labels.cluster_name=%s", clusterName)
+	listInstanceRequest := &computepb.ListInstancesRequest{
+		Project: project,
+		Zone:    zone,
+		Filter:  &clusterNameFilter,
+	}
+
+	listInstanceIter := instanceClient.List(ctx, listInstanceRequest)
+
+	for {
+		resp, err := listInstanceIter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			log.Error().Msgf("%s", err)
+			break
+		}
+		for _, networkInterface := range resp.NetworkInterfaces {
+			backendsIps = append(backendsIps, *networkInterface.NetworkIP)
+		}
+
+		_ = resp
+	}
+	return
+}
 
 func GenerateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, instanceBaseName string) (clusterizeScript string) {
 	log.Info().Msg("Generating clusterization scrtipt")
@@ -74,7 +113,7 @@ func GenerateClusterizationScript(project, zone, hostsNum, nicsNum, gws, cluster
 	weka cluster start-io
 	echo "completed successfully" > /tmp/weka_clusterization_completion_validation
 	`
-	ips := fmt.Sprintf("(%s)", strings.Join(common.GetBackendsIps(project, zone, clusterName), " "))
+	ips := fmt.Sprintf("(%s)", strings.Join(getAllBackendsIps(project, zone, clusterName), " "))
 	log.Info().Msgf("Formatting clusterization script template")
 	clusterizeScript = fmt.Sprintf(dedent.Dedent(clusterizeScriptTemplate), ips, hostsNum, nicsNum, gws, clusterName, nvmesMumber, creds.Username, creds.Password, instanceBaseName)
 	return

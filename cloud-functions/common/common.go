@@ -11,6 +11,7 @@ import (
 	"google.golang.org/api/iterator"
 	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
+	"strings"
 )
 
 type ClusterCreds struct {
@@ -36,41 +37,6 @@ func GetUsernameAndPassword(usernameId, passwordId string) (clusterCreds Cluster
 		return
 	}
 	clusterCreds.Password = string(res.Payload.Data)
-	return
-}
-
-func GetBackendsIps(project, zone, clusterName string) (backendsIps []string) {
-	ctx := context.Background()
-	instanceClient, err := compute.NewInstancesRESTClient(ctx)
-	if err != nil {
-		log.Error().Msgf("%s", err)
-	}
-	defer instanceClient.Close()
-
-	clusterNameFilter := fmt.Sprintf("labels.cluster_name=%s", clusterName)
-	listInstanceRequest := &computepb.ListInstancesRequest{
-		Project: project,
-		Zone:    zone,
-		Filter:  &clusterNameFilter,
-	}
-
-	listInstanceIter := instanceClient.List(ctx, listInstanceRequest)
-
-	for {
-		resp, err := listInstanceIter.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			log.Error().Msgf("%s", err)
-			break
-		}
-		for _, networkInterface := range resp.NetworkInterfaces {
-			backendsIps = append(backendsIps, *networkInterface.NetworkIP)
-		}
-
-		_ = resp
-	}
 	return
 }
 
@@ -145,6 +111,38 @@ func GetInstances(project, zone string, instanceNames []string) (instances []*co
 		instances = append(instances, resp)
 
 		_ = resp
+	}
+	return
+}
+
+func GetInstanceGroupInstanceNames(project, zone, instanceGroup string) (instanceNames []string) {
+	ctx := context.Background()
+
+	c, err := compute.NewInstanceGroupsRESTClient(ctx)
+	if err != nil {
+		log.Fatal().Err(err)
+	}
+	defer c.Close()
+
+	req := &computepb.ListInstancesInstanceGroupsRequest{
+		Project:       project,
+		Zone:          zone,
+		InstanceGroup: instanceGroup,
+	}
+	it := c.ListInstances(ctx, req)
+
+	for {
+		resp, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			log.Fatal().Err(err)
+			break
+		}
+		split := strings.Split(resp.GetInstance(), "/")
+		instanceNames = append(instanceNames, split[len(split)-1])
+		log.Info().Msgf("%s", split[len(split)-1])
 	}
 	return
 }

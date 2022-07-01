@@ -10,7 +10,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/weka/gcp-tf/cloud-functions/common"
 	"github.com/weka/gcp-tf/cloud-functions/protocol"
-	"google.golang.org/api/iterator"
 	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
 	"net/http"
 	"strings"
@@ -181,46 +180,6 @@ func terminateAsgInstances(project, zone string, terminateInstanceIds []string) 
 	return
 }
 
-func getAsgInstances(project, zone, instanceGroup string) (instances []*computepb.InstanceWithNamedPorts) {
-	ctx := context.Background()
-
-	c, err := compute.NewInstanceGroupsRESTClient(ctx)
-	if err != nil {
-		log.Fatal().Err(err)
-	}
-	defer c.Close()
-
-	req := &computepb.ListInstancesInstanceGroupsRequest{
-		Project:       project,
-		Zone:          zone,
-		InstanceGroup: instanceGroup,
-	}
-	it := c.ListInstances(ctx, req)
-
-	for {
-		resp, err := it.Next()
-
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			log.Error().Msgf("%s", err)
-			return
-		}
-
-		instances = append(instances, resp)
-	}
-	return
-}
-
-func unpackASGInstanceIds(instances []*computepb.InstanceWithNamedPorts) (instanceIds []string) {
-	for _, instance := range instances {
-		split := strings.Split(*instance.Instance, "/")
-		instanceIds = append(instanceIds, split[len(split)-1])
-	}
-	return
-}
-
 func writeResponse(w http.ResponseWriter, response protocol.TerminatedInstancesResponse) {
 	fmt.Println("Writing Terminate result")
 	w.Header().Set("Content-Type", "application/json")
@@ -361,8 +320,7 @@ func Terminate(w http.ResponseWriter, scaleResponse protocol.ScaleResponse, proj
 	}
 	response.TransientErrors = scaleResponse.TransientErrors[0:len(scaleResponse.TransientErrors):len(scaleResponse.TransientErrors)]
 
-	asgInstances := getAsgInstances(project, zone, instanceGroup)
-	asgInstanceIds := unpackASGInstanceIds(asgInstances)
+	asgInstanceIds := common.GetInstanceGroupInstanceNames(project, zone, instanceGroup)
 	log.Info().Msgf("Found %d instances on ASG", len(asgInstanceIds))
 	if err != nil {
 		log.Error().Msgf("%s", err)
