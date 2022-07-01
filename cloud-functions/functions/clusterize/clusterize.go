@@ -1,82 +1,16 @@
 package clusterize
 
 import (
-	compute "cloud.google.com/go/compute/apiv1"
-	secretmanager "cloud.google.com/go/secretmanager/apiv1"
-	"context"
 	"fmt"
 	"github.com/lithammer/dedent"
 	"github.com/rs/zerolog/log"
-	"google.golang.org/api/iterator"
-	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
-	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
+	"github.com/weka/gcp-tf/cloud-functions/common"
 	"strings"
 )
 
-type ClusterCreds struct {
-	Username string
-	Password string
-}
-
-func getUsernameAndPassword(usernameId, passwordId string) (clusterCreds ClusterCreds, err error) {
-	ctx := context.Background()
-	client, err := secretmanager.NewClient(ctx)
-	if err != nil {
-		return
-	}
-	defer client.Close()
-
-	res, err := client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{Name: usernameId})
-	if err != nil {
-		return
-	}
-	clusterCreds.Username = string(res.Payload.Data)
-	res, err = client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{Name: passwordId})
-	if err != nil {
-		return
-	}
-	clusterCreds.Password = string(res.Payload.Data)
-	return
-}
-
-func getBackendsIps(project, zone, clusterName string) (backendsIps []string) {
-	ctx := context.Background()
-	instanceClient, err := compute.NewInstancesRESTClient(ctx)
-	if err != nil {
-		log.Error().Msgf("%s", err)
-	}
-	defer instanceClient.Close()
-
-	clusterNameFilter := fmt.Sprintf("labels.cluster_name=%s", clusterName)
-	listInstanceRequest := &computepb.ListInstancesRequest{
-		Project: project,
-		Zone:    zone,
-		Filter:  &clusterNameFilter,
-	}
-
-	listInstanceIter := instanceClient.List(ctx, listInstanceRequest)
-
-	for {
-		resp, err := listInstanceIter.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			log.Error().Msgf("%s", err)
-			break
-		}
-		for _, networkInterface := range resp.NetworkInterfaces {
-			backendsIps = append(backendsIps, *networkInterface.NetworkIP)
-		}
-
-		_ = resp
-	}
-	return
-}
-
 func GenerateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, instanceBaseName string) (clusterizeScript string) {
 	log.Info().Msg("Generating clusterization scrtipt")
-	creds, err := getUsernameAndPassword(usernameId, passwordId)
+	creds, err := common.GetUsernameAndPassword(usernameId, passwordId)
 	if err != nil {
 		log.Error().Msgf("%s", err)
 		return
@@ -140,7 +74,7 @@ func GenerateClusterizationScript(project, zone, hostsNum, nicsNum, gws, cluster
 	weka cluster start-io
 	echo "completed successfully" > /tmp/weka_clusterization_completion_validation
 	`
-	ips := fmt.Sprintf("(%s)", strings.Join(getBackendsIps(project, zone, clusterName), " "))
+	ips := fmt.Sprintf("(%s)", strings.Join(common.GetBackendsIps(project, zone, clusterName), " "))
 	log.Info().Msgf("Formatting clusterization script template")
 	clusterizeScript = fmt.Sprintf(dedent.Dedent(clusterizeScriptTemplate), ips, hostsNum, nicsNum, gws, clusterName, nvmesMumber, creds.Username, creds.Password, instanceBaseName)
 	return
