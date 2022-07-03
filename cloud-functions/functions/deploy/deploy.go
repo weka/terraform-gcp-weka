@@ -247,7 +247,7 @@ func GetDeployScript(project, zone, clusterName, usernameId, passwordId, tokenId
 
 	eval instances=$(curl --silent $GET_INSTANCES_URL)
 	echo "${instances[*]}" > /tmp/instances.txt # for debug purposes
-	if [ ${#instances[@]} == $HOSTS_NUM ] ; then
+	if [[ ${#instances[@]} == $HOSTS_NUM  && ${instances[-1]} == $HOSTNAME ]] ; then
 		curl $CLUSTERIZE_URL > /tmp/clusterize.sh
 		chmod +x /tmp/clusterize.sh
 		/tmp/clusterize.sh
