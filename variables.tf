@@ -127,7 +127,6 @@ variable "create_vpc_connector" {
 variable "vpc_connector_name" {
   type = string
   description = ""
-  default = ""
 }
 
 variable "sa_name" {
@@ -139,6 +138,28 @@ variable "sa_email" {
   type = string
   description = "service account email"
   default = ""
+}
+
+variable "service_project" {
+  type = string
+  description = "project id of service project"
+  default = ""
+}
+
+variable "host_project" {
+  type = string
+  default = "The ID of the project that will serve as a Shared VPC host project"
+}
+
+variable "shared_vpcs" {
+  type = list(string)
+  description = "list of shared vpc name"
+  default = []
+}
+
+variable "deploy_on_host_project" {
+  type = bool
+  default = false
 }
 
 variable "create_cloudscheduler_sa" {
