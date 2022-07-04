@@ -6,7 +6,8 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "4.27.0"
+      version = ">=4.27.0"
+      configuration_aliases = [google.main,google.deployment,google.shared-vpc]
     }
   }
 }
@@ -24,3 +25,8 @@ provider "google" {
   credentials = module.create_service_account.output-sa-key
 }
 
+provider "google" {
+  alias   = "shared-vpc"
+  project = var.host_project
+  region  = var.region
+}

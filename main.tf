@@ -22,10 +22,46 @@ module "setup_network" {
   zone                 = var.zone
   create_vpc_connector = var.create_vpc_connector
   vpc_connector_range  = var.vpc_connector_range
+  vpc_connector_name   = var.vpc_connector_name
   providers = {
     google = google.deployment
   }
   depends_on = [ module.create_service_account]
+}
+
+
+module "host_vpc_peering" {
+  source                 = "./modules/shared_vpcs"
+  deploy_on_host_project = true
+  service_project        = var.service_project
+  prefix                 = var.prefix
+  project                = var.host_project
+  host_project           = var.host_project
+  shared_vpcs            = var.shared_vpcs
+  vpcs                   = module.setup_network.output-vpcs-names
+
+  providers = {
+    google = google.shared-vpc
+  }
+
+  depends_on = [module.create_service_account, module.setup_network ]
+}
+
+
+module "shared_vpc_peering" {
+  source                 = "./modules/shared_vpcs"
+  deploy_on_host_project = false
+  service_project        = var.service_project
+  prefix                 = var.prefix
+  project                = var.project
+  host_project           = var.host_project
+  shared_vpcs            = var.shared_vpcs
+  vpcs                   = module.setup_network.output-vpcs-names
+
+  providers = {
+    google = google.deployment
+  }
+  depends_on = [module.host_vpc_peering, module.setup_network ]
 }
 
 
@@ -52,7 +88,7 @@ module "deploy_weka" {
   weka_version         = var.weka_version
   bucket-location      = var.bucket-location
   subnets              = var.subnets
-  vpc-connector        = module.setup_network.output-vpc-connector-name
+  vpc_connector        = module.setup_network.output-vpc-connector-name
   sa_email             = module.create_service_account.outputs-service-account-email
   create_cloudscheduler_sa = var.create_cloudscheduler_sa
 

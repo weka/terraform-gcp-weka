@@ -15,5 +15,5 @@ output "output-subnets-range" {
 }
 
 output "output-vpc-connector-name" {
-  value = var.create_vpc_connector ? google_vpc_access_connector.connector[0].name : var.vpc_connector_name
+  value = var.create_vpc_connector ? google_vpc_access_connector.connector[0].name : "projects/${var.project}/locations/${var.region}/connectors/${var.vpc_connector_name}"
 }
