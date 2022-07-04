@@ -15,24 +15,36 @@ resource "google_workflows_workflow" "workflows" {
       call: http.post
       args:
           url: ${google_cloudfunctions_function.fetch_function.https_trigger_url}
+          auth:
+            type: OIDC
+            audience: ${google_cloudfunctions_function.fetch_function.https_trigger_url}
       result: FetchResult
   - scale_down:
       call: http.post
       args:
           url: ${google_cloudfunctions_function.scale_down_function.https_trigger_url}
           body: $${FetchResult.body}
+          auth:
+            type: OIDC
+            audience: ${google_cloudfunctions_function.scale_down_function.https_trigger_url}
       result: ScaleResult
   - terminate:
       call: http.post
       args:
           url: ${google_cloudfunctions_function.terminate_function.https_trigger_url}
           body: $${ScaleResult.body}
+          auth:
+            type: OIDC
+            audience: ${google_cloudfunctions_function.terminate_function.https_trigger_url}
       result: TerminateResult
   - transient:
       call: http.post
       args:
           url: ${google_cloudfunctions_function.transient_function.https_trigger_url}
           body: $${TerminateResult.body}
+          auth:
+            type: OIDC
+            audience: ${google_cloudfunctions_function.transient_function.https_trigger_url}
       result: TransientResult
   - returnOutput:
       return: $${TransientResult}
