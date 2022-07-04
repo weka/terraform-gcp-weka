@@ -9,7 +9,7 @@ resource "google_firestore_document" "firestore_doc" {
   collection  = "${var.prefix}-${var.cluster_name}-collection"
   document_id = "${var.prefix}-${var.cluster_name}-document"
   fields      = "{\"instances\":{\"arrayValue\":{}}, \"initial_size\":{\"integerValue\":\"${var.cluster_size}\"}, \"desired_size\":{\"integerValue\":\"${var.cluster_size}\"}}"
-  depends_on = [google_project_service.firestore]
+  depends_on = [google_project_service.firestore, google_workflows_workflow.workflows]
 
   lifecycle {
     ignore_changes = [fields]
