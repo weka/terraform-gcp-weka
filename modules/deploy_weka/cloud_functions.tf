@@ -134,7 +134,7 @@ resource "google_cloudfunctions_function" "scale_down_function" {
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "ScaleDown"
-  vpc_connector         = var.vpc-connector
+  vpc_connector         = var.vpc_connector
   ingress_settings      = "ALLOW_ALL"
   vpc_connector_egress_settings = "PRIVATE_RANGES_ONLY"
   service_account_email = var.sa_email

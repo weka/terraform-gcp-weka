@@ -65,5 +65,4 @@ variable "create_vpc_connector" {
 variable "vpc_connector_name" {
   type = string
   description = ""
-  default = ""
 }

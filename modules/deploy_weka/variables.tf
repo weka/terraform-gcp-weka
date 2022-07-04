@@ -104,7 +104,7 @@ variable "subnets_range" {
   type = list(string)
 }
 
-variable "vpc-connector" {
+variable "vpc_connector" {
   type        = string
   description = "connector name to use for serverless vpc access"
 }

@@ -67,7 +67,7 @@ resource "google_compute_network_peering" "peering" {
 resource "google_compute_firewall" "sg" {
   count         = length(var.vpcs) == 0 ? length(google_compute_network.vpc_network) : length(var.vpcs)
   name          = "${var.prefix}-sg-ssh-${count.index}"
-  network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[count.index].name : var.vpcs[count.index]
+  network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[count.index].name : "projects/test-tf-vars/global/networks/${var.vpcs[count.index]}"
   source_ranges = ["0.0.0.0/0"]
   allow {
     protocol = "tcp"
@@ -79,7 +79,7 @@ resource "google_compute_firewall" "sg" {
 resource "google_compute_firewall" "sg_private" {
   count         = length(var.vpcs) == 0 ? length(google_compute_network.vpc_network) : length(var.vpcs)
   name          = "${var.prefix}-sg-all-${count.index}"
-  network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[count.index].name : var.vpcs[count.index]
+  network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[count.index].name :  "projects/test-tf-vars/global/networks/${var.vpcs[count.index]}"
   source_ranges = length(var.vpcs) == 0 ? google_compute_subnetwork.subnetwork.*.ip_cidr_range : [for s in var.subnets: s.cidr_range ]
   allow {
     protocol = "all"
@@ -90,7 +90,7 @@ resource "google_compute_firewall" "sg_private" {
 #================ Vpc connector ==========================
 
 resource "google_vpc_access_connector" "connector" {
-  count         = var.create_vpc_connector ? 1 :0
+  count         = var.create_vpc_connector ? 1 : 0
   name          = "${var.prefix}-connector"
   ip_cidr_range = var.vpc_connector_range
   region        = var.region
@@ -110,12 +110,16 @@ resource "google_compute_firewall" "fw_hc" {
   source_tags = ["allow-health-check"]
 }
 
+locals {
+  default_subnet_range = [ for s in var.subnets: s["cidr_range"]]
+}
+
 # allow communication within the subnet
 resource "google_compute_firewall" "fw_ilb_to_backends" {
   name          = "${var.prefix}-fw-allow-ilb-to-backends"
   direction     = "INGRESS"
   network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[0].self_link : "https://www.googleapis.com/compute/v1/projects/${var.project}/global/networks/${var.vpcs[0]}"
-  source_ranges = length(var.vpcs) == 0 ? [var.subnets-cidr-range[0]] : [ "10.0.0.0/24"] # to fix [values(var.subnets)[0].cidr_range ]
+  source_ranges = length(var.vpcs) == 0 ? [var.subnets-cidr-range[0]] : [local.default_subnet_range[0]]
   allow {
     protocol = "tcp"
   }
