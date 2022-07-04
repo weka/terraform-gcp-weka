@@ -28,7 +28,7 @@ resource "google_compute_instance_template" "backends-template" {
   }
   service_account {
     email = var.sa_email
-    scopes = []
+    scopes = ["cloud-platform"]
   }
   disk {
     source_image = data.google_compute_image.centos_7.id
