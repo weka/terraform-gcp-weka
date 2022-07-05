@@ -158,21 +158,21 @@ func ScaleDown(w http.ResponseWriter, r *http.Request) {
 func ScaleUp(w http.ResponseWriter, r *http.Request) {
 	project := os.Getenv("PROJECT")
 	zone := os.Getenv("ZONE")
-	instanceGroup := os.Getenv("INSTANCE_GROUP")
+	clusterName := os.Getenv("CLUSTER_NAME")
 	backendTemplate := os.Getenv("BACKEND_TEMPLATE")
 	bucket := os.Getenv("BUCKET")
 	instanceBaseName := os.Getenv("INSTANCE_BASE_NAME")
 
-	instanceGroupSize := int(scale_up.GetInstanceGroupSize(project, zone, instanceGroup))
-	log.Info().Msgf("Instance group size is: %d", instanceGroupSize)
+	backendsNumber := len(common.GetInstancesByClusterLabel(project, zone, clusterName))
+	log.Info().Msgf("Number of backends is: %d", backendsNumber)
 	state, err := common.GetClusterState(bucket)
 	if err != nil {
 		return
 	}
 	log.Info().Msgf("Desired size is: %d", state.DesiredSize)
 
-	if instanceGroupSize < state.DesiredSize {
-		for i := instanceGroupSize; i < state.DesiredSize; i++ {
+	if backendsNumber < state.DesiredSize {
+		for i := backendsNumber; i < state.DesiredSize; i++ {
 			instanceName := fmt.Sprintf("%s-%s", instanceBaseName, uuid.New().String())
 			log.Info().Msg("creating new backend instance")
 			if err := scale_up.CreateInstance(project, zone, backendTemplate, instanceName); err != nil {

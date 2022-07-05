@@ -8,32 +8,6 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func GetInstanceGroupSize(project, zone, instanceGroup string) int32 {
-	log.Info().Msg("Retrieving instance group size")
-	ctx := context.Background()
-
-	c, err := compute.NewInstanceGroupsRESTClient(ctx)
-	if err != nil {
-		log.Error().Msgf("%s", err)
-		return -1
-	}
-	defer c.Close()
-
-	req := &computepb.GetInstanceGroupRequest{
-		Project:       project,
-		Zone:          zone,
-		InstanceGroup: instanceGroup,
-	}
-
-	resp, err := c.Get(ctx, req)
-	if err != nil {
-		log.Error().Msgf("%s", err)
-		return -1
-	}
-
-	return *resp.Size
-}
-
 func CreateInstance(project, zone, template, instanceName string) (err error) {
 	ctx := context.Background()
 	instancesClient, err := compute.NewInstancesRESTClient(ctx)
