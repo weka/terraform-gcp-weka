@@ -67,7 +67,7 @@ resource "google_compute_instance_template" "backends-template" {
 
 
   metadata_startup_script = <<-EOT
-  curl https://${var.region}-${var.project}.cloudfunctions.net/${var.prefix}-${var.cluster_name}-deploy > /tmp/deploy.sh
+  curl https://${var.region}-${var.project}.cloudfunctions.net/${var.prefix}-${var.cluster_name}-deploy -H "Authorization:bearer $(gcloud auth print-identity-token)" > /tmp/deploy.sh
   chmod +x /tmp/deploy.sh
   /tmp/deploy.sh
  EOT

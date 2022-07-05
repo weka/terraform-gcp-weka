@@ -170,8 +170,8 @@ func GetJoinParams(project, zone, clusterName, usernameId, passwordId, protectUr
 	done
 	sleep 60
 	weka cluster drive scan $host_id
-	curl $PROTECT_URL -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
-	curl $BUNCH_URL -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
+	curl $PROTECT_URL -H "Authorization:bearer $(gcloud auth print-identity-token)" -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
+	curl $BUNCH_URL -H "Authorization:bearer $(gcloud auth print-identity-token)" -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
 	echo "completed successfully" > /tmp/weka_join_completion_validation
 	`
 	var cores, frontend, drive int
@@ -242,17 +242,17 @@ func GetDeployScript(project, zone, clusterName, usernameId, passwordId, tokenId
 	
 	retry 300 2 curl --fail --max-time 10 $INSTALL_URL | sh
 
-	curl $INCREMENT_URL -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
-	curl $PROTECT_URL -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
+	curl $INCREMENT_URL -H "Authorization:bearer $(gcloud auth print-identity-token)" -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
+	curl $PROTECT_URL -H "Authorization:bearer $(gcloud auth print-identity-token)" -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
 
-	eval instances=$(curl --silent $GET_INSTANCES_URL)
+	eval instances=$(curl --silent $GET_INSTANCES_URL -H "Authorization:bearer $(gcloud auth print-identity-token)")
 	echo "${instances[*]}" > /tmp/instances.txt # for debug purposes
 	if [[ ${#instances[@]} == $HOSTS_NUM  && ${instances[-1]} == $HOSTNAME ]] ; then
-		curl $CLUSTERIZE_URL > /tmp/clusterize.sh
+		curl $CLUSTERIZE_URL -H "Authorization:bearer $(gcloud auth print-identity-token)" > /tmp/clusterize.sh
 		chmod +x /tmp/clusterize.sh
 		/tmp/clusterize.sh
 		for instance in ${instances[@]}; do
-			curl $BUNCH_URL -H "Content-Type:application/json"  -d "{\"name\": \"$instance\"}"
+			curl $BUNCH_URL -H "Authorization:bearer $(gcloud auth print-identity-token)" -H "Content-Type:application/json"  -d "{\"name\": \"$instance\"}"
 		done
 	fi
 	`
