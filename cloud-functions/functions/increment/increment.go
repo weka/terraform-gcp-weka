@@ -1,38 +1,43 @@
 package increment
 
 import (
-	"cloud.google.com/go/firestore"
+	"cloud.google.com/go/storage"
 	"context"
-	firebase "firebase.google.com/go"
 	"github.com/rs/zerolog/log"
+	"github.com/weka/gcp-tf/cloud-functions/common"
+	"time"
 )
 
-func Add(project, collectionName, documentName, instanceName string) (err error) {
-	log.Info().Msg("updating DB")
-
+func Add(bucket, newInstance string) (err error) {
 	ctx := context.Background()
-	conf := &firebase.Config{ProjectID: project}
-	app, err := firebase.NewApp(ctx, conf)
+	client, err := storage.NewClient(ctx)
 	if err != nil {
-		log.Error().Msgf("%s", err)
-		return
-	}
-
-	client, err := app.Firestore(ctx)
-	if err != nil {
-		log.Error().Msgf("%s", err)
+		log.Error().Msgf("Failed creating storage client: %s", err)
 		return
 	}
 	defer client.Close()
-	doc := client.Collection(collectionName).Doc(documentName)
 
-	_, err = doc.Update(ctx, []firestore.Update{
-		{Path: "instances", Value: firestore.ArrayUnion(instanceName)},
-	})
-
-	if err != nil {
-		log.Error().Msgf("Failed updating db: %s", err)
+	id, err := common.Lock(client, ctx, bucket)
+	for err != nil {
+		time.Sleep(1 * time.Second)
+		id, err = common.Lock(client, ctx, bucket)
 	}
 
+	err = addInstance(client, ctx, bucket, newInstance)
+	err = common.Unlock(client, ctx, bucket, id) // we always want to unlock
+
+	return
+}
+
+func addInstance(client *storage.Client, ctx context.Context, bucket, newInstance string) (err error) {
+	stateHandler := client.Bucket(bucket).Object("state")
+
+	state, err := common.ReadState(stateHandler, ctx)
+	if err != nil {
+		return
+	}
+	state.Instances = append(state.Instances, newInstance)
+
+	err = common.WriteState(stateHandler, ctx, state)
 	return
 }

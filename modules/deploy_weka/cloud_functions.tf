@@ -43,8 +43,7 @@ resource "google_cloudfunctions_function" "deploy_function" {
     USER_NAME_ID: google_secret_manager_secret_version.user_secret_key.id
     PASSWORD_ID: google_secret_manager_secret_version.password_secret_key.id
     TOKEN_ID: google_secret_manager_secret_version.token_secret_key.id
-    COLLECTION_NAME: "${var.prefix}-${var.cluster_name}-collection"
-    DOCUMENT_NAME: "${var.prefix}-${var.cluster_name}-document"
+    BUCKET : google_storage_bucket.state_bucket.name
     INSTALL_URL: "https://$TOKEN@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}"
     CLUSTERIZE_URL:google_cloudfunctions_function.clusterize_function.https_trigger_url
     INCREMENT_URL:google_cloudfunctions_function.increment_function.https_trigger_url
@@ -105,9 +104,7 @@ resource "google_cloudfunctions_function" "fetch_function" {
     PROJECT: var.project
     ZONE: var.zone
     INSTANCE_GROUP: google_compute_instance_group.instance_group.name
-    CLUSTER_NAME: var.cluster_name
-    COLLECTION_NAME: "${var.prefix}-${var.cluster_name}-collection"
-    DOCUMENT_NAME: "${var.prefix}-${var.cluster_name}-document"
+    BUCKET : google_storage_bucket.state_bucket.name
     USER_NAME_ID: google_secret_manager_secret_version.user_secret_key.id
     PASSWORD_ID: google_secret_manager_secret_version.password_secret_key.id
   }
@@ -170,8 +167,7 @@ resource "google_cloudfunctions_function" "scale_up_function" {
     ZONE: var.zone
     INSTANCE_GROUP: google_compute_instance_group.instance_group.name
     BACKEND_TEMPLATE: google_compute_instance_template.backends-template.id
-    COLLECTION_NAME: "${var.prefix}-${var.cluster_name}-collection"
-    DOCUMENT_NAME: "${var.prefix}-${var.cluster_name}-document"
+    BUCKET : google_storage_bucket.state_bucket.name
     INSTANCE_BASE_NAME: "${var.prefix}-${var.cluster_name}-vm"
   }
   service_account_email = var.sa_email
@@ -241,8 +237,6 @@ resource "google_cloudfunctions_function" "terminate_function" {
     PROJECT: var.project
     ZONE: var.zone
     INSTANCE_GROUP: google_compute_instance_group.instance_group.name
-    COLLECTION_NAME: "${var.prefix}-${var.cluster_name}-collection"
-    DOCUMENT_NAME: "${var.prefix}-${var.cluster_name}-document"
     LOAD_BALANCER_NAME: google_compute_region_backend_service.backend_service.name
   }
   service_account_email = var.sa_email
@@ -326,9 +320,7 @@ resource "google_cloudfunctions_function" "update_db_function" {
   trigger_http          = true
   entry_point           = "UpdateDb"
   environment_variables = {
-    PROJECT: var.project
-    COLLECTION_NAME: "${var.prefix}-${var.cluster_name}-collection"
-    DOCUMENT_NAME: "${var.prefix}-${var.cluster_name}-document"
+    BUCKET: google_storage_bucket.state_bucket.name
   }
   service_account_email = var.sa_email
 }
@@ -356,9 +348,7 @@ resource "google_cloudfunctions_function" "increment_function" {
   trigger_http          = true
   entry_point           = "Increment"
   environment_variables = {
-    PROJECT: var.project
-    COLLECTION_NAME: "${var.prefix}-${var.cluster_name}-collection"
-    DOCUMENT_NAME: "${var.prefix}-${var.cluster_name}-document"
+    BUCKET: google_storage_bucket.state_bucket.name
   }
   service_account_email = var.sa_email
 }
@@ -386,9 +376,7 @@ resource "google_cloudfunctions_function" "get_instances_function" {
   trigger_http          = true
   entry_point           = "GetInstances"
   environment_variables = {
-    PROJECT: var.project
-    COLLECTION_NAME: "${var.prefix}-${var.cluster_name}-collection"
-    DOCUMENT_NAME: "${var.prefix}-${var.cluster_name}-document"
+    BUCKET : google_storage_bucket.state_bucket.name
   }
   service_account_email = var.sa_email
 }

@@ -81,6 +81,7 @@ func GetJoinParams(project, zone, clusterName, usernameId, passwordId, protectUr
 		if err2 == iterator.Done {
 			break
 		}
+
 		if err2 != nil {
 			err = err2
 			log.Error().Msgf("%s", err)
@@ -88,6 +89,11 @@ func GetJoinParams(project, zone, clusterName, usernameId, passwordId, protectUr
 		}
 		ips = append(ips, *resp.NetworkInterfaces[0].NetworkIP)
 		instances = append(instances, resp)
+	}
+
+	if len(instances) == 0 {
+		err = errors.New(fmt.Sprintf("No instances found for cluster %s, can't join", clusterName))
+		return
 	}
 
 	instanceTypeParts := strings.Split(*instances[0].MachineType, "/")
@@ -201,14 +207,13 @@ func GetJoinParams(project, zone, clusterName, usernameId, passwordId, protectUr
 	return
 }
 
-func GetDeployScript(project, zone, clusterName, usernameId, passwordId, tokenId, collectionName, documentName, installUrl, clusterizeUrl, incrementUrl, protectUrl, bunchUrl, getInstancesUrl string) (bashScript string, err error) {
-	clusterInfo := common.GetClusterSizeInfo(project, collectionName, documentName)
-	instancesInterfaces := clusterInfo["instances"].([]interface{})
-	instances := make([]string, len(instancesInterfaces))
-	for i, v := range instancesInterfaces {
-		instances[i] = v.(string)
+func GetDeployScript(project, zone, clusterName, usernameId, passwordId, tokenId, bucket, installUrl, clusterizeUrl, incrementUrl, protectUrl, bunchUrl, getInstancesUrl string) (bashScript string, err error) {
+	state, err := common.GetClusterState(bucket)
+	if err != nil {
+		return
 	}
-	initial_size := int(clusterInfo["initial_size"].(int64))
+	instances := state.Instances
+	initialSize := state.InitialSize
 
 	installTemplate := `
 	#!/bin/bash
@@ -262,8 +267,8 @@ func GetDeployScript(project, zone, clusterName, usernameId, passwordId, tokenId
 		return
 	}
 
-	if len(instances) < initial_size {
-		bashScript = fmt.Sprintf(installTemplate, initial_size, token, installUrl, incrementUrl, protectUrl, bunchUrl, clusterizeUrl, getInstancesUrl)
+	if len(instances) < initialSize {
+		bashScript = fmt.Sprintf(installTemplate, initialSize, token, installUrl, incrementUrl, protectUrl, bunchUrl, clusterizeUrl, getInstancesUrl)
 	} else {
 		bashScript, err = GetJoinParams(project, zone, clusterName, usernameId, passwordId, protectUrl, bunchUrl)
 		if err != nil {

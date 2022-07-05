@@ -42,7 +42,6 @@ module "deploy_weka" {
   private_key_filename = var.private_key_filename
   zone                 = var.zone
   cluster_size         = var.cluster_size
-  firestore_count      = var.firestore_count
   gateway_address_list = module.setup_network.output-gateway-address
   get_weka_io_token    = var.get_weka_io_token
   machine_type         = var.machine_type

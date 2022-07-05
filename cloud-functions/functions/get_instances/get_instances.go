@@ -6,16 +6,15 @@ import (
 	"strings"
 )
 
-func GetInstances(project, collectionName, documentName string) (instances []string) {
-	info := common.GetClusterSizeInfo(project, collectionName, documentName)
-	instancesInterfaces := info["instances"].([]interface{})
-	for _, v := range instancesInterfaces {
-		instances = append(instances, v.(string))
+func GetInstances(bucket string) (instances []string) {
+	state, err := common.GetClusterState(bucket)
+	if err != nil {
+		return
 	}
-
+	instances = state.Instances
 	return
 }
 
-func GetInstancesBashList(project, collectionName, documentName string) string {
-	return fmt.Sprintf("(\"%s\")", strings.Join(GetInstances(project, collectionName, documentName), "\" \""))
+func GetInstancesBashList(bucket string) string {
+	return fmt.Sprintf("(\"%s\")", strings.Join(GetInstances(bucket), "\" \""))
 }

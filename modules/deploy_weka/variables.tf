@@ -86,11 +86,6 @@ variable "gateway_address_list" {
   description = "gateway ips list"
 }
 
-variable "firestore_count" {
-  type        = number
-  description = ""
-}
-
 variable "bucket-location" {
   type = string
   description = "bucket function location"

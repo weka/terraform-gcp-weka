@@ -3,20 +3,29 @@ package common
 import (
 	compute "cloud.google.com/go/compute/apiv1"
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
+	"cloud.google.com/go/storage"
 	"context"
+	"encoding/json"
 	"errors"
-	firebase "firebase.google.com/go"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/api/iterator"
 	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
+	"strconv"
 	"strings"
+	"time"
 )
 
 type ClusterCreds struct {
 	Username string
 	Password string
+}
+
+type ClusterState struct {
+	InitialSize int      `json:"initial_size"`
+	DesiredSize int      `json:"desired_size"`
+	Instances   []string `json:"instances"`
 }
 
 func GetUsernameAndPassword(usernameId, passwordId string) (clusterCreds ClusterCreds, err error) {
@@ -38,32 +47,6 @@ func GetUsernameAndPassword(usernameId, passwordId string) (clusterCreds Cluster
 	}
 	clusterCreds.Password = string(res.Payload.Data)
 	return
-}
-
-func GetClusterSizeInfo(project, collectionName, documentName string) (info map[string]interface{}) {
-	log.Info().Msg("Retrieving desired group size from DB")
-
-	ctx := context.Background()
-	conf := &firebase.Config{ProjectID: project}
-	app, err := firebase.NewApp(ctx, conf)
-	if err != nil {
-		log.Error().Msgf("%s", err)
-		return
-	}
-
-	client, err := app.Firestore(ctx)
-	if err != nil {
-		log.Error().Msgf("%s", err)
-		return
-	}
-	defer client.Close()
-	doc := client.Collection(collectionName).Doc(documentName)
-	res, err := doc.Get(ctx)
-	if err != nil {
-		log.Error().Msgf("%s", err)
-		return
-	}
-	return res.Data()
 }
 
 func generateInstanceNamesFilter(instanceNames []string) (namesFilter string) {
@@ -144,5 +127,109 @@ func GetInstanceGroupInstanceNames(project, zone, instanceGroup string) (instanc
 		instanceNames = append(instanceNames, split[len(split)-1])
 		log.Info().Msgf("%s", split[len(split)-1])
 	}
+	return
+}
+
+func Lock(client *storage.Client, ctx context.Context, bucket string) (id string, err error) {
+	LockHandler := client.Bucket(bucket).Object("lock")
+
+	w := LockHandler.If(storage.Conditions{DoesNotExist: true}).NewWriter(ctx)
+	err = func() error {
+		if _, err := w.Write([]byte("locked")); err != nil {
+			attrs, err := LockHandler.Attrs(ctx)
+			if err != nil {
+				return err
+			}
+
+			if time.Now().Sub(attrs.Created) > time.Minute*10 {
+				log.Error().Msgf("Deleting lock, we have indication that unlock failed at some point")
+				err = LockHandler.Delete(ctx)
+			}
+			return err
+		}
+		return w.Close()
+	}()
+
+	if err != nil {
+		log.Debug().Msgf("lock failed: %s", err)
+		return
+	}
+
+	id = strconv.FormatInt(w.Attrs().Generation, 10)
+	return
+}
+
+func Unlock(client *storage.Client, ctx context.Context, bucket, id string) (err error) {
+	gen, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		log.Error().Msgf("Lock ID should be numerical value, got '%s'", id)
+		return
+	}
+	LockHandler := client.Bucket(bucket).Object("lock")
+	if err = LockHandler.If(storage.Conditions{GenerationMatch: gen}).Delete(ctx); err != nil {
+		log.Error().Msgf("delete failed: %s", err)
+		return
+	}
+
+	return
+}
+
+func ReadState(stateHandler *storage.ObjectHandle, ctx context.Context) (state ClusterState, err error) {
+	reader, err := stateHandler.NewReader(ctx)
+	if err != nil {
+		log.Error().Msgf("Failed getting object reader: %s", err)
+		return
+	}
+	defer reader.Close()
+
+	if err = json.NewDecoder(reader).Decode(&state); err != nil {
+		log.Error().Msgf("Failed decoding cluster state: %s", err)
+		return
+	}
+
+	return
+}
+
+func WriteState(stateHandler *storage.ObjectHandle, ctx context.Context, state ClusterState) (err error) {
+	writer := stateHandler.NewWriter(ctx)
+	writer.ContentType = "application/json"
+
+	b, err := json.Marshal(&state)
+	if err != nil {
+		log.Error().Msgf("Marshaling failed: %s", err)
+		return
+	}
+	_, err = writer.Write(b)
+	if err != nil {
+		log.Error().Msgf("Failed writing object: %s", err)
+		return
+	}
+	err = writer.Close()
+	if err != nil {
+		log.Error().Msgf("Failed closing object writer: %s", err)
+	}
+	return
+}
+
+func GetClusterState(bucket string) (state ClusterState, err error) {
+	ctx := context.Background()
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		log.Error().Msgf("Failed creating storage client: %s", err)
+		return
+	}
+	defer client.Close()
+
+	id, err := Lock(client, ctx, bucket)
+	for err != nil {
+		time.Sleep(1 * time.Second)
+		id, err = Lock(client, ctx, bucket)
+	}
+
+	stateHandler := client.Bucket(bucket).Object("state")
+
+	state, err = ReadState(stateHandler, ctx)
+	err = Unlock(client, ctx, bucket, id)
+
 	return
 }

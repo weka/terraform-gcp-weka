@@ -34,7 +34,7 @@ func GetInstanceGroupSize(project, zone, instanceGroup string) int32 {
 	return *resp.Size
 }
 
-func CreateInstance(project, zone, template, instanceGroup, instanceName string) (err error) {
+func CreateInstance(project, zone, template, instanceName string) (err error) {
 	ctx := context.Background()
 	instancesClient, err := compute.NewInstancesRESTClient(ctx)
 	if err != nil {

@@ -3,7 +3,6 @@ package cloud_functions
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/weka/gcp-tf/cloud-functions/common"
 	"github.com/weka/gcp-tf/cloud-functions/functions/bunch"
 	"github.com/weka/gcp-tf/cloud-functions/functions/clusterize"
 	"github.com/weka/gcp-tf/cloud-functions/functions/deploy"
@@ -51,12 +50,10 @@ func Test_fetch(t *testing.T) {
 	project := "wekaio-rnd"
 	zone := "europe-west1-b"
 	instanceGroup := "weka-instance-group"
-	clusterName := "poc"
-	collectionName := "weka-poc-collection"
-	documentName := "weka-poc-document"
+	bucket := "weka-poc-state"
 	usernameId := "projects/896245720241/secrets/weka-poc-username/versions/1"
 	passwordId := "projects/896245720241/secrets/weka-poc-password/versions/1"
-	b, err := json.Marshal(fetch.GetFetchDataParams(project, zone, instanceGroup, clusterName, collectionName, documentName, usernameId, passwordId))
+	b, err := json.Marshal(fetch.GetFetchDataParams(project, zone, instanceGroup, bucket, usernameId, passwordId))
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -66,18 +63,15 @@ func Test_fetch(t *testing.T) {
 }
 
 func Test_get_instances(t *testing.T) {
-	project := "wekaio-rnd"
-	collectionName := "weka-poc-collection"
-	documentName := "weka-poc-document"
-	fmt.Printf("%s\n", get_instances.GetInstancesBashList(project, collectionName, documentName))
+	bucket := "weka-poc-state"
+	fmt.Printf("%s\n", get_instances.GetInstancesBashList(bucket))
 }
 
 func Test_increment(t *testing.T) {
-	project := "wekaio-rnd"
-	collectionName := "weka-poc-collection"
-	documentName := "weka-poc-document"
+	bucket := "weka-poc-state"
 	instanceName := "weka-poc-vm-test"
-	increment.Add(project, collectionName, documentName, instanceName)
+
+	increment.Add(bucket, instanceName)
 	t.Log("increment test passed")
 }
 
@@ -101,14 +95,13 @@ func Test_deploy(t *testing.T) {
 	token := os.Getenv("GET_WEKA_IO_TOKEN")
 	version := "3.14.0.50-gcp-beta"
 
-	collectionName := "weka-poc-collection"
-	documentName := "weka-poc-document"
+	bucket := "weka-poc-state"
 	installUrl := fmt.Sprintf("https://%s@get.weka.io/dist/v1/install/%s/%s", token, version, version)
 	incrementUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-increment"
 	clusterizeUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-clusterize"
 	getInstancesUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-get-instances"
 
-	bashScript, err = deploy.GetDeployScript(project, zone, clusterName, usernameId, passwordId, tokenId, collectionName, documentName, installUrl, clusterizeUrl, incrementUrl, protectUrl, bunchUrl, getInstancesUrl)
+	bashScript, err = deploy.GetDeployScript(project, zone, clusterName, usernameId, passwordId, tokenId, bucket, installUrl, clusterizeUrl, incrementUrl, protectUrl, bunchUrl, getInstancesUrl)
 	if err != nil {
 		t.Logf("Generating deploy scripts failed: %s", err)
 	} else {
@@ -160,12 +153,9 @@ func Test_scaleUp(t *testing.T) {
 	project := "wekaio-rnd"
 	zone := "europe-west1-b"
 	instanceGroup := "weka-poc-instance-group"
-	collectionName := "weka-poc-collection"
-	documentName := "weka-poc-document"
 	instanceGroupSize := scale_up.GetInstanceGroupSize(project, zone, instanceGroup)
 	t.Logf("Instance group size is: %d", instanceGroupSize)
-	desiredSize := int32(common.GetClusterSizeInfo(project, collectionName, documentName)["desired_size"].(int64))
-	t.Logf("Desired size is: %d", desiredSize)
+
 }
 
 func Test_Terminate(t *testing.T) {
@@ -198,10 +188,7 @@ func Test_Transient(t *testing.T) {
 }
 
 func Test_update_db(t *testing.T) {
-	project := "wekaio-rnd"
-	collectionName := "weka-poc-collection"
-	documentName := "weka-poc-document"
-	key := "clusterized"
-	value := true
-	update_db.UpdateValue(project, collectionName, documentName, key, value)
+	bucket := "weka-poc-state"
+	newDesiredValue := 6
+	update_db.UpdateValue(bucket, newDesiredValue)
 }

@@ -6,6 +6,7 @@ require (
 	cloud.google.com/go/compute v1.5.0
 	cloud.google.com/go/firestore v1.6.1
 	cloud.google.com/go/secretmanager v1.4.0
+	cloud.google.com/go/storage v1.10.0
 	firebase.google.com/go v3.13.0+incompatible
 	github.com/google/uuid v1.1.2
 	github.com/lithammer/dedent v1.1.0
