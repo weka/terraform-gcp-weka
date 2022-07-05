@@ -13,10 +13,10 @@ import (
 	"github.com/weka/gcp-tf/cloud-functions/functions/get_instances"
 	"github.com/weka/gcp-tf/cloud-functions/functions/increment"
 	"github.com/weka/gcp-tf/cloud-functions/functions/protect"
+	"github.com/weka/gcp-tf/cloud-functions/functions/resize"
 	"github.com/weka/gcp-tf/cloud-functions/functions/scale_down"
 	"github.com/weka/gcp-tf/cloud-functions/functions/scale_up"
 	"github.com/weka/gcp-tf/cloud-functions/functions/terminate"
-	"github.com/weka/gcp-tf/cloud-functions/functions/update_db"
 	"github.com/weka/gcp-tf/cloud-functions/protocol"
 	"net/http"
 	"os"
@@ -222,7 +222,7 @@ func Transient(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, output)
 }
 
-func UpdateDb(w http.ResponseWriter, r *http.Request) {
+func Resize(w http.ResponseWriter, r *http.Request) {
 	bucket := os.Getenv("BUCKET")
 
 	var d struct {
@@ -234,7 +234,7 @@ func UpdateDb(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := update_db.UpdateValue(bucket, d.Value)
+	err := resize.UpdateValue(bucket, d.Value)
 	if err != nil {
 		fmt.Fprintf(w, "Updade failed: %s", err)
 	} else {

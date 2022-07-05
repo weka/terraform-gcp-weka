@@ -1,4 +1,4 @@
-package update_db
+package resize
 
 import (
 	"cloud.google.com/go/storage"

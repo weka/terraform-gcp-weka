@@ -307,9 +307,9 @@ resource "google_cloudfunctions_function_iam_member" "bunch_invoker" {
   member = "allAuthenticatedUsers"
 }
 
-# ======================== update_db ============================
-resource "google_cloudfunctions_function" "update_db_function" {
-  name        = "${var.prefix}-${var.cluster_name}-update-db"
+# ======================== resize ============================
+resource "google_cloudfunctions_function" "resize_function" {
+  name        = "${var.prefix}-${var.cluster_name}-resize"
   description = "update db"
   runtime     = "go116"
   timeout     = 540
@@ -318,7 +318,7 @@ resource "google_cloudfunctions_function" "update_db_function" {
   source_archive_bucket = google_storage_bucket.cloud_functions.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
-  entry_point           = "UpdateDb"
+  entry_point           = "Resize"
   environment_variables = {
     BUCKET: google_storage_bucket.state_bucket.name
   }
@@ -326,10 +326,10 @@ resource "google_cloudfunctions_function" "update_db_function" {
 }
 
 # IAM entry for all users to invoke the function
-resource "google_cloudfunctions_function_iam_member" "update_db_invoker" {
-  project        = google_cloudfunctions_function.update_db_function.project
-  region         = google_cloudfunctions_function.update_db_function.region
-  cloud_function = google_cloudfunctions_function.update_db_function.name
+resource "google_cloudfunctions_function_iam_member" "resize_invoker" {
+  project        = google_cloudfunctions_function.resize_function.project
+  region         = google_cloudfunctions_function.resize_function.region
+  cloud_function = google_cloudfunctions_function.resize_function.name
 
   role   = "roles/cloudfunctions.invoker"
   member = "allAuthenticatedUsers"

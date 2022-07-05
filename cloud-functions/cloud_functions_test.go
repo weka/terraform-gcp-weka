@@ -10,10 +10,10 @@ import (
 	"github.com/weka/gcp-tf/cloud-functions/functions/get_instances"
 	"github.com/weka/gcp-tf/cloud-functions/functions/increment"
 	"github.com/weka/gcp-tf/cloud-functions/functions/protect"
+	"github.com/weka/gcp-tf/cloud-functions/functions/resize"
 	"github.com/weka/gcp-tf/cloud-functions/functions/scale_down"
 	"github.com/weka/gcp-tf/cloud-functions/functions/scale_up"
 	"github.com/weka/gcp-tf/cloud-functions/functions/terminate"
-	"github.com/weka/gcp-tf/cloud-functions/functions/update_db"
 	"os"
 	"testing"
 	"time"
@@ -187,8 +187,8 @@ func Test_Transient(t *testing.T) {
 	fmt.Println("ToDo: write test")
 }
 
-func Test_update_db(t *testing.T) {
+func Test_resize(t *testing.T) {
 	bucket := "weka-poc-state"
 	newDesiredValue := 6
-	update_db.UpdateValue(bucket, newDesiredValue)
+	resize.UpdateValue(bucket, newDesiredValue)
 }
