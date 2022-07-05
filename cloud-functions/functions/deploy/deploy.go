@@ -1,7 +1,6 @@
 package deploy
 
 import (
-	compute "cloud.google.com/go/compute/apiv1"
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	"context"
 	"errors"
@@ -9,8 +8,6 @@ import (
 	"github.com/lithammer/dedent"
 	"github.com/rs/zerolog/log"
 	"github.com/weka/gcp-tf/cloud-functions/common"
-	"google.golang.org/api/iterator"
-	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 	"math/rand"
 	"os"
@@ -56,43 +53,21 @@ func getToken(tokenId string) (token string, err error) {
 	return
 }
 
-func GetJoinParams(project, zone, clusterName, usernameId, passwordId, protectUrl, bunchUrl string) (bashScript string, err error) {
+func GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, protectUrl, bunchUrl string) (bashScript string, err error) {
 	role := "backend"
-	ctx := context.Background()
-	instanceClient, err := compute.NewInstancesRESTClient(ctx)
+
+	instances, err := common.GetInstances(project, zone, common.GetInstanceGroupInstanceNames(project, zone, instanceGroup))
 	if err != nil {
-		log.Fatal().Err(err)
+		return
 	}
-	defer instanceClient.Close()
-
-	clusterNameFilter := fmt.Sprintf("labels.cluster_name=%s", clusterName)
-	listInstanceRequest := &computepb.ListInstancesRequest{
-		Project: project,
-		Zone:    zone,
-		Filter:  &clusterNameFilter,
-	}
-
-	listInstanceIter := instanceClient.List(ctx, listInstanceRequest)
 
 	var ips []string
-	var instances []*computepb.Instance
-	for {
-		resp, err2 := listInstanceIter.Next()
-		if err2 == iterator.Done {
-			break
-		}
-
-		if err2 != nil {
-			err = err2
-			log.Error().Msgf("%s", err)
-			return
-		}
-		ips = append(ips, *resp.NetworkInterfaces[0].NetworkIP)
-		instances = append(instances, resp)
+	for _, instance := range instances {
+		ips = append(ips, *instance.NetworkInterfaces[0].NetworkIP)
 	}
 
 	if len(instances) == 0 {
-		err = errors.New(fmt.Sprintf("No instances found for cluster %s, can't join", clusterName))
+		err = errors.New(fmt.Sprintf("No instances found for instance group %s, can't join", instanceGroup))
 		return
 	}
 
@@ -207,7 +182,7 @@ func GetJoinParams(project, zone, clusterName, usernameId, passwordId, protectUr
 	return
 }
 
-func GetDeployScript(project, zone, clusterName, usernameId, passwordId, tokenId, bucket, installUrl, clusterizeUrl, incrementUrl, protectUrl, bunchUrl, getInstancesUrl string) (bashScript string, err error) {
+func GetDeployScript(project, zone, instanceGroup, usernameId, passwordId, tokenId, bucket, installUrl, clusterizeUrl, incrementUrl, protectUrl, bunchUrl, getInstancesUrl string) (bashScript string, err error) {
 	state, err := common.GetClusterState(bucket)
 	if err != nil {
 		return
@@ -270,7 +245,7 @@ func GetDeployScript(project, zone, clusterName, usernameId, passwordId, tokenId
 	if len(instances) < initialSize {
 		bashScript = fmt.Sprintf(installTemplate, initialSize, token, installUrl, incrementUrl, protectUrl, bunchUrl, clusterizeUrl, getInstancesUrl)
 	} else {
-		bashScript, err = GetJoinParams(project, zone, clusterName, usernameId, passwordId, protectUrl, bunchUrl)
+		bashScript, err = GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, protectUrl, bunchUrl)
 		if err != nil {
 			return
 		}

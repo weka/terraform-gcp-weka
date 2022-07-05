@@ -99,7 +99,7 @@ func Increment(w http.ResponseWriter, r *http.Request) {
 func Deploy(w http.ResponseWriter, r *http.Request) {
 	project := os.Getenv("PROJECT")
 	zone := os.Getenv("ZONE")
-	clusterName := os.Getenv("CLUSTER_NAME")
+	instanceGroup := os.Getenv("INSTANCE_GROUP")
 	usernameId := os.Getenv("USER_NAME_ID")
 	passwordId := os.Getenv("PASSWORD_ID")
 	tokenId := os.Getenv("TOKEN_ID")
@@ -113,7 +113,7 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 	bunchUrl := os.Getenv("BUNCH_URL")
 	getInstancesUrl := os.Getenv("GET_INSTANCES_URL")
 
-	bashScript, err := deploy.GetDeployScript(project, zone, clusterName, usernameId, passwordId, tokenId, bucket, installUrl, clusterizeUrl, incrementUrl, protectUrl, bunchUrl, getInstancesUrl)
+	bashScript, err := deploy.GetDeployScript(project, zone, instanceGroup, usernameId, passwordId, tokenId, bucket, installUrl, clusterizeUrl, incrementUrl, protectUrl, bunchUrl, getInstancesUrl)
 	if err != nil {
 		fmt.Fprintf(w, "%s", err)
 	} else {

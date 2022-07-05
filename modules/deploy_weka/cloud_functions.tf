@@ -37,7 +37,7 @@ resource "google_cloudfunctions_function" "deploy_function" {
   environment_variables = {
     PROJECT: var.project
     ZONE: var.zone
-    CLUSTER_NAME: var.cluster_name
+    INSTANCE_GROUP: google_compute_instance_group.instance_group.name
     GATEWAYS: local.gws_addresses
     SUBNETS: format("(%s)", join(" ", var.subnets_range ))
     USER_NAME_ID: google_secret_manager_secret_version.user_secret_key.id
@@ -57,7 +57,7 @@ resource "google_cloudfunctions_function" "deploy_function" {
 
 
 # IAM entry for all users to invoke the function
-resource "google_cloudfunctions_function_iam_member" "join_invoker" {
+resource "google_cloudfunctions_function_iam_member" "deploy_invoker" {
   project        = google_cloudfunctions_function.deploy_function.project
   region         = google_cloudfunctions_function.deploy_function.region
   cloud_function = google_cloudfunctions_function.deploy_function.name
