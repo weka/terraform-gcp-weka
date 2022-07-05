@@ -78,13 +78,13 @@ func Test_increment(t *testing.T) {
 func Test_deploy(t *testing.T) {
 	project := "wekaio-rnd"
 	zone := "europe-west1-b"
-	clusterName := "poc"
+	instanceGroup := "weka-instance-group"
 	usernameId := "projects/896245720241/secrets/weka-poc-username/versions/1"
 	passwordId := "projects/896245720241/secrets/weka-poc-password/versions/1"
 	tokenId := "projects/896245720241/secrets/weka-poc-token/versions/1"
 	protectUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-protect"
 	bunchUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-bunch"
-	bashScript, err := deploy.GetJoinParams(project, zone, clusterName, usernameId, passwordId, protectUrl, bunchUrl)
+	bashScript, err := deploy.GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, protectUrl, bunchUrl)
 	if err != nil {
 		t.Logf("Generating join scripts failed: %s", err)
 		return
@@ -101,7 +101,7 @@ func Test_deploy(t *testing.T) {
 	clusterizeUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-clusterize"
 	getInstancesUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-get-instances"
 
-	bashScript, err = deploy.GetDeployScript(project, zone, clusterName, usernameId, passwordId, tokenId, bucket, installUrl, clusterizeUrl, incrementUrl, protectUrl, bunchUrl, getInstancesUrl)
+	bashScript, err = deploy.GetDeployScript(project, zone, instanceGroup, usernameId, passwordId, tokenId, bucket, installUrl, clusterizeUrl, incrementUrl, protectUrl, bunchUrl, getInstancesUrl)
 	if err != nil {
 		t.Logf("Generating deploy scripts failed: %s", err)
 	} else {
