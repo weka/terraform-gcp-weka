@@ -3,6 +3,7 @@ package cloud_functions
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/weka/gcp-tf/cloud-functions/common"
 	"github.com/weka/gcp-tf/cloud-functions/functions/bunch"
@@ -172,7 +173,7 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 
 	if instanceGroupSize < state.DesiredSize {
 		for i := instanceGroupSize; i < state.DesiredSize; i++ {
-			instanceName := fmt.Sprintf("%s-%d", instanceBaseName, i) // uuid.New().String()
+			instanceName := fmt.Sprintf("%s-%s", instanceBaseName, uuid.New().String())
 			log.Info().Msg("creating new backend instance")
 			if err := scale_up.CreateInstance(project, zone, backendTemplate, instanceName); err != nil {
 				fmt.Fprintf(w, "Instance %s creation failed %s.", instanceName, err)
