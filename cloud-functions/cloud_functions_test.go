@@ -3,6 +3,7 @@ package cloud_functions
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/weka/gcp-tf/cloud-functions/common"
 	"github.com/weka/gcp-tf/cloud-functions/functions/bunch"
 	"github.com/weka/gcp-tf/cloud-functions/functions/clusterize"
 	"github.com/weka/gcp-tf/cloud-functions/functions/deploy"
@@ -38,7 +39,7 @@ func Test_clusterize(t *testing.T) {
 	hostsNum := "5"
 	nicsNum := "4"
 	gws := "(10.0.0.1 10.1.0.1 10.2.0.1 10.3.0.1)"
-	clusterName := "weka-poc-instance-group"
+	clusterName := "poc"
 	nvmesNumber := "2"
 	usernameId := "projects/896245720241/secrets/weka-poc-username/versions/1"
 	passwordId := "projects/896245720241/secrets/weka-poc-password/versions/1"
@@ -152,10 +153,16 @@ func Test_calculateDeactivateTarget(t *testing.T) {
 func Test_scaleUp(t *testing.T) {
 	project := "wekaio-rnd"
 	zone := "europe-west1-b"
-	instanceGroup := "weka-poc-instance-group"
-	instanceGroupSize := scale_up.GetInstanceGroupSize(project, zone, instanceGroup)
+	clusterName := "poc"
+	instanceName := "weka-poc-vm-test"
+	backendTemplate := "projects/wekaio-rnd/global/instanceTemplates/weka-poc-backends"
+	scale_up.CreateInstance(project, zone, backendTemplate, instanceName)
+	instances := common.GetInstancesByClusterLabel(project, zone, clusterName)
+	instanceGroupSize := len(instances)
 	t.Logf("Instance group size is: %d", instanceGroupSize)
-
+	for _, instance := range instances {
+		t.Logf("%s:%s", *instance.Name, *instance.Status)
+	}
 }
 
 func Test_Terminate(t *testing.T) {

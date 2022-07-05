@@ -233,3 +233,35 @@ func GetClusterState(bucket string) (state ClusterState, err error) {
 
 	return
 }
+
+func GetInstancesByClusterLabel(project, zone, clusterName string) (instances []*computepb.Instance) {
+	ctx := context.Background()
+	instanceClient, err := compute.NewInstancesRESTClient(ctx)
+	if err != nil {
+		log.Error().Msgf("%s", err)
+		return
+	}
+	defer instanceClient.Close()
+
+	clusterNameFilter := fmt.Sprintf("labels.cluster_name=%s", clusterName)
+	listInstanceRequest := &computepb.ListInstancesRequest{
+		Project: project,
+		Zone:    zone,
+		Filter:  &clusterNameFilter,
+	}
+
+	listInstanceIter := instanceClient.List(ctx, listInstanceRequest)
+
+	for {
+		resp, err := listInstanceIter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			log.Error().Msgf("%s", err)
+			break
+		}
+		instances = append(instances, resp)
+	}
+	return
+}

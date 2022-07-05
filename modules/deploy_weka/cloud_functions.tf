@@ -165,7 +165,7 @@ resource "google_cloudfunctions_function" "scale_up_function" {
   environment_variables = {
     PROJECT: var.project
     ZONE: var.zone
-    INSTANCE_GROUP: google_compute_instance_group.instance_group.name
+    CLUSTER_NAME: var.cluster_name
     BACKEND_TEMPLATE: google_compute_instance_template.backends-template.id
     BUCKET : google_storage_bucket.state_bucket.name
     INSTANCE_BASE_NAME: "${var.prefix}-${var.cluster_name}-vm"

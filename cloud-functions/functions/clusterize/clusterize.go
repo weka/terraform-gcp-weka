@@ -1,48 +1,19 @@
 package clusterize
 
 import (
-	compute "cloud.google.com/go/compute/apiv1"
-	"context"
 	"fmt"
 	"github.com/lithammer/dedent"
 	"github.com/rs/zerolog/log"
 	"github.com/weka/gcp-tf/cloud-functions/common"
-	"google.golang.org/api/iterator"
-	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
 	"strings"
 )
 
 func getAllBackendsIps(project, zone, clusterName string) (backendsIps []string) {
-	ctx := context.Background()
-	instanceClient, err := compute.NewInstancesRESTClient(ctx)
-	if err != nil {
-		log.Error().Msgf("%s", err)
-	}
-	defer instanceClient.Close()
-
-	clusterNameFilter := fmt.Sprintf("labels.cluster_name=%s", clusterName)
-	listInstanceRequest := &computepb.ListInstancesRequest{
-		Project: project,
-		Zone:    zone,
-		Filter:  &clusterNameFilter,
-	}
-
-	listInstanceIter := instanceClient.List(ctx, listInstanceRequest)
-
-	for {
-		resp, err := listInstanceIter.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			log.Error().Msgf("%s", err)
-			break
-		}
-		for _, networkInterface := range resp.NetworkInterfaces {
+	instances := common.GetInstancesByClusterLabel(project, zone, clusterName)
+	for _, instance := range instances {
+		for _, networkInterface := range instance.NetworkInterfaces {
 			backendsIps = append(backendsIps, *networkInterface.NetworkIP)
 		}
-
-		_ = resp
 	}
 	return
 }
