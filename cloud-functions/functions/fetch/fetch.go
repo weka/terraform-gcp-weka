@@ -28,7 +28,7 @@ func getInstanceGroupBackendsIps(instances []*computepb.Instance) (instanceGroup
 	return
 }
 
-func GetFetchDataParams(project, zone, instanceGroup, clusterName, collectionName, documentName, usernameId, passwordId string) (hostGroupInfoResponse HostGroupInfoResponse) {
+func GetFetchDataParams(project, zone, instanceGroup, bucket, usernameId, passwordId string) (hostGroupInfoResponse HostGroupInfoResponse) {
 
 	creds, err := common.GetUsernameAndPassword(usernameId, passwordId)
 	if err != nil {
@@ -43,7 +43,7 @@ func GetFetchDataParams(project, zone, instanceGroup, clusterName, collectionNam
 	return HostGroupInfoResponse{
 		Username:        creds.Username,
 		Password:        creds.Password,
-		DesiredCapacity: getCapacity(project, collectionName, documentName),
+		DesiredCapacity: getCapacity(bucket),
 		Instances:       getHostGroupInfoInstances(instances),
 		BackendIps:      getInstanceGroupBackendsIps(instances),
 		Role:            "backend",
@@ -63,7 +63,10 @@ func getHostGroupInfoInstances(instances []*computepb.Instance) (ret []HgInstanc
 	return
 }
 
-func getCapacity(project, collectionName, documentName string) int {
-	info := common.GetClusterSizeInfo(project, collectionName, documentName)
-	return int(info["desired_size"].(int64))
+func getCapacity(bucket string) int {
+	state, err := common.GetClusterState(bucket)
+	if err != nil {
+		return -1
+	}
+	return state.DesiredSize
 }

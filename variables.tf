@@ -96,12 +96,6 @@ variable "weka_username" {
   description = "weka cluster username"
 }
 
-variable "firestore_count" {
-  type        = number
-  description = ""
-  default     = 0
-}
-
 variable "set_peering" {
   type = bool
   description = "apply peering connection between subnets and subnets "

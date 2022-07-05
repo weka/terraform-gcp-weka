@@ -2,10 +2,8 @@ package terminate
 
 import (
 	compute "cloud.google.com/go/compute/apiv1"
-	"cloud.google.com/go/firestore"
 	"context"
 	"encoding/json"
-	firebase "firebase.google.com/go"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/weka/gcp-tf/cloud-functions/common"
@@ -186,36 +184,6 @@ func writeResponse(w http.ResponseWriter, response protocol.TerminatedInstancesR
 	json.NewEncoder(w).Encode(response)
 }
 
-func decrement(project, collectionName, documentName string, amount int) (err error) {
-	log.Info().Msg("updating DB")
-
-	ctx := context.Background()
-	conf := &firebase.Config{ProjectID: project}
-	app, err := firebase.NewApp(ctx, conf)
-	if err != nil {
-		log.Error().Msgf("%s", err)
-		return
-	}
-
-	client, err := app.Firestore(ctx)
-	if err != nil {
-		log.Error().Msgf("%s", err)
-		return
-	}
-	defer client.Close()
-	doc := client.Collection(collectionName).Doc(documentName)
-
-	_, err = doc.Update(ctx, []firestore.Update{
-		{Path: "counter", Value: firestore.Increment(amount * -1)},
-	})
-
-	if err != nil {
-		log.Error().Msgf("Failed updating db: %s", err)
-	}
-
-	return
-}
-
 func TerminateUnhealthyInstances(project, zone, instanceGroup, loadBalancerName string) (errs []error) {
 	var toTerminate []string
 
@@ -301,7 +269,7 @@ func TerminateUnhealthyInstances(project, zone, instanceGroup, loadBalancerName 
 	return
 }
 
-func Terminate(w http.ResponseWriter, scaleResponse protocol.ScaleResponse, project, zone, instanceGroup, collectionName, documentName, loadBalancerName string) {
+func Terminate(w http.ResponseWriter, scaleResponse protocol.ScaleResponse, project, zone, instanceGroup, loadBalancerName string) {
 	var response protocol.TerminatedInstancesResponse
 	var err error
 
@@ -355,8 +323,6 @@ func Terminate(w http.ResponseWriter, scaleResponse protocol.ScaleResponse, proj
 
 	terminatedInstances, errs := terminateUnneededInstances(project, zone, candidatesToTerminate, scaleResponse.ToTerminate)
 	response.AddTransientErrors(errs)
-
-	decrement(project, collectionName, documentName, len(terminatedInstances))
 
 	//detachTerminated(asgName)
 

@@ -19,7 +19,6 @@ import (
 	"github.com/weka/gcp-tf/cloud-functions/protocol"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 )
 
@@ -63,29 +62,23 @@ func Fetch(w http.ResponseWriter, r *http.Request) {
 	project := os.Getenv("PROJECT")
 	zone := os.Getenv("ZONE")
 	instanceGroup := os.Getenv("INSTANCE_GROUP")
-	clusterName := os.Getenv("CLUSTER_NAME")
-	collectionName := os.Getenv("COLLECTION_NAME")
-	documentName := os.Getenv("DOCUMENT_NAME")
+	bucket := os.Getenv("BUCKET")
 	usernameId := os.Getenv("USER_NAME_ID")
 	passwordId := os.Getenv("PASSWORD_ID")
 
 	fmt.Println("Writing fetch result")
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(fetch.GetFetchDataParams(project, zone, instanceGroup, clusterName, collectionName, documentName, usernameId, passwordId))
+	json.NewEncoder(w).Encode(fetch.GetFetchDataParams(project, zone, instanceGroup, bucket, usernameId, passwordId))
 }
 
 func GetInstances(w http.ResponseWriter, r *http.Request) {
-	project := os.Getenv("PROJECT")
-	collectionName := os.Getenv("COLLECTION_NAME")
-	documentName := os.Getenv("DOCUMENT_NAME")
+	bucket := os.Getenv("BUCKET")
 
-	fmt.Fprintf(w, "%s", get_instances.GetInstancesBashList(project, collectionName, documentName))
+	fmt.Fprintf(w, "%s", get_instances.GetInstancesBashList(bucket))
 }
 
 func Increment(w http.ResponseWriter, r *http.Request) {
-	project := os.Getenv("PROJECT")
-	collectionName := os.Getenv("COLLECTION_NAME")
-	documentName := os.Getenv("DOCUMENT_NAME")
+	bucket := os.Getenv("BUCKET")
 
 	var d struct {
 		Name string `json:"name"`
@@ -95,7 +88,7 @@ func Increment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := increment.Add(project, collectionName, documentName, d.Name)
+	err := increment.Add(bucket, d.Name)
 	if err != nil {
 		fmt.Fprintf(w, "Increment failed: %s", err)
 	} else {
@@ -111,8 +104,7 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 	passwordId := os.Getenv("PASSWORD_ID")
 	tokenId := os.Getenv("TOKEN_ID")
 
-	collectionName := os.Getenv("COLLECTION_NAME")
-	documentName := os.Getenv("DOCUMENT_NAME")
+	bucket := os.Getenv("BUCKET")
 
 	installUrl := os.Getenv("INSTALL_URL")
 	clusterizeUrl := os.Getenv("CLUSTERIZE_URL")
@@ -121,7 +113,7 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 	bunchUrl := os.Getenv("BUNCH_URL")
 	getInstancesUrl := os.Getenv("GET_INSTANCES_URL")
 
-	bashScript, err := deploy.GetDeployScript(project, zone, clusterName, usernameId, passwordId, tokenId, collectionName, documentName, installUrl, clusterizeUrl, incrementUrl, protectUrl, bunchUrl, getInstancesUrl)
+	bashScript, err := deploy.GetDeployScript(project, zone, clusterName, usernameId, passwordId, tokenId, bucket, installUrl, clusterizeUrl, incrementUrl, protectUrl, bunchUrl, getInstancesUrl)
 	if err != nil {
 		fmt.Fprintf(w, "%s", err)
 	} else {
@@ -167,21 +159,22 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 	zone := os.Getenv("ZONE")
 	instanceGroup := os.Getenv("INSTANCE_GROUP")
 	backendTemplate := os.Getenv("BACKEND_TEMPLATE")
-	collectionName := os.Getenv("COLLECTION_NAME")
-	documentName := os.Getenv("DOCUMENT_NAME")
+	bucket := os.Getenv("BUCKET")
 	instanceBaseName := os.Getenv("INSTANCE_BASE_NAME")
 
-	instanceGroupSize := scale_up.GetInstanceGroupSize(project, zone, instanceGroup)
+	instanceGroupSize := int(scale_up.GetInstanceGroupSize(project, zone, instanceGroup))
 	log.Info().Msgf("Instance group size is: %d", instanceGroupSize)
-	clusterInfo := common.GetClusterSizeInfo(project, collectionName, documentName)
-	desiredSize := int32(clusterInfo["desired_size"].(int64))
-	log.Info().Msgf("Desired size is: %d", desiredSize)
+	state, err := common.GetClusterState(bucket)
+	if err != nil {
+		return
+	}
+	log.Info().Msgf("Desired size is: %d", state.DesiredSize)
 
-	if instanceGroupSize < desiredSize {
-		for i := instanceGroupSize; i < desiredSize; i++ {
+	if instanceGroupSize < state.DesiredSize {
+		for i := instanceGroupSize; i < state.DesiredSize; i++ {
 			instanceName := fmt.Sprintf("%s-%d", instanceBaseName, i) // uuid.New().String()
 			log.Info().Msg("creating new backend instance")
-			if err := scale_up.CreateInstance(project, zone, backendTemplate, instanceGroup, instanceName); err != nil {
+			if err := scale_up.CreateInstance(project, zone, backendTemplate, instanceName); err != nil {
 				fmt.Fprintf(w, "Instance %s creation failed %s.", instanceName, err)
 			} else {
 				fmt.Fprintf(w, "Instance %s creation has started.", instanceName)
@@ -196,8 +189,6 @@ func Terminate(w http.ResponseWriter, r *http.Request) {
 	project := os.Getenv("PROJECT")
 	zone := os.Getenv("ZONE")
 	instanceGroup := os.Getenv("INSTANCE_GROUP")
-	collectionName := os.Getenv("COLLECTION_NAME")
-	documentName := os.Getenv("DOCUMENT_NAME")
 	loadBalancerName := os.Getenv("LOAD_BALANCER_NAME")
 
 	var scaleResponse protocol.ScaleResponse
@@ -207,7 +198,7 @@ func Terminate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	terminate.Terminate(w, scaleResponse, project, zone, instanceGroup, collectionName, documentName, loadBalancerName)
+	terminate.Terminate(w, scaleResponse, project, zone, instanceGroup, loadBalancerName)
 }
 
 func Transient(w http.ResponseWriter, r *http.Request) {
@@ -231,13 +222,10 @@ func Transient(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateDb(w http.ResponseWriter, r *http.Request) {
-	project := os.Getenv("PROJECT")
-	collectionName := os.Getenv("COLLECTION_NAME")
-	documentName := os.Getenv("DOCUMENT_NAME")
+	bucket := os.Getenv("BUCKET")
 
 	var d struct {
-		Key   string `json:"key"`
-		Value string `json:"value"`
+		Value int `json:"value"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
@@ -245,23 +233,7 @@ func UpdateDb(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var value interface{}
-	var err error
-	if d.Key == "clusterized" {
-		value, err = strconv.ParseBool(d.Value)
-		if err != nil {
-			fmt.Fprint(w, "Failed decoding request body")
-			return
-		}
-	} else {
-		value, err = strconv.ParseInt(d.Value, 10, 64)
-		if err != nil {
-			fmt.Fprint(w, "Failed decoding request body")
-			return
-		}
-	}
-
-	err = update_db.UpdateValue(project, collectionName, documentName, d.Key, value)
+	err := update_db.UpdateValue(bucket, d.Value)
 	if err != nil {
 		fmt.Fprintf(w, "Updade failed: %s", err)
 	} else {

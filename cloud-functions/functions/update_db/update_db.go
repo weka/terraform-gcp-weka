@@ -1,37 +1,43 @@
 package update_db
 
 import (
-	"cloud.google.com/go/firestore"
+	"cloud.google.com/go/storage"
 	"context"
-	firebase "firebase.google.com/go"
 	"github.com/rs/zerolog/log"
+	"github.com/weka/gcp-tf/cloud-functions/common"
+	"time"
 )
 
-func UpdateValue(project, collectionName, documentName, key string, value interface{}) (err error) {
-	log.Info().Msg("updating DB")
-
+func UpdateValue(bucket string, newDesiredSize int) (err error) {
 	ctx := context.Background()
-	conf := &firebase.Config{ProjectID: project}
-	app, err := firebase.NewApp(ctx, conf)
+	client, err := storage.NewClient(ctx)
 	if err != nil {
-		log.Error().Msgf("%s", err)
-		return
-	}
-
-	client, err := app.Firestore(ctx)
-	if err != nil {
-		log.Error().Msgf("%s", err)
+		log.Error().Msgf("Failed creating storage client: %s", err)
 		return
 	}
 	defer client.Close()
-	doc := client.Collection(collectionName).Doc(documentName)
 
-	_, err = doc.Update(ctx, []firestore.Update{
-		{Path: key, Value: value},
-	})
-	if err != nil {
-		log.Error().Msgf("Failed updating db: %s", err)
+	id, err := common.Lock(client, ctx, bucket)
+	for err != nil {
+		time.Sleep(1 * time.Second)
+		id, err = common.Lock(client, ctx, bucket)
 	}
 
+	err = updateDesiredSize(client, ctx, bucket, newDesiredSize)
+	err = common.Unlock(client, ctx, bucket, id) // we always want to unlock
+
+	return
+}
+
+func updateDesiredSize(client *storage.Client, ctx context.Context, bucket string, desiredSize int) (err error) {
+	stateHandler := client.Bucket(bucket).Object("state")
+
+	state, err := common.ReadState(stateHandler, ctx)
+	if err != nil {
+		return
+	}
+
+	state.DesiredSize = desiredSize
+	err = common.WriteState(stateHandler, ctx, state)
 	return
 }

@@ -20,7 +20,6 @@ resource "google_project_iam_member" "sa-member-role" {
     "roles/iam.serviceAccountAdmin",
     "roles/iam.securityAdmin",
     "roles/firebase.admin",
-    "roles/firestore.serviceAgent",
     "roles/vpcaccess.admin",
     "roles/vpcaccess.serviceAgent"
   ])
