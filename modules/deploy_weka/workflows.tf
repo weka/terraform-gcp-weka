@@ -4,11 +4,10 @@ resource "google_project_service" "workflows" {
   disable_dependent_services=false
 }
 
-
-resource "google_workflows_workflow" "workflows" {
+resource "google_workflows_workflow" "scale_down" {
   name            = "${var.prefix}-${var.cluster_name}-scale-down-workflow"
   region          = var.region
-  description     = "Fetch workflow"
+  description     = "scale down workflow"
   service_account = var.sa_email
   source_contents = <<-EOF
   - fetch:
@@ -50,5 +49,54 @@ resource "google_workflows_workflow" "workflows" {
       return: $${TransientResult}
 EOF
 
-  depends_on = [google_project_service.workflows, google_cloudfunctions_function.fetch_function , google_cloudfunctions_function.scale_down_function]
+  depends_on = [google_project_service.workflows , google_cloudfunctions_function.scale_down_function]
+}
+
+resource "google_cloud_scheduler_job" "scale_down_job" {
+  name        = "scale-down"
+  description = "scale down job"
+  schedule    = "* * * * *"
+
+  http_target {
+    http_method = "POST"
+    uri         = "https://workflowexecutions.googleapis.com/v1/${google_workflows_workflow.scale_down.id}/executions"
+    oauth_token {
+      service_account_email = var.sa_email
+    }
+  }
+}
+
+resource "google_workflows_workflow" "scale_up" {
+  name            = "${var.prefix}-${var.cluster_name}-scale-up-workflow"
+  region          = var.region
+  description     = "scale up workflow"
+  service_account = var.sa_email
+  source_contents = <<-EOF
+  - scale_up:
+      call: http.post
+      args:
+          url: ${google_cloudfunctions_function.scale_up_function.https_trigger_url}
+          auth:
+            type: OIDC
+            audience: ${google_cloudfunctions_function.scale_up_function.https_trigger_url}
+      result: ScaleUpResult
+  - returnOutput:
+      return: $${ScaleUpResult}
+EOF
+
+  depends_on = [google_project_service.workflows, google_cloudfunctions_function.scale_up_function]
+}
+
+resource "google_cloud_scheduler_job" "scale_up_job" {
+  name        = "scale-up"
+  description = "scale up job"
+  schedule    = "* * * * *"
+
+  http_target {
+    http_method = "POST"
+    uri         = "https://workflowexecutions.googleapis.com/v1/${google_workflows_workflow.scale_up.id}/executions"
+    oauth_token {
+      service_account_email = var.sa_email
+    }
+  }
 }

@@ -31,3 +31,10 @@ resource "google_project_service" "service-usage-api" {
   disable_on_destroy = false
   disable_dependent_services = false
 }
+
+resource "google_project_service" "service-scheduler-api" {
+  project = var.project
+  service = "cloudscheduler.googleapis.com"
+  disable_on_destroy = false
+  disable_dependent_services = false
+}
