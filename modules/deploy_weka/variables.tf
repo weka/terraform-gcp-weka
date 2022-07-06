@@ -113,3 +113,8 @@ variable "sa_email" {
   type = string
   description = "service account email"
 }
+
+variable "create_cloudscheduler_sa" {
+  type = bool
+  description = "should or not crate gcp cloudscheduler sa"
+}

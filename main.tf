@@ -54,6 +54,7 @@ module "deploy_weka" {
   subnets              = var.subnets
   vpc-connector        = module.setup_network.output-vpc-connector-name
   sa_email             = module.create_service_account.outputs-service-account-email
+  create_cloudscheduler_sa = var.create_cloudscheduler_sa
 
   providers = {
     google = google.deployment
