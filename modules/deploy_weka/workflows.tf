@@ -4,6 +4,15 @@ resource "google_project_service" "workflows" {
   disable_dependent_services=false
 }
 
+resource "google_project_iam_binding" "project" {
+  project = var.project
+  role    = "roles/cloudscheduler.serviceAgent"
+
+  members = [
+    "serviceAccount:service-${var.project_number}@gcp-sa-cloudscheduler.iam.gserviceaccount.com"
+  ]
+}
+
 resource "google_workflows_workflow" "scale_down" {
   name            = "${var.prefix}-${var.cluster_name}-scale-down-workflow"
   region          = var.region
