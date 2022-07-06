@@ -5,6 +5,7 @@ resource "google_project_service" "workflows" {
 }
 
 resource "google_project_iam_binding" "project" {
+  count   = var.create_cloudscheduler_sa ? 1 : 0
   project = var.project
   role    = "roles/cloudscheduler.serviceAgent"
 
