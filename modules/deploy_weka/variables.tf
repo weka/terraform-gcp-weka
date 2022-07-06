@@ -8,6 +8,11 @@ variable "project" {
   description = "project name"
 }
 
+variable "project_number" {
+  type        = string
+  description = "project number"
+}
+
 variable "nics_number" {
   type        = number
   description = "number of nics per host"
