@@ -9,6 +9,6 @@ resource "google_storage_bucket_object" "state" {
   content = "{\"initial_size\":${var.cluster_size}, \"desired_size\":${var.cluster_size}, \"instances\":[]}"
 
   lifecycle {
-    ignore_changes = [content]
+    ignore_changes = all
   }
 }
