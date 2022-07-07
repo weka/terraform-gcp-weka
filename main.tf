@@ -32,6 +32,7 @@ module "setup_network" {
 
 
 module "host_vpc_peering" {
+  count                  = var.create_shared_vpc ? 1 : 0
   source                 = "./modules/shared_vpcs"
   deploy_on_host_project = true
   service_project        = var.service_project
@@ -50,6 +51,7 @@ module "host_vpc_peering" {
 
 
 module "shared_vpc_peering" {
+  count                  = var.create_shared_vpc ? 1 : 0
   source                 = "./modules/shared_vpcs"
   deploy_on_host_project = false
   service_project        = var.service_project

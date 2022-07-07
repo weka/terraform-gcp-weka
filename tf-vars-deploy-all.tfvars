@@ -31,6 +31,7 @@ create_cloudscheduler_sa = true
 
 # Vpcs shared
 deploy_on_host_project = false
-service_project        = "test-tf-vars"
-host_project           = "wekaio-rnd"
+service_project        = "wekaio-rnd"
+host_project           = "test-tf-vars"
 shared_vpcs            = ["denise-test-vpc-shard-1", "denise-test-vpc-shard-2"]
+create_shared_vpc      = false
