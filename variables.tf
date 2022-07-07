@@ -166,3 +166,8 @@ variable "create_cloudscheduler_sa" {
   type = bool
   description = "should or not crate gcp cloudscheduler sa"
 }
+
+variable "create_shared_vpc" {
+  type = bool
+  description = "should or not create vpc sharing"
+}
