@@ -3,8 +3,8 @@
 resource "null_resource" "generate_cloud_functions_zips" {
   provisioner "local-exec" {
     command = <<-EOT
-      cd cloud-functions
-      zip -r ../cloud-functions.zip * -x cloud-functions/cloud_functions_test.go
+      cd modules/deploy_weka/cloud-functions
+      zip -r ../../../cloud-functions.zip * -x "cloud_functions_test.go"
     EOT
     interpreter = ["bash", "-ce"]
   }
