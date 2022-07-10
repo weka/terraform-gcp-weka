@@ -76,8 +76,11 @@ resource "google_compute_instance_template" "backends-template" {
 resource "random_password" "password" {
   length  = 16
   lower   = true
+  min_lower = 1
   upper   = true
+  min_upper = 1
   numeric = true
+  min_numeric = 1
   special = false
 }
 
