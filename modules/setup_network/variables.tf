@@ -28,11 +28,6 @@ variable "subnets-cidr-range" {
   description = "list of subnets to use for creating the cluster, the number of subnets must be 'nics_number'"
 }
 
-variable "cluster_name" {
-  type        = string
-  description = "prefix cluster name for all resources"
-}
-
 variable "subnets" {
   type              = map(object({
     gateway-address = string

@@ -11,7 +11,6 @@ module "create_service_account" {
 
 module "setup_network" {
   source               = "./modules/setup_network"
-  cluster_name         = var.cluster_name
   project              = var.project
   nics_number          = var.nics_number
   vpcs                 = var.vpcs
