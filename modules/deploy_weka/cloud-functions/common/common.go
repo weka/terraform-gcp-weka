@@ -26,6 +26,7 @@ type ClusterState struct {
 	InitialSize int      `json:"initial_size"`
 	DesiredSize int      `json:"desired_size"`
 	Instances   []string `json:"instances"`
+	Clusterized bool     `json:"clusterized"`
 }
 
 func GetUsernameAndPassword(usernameId, passwordId string) (clusterCreds ClusterCreds, err error) {
@@ -234,6 +235,29 @@ func GetClusterState(bucket string) (state ClusterState, err error) {
 	return
 }
 
+func UpdateClusterState(bucket string, state ClusterState) (err error) {
+	ctx := context.Background()
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		log.Error().Msgf("Failed creating storage client: %s", err)
+		return
+	}
+	defer client.Close()
+
+	id, err := Lock(client, ctx, bucket)
+	for err != nil {
+		time.Sleep(1 * time.Second)
+		id, err = Lock(client, ctx, bucket)
+	}
+
+	stateHandler := client.Bucket(bucket).Object("state")
+
+	err = WriteState(stateHandler, ctx, state)
+	err = Unlock(client, ctx, bucket, id) // we always unlock
+
+	return
+}
+
 func GetInstancesByClusterLabel(project, zone, clusterName string) (instances []*computepb.Instance) {
 	ctx := context.Background()
 	instanceClient, err := compute.NewInstancesRESTClient(ctx)
@@ -263,5 +287,119 @@ func GetInstancesByClusterLabel(project, zone, clusterName string) (instances []
 		}
 		instances = append(instances, resp)
 	}
+	return
+}
+
+func addInstanceToStateInstances(client *storage.Client, ctx context.Context, bucket, newInstance string) (instancesNames []string, err error) {
+	stateHandler := client.Bucket(bucket).Object("state")
+
+	state, err := ReadState(stateHandler, ctx)
+	if err != nil {
+		return
+	}
+	state.Instances = append(state.Instances, newInstance)
+
+	err = WriteState(stateHandler, ctx, state)
+	if err == nil {
+		instancesNames = state.Instances
+	}
+	return
+}
+
+func AddInstanceToStateInstances(bucket, newInstance string) (instancesNames []string, err error) {
+	ctx := context.Background()
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		log.Error().Msgf("Failed creating storage client: %s", err)
+		return
+	}
+	defer client.Close()
+
+	id, err := Lock(client, ctx, bucket)
+	for err != nil {
+		time.Sleep(1 * time.Second)
+		id, err = Lock(client, ctx, bucket)
+	}
+
+	instancesNames, err = addInstanceToStateInstances(client, ctx, bucket, newInstance)
+	err = Unlock(client, ctx, bucket, id) // we always want to unlock
+
+	return
+}
+
+func SetDeletionProtection(project, zone, instanceName string) (err error) {
+	log.Info().Msgf("Setting deletion protection on %s", instanceName)
+	ctx := context.Background()
+
+	c, err := compute.NewInstancesRESTClient(ctx)
+	if err != nil {
+		log.Error().Msgf("%s", err)
+		return
+	}
+	defer c.Close()
+
+	value := true
+	req := &computepb.SetDeletionProtectionInstanceRequest{
+		Project:            project,
+		Zone:               zone,
+		Resource:           instanceName,
+		DeletionProtection: &value,
+	}
+
+	_, err = c.SetDeletionProtection(ctx, req)
+	if err != nil {
+		log.Error().Msgf("%s", err)
+		return
+	}
+
+	return
+}
+
+func AddInstancesToGroup(project, zone, instanceGroup string, instancesNames []string) (err error) {
+	log.Info().Msgf("Adding instances: %s to instance group %s", instancesNames, instanceGroup)
+	ctx := context.Background()
+	instancesClient, err := compute.NewInstancesRESTClient(ctx)
+	if err != nil {
+		log.Error().Msgf("%s", err)
+		return
+	}
+	defer instancesClient.Close()
+
+	var instances []*computepb.InstanceReference
+	var instance *computepb.Instance
+	for _, instanceName := range instancesNames {
+		instance, err = instancesClient.Get(ctx, &computepb.GetInstanceRequest{
+			Instance: instanceName,
+			Project:  project,
+			Zone:     zone,
+		})
+		if err != nil {
+			log.Error().Msgf("%s", err)
+			return
+		}
+		instances = append(instances, &computepb.InstanceReference{Instance: instance.SelfLink})
+	}
+
+	instancesGroupClient, err := compute.NewInstanceGroupsRESTClient(ctx)
+	if err != nil {
+		log.Error().Msgf("%s", err)
+		return
+	}
+	defer instancesGroupClient.Close()
+	_, err = instancesGroupClient.AddInstances(ctx, &computepb.AddInstancesInstanceGroupRequest{
+		InstanceGroup: instanceGroup,
+		InstanceGroupsAddInstancesRequestResource: &computepb.InstanceGroupsAddInstancesRequest{
+			Instances: instances,
+		},
+		Project: project,
+		Zone:    zone,
+	})
+
+	if err != nil {
+		log.Error().Msgf("%s", err)
+		return
+	}
+
+	log.Info().Msgf("Instances: %s, were added to instance group successfully", instancesNames)
 	return
 }

@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"github.com/lithammer/dedent"
 	"github.com/rs/zerolog/log"
-	"github.com/weka/gcp-tf/cloud-functions/common"
+	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
+	"strconv"
 	"strings"
 )
 
@@ -18,7 +19,7 @@ func getAllBackendsIps(project, zone, clusterName string) (backendsIps []string)
 	return
 }
 
-func GenerateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, instanceBaseName string) (clusterizeScript string) {
+func generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, instanceNames, bunchUrl string) (clusterizeScript string) {
 	log.Info().Msg("Generating clusterization scrtipt")
 	creds, err := common.GetUsernameAndPassword(usernameId, passwordId)
 	if err != nil {
@@ -39,12 +40,10 @@ func GenerateClusterizationScript(project, zone, hostsNum, nicsNum, gws, cluster
 	NVMES_NUM=%s
 	ADMIN_USERNAME=%s
 	ADMIN_PASSWORD=%s
-	INSTANCE_NAME=%s
+	INSTANCE_NAMES="%s"
+	BUNCH_URL=%s
 
-	cluster_creation_str="weka cluster create"
-	for (( i=0; i<$HOSTS_NUM; i++ )); do
-		cluster_creation_str="$cluster_creation_str $INSTANCE_NAME-$i"
-	done
+	cluster_creation_str="weka cluster create $INSTANCE_NAMES"
 	cluster_creation_str="$cluster_creation_str --host-ips "
 	for (( i=0; i<$HOSTS_NUM; i++ )); do
 		cluster_creation_str="$cluster_creation_str${IPS[$i*$NICS_NUM]},"
@@ -83,9 +82,43 @@ func GenerateClusterizationScript(project, zone, hostsNum, nicsNum, gws, cluster
 	sleep 30s
 	weka cluster start-io
 	echo "completed successfully" > /tmp/weka_clusterization_completion_validation
+
+	curl $BUNCH_URL -H "Authorization:bearer $(gcloud auth print-identity-token)"
 	`
 	ips := fmt.Sprintf("(%s)", strings.Join(getAllBackendsIps(project, zone, clusterName), " "))
 	log.Info().Msgf("Formatting clusterization script template")
-	clusterizeScript = fmt.Sprintf(dedent.Dedent(clusterizeScriptTemplate), ips, hostsNum, nicsNum, gws, clusterName, nvmesMumber, creds.Username, creds.Password, instanceBaseName)
+	clusterizeScript = fmt.Sprintf(dedent.Dedent(clusterizeScriptTemplate), ips, hostsNum, nicsNum, gws, clusterName, nvmesMumber, creds.Username, creds.Password, instanceNames, bunchUrl)
+	return
+}
+
+func Clusterize(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, bucket, instanceName, bunchUrl string) (clusterizeScript string) {
+	instancesNames, err := common.AddInstanceToStateInstances(bucket, instanceName)
+	if err != nil {
+		return
+	}
+
+	initialSize, err := strconv.Atoi(hostsNum)
+	if err != nil {
+		return
+	}
+
+	if len(instancesNames) > initialSize {
+		clusterizeScript = dedent.Dedent(`
+		#!/bin/bash
+		shutdown -P
+		`)
+		return
+	}
+
+	err = common.SetDeletionProtection(project, zone, instanceName)
+	if err != nil {
+		return
+	}
+
+	if len(instancesNames) == initialSize {
+		instancesNamesStr := strings.Join(instancesNames, " ")
+		clusterizeScript = generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, instancesNamesStr, bunchUrl)
+	}
+
 	return
 }

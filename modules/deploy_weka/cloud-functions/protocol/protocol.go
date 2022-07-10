@@ -2,7 +2,7 @@ package protocol
 
 import (
 	"fmt"
-	"github.com/weka/gcp-tf/cloud-functions/lib/weka"
+	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/lib/weka"
 	"time"
 )
 

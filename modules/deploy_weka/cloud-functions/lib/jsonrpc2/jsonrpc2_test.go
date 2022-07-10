@@ -9,7 +9,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/weka/gcp-tf/cloud-functions/lib/jsonrpc2"
+	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/lib/jsonrpc2"
 	"io"
 	"log"
 	"path"

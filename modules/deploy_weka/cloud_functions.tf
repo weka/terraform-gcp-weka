@@ -3,6 +3,7 @@
 resource "null_resource" "generate_cloud_functions_zips" {
   provisioner "local-exec" {
     command = <<-EOT
+      rm -f cloud-functions.zip
       cd modules/deploy_weka/cloud-functions
       zip -r ../../../cloud-functions.zip * -x "cloud_functions_test.go"
     EOT
@@ -12,7 +13,7 @@ resource "null_resource" "generate_cloud_functions_zips" {
 
 # ================== function bucket =======================
 resource "google_storage_bucket" "cloud_functions" {
-  name     = "${var.prefix}-${var.cluster_name}-cloud-functions"
+  name     = "${var.prefix}-${var.cluster_name}-${var.project}-cloud-functions"
   location = var.bucket-location
 }
 
@@ -46,10 +47,7 @@ resource "google_cloudfunctions_function" "deploy_function" {
     BUCKET : google_storage_bucket.state_bucket.name
     INSTALL_URL: "https://$TOKEN@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}"
     CLUSTERIZE_URL:google_cloudfunctions_function.clusterize_function.https_trigger_url
-    INCREMENT_URL:google_cloudfunctions_function.increment_function.https_trigger_url
-    PROTECT_URL:google_cloudfunctions_function.protect_function.https_trigger_url
-    BUNCH_URL:google_cloudfunctions_function.bunch_function.https_trigger_url
-    GET_INSTANCES_URL: google_cloudfunctions_function.get_instances_function.https_trigger_url
+    FINALIZE_URL:google_cloudfunctions_function.finalize_function.https_trigger_url
   }
   service_account_email = var.sa_email
   depends_on = [google_project_service.project-function-api]
@@ -206,7 +204,8 @@ resource "google_cloudfunctions_function" "clusterize_function" {
     NVMES_NUM: var.nvmes_number
     USER_NAME_ID: google_secret_manager_secret_version.user_secret_key.id
     PASSWORD_ID: google_secret_manager_secret_version.password_secret_key.id
-    INSTANCE_BASE_NAME: "${var.prefix}-${var.cluster_name}-vm"
+    BUCKET: google_storage_bucket.state_bucket.name
+    BUNCH_URL: google_cloudfunctions_function.bunch_function.https_trigger_url
   }
   service_account_email = var.sa_email
 }
@@ -293,6 +292,7 @@ resource "google_cloudfunctions_function" "bunch_function" {
     PROJECT: var.project
     ZONE: var.zone
     INSTANCE_GROUP: google_compute_instance_group.instance_group.name
+    BUCKET: google_storage_bucket.state_bucket.name
   }
   service_account_email = var.sa_email
 }
@@ -335,10 +335,10 @@ resource "google_cloudfunctions_function_iam_member" "resize_invoker" {
   member = "allAuthenticatedUsers"
 }
 
-# ======================== increment ============================
-resource "google_cloudfunctions_function" "increment_function" {
-  name        = "${var.prefix}-${var.cluster_name}-increment"
-  description = "increment db"
+# ======================== finalize ============================
+resource "google_cloudfunctions_function" "finalize_function" {
+  name        = "${var.prefix}-${var.cluster_name}-finalize"
+  description = "finalize new instance join"
   runtime     = "go116"
   timeout     = 540
 
@@ -346,75 +346,20 @@ resource "google_cloudfunctions_function" "increment_function" {
   source_archive_bucket = google_storage_bucket.cloud_functions.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
-  entry_point           = "Increment"
-  environment_variables = {
-    BUCKET: google_storage_bucket.state_bucket.name
-  }
-  service_account_email = var.sa_email
-}
-
-# IAM entry for all users to invoke the function
-resource "google_cloudfunctions_function_iam_member" "increment_invoker" {
-  project        = google_cloudfunctions_function.increment_function.project
-  region         = google_cloudfunctions_function.increment_function.region
-  cloud_function = google_cloudfunctions_function.increment_function.name
-
-  role   = "roles/cloudfunctions.invoker"
-  member = "allAuthenticatedUsers"
-}
-
-# ======================== get_instances ============================
-resource "google_cloudfunctions_function" "get_instances_function" {
-  name        = "${var.prefix}-${var.cluster_name}-get-instances"
-  description = "get cluster instance group size"
-  runtime     = "go116"
-  timeout     = 540
-
-  available_memory_mb   = 128
-  source_archive_bucket = google_storage_bucket.cloud_functions.name
-  source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
-  trigger_http          = true
-  entry_point           = "GetInstances"
-  environment_variables = {
-    BUCKET : google_storage_bucket.state_bucket.name
-  }
-  service_account_email = var.sa_email
-}
-
-# IAM entry for all users to invoke the function
-resource "google_cloudfunctions_function_iam_member" "get_instances_invoker" {
-  project        = google_cloudfunctions_function.get_instances_function.project
-  region         = google_cloudfunctions_function.get_instances_function.region
-  cloud_function = google_cloudfunctions_function.get_instances_function.name
-
-  role   = "roles/cloudfunctions.invoker"
-  member = "allAuthenticatedUsers"
-}
-
-# ======================== protect ============================
-resource "google_cloudfunctions_function" "protect_function" {
-  name        = "${var.prefix}-${var.cluster_name}-protect"
-  description = "add instance deletion protection"
-  runtime     = "go116"
-  timeout     = 540
-
-  available_memory_mb   = 128
-  source_archive_bucket = google_storage_bucket.cloud_functions.name
-  source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
-  trigger_http          = true
-  entry_point           = "Protect"
+  entry_point           = "Finalize"
   environment_variables = {
     PROJECT: var.project
     ZONE: var.zone
+    INSTANCE_GROUP: google_compute_instance_group.instance_group.name
   }
   service_account_email = var.sa_email
 }
 
 # IAM entry for all users to invoke the function
-resource "google_cloudfunctions_function_iam_member" "protect_invoker" {
-  project        = google_cloudfunctions_function.protect_function.project
-  region         = google_cloudfunctions_function.protect_function.region
-  cloud_function = google_cloudfunctions_function.protect_function.name
+resource "google_cloudfunctions_function_iam_member" "finalize_invoker" {
+  project        = google_cloudfunctions_function.finalize_function.project
+  region         = google_cloudfunctions_function.finalize_function.region
+  cloud_function = google_cloudfunctions_function.finalize_function.name
 
   role   = "roles/cloudfunctions.invoker"
   member = "allAuthenticatedUsers"

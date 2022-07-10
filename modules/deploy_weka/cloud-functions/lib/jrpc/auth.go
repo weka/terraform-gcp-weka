@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/weka/gcp-tf/cloud-functions/lib/jsonrpc2"
+	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/lib/jsonrpc2"
 	"golang.org/x/oauth2"
 	"net/http"
 	"net/url"

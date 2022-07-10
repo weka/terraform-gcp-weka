@@ -3,7 +3,7 @@ package connectors
 import (
 	"context"
 	"github.com/rs/zerolog/log"
-	"github.com/weka/gcp-tf/cloud-functions/lib/jrpc"
+	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/lib/jrpc"
 	"net"
 	"net/http"
 	"net/url"
