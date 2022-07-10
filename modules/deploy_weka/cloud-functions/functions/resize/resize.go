@@ -4,7 +4,7 @@ import (
 	"cloud.google.com/go/storage"
 	"context"
 	"github.com/rs/zerolog/log"
-	"github.com/weka/gcp-tf/cloud-functions/common"
+	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
 	"time"
 )
 

@@ -2,7 +2,7 @@ package fetch
 
 import (
 	"fmt"
-	"github.com/weka/gcp-tf/cloud-functions/common"
+	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
 	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
 )
 

@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/weka/gcp-tf/cloud-functions/lib/jsonrpc2"
+	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/lib/jsonrpc2"
 	"io"
 	"io/ioutil"
 	"net/http"

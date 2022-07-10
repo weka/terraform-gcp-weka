@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/lithammer/dedent"
 	"github.com/rs/zerolog/log"
-	"github.com/weka/gcp-tf/cloud-functions/common"
+	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 	"math/rand"
 	"os"
@@ -53,7 +53,7 @@ func getToken(tokenId string) (token string, err error) {
 	return
 }
 
-func GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, protectUrl, bunchUrl string) (bashScript string, err error) {
+func GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, finalizeUrl string) (bashScript string, err error) {
 	role := "backend"
 
 	instances, err := common.GetInstances(project, zone, common.GetInstanceGroupInstanceNames(project, zone, instanceGroup))
@@ -131,8 +131,7 @@ func GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, protect
 	`
 
 	addDrives := `
-	PROTECT_URL=%s
-	BUNCH_URL=%s
+	FINALIZE_URL=%s
 	host_id=$(weka local run $WEKA_RUN_CREDS manhole getServerInfo | grep hostIdValue: | awk '{print $2}')
 	mkdir -p /opt/weka/tmp
 	cat >/opt/weka/tmp/find_drives.py <<EOL
@@ -151,8 +150,7 @@ func GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, protect
 	done
 	sleep 60
 	weka cluster drive scan $host_id
-	curl $PROTECT_URL -H "Authorization:bearer $(gcloud auth print-identity-token)" -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
-	curl $BUNCH_URL -H "Authorization:bearer $(gcloud auth print-identity-token)" -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
+	curl $FINALIZE_URL -H "Authorization:bearer $(gcloud auth print-identity-token)" -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
 	echo "completed successfully" > /tmp/weka_join_completion_validation
 	`
 	var cores, frontend, drive int
@@ -169,7 +167,7 @@ func GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, protect
 		if !instanceParams.converged {
 			bashScriptTemplate += " --dedicate"
 		}
-		bashScriptTemplate += isReady + fmt.Sprintf(addDrives, protectUrl, bunchUrl)
+		bashScriptTemplate += isReady + fmt.Sprintf(addDrives, finalizeUrl)
 	} else {
 		bashScriptTemplate += isReady
 		cores = 1
@@ -182,12 +180,11 @@ func GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, protect
 	return
 }
 
-func GetDeployScript(project, zone, instanceGroup, usernameId, passwordId, tokenId, bucket, installUrl, clusterizeUrl, incrementUrl, protectUrl, bunchUrl, getInstancesUrl string) (bashScript string, err error) {
+func GetDeployScript(project, zone, instanceGroup, usernameId, passwordId, tokenId, bucket, installUrl, clusterizeUrl, finalizeUrl string) (bashScript string, err error) {
 	state, err := common.GetClusterState(bucket)
 	if err != nil {
 		return
 	}
-	instances := state.Instances
 	initialSize := state.InitialSize
 
 	installTemplate := `
@@ -196,11 +193,7 @@ func GetDeployScript(project, zone, instanceGroup, usernameId, passwordId, token
 	HOSTS_NUM=%d
 	TOKEN=%s
 	INSTALL_URL=%s
-	INCREMENT_URL=%s
-	PROTECT_URL=%s
-	BUNCH_URL=%s
 	CLUSTERIZE_URL=%s
-	GET_INSTANCES_URL=%s
 
 	# https://gist.github.com/fungusakafungus/1026804
 	function retry {
@@ -222,19 +215,9 @@ func GetDeployScript(project, zone, instanceGroup, usernameId, passwordId, token
 	
 	retry 300 2 curl --fail --max-time 10 $INSTALL_URL | sh
 
-	curl $INCREMENT_URL -H "Authorization:bearer $(gcloud auth print-identity-token)" -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
-	curl $PROTECT_URL -H "Authorization:bearer $(gcloud auth print-identity-token)" -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
-
-	eval instances=$(curl --silent $GET_INSTANCES_URL -H "Authorization:bearer $(gcloud auth print-identity-token)")
-	echo "${instances[*]}" > /tmp/instances.txt # for debug purposes
-	if [[ ${#instances[@]} == $HOSTS_NUM  && ${instances[-1]} == $HOSTNAME ]] ; then
-		curl $CLUSTERIZE_URL -H "Authorization:bearer $(gcloud auth print-identity-token)" > /tmp/clusterize.sh
-		chmod +x /tmp/clusterize.sh
-		/tmp/clusterize.sh
-		for instance in ${instances[@]}; do
-			curl $BUNCH_URL -H "Authorization:bearer $(gcloud auth print-identity-token)" -H "Content-Type:application/json"  -d "{\"name\": \"$instance\"}"
-		done
-	fi
+	curl $CLUSTERIZE_URL -H "Authorization:bearer $(gcloud auth print-identity-token)" -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}" > /tmp/clusterize.sh
+	chmod +x /tmp/clusterize.sh
+	/tmp/clusterize.sh
 	`
 
 	token, err := getToken(tokenId)
@@ -242,10 +225,10 @@ func GetDeployScript(project, zone, instanceGroup, usernameId, passwordId, token
 		return
 	}
 
-	if len(instances) < initialSize {
-		bashScript = fmt.Sprintf(installTemplate, initialSize, token, installUrl, incrementUrl, protectUrl, bunchUrl, clusterizeUrl, getInstancesUrl)
+	if !state.Clusterized {
+		bashScript = fmt.Sprintf(installTemplate, initialSize, token, installUrl, clusterizeUrl)
 	} else {
-		bashScript, err = GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, protectUrl, bunchUrl)
+		bashScript, err = GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, finalizeUrl)
 		if err != nil {
 			return
 		}
