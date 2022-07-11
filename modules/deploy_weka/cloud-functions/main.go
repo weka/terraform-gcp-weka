@@ -128,15 +128,17 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 	if backendsNumber < state.DesiredSize {
 		for i := backendsNumber; i < state.DesiredSize; i++ {
 			instanceName := fmt.Sprintf("%s-%s", instanceBaseName, uuid.New().String())
-			log.Info().Msg("creating new backend instance")
+			log.Info().Msgf("creating new backend instance: %s", instanceName)
 			if err := scale_up.CreateInstance(project, zone, backendTemplate, instanceName); err != nil {
 				fmt.Fprintf(w, "Instance %s creation failed %s.", instanceName, err)
 			} else {
+				log.Info().Msgf("Instance %s creation completed successfully", instanceName)
 				fmt.Fprintf(w, "Instance %s creation has started.", instanceName)
 			}
 		}
 	} else {
-		fmt.Fprintf(w, "Nothing to do!")
+		log.Info().Msg("Nothing to do")
+		fmt.Fprintf(w, "Nothing to do")
 	}
 }
 

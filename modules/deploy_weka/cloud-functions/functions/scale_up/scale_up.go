@@ -29,7 +29,7 @@ func CreateInstance(project, zone, template, instanceName string) (err error) {
 
 	_, err = instancesClient.Insert(ctx, req)
 	if err != nil {
-		log.Error().Msgf("%s", err)
+		log.Error().Msgf("Instance creation failed: %s", err)
 		return
 	}
 
