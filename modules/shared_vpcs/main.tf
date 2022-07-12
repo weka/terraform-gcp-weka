@@ -1,9 +1,9 @@
 locals {
   vpc_length = length(var.shared_vpcs)
   peering_list = flatten([
-  for from in range(length (var.vpcs)) : [
+  for from in range(length (var.vpcs_list)) : [
   for to in range(local.vpc_length) : {
-    from = var.vpcs[from]
+    from = var.vpcs_list[from]
     to   = var.shared_vpcs[to]
   }
   ]
@@ -15,7 +15,7 @@ locals {
 resource "google_project_iam_binding" "iam-binding" {
   project = var.service_project
   role    = "roles/compute.networkAdmin"
-  members = ["serviceAccount:${var.prefix}-deploy-sa@${var.service_project}.iam.gserviceaccount.com",]
+  members = ["serviceAccount:${var.sa_email}",]
 }
 
 resource "google_compute_shared_vpc_service_project" "service" {

@@ -18,7 +18,7 @@ variable "nics_number" {
   description = "number of nics per host"
 }
 
-variable "vpcs" {
+variable "vpcs_list" {
   type = list(string)
   description = "List of vpcs name"
 }
@@ -26,14 +26,6 @@ variable "vpcs" {
 variable "prefix" {
   type        = string
   description = "prefix for all resources"
-}
-
-variable "subnets" {
-  type              = map(object({
-    gateway-address = string
-    vpc-name        = string
-    cidr_range       = string
-  }))
 }
 
 variable "zone" {
@@ -81,21 +73,12 @@ variable "cluster_size" {
   description = "weka cluster size"
 }
 
-variable "gateway_address_list" {
-  type = list(string)
-  description = "gateway ips list"
-}
-
-variable "bucket-location" {
+variable "bucket_location" {
   type = string
   description = "bucket function location"
 }
 
-variable "subnets_name" {
-  type = list(string)
-}
-
-variable "subnets_range" {
+variable "subnets_list" {
   type = list(string)
 }
 

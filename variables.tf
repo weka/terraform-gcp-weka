@@ -39,13 +39,19 @@ variable "cluster_size" {
   default     = 5
 }
 
+variable "vpc_number" {
+  type        = number
+  description = "number of vpcs"
+  default     = 4
+}
+
 variable "nics_number" {
   type        = number
   description = "number of nics per host"
   default     = 4
 }
 
-variable "vpcs" {
+variable "vpcs_list" {
   type        = list(string)
   description = "List of vpcs name"
   default    = []
@@ -59,12 +65,8 @@ variable "subnets-cidr-range" {
 
 variable "subnets" {
   description = "Details of existing subnets, the key is contain subnet name"
-  type = map(object({
-    gateway-address =  string
-    vpc-name        = string
-    cidr_range      = string
-  }))
- default = {}
+  type = list(string)
+ default = []
 }
 
 variable "nvmes_number" {
@@ -101,7 +103,7 @@ variable "set_peering" {
   default = true
 }
 
-variable "bucket-location" {
+variable "bucket_location" {
   type = string
   description = "bucket function location"
   default = "EU"

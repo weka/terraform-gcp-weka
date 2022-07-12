@@ -1,21 +1,21 @@
 ### Network module ###
-vpcs                 = []
-subnets-cidr-range   = ["10.0.0.0/24", "10.1.0.0/24", "10.2.0.0/24", "10.3.0.0/24"]
+vpcs_list                 = []
+subnets-cidr-range   = ["11.0.0.0/24", "11.1.0.0/24", "11.2.0.0/24", "11.3.0.0/24"]
 set_peering          = true
 subnets              = {}
-vpc_connector_range  = "10.8.0.0/28"
+vpc_connector_range  = "11.8.0.0/28"
 create_vpc_connector = true
 vpc_connector_name   = ""
 
 
 ### Mandatory vars ###
-nics_number    = 4
-project        = "wekaio-rnd"
-project_number = "896245720241"
-region         = "europe-west1"
-zone           = "europe-west1-b"
-prefix         = "weka"
-cluster_name   = "poc"
+vpc_number    = 4
+project        = "test-tf-vars"
+project_number = "1053406525470"
+region         = "us-east1"
+zone           = "us-east1-b"
+prefix         = "denise"
+cluster_name   = "test"
 sa_name        = "deploy-sa"
 
 

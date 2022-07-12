@@ -33,6 +33,6 @@ resource "google_compute_forwarding_rule" "google_compute_forwarding_rule" {
   region                = var.region
   load_balancing_scheme = "INTERNAL"
   all_ports             = true
-  network               = "https://www.googleapis.com/compute/v1/projects/${var.project}/global/networks/${var.vpcs[0]}"
-  subnetwork            = "https://www.googleapis.com/compute/v1/projects/${var.project}/regions/${var.region}/subnetworks/${var.subnets_name[0]}"
+  network               = var.vpcs_list[0] #"https://www.googleapis.com/compute/v1/projects/${var.project}/global/networks/${var.vpcs[0]}"
+  subnetwork            = var.subnets_list[0] #"https://www.googleapis.com/compute/v1/projects/${var.project}/regions/${var.region}/subnetworks/${var.subnets_name[0]}"
 }

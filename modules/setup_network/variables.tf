@@ -13,12 +13,12 @@ variable "zone" {
   description = "zone name"
 }
 
-variable "nics_number" {
+variable "vpc_number" {
   type        = number
-  description = "number of nics per host"
+  description = "number of vpcs"
 }
 
-variable "vpcs" {
+variable "vpcs_list" {
   type       = list(string)
   description = "List of vpcs name"
 }
@@ -29,11 +29,8 @@ variable "subnets-cidr-range" {
 }
 
 variable "subnets" {
-  type              = map(object({
-    gateway-address = string
-    vpc-name        = string
-    cidr_range      = string
-  }))
+  type   = list(string)
+  description = "list of subnet name if existing"
 }
 
 variable "prefix" {

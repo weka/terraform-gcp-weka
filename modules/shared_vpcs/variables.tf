@@ -18,7 +18,7 @@ variable "shared_vpcs" {
   description = "list of shared vpc name"
 }
 
-variable "vpcs" {
+variable "vpcs_list" {
   type = list(string)
   description = "list of vpcs name"
 }
@@ -30,4 +30,9 @@ variable "deploy_on_host_project" {
 variable "service_project" {
   type        = string
   description = "project id of service project"
+}
+
+variable "sa_email" {
+  type        = string
+  description = "service account email"
 }

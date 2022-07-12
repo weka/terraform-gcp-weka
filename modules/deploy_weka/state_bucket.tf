@@ -1,6 +1,6 @@
 resource "google_storage_bucket" "state_bucket" {
-  name     = "${var.prefix}-${var.cluster_name}-${var.project}-state"
-  location = var.bucket-location
+  name     = "${var.prefix}-${var.cluster_name}-state"
+  location = var.bucket_location
 }
 
 resource "google_storage_bucket_object" "state" {

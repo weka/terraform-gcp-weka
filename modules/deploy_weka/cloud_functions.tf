@@ -14,7 +14,7 @@ resource "null_resource" "generate_cloud_functions_zips" {
 # ================== function bucket =======================
 resource "google_storage_bucket" "cloud_functions" {
   name     = "${var.prefix}-${var.cluster_name}-${var.project}-cloud-functions"
-  location = var.bucket-location
+  location = var.bucket_location
 }
 
 resource "google_storage_bucket_object" "cloud_functions_zip" {
@@ -25,6 +25,12 @@ resource "google_storage_bucket_object" "cloud_functions_zip" {
 }
 
 # ======================== deploy ============================
+data "google_compute_subnetwork" "ip_cidr_range_list" {
+  count = length(var.subnets_list)
+  name = var.subnets_list[count.index]
+}
+
+
 resource "google_cloudfunctions_function" "deploy_function" {
   name        = "${var.prefix}-${var.cluster_name}-deploy"
   description = "deploy new instance"
@@ -40,7 +46,7 @@ resource "google_cloudfunctions_function" "deploy_function" {
     ZONE: var.zone
     INSTANCE_GROUP: google_compute_instance_group.instance_group.name
     GATEWAYS: local.gws_addresses
-    SUBNETS: format("(%s)", join(" ", var.subnets_range ))
+    SUBNETS: format("(%s)", join(" ",[for ip in data.google_compute_subnetwork.ip_cidr_range_list: ip.ip_cidr_range ]))
     USER_NAME_ID: google_secret_manager_secret_version.user_secret_key.id
     PASSWORD_ID: google_secret_manager_secret_version.password_secret_key.id
     BUCKET : google_storage_bucket.state_bucket.name
