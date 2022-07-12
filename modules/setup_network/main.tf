@@ -58,7 +58,7 @@ data google_compute_subnetwork "subnets-list-id"{
 resource "google_compute_subnetwork" "subnetwork" {
   count         = length(var.subnets) == 0 ? var.vpc_number : 0
   name          = "${var.prefix}-subnet-${count.index}"
-  ip_cidr_range = var.subnets-cidr-range[count.index]
+  ip_cidr_range = var.subnets_cidr_range[count.index]
   region        = var.region
   network       = length(var.vpcs_list) == 0 ? google_compute_network.vpc_network[count.index].name : var.vpcs_list[count.index]
   private_ip_google_access = true
@@ -78,7 +78,7 @@ resource "google_compute_network_peering" "peering" {
 resource "google_compute_firewall" "sg_private" {
   count         = length(var.vpcs_list) == 0 ? length(google_compute_network.vpc_network) : length(var.vpcs_list)
   name          = "${var.prefix}-sg-all-${count.index}"
-  network       = length(var.vpcs_list) == 0 ? google_compute_network.vpc_network[count.index].name : data.google_compute_network.vpcs_lis_id[count.index].id # "projects/test-tf-vars/global/networks/${var.vpcs_list[count.index]}"
+  network       = length(var.vpcs_list) == 0 ? google_compute_network.vpc_network[count.index].name : data.google_compute_network.vpcs_lis_id[count.index].name
   source_ranges = length(var.vpcs_list) == 0 ? google_compute_subnetwork.subnetwork.*.ip_cidr_range : [for s in data.google_compute_subnetwork.subnets-list-id: s.ip_cidr_range ]
   allow {
     protocol = "all"
@@ -93,7 +93,7 @@ resource "google_vpc_access_connector" "connector" {
   name          = "${var.prefix}-connector"
   ip_cidr_range = var.vpc_connector_range
   region        = var.region
-  network       = length(var.vpcs_list) == 0 ? google_compute_network.vpc_network[0].id : data.google_compute_network.vpcs_lis_id[0].id #"projects/${var.project}/global/networks/${var.vpcs_list[0]}"
+  network       = length(var.vpcs_list) == 0 ? google_compute_network.vpc_network[0].id : data.google_compute_network.vpcs_lis_id[0].name #"projects/${var.project}/global/networks/${var.vpcs_list[0]}"
 }
 
 #============== Health check ============================
@@ -114,7 +114,7 @@ resource "google_compute_firewall" "fw_ilb_to_backends" {
   name          = "${var.prefix}-fw-allow-ilb-to-backends"
   direction     = "INGRESS"
   network       = length(var.vpcs_list) == 0 ? google_compute_network.vpc_network[0].self_link : data.google_compute_network.vpcs_lis_id[0].self_link #"https://www.googleapis.com/compute/v1/projects/${var.project}/global/networks/${var.vpcs_list[0]}"
-  source_ranges = length(var.vpcs_list) == 0 ? [var.subnets-cidr-range[0]] : [data.google_compute_subnetwork.subnets-list-id[0].ip_cidr_range]
+  source_ranges = length(var.vpcs_list) == 0 ? [var.subnets_cidr_range[0]] : [data.google_compute_subnetwork.subnets-list-id[0].ip_cidr_range]
   allow {
     protocol = "tcp"
   }

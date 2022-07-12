@@ -23,7 +23,7 @@ variable "vpcs_list" {
   description = "List of vpcs name"
 }
 
-variable "subnets-cidr-range" {
+variable "subnets_cidr_range" {
   type        = list(string)
   description = "list of subnets to use for creating the cluster, the number of subnets must be 'nics_number'"
 }

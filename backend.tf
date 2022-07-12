@@ -1,7 +1,7 @@
 terraform {
   backend "gcs" {
     bucket = "tf-vars-infra-backend"
-    prefix = "terrafrom/state1"
+    prefix = "terrafrom/state"
   }
   required_providers {
     google = {

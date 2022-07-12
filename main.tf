@@ -1,8 +1,9 @@
 module "create_service_account" {
-  source = "./modules/service_account"
+  source  = "./modules/service_account"
   project = var.project
-  prefix = var.prefix
+  prefix  = var.prefix
   sa_name = var.sa_name
+
   providers = {
     google = google.main
   }
@@ -17,12 +18,13 @@ module "setup_network" {
   prefix               = var.prefix
   region               = var.region
   subnets              = var.subnets
-  subnets-cidr-range   = var.subnets-cidr-range
+  subnets_cidr_range   = var.subnets_cidr_range
   set_peering          = var.set_peering
   zone                 = var.zone
   create_vpc_connector = var.create_vpc_connector
   vpc_connector_range  = var.vpc_connector_range
   vpc_connector_name   = var.vpc_connector_name
+
   providers = {
     google = google.deployment
   }
@@ -30,23 +32,7 @@ module "setup_network" {
 }
 
 
-module "host_vpc_peering" {
-  count                  = var.create_shared_vpc ? 1 : 0
-  source                 = "./modules/shared_vpcs"
-  deploy_on_host_project = true
-  service_project        = var.service_project
-  prefix                 = var.prefix
-  project                = var.host_project
-  host_project           = var.host_project
-  shared_vpcs            = var.shared_vpcs
-  vpcs_list              = module.setup_network.output-vpcs-names
-  sa_email               = module.create_service_account.outputs-service-account-email
-  providers = {
-    google = google.shared-vpc
-  }
 
-  depends_on = [module.create_service_account, module.setup_network ]
-}
 
 module "deploy_weka" {
   source                   = "./modules/deploy_weka"

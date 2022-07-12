@@ -57,7 +57,7 @@ variable "vpcs_list" {
   default    = []
 }
 
-variable "subnets-cidr-range" {
+variable "subnets_cidr_range" {
   type        = list(string)
   description = "list of subnets to use for creating the cluster, the number of subnets must be 'nics_number'"
   default    = []
@@ -66,7 +66,7 @@ variable "subnets-cidr-range" {
 variable "subnets" {
   description = "Details of existing subnets, the key is contain subnet name"
   type = list(string)
- default = []
+  default = []
 }
 
 variable "nvmes_number" {
