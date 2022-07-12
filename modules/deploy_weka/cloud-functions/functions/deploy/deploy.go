@@ -53,7 +53,7 @@ func getToken(tokenId string) (token string, err error) {
 	return
 }
 
-func GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, finalizeUrl string) (bashScript string, err error) {
+func GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, joinFinalizationUrl string) (bashScript string, err error) {
 	role := "backend"
 
 	instances, err := common.GetInstances(project, zone, common.GetInstanceGroupInstanceNames(project, zone, instanceGroup))
@@ -131,7 +131,7 @@ func GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, finaliz
 	`
 
 	addDrives := `
-	FINALIZE_URL=%s
+	JOIN_FINALIZATION_URL=%s
 	host_id=$(weka local run $WEKA_RUN_CREDS manhole getServerInfo | grep hostIdValue: | awk '{print $2}')
 	mkdir -p /opt/weka/tmp
 	cat >/opt/weka/tmp/find_drives.py <<EOL
@@ -150,7 +150,7 @@ func GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, finaliz
 	done
 	sleep 60
 	weka cluster drive scan $host_id
-	curl $FINALIZE_URL -H "Authorization:bearer $(gcloud auth print-identity-token)" -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
+	curl $JOIN_FINALIZATION_URL -H "Authorization:bearer $(gcloud auth print-identity-token)" -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
 	echo "completed successfully" > /tmp/weka_join_completion_validation
 	`
 	var cores, frontend, drive int
@@ -167,7 +167,7 @@ func GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, finaliz
 		if !instanceParams.converged {
 			bashScriptTemplate += " --dedicate"
 		}
-		bashScriptTemplate += isReady + fmt.Sprintf(addDrives, finalizeUrl)
+		bashScriptTemplate += isReady + fmt.Sprintf(addDrives, joinFinalizationUrl)
 	} else {
 		bashScriptTemplate += isReady
 		cores = 1
@@ -180,7 +180,7 @@ func GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, finaliz
 	return
 }
 
-func GetDeployScript(project, zone, instanceGroup, usernameId, passwordId, tokenId, bucket, installUrl, clusterizeUrl, finalizeUrl string) (bashScript string, err error) {
+func GetDeployScript(project, zone, instanceGroup, usernameId, passwordId, tokenId, bucket, installUrl, clusterizeUrl, joinFinalizationUrl string) (bashScript string, err error) {
 	state, err := common.GetClusterState(bucket)
 	if err != nil {
 		return
@@ -228,7 +228,7 @@ func GetDeployScript(project, zone, instanceGroup, usernameId, passwordId, token
 	if !state.Clusterized {
 		bashScript = fmt.Sprintf(installTemplate, initialSize, token, installUrl, clusterizeUrl)
 	} else {
-		bashScript, err = GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, finalizeUrl)
+		bashScript, err = GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, joinFinalizationUrl)
 		if err != nil {
 			return
 		}

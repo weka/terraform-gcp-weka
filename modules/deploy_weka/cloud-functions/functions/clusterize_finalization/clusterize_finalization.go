@@ -1,8 +1,8 @@
-package bunch
+package clusterize_finalization
 
 import "github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
 
-func Bunch(project, zone, instanceGroup, bucket string) (err error) {
+func ClusterizeFinalization(project, zone, instanceGroup, bucket string) (err error) {
 	state, err := common.GetClusterState(bucket)
 	if err != nil {
 		return
