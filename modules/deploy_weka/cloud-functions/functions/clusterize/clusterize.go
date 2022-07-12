@@ -19,7 +19,7 @@ func getAllBackendsIps(project, zone, clusterName string) (backendsIps []string)
 	return
 }
 
-func generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, instanceNames, bunchUrl string) (clusterizeScript string) {
+func generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, instanceNames, clusterizeFinalizationUrl string) (clusterizeScript string) {
 	log.Info().Msg("Generating clusterization scrtipt")
 	creds, err := common.GetUsernameAndPassword(usernameId, passwordId)
 	if err != nil {
@@ -41,7 +41,7 @@ func generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, cluster
 	ADMIN_USERNAME=%s
 	ADMIN_PASSWORD=%s
 	INSTANCE_NAMES="%s"
-	BUNCH_URL=%s
+	CLUSTERIZE_FINALIZATION_URL=%s
 
 	cluster_creation_str="weka cluster create $INSTANCE_NAMES"
 	cluster_creation_str="$cluster_creation_str --host-ips "
@@ -83,15 +83,15 @@ func generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, cluster
 	weka cluster start-io
 	echo "completed successfully" > /tmp/weka_clusterization_completion_validation
 
-	curl $BUNCH_URL -H "Authorization:bearer $(gcloud auth print-identity-token)"
+	curl $CLUSTERIZE_FINALIZATION_URL -H "Authorization:bearer $(gcloud auth print-identity-token)"
 	`
 	ips := fmt.Sprintf("(%s)", strings.Join(getAllBackendsIps(project, zone, clusterName), " "))
 	log.Info().Msgf("Formatting clusterization script template")
-	clusterizeScript = fmt.Sprintf(dedent.Dedent(clusterizeScriptTemplate), ips, hostsNum, nicsNum, gws, clusterName, nvmesMumber, creds.Username, creds.Password, instanceNames, bunchUrl)
+	clusterizeScript = fmt.Sprintf(dedent.Dedent(clusterizeScriptTemplate), ips, hostsNum, nicsNum, gws, clusterName, nvmesMumber, creds.Username, creds.Password, instanceNames, clusterizeFinalizationUrl)
 	return
 }
 
-func Clusterize(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, bucket, instanceName, bunchUrl string) (clusterizeScript string) {
+func Clusterize(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, bucket, instanceName, clusterizeFinalizationUrl string) (clusterizeScript string) {
 	instancesNames, err := common.AddInstanceToStateInstances(bucket, instanceName)
 	if err != nil {
 		return
@@ -117,7 +117,7 @@ func Clusterize(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber,
 
 	if len(instancesNames) == initialSize {
 		instancesNamesStr := strings.Join(instancesNames, " ")
-		clusterizeScript = generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, instancesNamesStr, bunchUrl)
+		clusterizeScript = generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, instancesNamesStr, clusterizeFinalizationUrl)
 	}
 
 	return

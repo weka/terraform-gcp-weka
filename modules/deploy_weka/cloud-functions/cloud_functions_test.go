@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
-	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/bunch"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/clusterize"
+	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/clusterize_finalization"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/deploy"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/fetch"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/resize"
@@ -22,7 +22,7 @@ func Test_bunch(t *testing.T) {
 	zone := "europe-west1-b"
 	instanceGroup := "weka-instance-group"
 	bucket := "weka-poc-state"
-	err := bunch.Bunch(project, zone, instanceGroup, bucket)
+	err := clusterize_finalization.ClusterizeFinalization(project, zone, instanceGroup, bucket)
 	if err != nil {
 		t.Log("bunch test passed")
 	} else {
@@ -40,12 +40,12 @@ func Test_clusterize(t *testing.T) {
 	nvmesNumber := "2"
 	usernameId := "projects/896245720241/secrets/weka-poc-username/versions/1"
 	passwordId := "projects/896245720241/secrets/weka-poc-password/versions/1"
-	bunchUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-bunch"
+	clusterizeFinalizationUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-clusterize-finalization"
 
 	bucket := "weka-poc-wekaio-rnd-state"
 	instanceName := "weka-poc-vm-test"
 
-	fmt.Printf("res:%s", clusterize.Clusterize(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesNumber, usernameId, passwordId, bucket, instanceName, bunchUrl))
+	fmt.Printf("res:%s", clusterize.Clusterize(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesNumber, usernameId, passwordId, bucket, instanceName, clusterizeFinalizationUrl))
 }
 
 func Test_fetch(t *testing.T) {
@@ -71,8 +71,8 @@ func Test_deploy(t *testing.T) {
 	usernameId := "projects/896245720241/secrets/weka-poc-username/versions/1"
 	passwordId := "projects/896245720241/secrets/weka-poc-password/versions/1"
 	tokenId := "projects/896245720241/secrets/weka-poc-token/versions/1"
-	finalizeUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-finalize"
-	bashScript, err := deploy.GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, finalizeUrl)
+	joinFinalizationUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-join-finalization"
+	bashScript, err := deploy.GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, joinFinalizationUrl)
 	if err != nil {
 		t.Logf("Generating join scripts failed: %s", err)
 		return
@@ -87,7 +87,7 @@ func Test_deploy(t *testing.T) {
 	installUrl := fmt.Sprintf("https://%s@get.weka.io/dist/v1/install/%s/%s", token, version, version)
 	clusterizeUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-clusterize"
 
-	bashScript, err = deploy.GetDeployScript(project, zone, instanceGroup, usernameId, passwordId, tokenId, bucket, installUrl, clusterizeUrl, finalizeUrl)
+	bashScript, err = deploy.GetDeployScript(project, zone, instanceGroup, usernameId, passwordId, tokenId, bucket, installUrl, clusterizeUrl, joinFinalizationUrl)
 	if err != nil {
 		t.Logf("Generating deploy scripts failed: %s", err)
 	} else {

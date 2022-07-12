@@ -47,7 +47,7 @@ resource "google_cloudfunctions_function" "deploy_function" {
     BUCKET : google_storage_bucket.state_bucket.name
     INSTALL_URL: "https://$TOKEN@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}"
     CLUSTERIZE_URL:google_cloudfunctions_function.clusterize_function.https_trigger_url
-    FINALIZE_URL:google_cloudfunctions_function.finalize_function.https_trigger_url
+    JOIN_FINALIZATION_URL:google_cloudfunctions_function.join_finalization_function.https_trigger_url
   }
   service_account_email = var.sa_email
   depends_on = [google_project_service.project-function-api]
@@ -205,7 +205,7 @@ resource "google_cloudfunctions_function" "clusterize_function" {
     USER_NAME_ID: google_secret_manager_secret_version.user_secret_key.id
     PASSWORD_ID: google_secret_manager_secret_version.password_secret_key.id
     BUCKET: google_storage_bucket.state_bucket.name
-    BUNCH_URL: google_cloudfunctions_function.bunch_function.https_trigger_url
+    CLUSTERIZE_FINALIZATION_URL: google_cloudfunctions_function.clusterize_finalization_function.https_trigger_url
   }
   service_account_email = var.sa_email
 }
@@ -276,10 +276,10 @@ resource "google_cloudfunctions_function_iam_member" "transient_invoker" {
   member = "allAuthenticatedUsers"
 }
 
-# ======================== bunch ============================
-resource "google_cloudfunctions_function" "bunch_function" {
-  name        = "${var.prefix}-${var.cluster_name}-bunch"
-  description = "bunch instances"
+# ======================== clusterize_finalization ============================
+resource "google_cloudfunctions_function" "clusterize_finalization_function" {
+  name        = "${var.prefix}-${var.cluster_name}-clusterize-finalization"
+  description = "clusterization finalization"
   runtime     = "go116"
   timeout     = 540
 
@@ -287,7 +287,7 @@ resource "google_cloudfunctions_function" "bunch_function" {
   source_archive_bucket = google_storage_bucket.cloud_functions.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
-  entry_point           = "Bunch"
+  entry_point           = "ClusterizeFinalization"
   environment_variables = {
     PROJECT: var.project
     ZONE: var.zone
@@ -298,10 +298,10 @@ resource "google_cloudfunctions_function" "bunch_function" {
 }
 
 # IAM entry for all users to invoke the function
-resource "google_cloudfunctions_function_iam_member" "bunch_invoker" {
-  project        = google_cloudfunctions_function.bunch_function.project
-  region         = google_cloudfunctions_function.bunch_function.region
-  cloud_function = google_cloudfunctions_function.bunch_function.name
+resource "google_cloudfunctions_function_iam_member" "clusterize_finalization_invoker" {
+  project        = google_cloudfunctions_function.clusterize_finalization_function.project
+  region         = google_cloudfunctions_function.clusterize_finalization_function.region
+  cloud_function = google_cloudfunctions_function.clusterize_finalization_function.name
 
   role   = "roles/cloudfunctions.invoker"
   member = "allAuthenticatedUsers"
@@ -335,10 +335,10 @@ resource "google_cloudfunctions_function_iam_member" "resize_invoker" {
   member = "allAuthenticatedUsers"
 }
 
-# ======================== finalize ============================
-resource "google_cloudfunctions_function" "finalize_function" {
-  name        = "${var.prefix}-${var.cluster_name}-finalize"
-  description = "finalize new instance join"
+# ======================== join_finalization ============================
+resource "google_cloudfunctions_function" "join_finalization_function" {
+  name        = "${var.prefix}-${var.cluster_name}-join-finalization"
+  description = "join finalization"
   runtime     = "go116"
   timeout     = 540
 
@@ -346,7 +346,7 @@ resource "google_cloudfunctions_function" "finalize_function" {
   source_archive_bucket = google_storage_bucket.cloud_functions.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
-  entry_point           = "Finalize"
+  entry_point           = "JoinFinalization"
   environment_variables = {
     PROJECT: var.project
     ZONE: var.zone
@@ -356,10 +356,10 @@ resource "google_cloudfunctions_function" "finalize_function" {
 }
 
 # IAM entry for all users to invoke the function
-resource "google_cloudfunctions_function_iam_member" "finalize_invoker" {
-  project        = google_cloudfunctions_function.finalize_function.project
-  region         = google_cloudfunctions_function.finalize_function.region
-  cloud_function = google_cloudfunctions_function.finalize_function.name
+resource "google_cloudfunctions_function_iam_member" "join_finalization_invoker" {
+  project        = google_cloudfunctions_function.join_finalization_function.project
+  region         = google_cloudfunctions_function.join_finalization_function.region
+  cloud_function = google_cloudfunctions_function.join_finalization_function.name
 
   role   = "roles/cloudfunctions.invoker"
   member = "allAuthenticatedUsers"

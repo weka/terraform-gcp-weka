@@ -6,11 +6,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
-	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/bunch"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/clusterize"
+	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/clusterize_finalization"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/deploy"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/fetch"
-	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/finalize"
+	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/join_finalization"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/resize"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/scale_down"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/scale_up"
@@ -21,19 +21,19 @@ import (
 	"strings"
 )
 
-func Bunch(w http.ResponseWriter, r *http.Request) {
+func ClusterizeFinalization(w http.ResponseWriter, r *http.Request) {
 	project := os.Getenv("PROJECT")
 	zone := os.Getenv("ZONE")
 	instanceGroup := os.Getenv("INSTANCE_GROUP")
 
 	bucket := os.Getenv("BUCKET")
 
-	err := bunch.Bunch(project, zone, instanceGroup, bucket)
+	err := clusterize_finalization.ClusterizeFinalization(project, zone, instanceGroup, bucket)
 
 	if err != nil {
 		fmt.Fprintf(w, "%s", err)
 	} else {
-		fmt.Fprintf(w, "Bunch completed successfully")
+		fmt.Fprintf(w, "ClusterizeFinalization completed successfully")
 	}
 }
 
@@ -48,7 +48,7 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 	usernameId := os.Getenv("USER_NAME_ID")
 	passwordId := os.Getenv("PASSWORD_ID")
 	bucket := os.Getenv("BUCKET")
-	bunchUrl := os.Getenv("BUNCH_URL")
+	clusterizeFinalizationUrl := os.Getenv("CLUSTERIZE_FINALIZATION_URL")
 
 	var d struct {
 		Name string `json:"name"`
@@ -58,7 +58,7 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, clusterize.Clusterize(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, bucket, d.Name, bunchUrl))
+	fmt.Fprintf(w, clusterize.Clusterize(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, bucket, d.Name, clusterizeFinalizationUrl))
 }
 
 func Fetch(w http.ResponseWriter, r *http.Request) {
@@ -86,9 +86,9 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 
 	installUrl := os.Getenv("INSTALL_URL")
 	clusterizeUrl := os.Getenv("CLUSTERIZE_URL")
-	finalizeUrl := os.Getenv("FINALIZE_URL")
+	joinFinalizationUrl := os.Getenv("JOIN_FINALIZATION_URL")
 
-	bashScript, err := deploy.GetDeployScript(project, zone, instanceGroup, usernameId, passwordId, tokenId, bucket, installUrl, clusterizeUrl, finalizeUrl)
+	bashScript, err := deploy.GetDeployScript(project, zone, instanceGroup, usernameId, passwordId, tokenId, bucket, installUrl, clusterizeUrl, joinFinalizationUrl)
 	if err != nil {
 		fmt.Fprintf(w, "%s", err)
 	} else {
@@ -198,7 +198,7 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Finalize(w http.ResponseWriter, r *http.Request) {
+func JoinFinalization(w http.ResponseWriter, r *http.Request) {
 	project := os.Getenv("PROJECT")
 	zone := os.Getenv("ZONE")
 	instanceGroup := os.Getenv("INSTANCE_GROUP")
@@ -211,11 +211,11 @@ func Finalize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := finalize.Finalize(project, zone, instanceGroup, d.Name)
+	err := join_finalization.JoinFinalization(project, zone, instanceGroup, d.Name)
 
 	if err != nil {
 		fmt.Fprintf(w, "%s", err)
 	} else {
-		fmt.Fprintf(w, "Finalize completed successfully")
+		fmt.Fprintf(w, "JoinFinalization completed successfully")
 	}
 }

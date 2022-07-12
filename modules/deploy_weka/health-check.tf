@@ -23,7 +23,7 @@ resource "google_compute_region_backend_service" "backend_service" {
   backend {
     group               = google_compute_instance_group.instance_group.self_link
   }
-  depends_on = [google_cloudfunctions_function.deploy_function, google_cloudfunctions_function.bunch_function]
+  depends_on = [google_cloudfunctions_function.deploy_function, google_cloudfunctions_function.clusterize_finalization_function]
 }
 
 # forwarding rule
