@@ -29,6 +29,7 @@ private_key_filename     = ".ssh/google_compute_engine"
 machine_type             = "c2-standard-8"
 bucket-location          = "EU"
 create_cloudscheduler_sa = true
+yum_repo_server          = "http://yum.weka-private.net"
 
 # Vpcs shared
 deploy_on_host_project = false

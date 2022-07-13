@@ -67,6 +67,17 @@ resource "google_compute_instance_template" "backends-template" {
 
 
   metadata_startup_script = <<-EOT
+  mkdir /tmp/yum.repos.d
+  mv /etc/yum.repos.d/*.repo /tmp/yum.repos.d/
+
+  cat >/etc/yum.repos.d/local.repo <<EOL
+  [local]
+  name=Centos Base
+  baseurl=${var.yum_repo_server}
+  enabled=1
+  gpgcheck=0
+  EOL
+
   curl https://${var.region}-${var.project}.cloudfunctions.net/${var.prefix}-${var.cluster_name}-deploy -H "Authorization:bearer $(gcloud auth print-identity-token)" > /tmp/deploy.sh
   chmod +x /tmp/deploy.sh
   /tmp/deploy.sh

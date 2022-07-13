@@ -118,3 +118,8 @@ variable "create_cloudscheduler_sa" {
   type = bool
   description = "should or not crate gcp cloudscheduler sa"
 }
+
+variable "yum_repo_server" {
+  type = string
+  description = "yum repo server address"
+}
