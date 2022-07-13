@@ -94,19 +94,15 @@ func generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, cluster
 func Clusterize(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, bucket, instanceName, clusterizeFinalizationUrl string) (clusterizeScript string) {
 	instancesNames, err := common.AddInstanceToStateInstances(bucket, instanceName)
 	if err != nil {
+		clusterizeScript = dedent.Dedent(`
+		#!/bin/bash
+		shutdown -P
+		`)
 		return
 	}
 
 	initialSize, err := strconv.Atoi(hostsNum)
 	if err != nil {
-		return
-	}
-
-	if len(instancesNames) > initialSize {
-		clusterizeScript = dedent.Dedent(`
-		#!/bin/bash
-		shutdown -P
-		`)
 		return
 	}
 
