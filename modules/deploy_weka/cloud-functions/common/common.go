@@ -297,6 +297,11 @@ func addInstanceToStateInstances(client *storage.Client, ctx context.Context, bu
 	if err != nil {
 		return
 	}
+	if len(state.Instances) == state.InitialSize {
+		//This might happen if someone increases the desired number before the clusterization id done
+		err = errors.New(" number of instances is already the initial size, not adding instance to state instances list")
+		return
+	}
 	state.Instances = append(state.Instances, newInstance)
 
 	err = WriteState(stateHandler, ctx, state)
@@ -322,7 +327,7 @@ func AddInstanceToStateInstances(bucket, newInstance string) (instancesNames []s
 	}
 
 	instancesNames, err = addInstanceToStateInstances(client, ctx, bucket, newInstance)
-	err = Unlock(client, ctx, bucket, id) // we always want to unlock
+	Unlock(client, ctx, bucket, id) // we always want to unlock
 
 	return
 }
