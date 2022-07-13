@@ -82,7 +82,7 @@ module "deploy_weka" {
   zone                 = var.zone
   cluster_size         = var.cluster_size
   gateway_address_list = module.setup_network.output-gateway-address
-  get_weka_io_token    = var.get_weka_io_token
+  install_url          = var.install_url
   machine_type         = var.machine_type
   nvmes_number         = var.nvmes_number
   username             = var.username
