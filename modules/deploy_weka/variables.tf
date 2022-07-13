@@ -66,9 +66,9 @@ variable "username" {
   description = "username for login "
 }
 
-variable "get_weka_io_token" {
+variable "install_url" {
   type        = string
-  description = "get.weka.io token for downloading weka"
+  description = "path to weka installation tar object"
 }
 
 variable "weka_version" {
