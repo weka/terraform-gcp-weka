@@ -93,6 +93,7 @@ module "deploy_weka" {
   vpc_connector        = module.setup_network.output-vpc-connector-name
   sa_email             = module.create_service_account.outputs-service-account-email
   create_cloudscheduler_sa = var.create_cloudscheduler_sa
+  yum_repo_server      = var.yum_repo_server
 
   providers = {
     google = google.deployment

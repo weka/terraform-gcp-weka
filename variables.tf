@@ -171,3 +171,8 @@ variable "create_shared_vpc" {
   type = bool
   description = "should or not create vpc sharing"
 }
+
+variable "yum_repo_server" {
+  type = string
+  description = "yum repo server address"
+}
