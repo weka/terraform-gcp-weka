@@ -47,7 +47,7 @@ nvmes_number = 2
 machine_type = "c2-standard-8"
 weka_username  = ""
 bucket-location = "EU"
-yum_repo_server = "http://yum.weka-private.net"
+yum_repo_server = "http://yum.weka.private.net"
 
 
 # Vpcs shared

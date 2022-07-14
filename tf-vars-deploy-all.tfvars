@@ -28,7 +28,7 @@ nvmes_number             = 2
 machine_type             = "c2-standard-8"
 bucket-location          = "EU"
 create_cloudscheduler_sa = true
-yum_repo_server          = "http://yum.weka-private.net"
+yum_repo_server          = "http://yum.weka.private.net"
 
 # Vpcs shared
 deploy_on_host_project = false
