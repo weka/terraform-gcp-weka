@@ -1,15 +1,3 @@
-# ======================== ssh-key ============================
-resource "tls_private_key" "ssh" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
-}
-
-resource "local_file" "ssh_private_key_pem" {
-  content         = tls_private_key.ssh.private_key_pem
-  filename        = var.private_key_filename
-  file_permission = "0600"
-}
-
 # ======================== instances ============================
 
 data "google_compute_image" "centos_7" {
@@ -36,15 +24,9 @@ resource "google_compute_instance_template" "backends-template" {
     boot         = true
   }
 
-  # nic with public ip
-  network_interface {
-    subnetwork = "https://www.googleapis.com/compute/v1/projects/${var.project}/regions/${var.region}/subnetworks/${var.subnets_name[0]}"
-    access_config {}
-  }
-
   # nics with private ip
   dynamic "network_interface" {
-    for_each = range(1, var.nics_number)
+    for_each = range(0, var.nics_number)
      content {
       subnetwork = "https://www.googleapis.com/compute/v1/projects/${var.project}/regions/${var.region}/subnetworks/${var.subnets_name[network_interface.value]}"
     }
@@ -60,11 +42,6 @@ resource "google_compute_instance_template" "backends-template" {
       disk_size_gb = 375
     }
   }
-
-  metadata = {
-    ssh-keys = "${var.username}:${tls_private_key.ssh.public_key_openssh}"
-  }
-
 
   metadata_startup_script = <<-EOT
   mkdir /tmp/yum.repos.d
