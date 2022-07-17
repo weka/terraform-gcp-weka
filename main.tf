@@ -78,7 +78,6 @@ module "deploy_weka" {
   region               = var.region
   subnets_name         = module.setup_network.output-subnetwork-name
   subnets_range        = module.setup_network.output-subnets-range
-  private_key_filename = var.private_key_filename
   zone                 = var.zone
   cluster_size         = var.cluster_size
   gateway_address_list = module.setup_network.output-gateway-address

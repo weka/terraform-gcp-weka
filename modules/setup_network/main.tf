@@ -50,6 +50,7 @@ resource "google_compute_subnetwork" "subnetwork" {
   ip_cidr_range = var.subnets-cidr-range[count.index]
   region        = var.region
   network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[count.index].name : var.vpcs[count.index]
+  private_ip_google_access = true
 
 }
 
@@ -64,18 +65,6 @@ resource "google_compute_network_peering" "peering" {
 }
 
 # ========================= sg =================================
-resource "google_compute_firewall" "sg" {
-  count         = length(var.vpcs) == 0 ? length(google_compute_network.vpc_network) : length(var.vpcs)
-  name          = "${var.prefix}-sg-ssh-${count.index}"
-  network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[count.index].name : "projects/test-tf-vars/global/networks/${var.vpcs[count.index]}"
-  source_ranges = ["0.0.0.0/0"]
-  allow {
-    protocol = "tcp"
-    ports    = ["22"]
-  }
-  source_tags = ["ssh"]
-}
-
 resource "google_compute_firewall" "sg_private" {
   count         = length(var.vpcs) == 0 ? length(google_compute_network.vpc_network) : length(var.vpcs)
   name          = "${var.prefix}-sg-all-${count.index}"

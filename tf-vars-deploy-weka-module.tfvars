@@ -44,7 +44,6 @@ weka_version = "3.14.0.50-gcp-beta"
 install_url  = "gs://weka-installation/weka-3.14.0.50-gcp-beta.tar"
 cluster_size = 5
 nvmes_number = 2
-private_key_filename = ".ssh/google_compute_engine"
 machine_type = "c2-standard-8"
 weka_username  = ""
 bucket-location = "EU"

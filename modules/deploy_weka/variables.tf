@@ -41,11 +41,6 @@ variable "zone" {
   description = "zone name"
 }
 
-variable "private_key_filename" {
-  type        = string
-  description = "local private_key filename"
-}
-
 variable "machine_type" {
   type        = string
   description = "weka cluster backends machines type"
