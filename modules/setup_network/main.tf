@@ -76,6 +76,18 @@ resource "google_compute_network_peering" "peering" {
 }
 
 # ========================= sg =================================
+resource "google_compute_firewall" "sg_public_ssh" {
+  count         = var.private_network ? 0 : local.vpc_length
+  name          = "${var.prefix}-sg-ssh-${count.index}"
+  network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[count.index].name : "projects/test-tf-vars/global/networks/${var.vpcs[count.index]}"
+  source_ranges = var.sg_public_ssh_cidr_range
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+  source_tags = ["ssh"]
+}
+
 resource "google_compute_firewall" "sg_private" {
   count         = length(var.vpcs) == 0 ? length(google_compute_network.vpc_network) : length(var.vpcs)
   name          = "${var.prefix}-sg-all-${count.index}"

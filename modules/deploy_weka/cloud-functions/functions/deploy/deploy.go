@@ -1,11 +1,14 @@
 package deploy
 
 import (
+	secretmanager "cloud.google.com/go/secretmanager/apiv1"
+	"context"
 	"errors"
 	"fmt"
 	"github.com/lithammer/dedent"
 	"github.com/rs/zerolog/log"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
+	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 	"math/rand"
 	"os"
 	"strings"
@@ -32,6 +35,22 @@ func getBackendCoreCounts() BackendCoreCounts {
 		"c2-standard-8":  BackendCoreCount{total: 3, frontend: 1, drive: 1},
 	}
 	return backendCoreCounts
+}
+
+func getToken(tokenId string) (token string, err error) {
+	ctx := context.Background()
+	client, err := secretmanager.NewClient(ctx)
+	if err != nil {
+		return
+	}
+	defer client.Close()
+
+	res, err := client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{Name: tokenId})
+	if err != nil {
+		return
+	}
+	token = string(res.Payload.Data)
+	return
 }
 
 func GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, joinFinalizationUrl string) (bashScript string, err error) {
@@ -161,38 +180,79 @@ func GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, joinFin
 	return
 }
 
-func GetDeployScript(project, zone, instanceGroup, usernameId, passwordId, bucket, installUrl, clusterizeUrl, joinFinalizationUrl string) (bashScript string, err error) {
+func GetDeployScript(project, zone, instanceGroup, usernameId, passwordId, tokenId, bucket, installUrl, clusterizeUrl, joinFinalizationUrl string) (bashScript string, err error) {
 	state, err := common.GetClusterState(bucket)
 	if err != nil {
 		return
 	}
 	initialSize := state.InitialSize
-	split := strings.Split(installUrl, "/")
-	tarName := split[len(split)-1]
-	packageName := strings.TrimSuffix(tarName, ".tar")
-
-	installTemplate := `
-	#!/bin/bash
-	set -ex
-	HOSTS_NUM=%d
-	INSTALL_URL=%s
-	TAR_NAME=%s
-	PACKAGE_NAME=%s
-	CLUSTERIZE_URL=%s
-
-	gsutil cp $INSTALL_URL /tmp
-	cd /tmp
-	tar -xvf $TAR_NAME
-	cd $PACKAGE_NAME
-	./install.sh
-
-	curl $CLUSTERIZE_URL -H "Authorization:bearer $(gcloud auth print-identity-token)" -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}" > /tmp/clusterize.sh
-	chmod +x /tmp/clusterize.sh
-	/tmp/clusterize.sh
-	`
-
 	if !state.Clusterized {
-		bashScript = fmt.Sprintf(installTemplate, initialSize, installUrl, tarName, packageName, clusterizeUrl)
+		if strings.HasSuffix(installUrl, ".tar") {
+			split := strings.Split(installUrl, "/")
+			tarName := split[len(split)-1]
+			packageName := strings.TrimSuffix(tarName, ".tar")
+			installTemplate := `
+			#!/bin/bash
+			set -ex
+			HOSTS_NUM=%d
+			INSTALL_URL=%s
+			TAR_NAME=%s
+			PACKAGE_NAME=%s
+			CLUSTERIZE_URL=%s
+
+			gsutil cp $INSTALL_URL /tmp
+			cd /tmp
+			tar -xvf $TAR_NAME
+			cd $PACKAGE_NAME
+			./install.sh
+
+			curl $CLUSTERIZE_URL -H "Authorization:bearer $(gcloud auth print-identity-token)" -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}" > /tmp/clusterize.sh
+			chmod +x /tmp/clusterize.sh
+			/tmp/clusterize.sh
+			`
+			bashScript = fmt.Sprintf(installTemplate, initialSize, installUrl, tarName, packageName, clusterizeUrl)
+
+		} else {
+			token, err2 := getToken(tokenId)
+			if err2 != nil {
+				err = err2
+				return
+			}
+
+			installTemplate := `
+			#!/bin/bash
+			set -ex
+			HOSTS_NUM=%d
+			TOKEN=%s
+			INSTALL_URL=%s
+			CLUSTERIZE_URL=%s
+
+			# https://gist.github.com/fungusakafungus/1026804
+			function retry {
+					local retry_max=$1
+					local retry_sleep=$2
+					shift 2
+					local count=$retry_max
+					while [ $count -gt 0 ]; do
+							"$@" && break
+							count=$(($count - 1))
+							sleep $retry_sleep
+					done
+					[ $count -eq 0 ] && {
+							echo "Retry failed [$retry_max]: $@"
+							return 1
+					}
+					return 0
+			}
+
+			retry 300 2 curl --fail --max-time 10 $INSTALL_URL | sh
+
+			curl $CLUSTERIZE_URL -H "Authorization:bearer $(gcloud auth print-identity-token)" -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}" > /tmp/clusterize.sh
+			chmod +x /tmp/clusterize.sh
+			/tmp/clusterize.sh
+			`
+			bashScript = fmt.Sprintf(installTemplate, initialSize, token, installUrl, clusterizeUrl)
+		}
 	} else {
 		bashScript, err = GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, joinFinalizationUrl)
 		if err != nil {

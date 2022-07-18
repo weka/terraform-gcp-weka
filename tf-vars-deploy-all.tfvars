@@ -5,7 +5,8 @@ set_peering          = true
 subnets              = []
 vpc_connector_range  = "10.8.0.0/28"
 create_vpc_connector = true
-
+private_network      = false
+sg_public_ssh_cidr_range = ["0.0.0.0/0"]
 
 ### Mandatory vars ###
 nics_number    = 4
@@ -20,13 +21,13 @@ sa_name        = "deploy-sa"
 ### Deploy weka module ###
 username                 = "weka"
 weka_version             = "3.14.0.50-gcp-beta"
-install_url              = "gs://weka-installation/weka-3.14.0.50-gcp-beta.tar"
+install_url              = ""
 cluster_size             = 5
 nvmes_number             = 2
 machine_type             = "c2-standard-8"
 bucket-location          = "EU"
 create_cloudscheduler_sa = true
-yum_repo_server          = "http://yum.weka.private.net"
+yum_repo_server          = ""
 
 # Vpcs shared
 service_project        = "wekaio-rnd"

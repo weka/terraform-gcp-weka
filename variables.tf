@@ -18,6 +18,16 @@ variable "username" {
   description = "username for login "
 }
 
+variable "private_network" {
+  type        = bool
+  description = "deploy weka in private network"
+}
+
+variable "get_weka_io_token" {
+  type        = string
+  description = "get.weka.io token for downloading weka"
+}
+
 variable "install_url" {
   type        = string
   description = "path to weka installation tar object"
@@ -190,4 +200,9 @@ variable "project_image" {
   type = string
   default = "centos-cloud"
   description = "The project in which the resource belongs"
+}
+
+variable "sg_public_ssh_cidr_range" {
+  type        = list(string)
+  description = "list of ranges to allow ssh on public deployment"
 }

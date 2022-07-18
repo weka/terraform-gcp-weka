@@ -70,6 +70,7 @@ func Test_deploy(t *testing.T) {
 	instanceGroup := "weka-instance-group"
 	usernameId := "projects/896245720241/secrets/weka-poc-username/versions/1"
 	passwordId := "projects/896245720241/secrets/weka-poc-password/versions/1"
+	tokenId := "projects/896245720241/secrets/weka-poc-token/versions/1
 	joinFinalizationUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-join-finalization"
 	bashScript, err := deploy.GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, joinFinalizationUrl)
 	if err != nil {
@@ -86,7 +87,7 @@ func Test_deploy(t *testing.T) {
 	installUrl := fmt.Sprintf("https://%s@get.weka.io/dist/v1/install/%s/%s", token, version, version)
 	clusterizeUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-clusterize"
 
-	bashScript, err = deploy.GetDeployScript(project, zone, instanceGroup, usernameId, passwordId, bucket, installUrl, clusterizeUrl, joinFinalizationUrl)
+	bashScript, err = deploy.GetDeployScript(project, zone, instanceGroup, usernameId, passwordId, tokenId, bucket, installUrl, clusterizeUrl, joinFinalizationUrl)
 	if err != nil {
 		t.Logf("Generating deploy scripts failed: %s", err)
 	} else {
