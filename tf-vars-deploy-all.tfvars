@@ -36,3 +36,10 @@ service_project        = "wekaio-rnd"
 host_project           = "test-tf-vars"
 shared_vpcs            = ["denise-test-vpc-shard-1", "denise-test-vpc-shard-2"]
 create_shared_vpc      = false
+
+### Centos local repo
+create_local_repo       = false
+family_image            = "centos-7"
+project_image           = "centos-cloud"
+repo_public_cidr_range  = "10.26.2.0/24"
+repo_private_cidr_range = "10.26.1.0/24"

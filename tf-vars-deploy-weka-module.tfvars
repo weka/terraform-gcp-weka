@@ -55,3 +55,11 @@ deploy_on_host_project = false
 service_project        = "test-tf-vars"
 host_project           = "wekaio-rnd"
 shared_vpcs            = ["denise-test-vpc-shard-1", "denise-test-vpc-shard-2"]
+
+
+### Centos local repo
+create_local_repo       = true
+family_image            = "centos-7"
+project_image           = "centos-cloud"
+repo_public_cidr_range  = "10.26.2.0/24"
+repo_private_cidr_range = "10.26.1.0/24"

@@ -170,3 +170,32 @@ variable "yum_repo_server" {
   type = string
   description = "yum repo server address"
 }
+
+variable "repo_public_cidr_range" {
+  type        = string
+  description = "Public range for local repo"
+  default     = ""
+}
+
+variable "repo_private_cidr_range" {
+  type = string
+  description = "Private range for local repo"
+  default = ""
+}
+
+variable "create_local_repo" {
+  type = bool
+  description = "create a local centos repo for private network"
+}
+
+variable "family_image" {
+  type = string
+  default = "centos-7"
+  description = "The family name of the image"
+}
+
+variable "project_image" {
+  type = string
+  default = "centos-cloud"
+  description = "The project in which the resource belongs"
+}
