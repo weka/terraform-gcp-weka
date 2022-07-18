@@ -11,7 +11,6 @@ vpc_connector_name   = ""
 ### Mandatory vars ###
 nics_number    = 4
 project        = "wekaio-rnd"
-project_number = "896245720241"
 region         = "europe-west1"
 zone           = "europe-west1-b"
 prefix         = "weka"

@@ -90,7 +90,6 @@ module "deploy_weka" {
   source               = "./modules/deploy_weka"
   cluster_name         = var.cluster_name
   project              = var.project
-  project_number       = var.project_number
   nics_number          = var.nics_number
   vpcs                 = module.setup_network.output-vpcs-names
   prefix               = var.prefix

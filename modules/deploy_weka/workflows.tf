@@ -4,13 +4,16 @@ resource "google_project_service" "workflows" {
   disable_dependent_services=false
 }
 
+data "google_project" "project" {
+}
+
 resource "google_project_iam_binding" "project" {
   count   = var.create_cloudscheduler_sa ? 1 : 0
   project = var.project
   role    = "roles/cloudscheduler.serviceAgent"
 
   members = [
-    "serviceAccount:service-${var.project_number}@gcp-sa-cloudscheduler.iam.gserviceaccount.com"
+    "serviceAccount:service-${data.google_project.project.number}@gcp-sa-cloudscheduler.iam.gserviceaccount.com"
   ]
 }
 
