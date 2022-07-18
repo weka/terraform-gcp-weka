@@ -3,15 +3,15 @@ output "output-vpcs-names" {
 }
 
 output "output-gateway-address" {
-  value =  length(var.subnets) == 0 ? [for g in google_compute_subnetwork.subnetwork: g.gateway_address ] : [ for n in var.subnets : n["gateway-address"]]
+  value =  length(var.subnets) == 0 ? [for g in google_compute_subnetwork.subnetwork: g.gateway_address ] : [ for g in data.google_compute_subnetwork.subnets_list_ids: g.gateway_address ]
 }
 
 output "output-subnetwork-name" {
-  value = length(var.subnets) == 0 ? [ for n in google_compute_subnetwork.subnetwork: n.name ] : [for k,v  in var.subnets: k ]
+  value = length(var.subnets) == 0 ? [for s in google_compute_subnetwork.subnetwork: s.name ] : [for s in data.google_compute_subnetwork.subnets_list_ids: s.name ]
 }
 
 output "output-subnets-range" {
-  value = length(var.subnets) == 0 ? var.subnets-cidr-range : [ for s in var.subnets: s["cidr_range"] ]
+  value = length(var.subnets) == 0 ? var.subnets-cidr-range : [ for i in data.google_compute_subnetwork.subnets_list_ids: i.ip_cidr_range ]
 }
 
 output "output-vpc-connector-name" {

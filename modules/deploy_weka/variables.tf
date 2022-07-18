@@ -23,14 +23,6 @@ variable "prefix" {
   description = "prefix for all resources"
 }
 
-variable "subnets" {
-  type              = map(object({
-    gateway-address = string
-    vpc-name        = string
-    cidr_range       = string
-  }))
-}
-
 variable "zone" {
   type        = string
   description = "zone name"
@@ -76,21 +68,12 @@ variable "cluster_size" {
   description = "weka cluster size"
 }
 
-variable "gateway_address_list" {
-  type = list(string)
-  description = "gateway ips list"
-}
-
 variable "bucket-location" {
   type = string
   description = "bucket function location"
 }
 
 variable "subnets_name" {
-  type = list(string)
-}
-
-variable "subnets_range" {
   type = list(string)
 }
 

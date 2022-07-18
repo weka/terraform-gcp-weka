@@ -5,6 +5,16 @@ data "google_compute_image" "centos_7" {
   project = "centos-cloud"
 }
 
+data "google_compute_network" "vpc_list_ids"{
+  count = length(var.vpcs)
+  name  = var.vpcs[count.index]
+}
+
+data "google_compute_subnetwork" "subnets_list_ids" {
+  count  = length(var.subnets_name)
+  name   = var.subnets_name[count.index]
+}
+
 resource "google_compute_instance_template" "backends-template" {
   name           = "${var.prefix}-${var.cluster_name}-backends"
   machine_type   = var.machine_type
@@ -28,7 +38,7 @@ resource "google_compute_instance_template" "backends-template" {
   dynamic "network_interface" {
     for_each = range(0, var.nics_number)
      content {
-      subnetwork = "https://www.googleapis.com/compute/v1/projects/${var.project}/regions/${var.region}/subnetworks/${var.subnets_name[network_interface.value]}"
+      subnetwork = data.google_compute_subnetwork.subnets_list_ids[network_interface.value].self_link
     }
  }
 
@@ -77,16 +87,12 @@ resource "random_password" "password" {
 resource "google_compute_instance_group" "instance_group" {
   name = "${var.prefix}-${var.cluster_name}-instance-group"
   zone = var.zone
-  network = "https://www.googleapis.com/compute/v1/projects/${var.project}/global/networks/${var.vpcs[0]}"
+  network = data.google_compute_network.vpc_list_ids[0].self_link
+  depends_on = [google_compute_region_health_check.health_check]
 }
 
 
 # ======================== install-weka ============================
-
-locals {
-  gws_addresses = format("(%s)", join(" ", [for i in range(var.nics_number) : var.gateway_address_list[i] ]))
-}
-
 resource "null_resource" "write_weka_password_to_local_file" {
   provisioner "local-exec" {
     command = <<-EOT

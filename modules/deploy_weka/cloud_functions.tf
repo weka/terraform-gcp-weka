@@ -39,8 +39,8 @@ resource "google_cloudfunctions_function" "deploy_function" {
     PROJECT: var.project
     ZONE: var.zone
     INSTANCE_GROUP: google_compute_instance_group.instance_group.name
-    GATEWAYS: local.gws_addresses
-    SUBNETS: format("(%s)", join(" ", var.subnets_range ))
+    GATEWAYS: format("(%s)", join(" ", [for s in data.google_compute_subnetwork.subnets_list_ids: s.gateway_address] ))
+    SUBNETS: format("(%s)", join(" ", [for s in data.google_compute_subnetwork.subnets_list_ids: s.ip_cidr_range] ))
     USER_NAME_ID: google_secret_manager_secret_version.user_secret_key.id
     PASSWORD_ID: google_secret_manager_secret_version.password_secret_key.id
     BUCKET : google_storage_bucket.state_bucket.name
@@ -191,7 +191,7 @@ resource "google_cloudfunctions_function" "clusterize_function" {
     ZONE: var.zone
     HOSTS_NUM: var.cluster_size
     NICS_NUM: var.nics_number
-    GWS: local.gws_addresses
+    GWS: format("(%s)", join(" ", [for s in data.google_compute_subnetwork.subnets_list_ids: s.gateway_address] ))
     CLUSTER_NAME: var.cluster_name
     NVMES_NUM: var.nvmes_number
     USER_NAME_ID: google_secret_manager_secret_version.user_secret_key.id

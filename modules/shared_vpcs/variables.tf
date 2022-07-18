@@ -31,3 +31,9 @@ variable "service_project" {
   type        = string
   description = "project id of service project"
 }
+
+variable "sa_email" {
+  type = string
+  description = "service account email"
+  default = ""
+}

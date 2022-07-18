@@ -2,10 +2,9 @@
 vpcs                 = []
 subnets-cidr-range   = ["10.0.0.0/24", "10.1.0.0/24", "10.2.0.0/24", "10.3.0.0/24"]
 set_peering          = true
-subnets              = {}
+subnets              = []
 vpc_connector_range  = "10.8.0.0/28"
 create_vpc_connector = true
-vpc_connector_name   = ""
 
 
 ### Mandatory vars ###
@@ -30,7 +29,6 @@ create_cloudscheduler_sa = true
 yum_repo_server          = "http://yum.weka.private.net"
 
 # Vpcs shared
-deploy_on_host_project = false
 service_project        = "wekaio-rnd"
 host_project           = "test-tf-vars"
 shared_vpcs            = ["denise-test-vpc-shard-1", "denise-test-vpc-shard-2"]
