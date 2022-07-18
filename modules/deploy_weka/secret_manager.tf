@@ -36,3 +36,20 @@ resource "google_secret_manager_secret_version" "user_secret_key" {
     ignore_changes = [secret_data]
   }
 }
+
+resource "google_secret_manager_secret" "secret_token" {
+  secret_id = "${var.prefix}-${var.cluster_name}-token"
+  replication {
+    automatic = true
+  }
+  depends_on = [google_project_service.secret_manager]
+}
+
+resource "google_secret_manager_secret_version" "token_secret_key" {
+  secret      = google_secret_manager_secret.secret_token.id
+  secret_data = var.get_weka_io_token
+
+  lifecycle {
+    ignore_changes = [secret_data]
+  }
+}

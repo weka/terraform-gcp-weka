@@ -61,3 +61,13 @@ variable "vpc_connector_name" {
   description = ""
   default = ""
 }
+
+variable "private_network" {
+  type        = bool
+  description = "deploy weka in private network"
+}
+
+variable "sg_public_ssh_cidr_range" {
+  type        = list(string)
+  description = "list of ranges to allow ssh on public deployment"
+}

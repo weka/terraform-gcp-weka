@@ -80,6 +80,7 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 	instanceGroup := os.Getenv("INSTANCE_GROUP")
 	usernameId := os.Getenv("USER_NAME_ID")
 	passwordId := os.Getenv("PASSWORD_ID")
+	tokenId := os.Getenv("TOKEN_ID")
 
 	bucket := os.Getenv("BUCKET")
 
@@ -87,7 +88,7 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 	clusterizeUrl := os.Getenv("CLUSTERIZE_URL")
 	joinFinalizationUrl := os.Getenv("JOIN_FINALIZATION_URL")
 
-	bashScript, err := deploy.GetDeployScript(project, zone, instanceGroup, usernameId, passwordId, bucket, installUrl, clusterizeUrl, joinFinalizationUrl)
+	bashScript, err := deploy.GetDeployScript(project, zone, instanceGroup, usernameId, passwordId, tokenId, bucket, installUrl, clusterizeUrl, joinFinalizationUrl)
 	if err != nil {
 		fmt.Fprintf(w, "%s", err)
 	} else {

@@ -23,6 +23,8 @@ module "setup_network" {
   create_vpc_connector = var.create_vpc_connector
   vpc_connector_range  = var.vpc_connector_range
   vpc_connector_name   = var.vpc_connector_name
+  private_network      = var.private_network
+  sg_public_ssh_cidr_range = var.sg_public_ssh_cidr_range
   providers = {
     google = google.deployment
   }
@@ -97,10 +99,12 @@ module "deploy_weka" {
   subnets_name         = module.setup_network.output-subnetwork-name
   zone                 = var.zone
   cluster_size         = var.cluster_size
+  get_weka_io_token    = var.get_weka_io_token
   install_url          = var.install_url
   machine_type         = var.machine_type
   nvmes_number         = var.nvmes_number
   username             = var.username
+  private_network      = var.private_network
   weka_username        = var.weka_username
   weka_version         = var.weka_version
   bucket-location      = var.bucket-location

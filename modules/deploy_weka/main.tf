@@ -4,6 +4,9 @@ data "google_compute_image" "centos_7" {
   family  = "centos-7"
   project = "centos-cloud"
 }
+locals {
+  private_nic_first_index = var.private_network ? 0 : 1
+}
 
 data "google_compute_network" "vpc_list_ids"{
   count = length(var.vpcs)
@@ -34,9 +37,19 @@ resource "google_compute_instance_template" "backends-template" {
     boot         = true
   }
 
-  # nics with private ip
+  # nic with public ip
   dynamic "network_interface" {
-    for_each = range(0, var.nics_number)
+    for_each = range(local.private_nic_first_index)
+    content {
+      subnetwork = "https://www.googleapis.com/compute/v1/projects/${var.project}/regions/${var.region}/subnetworks/${var.subnets_name[network_interface.value]}"
+      access_config {}
+    }
+  }
+
+
+# nics with private ip
+  dynamic "network_interface" {
+    for_each = range(local.private_nic_first_index, var.nics_number)
      content {
       subnetwork = data.google_compute_subnetwork.subnets_list_ids[network_interface.value].self_link
     }
@@ -54,16 +67,18 @@ resource "google_compute_instance_template" "backends-template" {
   }
 
   metadata_startup_script = <<-EOT
-  mkdir /tmp/yum.repos.d
-  mv /etc/yum.repos.d/*.repo /tmp/yum.repos.d/
+  if [ "${var.yum_repo_server}" ] ; then
+    mkdir /tmp/yum.repos.d
+    mv /etc/yum.repos.d/*.repo /tmp/yum.repos.d/
 
-  cat >/etc/yum.repos.d/local.repo <<EOL
+    cat >/etc/yum.repos.d/local.repo <<EOL
   [local]
   name=Centos Base
   baseurl=${var.yum_repo_server}
   enabled=1
   gpgcheck=0
   EOL
+  fi
 
   curl https://${var.region}-${var.project}.cloudfunctions.net/${var.prefix}-${var.cluster_name}-deploy -H "Authorization:bearer $(gcloud auth print-identity-token)" > /tmp/deploy.sh
   chmod +x /tmp/deploy.sh

@@ -18,13 +18,14 @@ sa_name      = "deploy-sa"
 
 ## Deploy weka module
 username                 = "weka"
+private_network          = false
 weka_version             = "3.14.0.50-gcp-beta"
-install_url              = "gs://weka-installation/weka-3.14.0.50-gcp-beta.tar"
+install_url              = ""
 cluster_size             = 5
 nvmes_number             = 2
 machine_type             = "c2-standard-8"
 bucket-location          = "EU"
-yum_repo_server          = "http://yum.weka.private.net"
+yum_repo_server          = ""
 create_cloudscheduler_sa = true
 
 

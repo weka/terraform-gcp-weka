@@ -48,6 +48,16 @@ variable "username" {
   description = "username for login "
 }
 
+variable "private_network" {
+  type        = bool
+  description = "deploy weka in private network"
+}
+
+variable "get_weka_io_token" {
+  type        = string
+  description = "get.weka.io token for downloading weka"
+}
+
 variable "install_url" {
   type        = string
   description = "path to weka installation tar object"

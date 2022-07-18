@@ -43,8 +43,9 @@ resource "google_cloudfunctions_function" "deploy_function" {
     SUBNETS: format("(%s)", join(" ", [for s in data.google_compute_subnetwork.subnets_list_ids: s.ip_cidr_range] ))
     USER_NAME_ID: google_secret_manager_secret_version.user_secret_key.id
     PASSWORD_ID: google_secret_manager_secret_version.password_secret_key.id
+    TOKEN_ID: google_secret_manager_secret_version.token_secret_key.id
     BUCKET : google_storage_bucket.state_bucket.name
-    INSTALL_URL: var.install_url
+    INSTALL_URL: var.install_url != "" ? var.install_url : "https://$TOKEN@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}"
     CLUSTERIZE_URL:google_cloudfunctions_function.clusterize_function.https_trigger_url
     JOIN_FINALIZATION_URL:google_cloudfunctions_function.join_finalization_function.https_trigger_url
   }
