@@ -1,9 +1,3 @@
-provider "google" {
-  alias   = "main"
-  project = var.project
-  region  = var.region
-}
-
 resource "google_compute_network" "vpc_network" {
   name                    = "global-${var.project}-vpc"
   auto_create_subnetworks = false
@@ -15,14 +9,15 @@ resource "google_compute_network" "vpc_network" {
 resource "google_compute_subnetwork" "public_subnet" {
   name          =  "global-public-net"
   project       = var.project
-  ip_cidr_range = var.pub_ip_cidr_range
+  ip_cidr_range = var.public_cidr_range
   network       = google_compute_network.vpc_network.self_link
   region        = var.region
 }
+
 resource "google_compute_subnetwork" "private_subnet" {
   name          =  "global-private-net"
   project       = var.project
-  ip_cidr_range = var.pri_ip_cidr_range
+  ip_cidr_range = var.private_cidr_range
   network       = google_compute_network.vpc_network.self_link
   region        = var.region
 }
@@ -43,7 +38,7 @@ resource "google_compute_firewall" "allow-internal" {
     protocol = "udp"
     ports    = ["0-65535"]
   }
-  source_ranges = [ var.pri_ip_cidr_range, var.pub_ip_cidr_range , var.vpc_range]
+  source_ranges = [ var.public_cidr_range, var.private_cidr_range , var.vpc_range]
 }
 
 resource "google_compute_firewall" "allow-http" {
@@ -81,22 +76,10 @@ resource "google_compute_firewall" "egress-firewall-rules" {
   }
 }
 
-# ======================== ssh-key ============================
-resource "tls_private_key" "ssh" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
-}
-
-resource "local_file" "ssh_private_key_pem" {
-  content         = tls_private_key.ssh.private_key_pem
-  filename        = var.private_key_filename
-  file_permission = "0600"
-}
-
 # ==================== yum repo vm ======================
 data "google_compute_image" "centos_7" {
-  family  = "centos-7"
-  project = "centos-cloud"
+  family  = var.family_image
+  project = var.project_image
 }
 
 resource "google_compute_instance" "vm-repo" {
@@ -120,35 +103,23 @@ resource "google_compute_instance" "vm-repo" {
 
     }
   }
-  metadata = {
-    ssh-keys = "${var.ssh_user}:${tls_private_key.ssh.public_key_openssh}"
-  }
+
   deletion_protection = true
-  metadata_startup_script = file("./setup_repo.sh")
-  #resource_policies = [google_compute_resource_policy.scheduling-vm.id]
-
-}
-
-resource "google_storage_bucket_object" "upload-ssh-key" {
-  name   = "weka-yum-repo-ssh-key"
-  source = var.private_key_filename
-  bucket = var.storage_bucket
-
-  depends_on = [google_compute_instance.vm-repo]
+  metadata_startup_script = file("${path.module}/setup_repo.sh")
 }
 
 data "google_compute_network" "vpcs_ids" {
-  count   = length(var.vpcs-peering)
-  name    = var.vpcs-peering[count.index]
+  count   = length(var.vpcs_peering)
+  name    = var.vpcs_peering[count.index]
   project = var.project
 }
 
 locals {
   temp = flatten([
-  for from in range(length(var.vpcs-peering)) : [
+  for from in range(length(var.vpcs_peering)) : [
   for to in range((1)) : {
     from = google_compute_network.vpc_network.name
-    to   = var.vpcs-peering[from]
+    to   = var.vpcs_peering[from]
   }
   ]
   ])
@@ -171,10 +142,10 @@ resource "google_compute_network_peering" "peering-vpc" {
 }
 
 resource "google_compute_firewall" "sg_private" {
-  count         = length(var.vpcs-peering)
-  name          = "${var.vpcs-peering[count.index]}-sg-allow-global-vpc"
-  network       = var.vpcs-peering[count.index]
-  source_ranges = [var.pub_ip_cidr_range, var.pri_ip_cidr_range]
+  count         = length(var.vpcs_peering)
+  name          = "${var.vpcs_peering[count.index]}-sg-allow-global-vpc"
+  network       = var.vpcs_peering[count.index]
+  source_ranges = [var.public_cidr_range, var.private_cidr_range]
   project = var.project
   allow {
     protocol = "all"
@@ -182,3 +153,34 @@ resource "google_compute_firewall" "sg_private" {
   source_tags = ["all"]
 }
 
+
+# =================== private DNS ==========================
+locals {
+  network_list = concat(formatlist(google_compute_network.vpc_network.id), [for v in data.google_compute_network.vpcs_ids: v.id ])
+}
+
+resource "google_dns_managed_zone" "private-zone" {
+  name        = "weka-private-zone"
+  dns_name    = "weka.private.net."
+  project     = var.project
+  description = "private dns weka.private.net"
+  visibility  = "private"
+
+  private_visibility_config {
+    dynamic "networks" {
+      for_each = local.network_list
+      content {
+        network_url = networks.value
+      }
+    }
+  }
+}
+
+resource "google_dns_record_set" "record-a" {
+  name         = "yum.${google_dns_managed_zone.private-zone.dns_name}"
+  managed_zone = google_dns_managed_zone.private-zone.name
+  project      = var.project
+  type         = "A"
+  ttl          = 120
+  rrdatas      = [google_compute_instance.vm-repo.network_interface.0.network_ip]
+}

@@ -30,6 +30,25 @@ module "setup_network" {
 }
 
 
+module "create_local_centos_repo" {
+  count              = var.create_local_repo ? 1 : 0
+  source             = "./modules/local_centos_repo"
+  project            = var.project
+  zone               = var.zone
+  region             = var.region
+  family_image       = "centos-7"
+  project_image      = "centos-cloud"
+  vpcs_peering       = module.setup_network.output-vpcs-names
+  public_cidr_range  = var.repo_public_cidr_range
+  private_cidr_range = var.repo_private_cidr_range
+  vpc_range          = "10.0.0.0/24"
+
+  providers = {
+    google = google.main
+  }
+}
+
+
 module "host_vpc_peering" {
   count                  = var.create_shared_vpc ? 1 : 0
   source                 = "./modules/shared_vpcs"
@@ -98,5 +117,5 @@ module "deploy_weka" {
     google = google.deployment
   }
 
-  depends_on = [module.create_service_account]
+  depends_on = [module.create_service_account, module.create_local_centos_repo]
 }
