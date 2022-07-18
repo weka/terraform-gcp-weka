@@ -13,9 +13,10 @@ locals {
 
 
 resource "google_project_iam_binding" "iam-binding" {
+  count   = var.deploy_on_host_project ? 0 : 1
   project = var.service_project
   role    = "roles/compute.networkAdmin"
-  members = ["serviceAccount:${var.prefix}-deploy-sa@${var.service_project}.iam.gserviceaccount.com",]
+  members = ["serviceAccount:${var.sa_email}",]
 }
 
 resource "google_compute_shared_vpc_service_project" "service" {

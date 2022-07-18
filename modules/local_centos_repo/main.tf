@@ -169,9 +169,9 @@ resource "google_dns_managed_zone" "private-zone" {
   private_visibility_config {
     dynamic "networks" {
       for_each = local.network_list
-      content {
-        network_url = networks.value
-      }
+       content {
+         network_url = networks.value
+       }
     }
   }
 }

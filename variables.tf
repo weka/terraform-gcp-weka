@@ -54,12 +54,8 @@ variable "subnets-cidr-range" {
 
 variable "subnets" {
   description = "Details of existing subnets, the key is contain subnet name"
-  type = map(object({
-    gateway-address =  string
-    vpc-name        = string
-    cidr_range      = string
-  }))
- default = {}
+  type = list(string)
+  default = []
 }
 
 variable "nvmes_number" {
@@ -116,6 +112,7 @@ variable "create_vpc_connector" {
 variable "vpc_connector_name" {
   type = string
   description = ""
+  default = ""
 }
 
 variable "sa_name" {

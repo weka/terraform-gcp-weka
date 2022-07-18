@@ -34,6 +34,17 @@ resource "google_project_service" "service-cloud-api" {
   disable_dependent_services = false
 }
 
+data "google_compute_network" "vpc_list_ids"{
+  count = length(var.vpcs)
+  name  = var.vpcs[count.index]
+}
+
+data "google_compute_subnetwork" "subnets_list_ids" {
+  count  = length(var.subnets)
+  name   = var.subnets[count.index]
+}
+
+
 resource "google_compute_network" "vpc_network" {
   count                   = length(var.vpcs) == 0 ? var.nics_number :0
   name                    = "${var.prefix}-vpc-${count.index}"
@@ -49,7 +60,7 @@ resource "google_compute_subnetwork" "subnetwork" {
   name          = "${var.prefix}-subnet-${count.index}"
   ip_cidr_range = var.subnets-cidr-range[count.index]
   region        = var.region
-  network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[count.index].name : var.vpcs[count.index]
+  network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[count.index].name : data.google_compute_network.vpc_list_ids[count.index].name
   private_ip_google_access = true
 
 }
@@ -58,8 +69,8 @@ resource "google_compute_subnetwork" "subnetwork" {
 resource "google_compute_network_peering" "peering" {
   count        = var.set_peering ? length(local.peering-list) : 0
   name         = "${var.prefix}-peering-${local.peering-list[count.index]["from"]}-${local.peering-list[count.index]["to"]}"
-  network      = length(var.vpcs) == 0 ?  google_compute_network.vpc_network[local.peering-list[count.index]["from"]].self_link : "https://www.googleapis.com/compute/v1/projects/${var.project}/global/networks/${var.vpcs[local.peering-list[count.index]["from"]]}"
-  peer_network = length(var.vpcs) == 0 ?  google_compute_network.vpc_network[local.peering-list[count.index]["to"]].self_link : "https://www.googleapis.com/compute/v1/projects/${var.project}/global/networks/${var.vpcs[local.peering-list[count.index]["to"]]}"
+  network      = length(var.vpcs) == 0 ?  google_compute_network.vpc_network[local.peering-list[count.index]["from"]].self_link : data.google_compute_network.vpc_list_ids[local.peering-list[count.index]["from"]].self_link
+  peer_network = length(var.vpcs) == 0 ?  google_compute_network.vpc_network[local.peering-list[count.index]["to"]].self_link :  data.google_compute_network.vpc_list_ids[local.peering-list[count.index]["to"]].self_link
 
   depends_on = [google_compute_subnetwork.subnetwork]
 }
@@ -68,8 +79,8 @@ resource "google_compute_network_peering" "peering" {
 resource "google_compute_firewall" "sg_private" {
   count         = length(var.vpcs) == 0 ? length(google_compute_network.vpc_network) : length(var.vpcs)
   name          = "${var.prefix}-sg-all-${count.index}"
-  network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[count.index].name :  "projects/test-tf-vars/global/networks/${var.vpcs[count.index]}"
-  source_ranges = length(var.vpcs) == 0 ? google_compute_subnetwork.subnetwork.*.ip_cidr_range : [for s in var.subnets: s.cidr_range ]
+  network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[count.index].name :  data.google_compute_network.vpc_list_ids[count.index].id
+  source_ranges = length(var.vpcs) == 0 ? google_compute_subnetwork.subnetwork.*.ip_cidr_range : data.google_compute_subnetwork.subnets_list_ids.*.ip_cidr_range
   allow {
     protocol = "all"
   }
@@ -83,7 +94,7 @@ resource "google_vpc_access_connector" "connector" {
   name          = "${var.prefix}-connector"
   ip_cidr_range = var.vpc_connector_range
   region        = var.region
-  network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[0].id : "https://www.googleapis.com/compute/v1/projects/${var.project}/global/networks/${var.vpcs[0]}"
+  network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[0].id :  data.google_compute_network.vpc_list_ids[count.index].id
 }
 
 #============== Health check ============================
@@ -91,7 +102,7 @@ resource "google_vpc_access_connector" "connector" {
 resource "google_compute_firewall" "fw_hc" {
   name          = "${var.prefix}-fw-allow-hc"
   direction     = "INGRESS"
-  network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[0].self_link : "https://www.googleapis.com/compute/v1/projects/${var.project}/global/networks/${var.vpcs[0]}"
+  network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[0].self_link : data.google_compute_network.vpc_list_ids[0].self_link
   source_ranges = ["130.211.0.0/22", "35.191.0.0/16", "35.235.240.0/20"]
   allow {
     protocol = "tcp"
@@ -99,16 +110,12 @@ resource "google_compute_firewall" "fw_hc" {
   source_tags = ["allow-health-check"]
 }
 
-locals {
-  default_subnet_range = [ for s in var.subnets: s["cidr_range"]]
-}
-
 # allow communication within the subnet
 resource "google_compute_firewall" "fw_ilb_to_backends" {
   name          = "${var.prefix}-fw-allow-ilb-to-backends"
   direction     = "INGRESS"
-  network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[0].self_link : "https://www.googleapis.com/compute/v1/projects/${var.project}/global/networks/${var.vpcs[0]}"
-  source_ranges = length(var.vpcs) == 0 ? [var.subnets-cidr-range[0]] : [local.default_subnet_range[0]]
+  network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[0].self_link :  data.google_compute_network.vpc_list_ids[0].self_link
+  source_ranges = length(var.vpcs) == 0 ? [var.subnets-cidr-range[0]] : [data.google_compute_subnetwork.subnets_list_ids[0].ip_cidr_range]
   allow {
     protocol = "tcp"
   }
