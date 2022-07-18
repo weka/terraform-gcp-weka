@@ -63,7 +63,7 @@ EOF
 }
 
 resource "google_cloud_scheduler_job" "scale_down_job" {
-  name        = "scale-down"
+  name        = "${var.prefix}-${var.cluster_name}-scale-down"
   description = "scale down job"
   schedule    = "* * * * *"
 
@@ -98,7 +98,7 @@ EOF
 }
 
 resource "google_cloud_scheduler_job" "scale_up_job" {
-  name        = "scale-up"
+  name        = "${var.prefix}-${var.cluster_name}-scale-up"
   description = "scale up job"
   schedule    = "* * * * *"
 
