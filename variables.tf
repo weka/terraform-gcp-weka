@@ -3,11 +3,6 @@ variable "project" {
   description = "project name"
 }
 
-variable "project_number" {
-  type        = string
-  description = "project number"
-}
-
 variable "region" {
   type        = string
   description = "region name"
