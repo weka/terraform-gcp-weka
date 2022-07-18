@@ -21,6 +21,7 @@ variable "nics_number" {
 variable "vpcs" {
   type       = list(string)
   description = "List of vpcs name"
+  default = []
 }
 
 variable "subnets-cidr-range" {
@@ -29,11 +30,9 @@ variable "subnets-cidr-range" {
 }
 
 variable "subnets" {
-  type              = map(object({
-    gateway-address = string
-    vpc-name        = string
-    cidr_range      = string
-  }))
+  type = list(string)
+  description = "List of subnets name"
+  default = []
 }
 
 variable "prefix" {
@@ -60,4 +59,5 @@ variable "create_vpc_connector" {
 variable "vpc_connector_name" {
   type = string
   description = ""
+  default = ""
 }

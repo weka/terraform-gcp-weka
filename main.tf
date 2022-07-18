@@ -46,6 +46,8 @@ module "create_local_centos_repo" {
   providers = {
     google = google.main
   }
+
+  depends_on = [module.setup_network]
 }
 
 
@@ -59,7 +61,6 @@ module "host_vpc_peering" {
   host_project           = var.host_project
   shared_vpcs            = var.shared_vpcs
   vpcs                   = module.setup_network.output-vpcs-names
-
   providers = {
     google = google.shared-vpc
   }
@@ -78,13 +79,12 @@ module "shared_vpc_peering" {
   host_project           = var.host_project
   shared_vpcs            = var.shared_vpcs
   vpcs                   = module.setup_network.output-vpcs-names
-
+  sa_email               = module.create_service_account.outputs-service-account-email
   providers = {
     google = google.deployment
   }
   depends_on = [module.host_vpc_peering, module.setup_network ]
 }
-
 
 module "deploy_weka" {
   source               = "./modules/deploy_weka"
@@ -95,10 +95,8 @@ module "deploy_weka" {
   prefix               = var.prefix
   region               = var.region
   subnets_name         = module.setup_network.output-subnetwork-name
-  subnets_range        = module.setup_network.output-subnets-range
   zone                 = var.zone
   cluster_size         = var.cluster_size
-  gateway_address_list = module.setup_network.output-gateway-address
   install_url          = var.install_url
   machine_type         = var.machine_type
   nvmes_number         = var.nvmes_number
@@ -106,11 +104,10 @@ module "deploy_weka" {
   weka_username        = var.weka_username
   weka_version         = var.weka_version
   bucket-location      = var.bucket-location
-  subnets              = var.subnets
   vpc_connector        = module.setup_network.output-vpc-connector-name
   sa_email             = module.create_service_account.outputs-service-account-email
-  create_cloudscheduler_sa = var.create_cloudscheduler_sa
   yum_repo_server      = var.yum_repo_server
+  create_cloudscheduler_sa = var.create_cloudscheduler_sa
 
   providers = {
     google = google.deployment
