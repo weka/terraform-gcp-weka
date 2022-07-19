@@ -88,6 +88,13 @@ resource "google_compute_firewall" "sg_private" {
 }
 
 #================ Vpc connector ==========================
+resource "google_project_service" "project-vpc" {
+  project = var.project
+  service = "vpcaccess.googleapis.com"
+  disable_on_destroy = false
+  disable_dependent_services = false
+  depends_on = [google_project_service.project-gcp-api]
+}
 
 resource "google_vpc_access_connector" "connector" {
   count         = var.create_vpc_connector ? 1 : 0
@@ -95,6 +102,8 @@ resource "google_vpc_access_connector" "connector" {
   ip_cidr_range = var.vpc_connector_range
   region        = var.region
   network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[0].id :  data.google_compute_network.vpc_list_ids[count.index].id
+
+  depends_on = [google_project_service.project-vpc]
 }
 
 #============== Health check ============================

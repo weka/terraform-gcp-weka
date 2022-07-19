@@ -159,6 +159,13 @@ locals {
   network_list = concat(formatlist(google_compute_network.vpc_network.id), [for v in data.google_compute_network.vpcs_ids: v.id ])
 }
 
+resource "google_project_service" "project-dns" {
+  project = var.project
+  service = "dns.googleapis.com"
+  disable_on_destroy = false
+  disable_dependent_services = false
+}
+
 resource "google_dns_managed_zone" "private-zone" {
   name        = "weka-private-zone"
   dns_name    = "weka.private.net."
@@ -174,6 +181,8 @@ resource "google_dns_managed_zone" "private-zone" {
        }
     }
   }
+
+  depends_on = [google_project_service.project-dns]
 }
 
 resource "google_dns_record_set" "record-a" {
