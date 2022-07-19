@@ -161,6 +161,7 @@ resource "google_cloudfunctions_function" "scale_up_function" {
     INSTANCE_BASE_NAME: "${var.prefix}-${var.cluster_name}-vm"
   }
   service_account_email = var.sa_email
+  depends_on = [google_project_service.project-function-api]
 }
 
 # IAM entry for all users to invoke the function
@@ -200,6 +201,7 @@ resource "google_cloudfunctions_function" "clusterize_function" {
     CLUSTERIZE_FINALIZATION_URL: google_cloudfunctions_function.clusterize_finalization_function.https_trigger_url
   }
   service_account_email = var.sa_email
+  depends_on = [google_project_service.project-function-api]
 }
 
 # IAM entry for all users to invoke the function
@@ -231,6 +233,7 @@ resource "google_cloudfunctions_function" "terminate_function" {
     LOAD_BALANCER_NAME: google_compute_region_backend_service.backend_service.name
   }
   service_account_email = var.sa_email
+  depends_on = [google_project_service.project-function-api]
 }
 
 # IAM entry for all users to invoke the function
@@ -256,6 +259,7 @@ resource "google_cloudfunctions_function" "transient_function" {
   trigger_http          = true
   entry_point           = "Transient"
   service_account_email = var.sa_email
+  depends_on = [google_project_service.project-function-api]
 }
 
 # IAM entry for all users to invoke the function
@@ -287,6 +291,7 @@ resource "google_cloudfunctions_function" "clusterize_finalization_function" {
     BUCKET: google_storage_bucket.state_bucket.name
   }
   service_account_email = var.sa_email
+  depends_on = [google_project_service.project-function-api]
 }
 
 # IAM entry for all users to invoke the function
@@ -315,6 +320,7 @@ resource "google_cloudfunctions_function" "resize_function" {
     BUCKET: google_storage_bucket.state_bucket.name
   }
   service_account_email = var.sa_email
+  depends_on = [google_project_service.project-function-api]
 }
 
 # IAM entry for all users to invoke the function
@@ -345,6 +351,7 @@ resource "google_cloudfunctions_function" "join_finalization_function" {
     INSTANCE_GROUP: google_compute_instance_group.instance_group.name
   }
   service_account_email = var.sa_email
+  depends_on = [google_project_service.project-function-api]
 }
 
 # IAM entry for all users to invoke the function
