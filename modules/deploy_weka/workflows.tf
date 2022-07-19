@@ -97,7 +97,7 @@ resource "google_workflows_workflow" "scale_up" {
       return: $${ScaleUpResult}
 EOF
 
-  depends_on = [google_project_service.workflows, google_cloudfunctions_function.scale_up_function, google_cloudfunctions_function.deploy_function]
+  depends_on = [google_project_service.workflows, google_cloudfunctions_function.scale_up_function, google_cloudfunctions_function.deploy_function, google_cloudfunctions_function.clusterize_function, google_cloudfunctions_function.clusterize_finalization_function]
 }
 
 resource "google_cloud_scheduler_job" "scale_up_job" {
