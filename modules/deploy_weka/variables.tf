@@ -56,11 +56,13 @@ variable "private_network" {
 variable "get_weka_io_token" {
   type        = string
   description = "get.weka.io token for downloading weka"
+  default     = ""
 }
 
 variable "install_url" {
   type        = string
   description = "path to weka installation tar object"
+  default     = ""
 }
 
 variable "weka_version" {
@@ -105,6 +107,7 @@ variable "create_cloudscheduler_sa" {
 variable "yum_repo_server" {
   type = string
   description = "yum repo server address"
+  default     = ""
 }
 
 variable "weka_image_name" {
