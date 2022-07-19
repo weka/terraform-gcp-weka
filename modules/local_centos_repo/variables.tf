@@ -39,9 +39,9 @@ variable "vpc_range" {
   default = "10.0.0.0/24"
 }
 
-variable "family_image" {
+variable "image_name" {
   type = string
-  default = "centos-7"
+  default = "centos-7-v20220719"
   description = "The family name of the image"
 }
 

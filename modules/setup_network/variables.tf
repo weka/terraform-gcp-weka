@@ -27,6 +27,7 @@ variable "vpcs" {
 variable "subnets-cidr-range" {
   type        = list(string)
   description = "list of subnets to use for creating the cluster, the number of subnets must be 'nics_number'"
+  default     = []
 }
 
 variable "subnets" {
@@ -49,6 +50,7 @@ variable "set_peering" {
 variable "vpc_connector_range" {
   type        = string
   description = "list of connector to use for serverless vpc access"
+  default     = ""
 }
 
 variable "create_vpc_connector" {
@@ -70,4 +72,5 @@ variable "private_network" {
 variable "sg_public_ssh_cidr_range" {
   type        = list(string)
   description = "list of ranges to allow ssh on public deployment"
+  default     = []
 }

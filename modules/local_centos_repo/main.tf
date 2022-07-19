@@ -77,8 +77,8 @@ resource "google_compute_firewall" "egress-firewall-rules" {
 }
 
 # ==================== yum repo vm ======================
-data "google_compute_image" "centos_7" {
-  family  = var.family_image
+data "google_compute_image" "image" {
+  name  = var.image_name
   project = var.project_image
 }
 
@@ -90,7 +90,7 @@ resource "google_compute_instance" "vm-repo" {
   project       = var.project
   boot_disk {
     initialize_params {
-      image = data.google_compute_image.centos_7.id
+      image = data.google_compute_image.image.id
       size  = 100
     }
   }
@@ -132,6 +132,7 @@ resource "google_compute_network_peering" "peering-global" {
   name         = "global-peering-to-${local.peering-list[count.index]["to"]}"
   network      = "projects/${var.project}/global/networks/${local.peering-list[count.index]["from"]}"
   peer_network = "projects/${var.project}/global/networks/${local.peering-list[count.index]["to"]}"
+  depends_on = [google_compute_network.vpc_network]
 }
 
 resource "google_compute_network_peering" "peering-vpc" {
@@ -139,6 +140,7 @@ resource "google_compute_network_peering" "peering-vpc" {
   name         = "${local.peering-list[count.index]["to"]}-peering-to-global"
   network      = "projects/${var.project}/global/networks/${local.peering-list[count.index]["to"]}"
   peer_network = "projects/${var.project}/global/networks/${local.peering-list[count.index]["from"]}"
+  depends_on = [google_compute_network.vpc_network]
 }
 
 resource "google_compute_firewall" "sg_private" {

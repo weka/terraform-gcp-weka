@@ -4,7 +4,7 @@ resource "null_resource" "generate_cloud_functions_zips" {
   provisioner "local-exec" {
     command = <<-EOT
       rm -f cloud-functions.zip
-      cd modules/deploy_weka/cloud-functions
+      cd ${path.module}/cloud-functions
       zip -r ../../../cloud-functions.zip * -x "cloud_functions_test.go"
     EOT
     interpreter = ["bash", "-ce"]
@@ -20,7 +20,7 @@ resource "google_storage_bucket" "cloud_functions" {
 resource "google_storage_bucket_object" "cloud_functions_zip" {
   name   = "${var.prefix}-${var.cluster_name}-cloud-functions.zip"
   bucket = google_storage_bucket.cloud_functions.name
-  source = "cloud-functions.zip"
+  source = "${path.module}/../../cloud-functions.zip"
   depends_on = [null_resource.generate_cloud_functions_zips]
 }
 

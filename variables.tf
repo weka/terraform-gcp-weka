@@ -26,6 +26,7 @@ variable "private_network" {
 variable "get_weka_io_token" {
   type        = string
   description = "get.weka.io token for downloading weka"
+  default     = ""
 }
 
 variable "install_url" {
@@ -102,7 +103,7 @@ variable "set_peering" {
   default = true
 }
 
-variable "bucket-location" {
+variable "bucket_location" {
   type = string
   description = "bucket function location"
   default = "EU"
@@ -190,13 +191,13 @@ variable "create_local_repo" {
   description = "create a local centos repo for private network"
 }
 
-variable "family_image" {
+variable "repo_image_name" {
   type = string
   default = "centos-7"
   description = "The family name of the image"
 }
 
-variable "project_image" {
+variable "repo_project_image" {
   type = string
   default = "centos-cloud"
   description = "The project in which the resource belongs"
@@ -205,6 +206,7 @@ variable "project_image" {
 variable "sg_public_ssh_cidr_range" {
   type        = list(string)
   description = "list of ranges to allow ssh on public deployment"
+  default     = []
 }
 
 variable "weka_image_name" {
@@ -215,4 +217,15 @@ variable "weka_image_name" {
 variable "weka_image_project" {
   type = string
   description = "weka image project"
+}
+
+variable "vpc_range" {
+  type = string
+  description = "vpc range for allow sg"
+}
+
+variable "clusters_name" {
+  type        = list(string)
+  description = "List of cluster name"
+  default     = []
 }
