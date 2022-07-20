@@ -1,8 +1,8 @@
 # ======================== instances ============================
 
-data "google_compute_image" "centos_7" {
-  family  = "centos-7"
-  project = "centos-cloud"
+data "google_compute_image" "weka_image" {
+  name  = var.weka_image_name
+  project = var.weka_image_project
 }
 locals {
   private_nic_first_index = var.private_network ? 0 : 1
@@ -32,7 +32,7 @@ resource "google_compute_instance_template" "backends-template" {
     scopes = ["cloud-platform"]
   }
   disk {
-    source_image = data.google_compute_image.centos_7.id
+    source_image = data.google_compute_image.weka_image.id
     disk_size_gb = 50
     boot         = true
   }

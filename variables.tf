@@ -206,3 +206,13 @@ variable "sg_public_ssh_cidr_range" {
   type        = list(string)
   description = "list of ranges to allow ssh on public deployment"
 }
+
+variable "weka_image_name" {
+  type = string
+  description = "weka image name"
+}
+
+variable "weka_image_project" {
+  type = string
+  description = "weka image project"
+}
