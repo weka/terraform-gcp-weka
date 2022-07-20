@@ -106,3 +106,13 @@ variable "yum_repo_server" {
   type = string
   description = "yum repo server address"
 }
+
+variable "weka_image_name" {
+  type = string
+  description = "weka image name"
+}
+
+variable "weka_image_project" {
+  type = string
+  description = "weka image project"
+}

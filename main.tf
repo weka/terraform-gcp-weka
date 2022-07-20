@@ -102,6 +102,8 @@ module "deploy_weka" {
   get_weka_io_token    = var.get_weka_io_token
   install_url          = var.install_url
   machine_type         = var.machine_type
+  weka_image_name      = var.weka_image_name
+  weka_image_project   = var.weka_image_project
   nvmes_number         = var.nvmes_number
   username             = var.username
   private_network      = var.private_network
