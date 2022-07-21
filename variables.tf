@@ -216,3 +216,8 @@ variable "weka_image_project" {
   type = string
   description = "weka image project"
 }
+
+variable "create_weka_image" {
+  type = bool
+  description = "should create weka image project"
+}

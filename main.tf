@@ -88,6 +88,24 @@ module "shared_vpc_peering" {
   depends_on = [module.host_vpc_peering, module.setup_network ]
 }
 
+module "create_weka_image" {
+  count = var.create_weka_image ? 1 : 0
+  source = "./modules/weka_image"
+  project = var.project
+  region = var.region
+  zone = var.zone
+  vpc_name = module.setup_network.output-vpcs-names[0]
+  subnet_name = module.setup_network.output-subnetwork-name[0]
+  machine_type = var.machine_type
+  sa_email = module.create_service_account.outputs-service-account-email
+  weka_image_name = var.weka_image_name
+  weka_image_project = var.weka_image_project
+  providers = {
+    google = google.main
+  }
+  depends_on = [module.setup_network, module.create_service_account]
+}
+
 module "deploy_weka" {
   source               = "./modules/deploy_weka"
   cluster_name         = var.cluster_name
@@ -102,8 +120,8 @@ module "deploy_weka" {
   get_weka_io_token    = var.get_weka_io_token
   install_url          = var.install_url
   machine_type         = var.machine_type
-  weka_image_name      = var.weka_image_name
-  weka_image_project   = var.weka_image_project
+  weka_image_name      = var.create_weka_image ? module.create_weka_image[0].output-weka-image-name : var.weka_image_name
+  weka_image_project   = var.create_weka_image ? module.create_weka_image[0].output-weka-image-project : var.weka_image_project
   nvmes_number         = var.nvmes_number
   username             = var.username
   private_network      = var.private_network
@@ -119,5 +137,5 @@ module "deploy_weka" {
     google = google.deployment
   }
 
-  depends_on = [module.create_service_account, module.create_local_centos_repo]
+  depends_on = [module.create_service_account, module.create_local_centos_repo, module.create_weka_image]
 }
