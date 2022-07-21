@@ -77,6 +77,7 @@ resource "google_cloud_scheduler_job" "scale_down_job" {
       service_account_email = var.sa_email
     }
   }
+  depends_on = [google_workflows_workflow.scale_down]
 }
 
 resource "google_workflows_workflow" "scale_up" {
@@ -112,4 +113,5 @@ resource "google_cloud_scheduler_job" "scale_up_job" {
       service_account_email = var.sa_email
     }
   }
+  depends_on = [google_workflows_workflow.scale_up]
 }
