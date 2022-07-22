@@ -3,6 +3,7 @@ package resize
 import (
 	"cloud.google.com/go/storage"
 	"context"
+	"errors"
 	"github.com/rs/zerolog/log"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
 	"time"
@@ -24,7 +25,7 @@ func UpdateValue(bucket string, newDesiredSize int) (err error) {
 	}
 
 	err = updateDesiredSize(client, ctx, bucket, newDesiredSize)
-	err = common.Unlock(client, ctx, bucket, id) // we always want to unlock
+	common.Unlock(client, ctx, bucket, id) // we always want to unlock
 
 	return
 }
@@ -34,6 +35,11 @@ func updateDesiredSize(client *storage.Client, ctx context.Context, bucket strin
 
 	state, err := common.ReadState(stateHandler, ctx)
 	if err != nil {
+		return
+	}
+
+	if !state.Clusterized {
+		err = errors.New("weka cluster is not ready")
 		return
 	}
 
