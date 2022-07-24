@@ -20,7 +20,7 @@ sa_name        = "deploy-sa"
 
 ### Deploy weka module ###
 username                 = "weka"
-weka_version             = "3.14.2.2-gcp-beta"
+weka_version             = "3.14.2.3-gcp-beta"
 install_url              = ""
 cluster_size             = 5
 nvmes_number             = 2
