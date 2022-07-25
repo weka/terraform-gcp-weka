@@ -97,6 +97,7 @@ module "deploy_weka" {
   create_cloudscheduler_sa = var.create_cloudscheduler_sa
   get_weka_io_token        = var.get_weka_io_token
   private_network          = var.private_network
+  host_shared_range        = var.host_shared_range
   providers = {
     google = google.deployment
   }

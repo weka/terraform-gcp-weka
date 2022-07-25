@@ -33,6 +33,12 @@ variable "nics_number" {
   description = "number of nics per host"
 }
 
+variable "host_shared_range" {
+  type = list(string)
+  description = "list of host range to allow sg"
+  default = []
+}
+
 variable "cluster_size" {
   type        = number
   description = "weka cluster size"

@@ -132,3 +132,9 @@ variable "vpc_range" {
   type        = string
   description = "vpc range for allow sg"
 }
+
+variable "host_shared_range" {
+  type = list(string)
+  description = "list of host range to allow sg"
+  default = []
+}

@@ -170,7 +170,7 @@ variable "create_shared_vpc" {
 }
 
 variable "yum_repo_server" {
-  type = string
+  type        = string
   description = "yum repo server address"
 }
 
@@ -228,4 +228,10 @@ variable "clusters_name" {
   type        = list(string)
   description = "List of cluster name"
   default     = []
+}
+
+variable "host_shared_range" {
+  type = list(string)
+  description = "list of host range to allow sg"
+  default = []
 }

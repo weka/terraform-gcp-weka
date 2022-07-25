@@ -6,6 +6,7 @@ host_project             = "test-tf-vars"
 bucket_location          = "EU"
 subnets_cidr_range       = ["10.0.0.0/24", "10.1.0.0/24", "10.2.0.0/24", "10.3.0.0/24"]
 shared_vpcs              = ["host-vpc-shared-1", "host-vpc-shared-2"]
+host_shared_range        = ["10.13.0.0/24", "10.14.0.0/24"]
 nics_number              = 4
 cluster_size             = 5
 install_url              = "gs://weka-installation/weka-4.0.0.68-gcp-beta.tar"

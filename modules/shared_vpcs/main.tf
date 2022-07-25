@@ -41,3 +41,32 @@ resource "google_compute_network_peering" "host-peering" {
   peer_network = "projects/${var.service_project}/global/networks/${local.peering_list[count.index]["from"]}"
   depends_on = [google_compute_shared_vpc_service_project.service]
 }
+
+data "google_compute_network" "vpc_list_ids"{
+  count = length(var.vpcs)
+  name  = var.vpcs[count.index]
+}
+
+resource "google_compute_firewall" "sg_private" {
+  count         = var.deploy_on_host_project ? 0 : length(var.vpcs)
+  name          = "${var.prefix}-shared-sg-ingress-all-${count.index}"
+  direction     = "INGRESS"
+  network       = data.google_compute_network.vpc_list_ids[count.index].id
+  source_ranges = var.host_shared_range
+  allow {
+    protocol = "all"
+  }
+  source_tags = ["all"]
+}
+
+
+resource "google_compute_firewall" "sg_private_egress" {
+  count         = var.deploy_on_host_project ? 0 : length(var.vpcs)
+  name          = "${var.prefix}-shared-sg-egress-all-${count.index}"
+  direction     = "EGRESS"
+  network       = data.google_compute_network.vpc_list_ids[count.index].id
+  source_ranges = var.host_shared_range
+  allow {
+    protocol = "all"
+  }
+}

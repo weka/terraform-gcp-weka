@@ -32,6 +32,7 @@ service_project    = "wekaio-rnd"
 host_project       = "test-tf-vars"
 shared_vpcs        = ["host-vpc-shared-1", "host-vpc-shared-2"]
 create_shared_vpc  = false
+host_shared_range  = ["10.13.0.0/24", "10.14.0.0/24"]
 
 ### Centos local repo
 create_local_repo       = false

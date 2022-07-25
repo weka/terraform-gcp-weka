@@ -128,3 +128,8 @@ variable "create_vpc_connector" {
   type = bool
   description = "create vpc connector"
 }
+
+variable "host_shared_range" {
+  type = list(string)
+  description = "list of host range to allow sg"
+}

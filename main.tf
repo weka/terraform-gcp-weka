@@ -91,6 +91,7 @@ module "shared_vpc_peering" {
   shared_vpcs            = var.shared_vpcs
   vpcs                   = module.setup_network.output-vpcs-names
   sa_email               = module.create_service_account.outputs-service-account-email
+  host_shared_range      = var.host_shared_range
   providers = {
     google = google.deployment
   }

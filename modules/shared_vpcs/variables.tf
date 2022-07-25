@@ -38,3 +38,9 @@ variable "sa_email" {
   description = "service account email"
   default = ""
 }
+
+variable "host_shared_range" {
+  type = list(string)
+  description = "list of host range to allow sg"
+  default = []
+}
