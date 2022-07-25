@@ -32,6 +32,7 @@ variable "get_weka_io_token" {
 variable "install_url" {
   type        = string
   description = "path to weka installation tar object"
+  default     = ""
 }
 
 variable "weka_version" {
@@ -172,6 +173,7 @@ variable "create_shared_vpc" {
 variable "yum_repo_server" {
   type        = string
   description = "yum repo server address"
+  default     = ""
 }
 
 variable "repo_public_cidr_range" {
