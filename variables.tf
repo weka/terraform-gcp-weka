@@ -176,35 +176,6 @@ variable "yum_repo_server" {
   default     = ""
 }
 
-variable "repo_public_cidr_range" {
-  type        = string
-  description = "Public range for local repo"
-  default     = ""
-}
-
-variable "repo_private_cidr_range" {
-  type = string
-  description = "Private range for local repo"
-  default = ""
-}
-
-variable "create_local_repo" {
-  type = bool
-  description = "create a local centos repo for private network"
-}
-
-variable "repo_image_name" {
-  type = string
-  default = "centos-7"
-  description = "The family name of the image"
-}
-
-variable "repo_project_image" {
-  type = string
-  default = "centos-cloud"
-  description = "The project in which the resource belongs"
-}
-
 variable "sg_public_ssh_cidr_range" {
   type        = list(string)
   description = "list of ranges to allow ssh on public deployment"
@@ -219,11 +190,6 @@ variable "weka_image_name" {
 variable "weka_image_project" {
   type = string
   description = "weka image project"
-}
-
-variable "vpc_range" {
-  type = string
-  description = "vpc range for allow sg"
 }
 
 variable "clusters_name" {

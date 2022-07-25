@@ -10,7 +10,6 @@ We supply 5 modules:
 2. [**service_account**](modules/service_account): includes the service account that will be used for deployment with all necessary permissions.
 3. [**deploy_weka**](modules/deploy_weka): includes the actual weka deployment, instance template, cloud functions, workflows, job schedulers, secret manger, buckets, health check.
 4. [**shared_vpcs**(*optional*)](modules/shared_vpcs): includes vpc sharing between the weka deployment network and another notwork.
-5. [**local_centos_repo**(*optional*)](modules/local_centos_repo): includes setup of private yum repo.
 
 We support deploying weka on public and private network.
 * public network deployment:

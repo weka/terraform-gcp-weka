@@ -37,29 +37,6 @@ module "setup_network" {
 }
 
 /***********************************
-      Centos local repo
-***********************************/
-module "create_local_centos_repo" {
-  count              = var.create_local_repo ? 1 : 0
-  source             = "./modules/local_centos_repo"
-  project            = var.project
-  zone               = var.zone
-  region             = var.region
-  image_name         = var.repo_image_name
-  project_image      = var.repo_project_image
-  vpcs_peering       = module.setup_network.output-vpcs-names
-  public_cidr_range  = var.repo_public_cidr_range
-  private_cidr_range = var.repo_private_cidr_range
-  vpc_range          = var.vpc_range
-
-  providers = {
-    google = google.main
-  }
-
-  depends_on = [module.setup_network]
-}
-
-/***********************************
       Shared vpc - host side
 ***********************************/
 module "host_vpc_peering" {
@@ -132,5 +109,5 @@ module "deploy_weka" {
     google = google.deployment
   }
 
-  depends_on = [module.create_service_account, module.create_local_centos_repo]
+  depends_on = [module.create_service_account, module.setup_network]
 }
