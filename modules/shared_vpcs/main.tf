@@ -61,11 +61,11 @@ resource "google_compute_firewall" "sg_private" {
 
 
 resource "google_compute_firewall" "sg_private_egress" {
-  count         = var.deploy_on_host_project ? 0 : length(var.vpcs)
-  name          = "${var.prefix}-shared-sg-egress-all-${count.index}"
-  direction     = "EGRESS"
-  network       = data.google_compute_network.vpc_list_ids[count.index].id
-  source_ranges = var.host_shared_range
+  count               = var.deploy_on_host_project ? 0 : length(var.vpcs)
+  name                = "${var.prefix}-shared-sg-egress-all-${count.index}"
+  direction           = "EGRESS"
+  network             = data.google_compute_network.vpc_list_ids[count.index].id
+  destination_ranges  = var.host_shared_range
   allow {
     protocol = "all"
   }
