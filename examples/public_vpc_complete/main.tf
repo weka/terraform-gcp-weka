@@ -66,6 +66,7 @@ module "shared_vpc_peering" {
   shared_vpcs            = var.shared_vpcs
   vpcs                   = module.setup_network.output-vpcs-names
   sa_email               = module.create_service_account.outputs-service-account-email
+  host_shared_range        = var.host_shared_range
   providers = {
     google = google.deployment
   }
@@ -99,7 +100,6 @@ module "deploy_weka" {
   create_cloudscheduler_sa = var.create_cloudscheduler_sa
   get_weka_io_token        = var.get_weka_io_token
   private_network          = var.private_network
-  host_shared_range        = var.host_shared_range
   providers = {
     google = google.deployment
   }
