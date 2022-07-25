@@ -6,6 +6,12 @@ create_vpc_connector     = true
 private_network          = false
 sg_public_ssh_cidr_range = ["0.0.0.0/0"]
 
+
+### Existing vpcs and subnets
+vpcs    = []
+subnets = []
+
+
 ### Mandatory vars ###
 nics_number    = 4
 project        = "wekaio-rnd"
@@ -27,12 +33,19 @@ weka_image_project       = "centos-cloud"
 bucket_location          = "EU"
 create_cloudscheduler_sa = true
 
+
+### Deploy on private network
+yum_repo_server = ""
+install_url     = ""
+
+
 # Vpcs shared
+create_shared_vpc  = false
 service_project    = "wekaio-rnd"
 host_project       = "test-tf-vars"
 shared_vpcs        = ["host-vpc-shared-1", "host-vpc-shared-2"]
-create_shared_vpc  = false
 host_shared_range  = ["10.13.0.0/24", "10.14.0.0/24"]
+
 
 ### Centos local repo
 create_local_repo       = false
