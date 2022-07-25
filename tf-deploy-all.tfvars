@@ -32,6 +32,8 @@ weka_image_name          = "centos-7-v20220719"
 weka_image_project       = "centos-cloud"
 bucket_location          = "EU"
 create_cloudscheduler_sa = true
+yum_repo_server          = ""
+install_url              = ""
 
 
 ### Deploy on private network
@@ -43,14 +45,5 @@ install_url     = ""
 create_shared_vpc  = false
 service_project    = "wekaio-rnd"
 host_project       = "test-tf-vars"
-shared_vpcs        = ["host-vpc-shared-1", "host-vpc-shared-2"]
-host_shared_range  = ["10.13.0.0/24", "10.14.0.0/24"]
-
-
-### Centos local repo
-create_local_repo       = false
-repo_image_name         = "centos-7-v20220719"
-repo_project_image      = "centos-cloud"
-repo_public_cidr_range  = "10.26.2.0/24"
-repo_private_cidr_range = "10.26.1.0/24"
-vpc_range               = "10.0.0.0/24"
+shared_vpcs        = ["global-test-tf-vars-vpc"]
+host_shared_range  = ["10.26.1.0/24", "10.26.2.0/24"]
