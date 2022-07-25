@@ -37,21 +37,21 @@ curl -m 70 -X POST RESIZE_CLOUD_FUNCTION_URL -H "Authorization:bearer $(gcloud a
 - **State**: for our state we use a bucket named `weka-infra-backend` ( - see `backend/`) you can apply it (using your relevant variables). 
 In case you want different bucket name, you will need to change it in `backend.tf` as well.
 - **Deployment**:<br>
-  Update the variables in `tf-vars-deploy-all.tfvars` according to your env.<br>
+  Update the variables in `tf-deploy-all.tfvars` according to your env.<br>
   You can see the full variables' description in the modules links above.
   * **Public deployment**:
     * 
       ```
-      TF_VAR_get_weka_io_token=$TOKEN TF_VAR_weka_username=$USERNAME terraform apply -auto-approve -var-file tf-vars-deploy-all.tfvars
+      TF_VAR_get_weka_io_token=$TOKEN TF_VAR_weka_username=$USERNAME terraform apply -auto-approve -var-file tf-deploy-all.tfvars
       ```
   * **Private deployment**:
-    * Update in `tf-vars-deploy-all.tfvars` the following values:
+    * Update in `tf-deploy-all.tfvars` the following values:
       * `private_network = true`
       * `install_url = YOUR_TAR_OBJECT_URL`
       * `yum_repo_server = YOUR_YUM_REPO_URL`
       * *Optional in case you wish to use our option for private yum repo server:* `create_local_repo = true`
     *
     ```
-    TF_VAR_weka_username=$USERNAME terraform apply -auto-approve -var-file tf-vars-deploy-all.tfvars
+    TF_VAR_weka_username=$USERNAME terraform apply -auto-approve -var-file tf-deploy-all.tfvars
     ```
 
