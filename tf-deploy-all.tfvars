@@ -35,12 +35,6 @@ create_cloudscheduler_sa = true
 yum_repo_server          = ""
 install_url              = ""
 
-
-### Deploy on private network
-yum_repo_server = ""
-install_url     = ""
-
-
 # Vpcs shared
 create_shared_vpc  = false
 service_project    = "wekaio-rnd"
