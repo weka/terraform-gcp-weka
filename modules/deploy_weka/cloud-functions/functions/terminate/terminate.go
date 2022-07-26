@@ -286,6 +286,12 @@ func Terminate(w http.ResponseWriter, scaleResponse protocol.ScaleResponse, proj
 		writeResponse(w, response)
 		return
 	}
+	if len(scaleResponse.Hosts) == 0 {
+		log.Error().Msgf("Hosts list must not be empty")
+		writeResponse(w, response)
+		return
+	}
+
 	response.TransientErrors = scaleResponse.TransientErrors[0:len(scaleResponse.TransientErrors):len(scaleResponse.TransientErrors)]
 
 	asgInstanceIds := common.GetInstanceGroupInstanceNames(project, zone, instanceGroup)
