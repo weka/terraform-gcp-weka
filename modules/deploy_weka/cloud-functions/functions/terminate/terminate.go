@@ -4,6 +4,7 @@ import (
 	compute "cloud.google.com/go/compute/apiv1"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
@@ -269,25 +270,24 @@ func TerminateUnhealthyInstances(project, zone, instanceGroup, loadBalancerName 
 	return
 }
 
-func Terminate(w http.ResponseWriter, scaleResponse protocol.ScaleResponse, project, zone, instanceGroup, loadBalancerName string) {
+func Terminate(w http.ResponseWriter, scaleResponse protocol.ScaleResponse, project, zone, instanceGroup, loadBalancerName string) (err error) {
 	var response protocol.TerminatedInstancesResponse
-	var err error
 
 	response.Version = protocol.Version
 
 	if scaleResponse.Version != protocol.Version {
-		log.Error().Msgf("Incompatible scale response version")
+		err = errors.New("incompatible scale response version")
 		writeResponse(w, response)
 		return
 	}
 
 	if instanceGroup == "" {
-		log.Error().Msgf("ASG_NAME env var is mandatory")
+		err = errors.New("instance group is mandatory")
 		writeResponse(w, response)
 		return
 	}
 	if len(scaleResponse.Hosts) == 0 {
-		log.Error().Msgf("Hosts list must not be empty")
+		err = errors.New("hosts list must not be empty")
 		writeResponse(w, response)
 		return
 	}

@@ -28,7 +28,7 @@ func getInstanceGroupBackendsIps(instances []*computepb.Instance) (instanceGroup
 	return
 }
 
-func GetFetchDataParams(project, zone, instanceGroup, bucket, usernameId, passwordId string) (hostGroupInfoResponse HostGroupInfoResponse) {
+func GetFetchDataParams(project, zone, instanceGroup, bucket, usernameId, passwordId string) (hostGroupInfoResponse HostGroupInfoResponse, err error) {
 
 	creds, err := common.GetUsernameAndPassword(usernameId, passwordId)
 	if err != nil {
@@ -40,15 +40,22 @@ func GetFetchDataParams(project, zone, instanceGroup, bucket, usernameId, passwo
 		return
 	}
 
-	return HostGroupInfoResponse{
+	desiredCapacity, err := getCapacity(bucket)
+	if err != nil {
+		return
+	}
+
+	hostGroupInfoResponse = HostGroupInfoResponse{
 		Username:        creds.Username,
 		Password:        creds.Password,
-		DesiredCapacity: getCapacity(bucket),
+		DesiredCapacity: desiredCapacity,
 		Instances:       getHostGroupInfoInstances(instances),
 		BackendIps:      getInstanceGroupBackendsIps(instances),
 		Role:            "backend",
 		Version:         1,
 	}
+
+	return
 }
 
 func getHostGroupInfoInstances(instances []*computepb.Instance) (ret []HgInstance) {
@@ -63,10 +70,11 @@ func getHostGroupInfoInstances(instances []*computepb.Instance) (ret []HgInstanc
 	return
 }
 
-func getCapacity(bucket string) int {
+func getCapacity(bucket string) (desired int, err error) {
 	state, err := common.GetClusterState(bucket)
 	if err != nil {
-		return -1
+		return
 	}
-	return state.DesiredSize
+	desired = state.DesiredSize
+	return
 }

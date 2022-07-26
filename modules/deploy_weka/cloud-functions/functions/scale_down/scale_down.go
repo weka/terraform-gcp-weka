@@ -253,7 +253,7 @@ func removeDrive(jpool *jrpc.Pool, drive weka.Drive, p *protocol.ScaleResponse) 
 	}
 }
 
-func ScaleDown(info protocol.HostGroupInfoResponse) (response protocol.ScaleResponse) {
+func ScaleDown(info protocol.HostGroupInfoResponse) (response protocol.ScaleResponse, err error) {
 	/*
 		Code in here based on following logic:
 
@@ -291,7 +291,7 @@ func ScaleDown(info protocol.HostGroupInfoResponse) (response protocol.ScaleResp
 	driveApiList := weka.DriveListResponse{}
 	nodeApiList := weka.NodeListResponse{}
 
-	err := jpool.Call(weka.JrpcStatus, struct{}{}, &systemStatus)
+	err = jpool.Call(weka.JrpcStatus, struct{}{}, &systemStatus)
 	if err != nil {
 		return
 	}

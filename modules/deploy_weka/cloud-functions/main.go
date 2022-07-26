@@ -71,7 +71,11 @@ func Fetch(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("Writing fetch result")
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(fetch.GetFetchDataParams(project, zone, instanceGroup, bucket, usernameId, passwordId))
+	hostGroupInfoResponse, err := fetch.GetFetchDataParams(project, zone, instanceGroup, bucket, usernameId, passwordId)
+	if err != nil {
+		panic(fmt.Sprintf("An error occurred: %s", err))
+	}
+	json.NewEncoder(w).Encode(hostGroupInfoResponse)
 }
 
 func Deploy(w http.ResponseWriter, r *http.Request) {
@@ -105,8 +109,12 @@ func ScaleDown(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("Writing scale result")
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(scale_down.ScaleDown(info))
 
+	scaleResponse, err := scale_down.ScaleDown(info)
+	if err != nil {
+		panic(fmt.Sprintf("An error occurred: %s", err))
+	}
+	json.NewEncoder(w).Encode(scaleResponse)
 }
 
 func ScaleUp(w http.ResponseWriter, r *http.Request) {
@@ -155,7 +163,10 @@ func Terminate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	terminate.Terminate(w, scaleResponse, project, zone, instanceGroup, loadBalancerName)
+	err := terminate.Terminate(w, scaleResponse, project, zone, instanceGroup, loadBalancerName)
+	if err != nil {
+		panic(fmt.Sprintf("An error occurred: %s", err))
+	}
 }
 
 func Transient(w http.ResponseWriter, r *http.Request) {
