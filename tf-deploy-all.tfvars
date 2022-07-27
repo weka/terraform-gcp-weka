@@ -37,7 +37,6 @@ install_url              = ""
 
 # Vpcs shared
 create_shared_vpc  = false
-service_project    = "wekaio-rnd"
 host_project       = "test-tf-vars"
 shared_vpcs        = ["global-test-tf-vars-vpc"]
 host_shared_range  = ["10.26.1.0/24", "10.26.2.0/24"]

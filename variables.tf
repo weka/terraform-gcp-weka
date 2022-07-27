@@ -138,12 +138,6 @@ variable "sa_email" {
   default = ""
 }
 
-variable "service_project" {
-  type = string
-  description = "project id of service project"
-  default = ""
-}
-
 variable "host_project" {
   type = string
   default = "The ID of the project that will serve as a Shared VPC host project"
