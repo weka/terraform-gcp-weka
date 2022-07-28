@@ -41,7 +41,7 @@ In case you want different bucket name, you will need to change it in `backend.t
   * **Public deployment**:
     * 
       ```
-      TF_VAR_get_weka_io_token=$TOKEN TF_VAR_weka_username=$USERNAME terraform apply -auto-approve -var-file tf-deploy-all.tfvars
+      TF_VAR_get_weka_io_token=$TOKEN terraform apply -auto-approve -var-file tf-deploy-all.tfvars
       ```
   * **Private deployment**:
     * Update in `tf-deploy-all.tfvars` the following values:
@@ -50,6 +50,6 @@ In case you want different bucket name, you will need to change it in `backend.t
       * `yum_repo_server = YOUR_YUM_REPO_URL` or `weka_image_name=WEKA_CUSTOM_IMAGE_NAME; weka_image_project=WEKA_CUSTOM_IMAGE_PROJECT`
     *
     ```
-    TF_VAR_weka_username=$USERNAME terraform apply -auto-approve -var-file tf-deploy-all.tfvars
+    terraform apply -auto-approve -var-file tf-deploy-all.tfvars
     ```
 

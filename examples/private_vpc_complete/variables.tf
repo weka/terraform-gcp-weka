@@ -111,6 +111,7 @@ variable "weka_image_project" {
 variable "weka_username" {
   type        = string
   description = "weka cluster username"
+  default = "admin"
 }
 
 variable "set_peering" {

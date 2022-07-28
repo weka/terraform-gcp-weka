@@ -91,6 +91,7 @@ variable "yum_repo_server" {
 variable "weka_username" {
   type        = string
   description = "weka cluster username"
+  default = "admin"
 }
 
 variable "cluster_name" {

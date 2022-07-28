@@ -56,6 +56,7 @@ variable "weka_version" {
 variable "weka_username" {
   type        = string
   description = "weka cluster username"
+  default = "admin"
 }
 
 variable "bucket_location" {
