@@ -51,11 +51,6 @@ func GetUsernameAndPassword(usernameId, passwordId string) (clusterCreds Cluster
 }
 
 func generateInstanceNamesFilter(instanceNames []string) (namesFilter string) {
-	if len(instanceNames) == 0 {
-		log.Fatal().Err(errors.New("no instances found in instance group"))
-		return
-	}
-
 	namesFilter = fmt.Sprintf("name=%s", instanceNames[0])
 	for _, instanceName := range instanceNames[1:] {
 		namesFilter = fmt.Sprintf("%s OR name=%s", namesFilter, instanceName)
@@ -65,6 +60,11 @@ func generateInstanceNamesFilter(instanceNames []string) (namesFilter string) {
 }
 
 func GetInstances(project, zone string, instanceNames []string) (instances []*computepb.Instance, err error) {
+	if len(instanceNames) == 0 {
+		log.Warn().Msg("Got empty instance names list")
+		return
+	}
+
 	namesFilter := generateInstanceNamesFilter(instanceNames)
 
 	ctx := context.Background()
