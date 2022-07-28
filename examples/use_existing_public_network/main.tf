@@ -64,6 +64,7 @@ module "deploy_weka" {
   sa_email                 = module.create_service_account.outputs-service-account-email
   create_cloudscheduler_sa = var.create_cloudscheduler_sa
   private_network          = var.private_network
+  private_dns_zone         = module.setup_network.output-private-zone-name
   providers = {
     google = google.deployment
   }

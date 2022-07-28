@@ -147,3 +147,33 @@ resource "google_compute_firewall" "fw_ilb_to_backends" {
     protocol = "icmp"
   }
 }
+
+# =================== private DNS ==========================
+locals {
+  network_list = length(var.vpcs) == 0 ? google_compute_network.vpc_network.*.self_link : data.google_compute_network.vpc_list_ids.*.self_link
+}
+
+resource "google_project_service" "project-dns" {
+  project = var.project
+  service = "dns.googleapis.com"
+  disable_on_destroy = false
+  disable_dependent_services = false
+}
+
+resource "google_dns_managed_zone" "private-zone" {
+  name        = "${var.prefix}-private-zone"
+  dns_name    = "${var.prefix}.private.net."
+  project     = var.project
+  description = "private dns weka.private.net"
+  visibility  = "private"
+
+  private_visibility_config {
+    dynamic "networks" {
+      for_each = local.network_list
+      content {
+        network_url = networks.value
+      }
+    }
+  }
+  depends_on = [google_project_service.project-dns]
+}
