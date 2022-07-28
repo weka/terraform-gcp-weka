@@ -43,11 +43,6 @@ variable "nvmes_number" {
   description = "number of local nvmes per host"
 }
 
-variable "username" {
-  type        = string
-  description = "username for login "
-}
-
 variable "private_network" {
   type        = bool
   description = "deploy weka in private network"

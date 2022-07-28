@@ -13,11 +13,6 @@ variable "zone" {
   description = "zone name"
 }
 
-variable "username" {
-  type        = string
-  description = "username for login "
-}
-
 variable "private_network" {
   type        = bool
   description = "deploy weka in private network"

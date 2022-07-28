@@ -53,11 +53,6 @@ variable "nvmes_number" {
   description = "number of local nvmes per host"
 }
 
-variable "username" {
-  type        = string
-  description = "username for login "
-}
-
 variable "weka_version" {
   type        = string
   description = "weka version"

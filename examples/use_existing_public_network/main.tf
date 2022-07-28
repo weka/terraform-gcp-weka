@@ -54,7 +54,6 @@ module "deploy_weka" {
   cluster_size             = var.cluster_size
   machine_type             = var.machine_type
   nvmes_number             = var.nvmes_number
-  username                 = var.username
   weka_version             = var.weka_version
   weka_username            = var.weka_username
   get_weka_io_token        = var.get_weka_io_token

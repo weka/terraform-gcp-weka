@@ -87,7 +87,6 @@ module "deploy_weka" {
   install_url              = var.install_url
   machine_type             = var.machine_type
   nvmes_number             = var.nvmes_number
-  username                 = var.username
   weka_version             = var.weka_version
   bucket-location          = var.bucket_location
   weka_image_name          = var.weka_image_name

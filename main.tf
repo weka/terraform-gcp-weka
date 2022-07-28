@@ -95,7 +95,6 @@ module "deploy_weka" {
   weka_image_name          = var.weka_image_name
   weka_image_project       = var.weka_image_project
   nvmes_number             = var.nvmes_number
-  username                 = var.username
   private_network          = var.private_network
   weka_username            = var.weka_username
   weka_version             = var.weka_version
