@@ -38,7 +38,7 @@ variable "weka_version" {
 variable "cluster_size" {
   type        = number
   description = "weka cluster size"
-  default     = 5
+  default     = 7
 }
 
 variable "nics_number" {
