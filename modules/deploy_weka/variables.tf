@@ -115,3 +115,8 @@ variable "weka_image_project" {
   type = string
   description = "weka image project"
 }
+
+variable "private_dns_zone" {
+  type = string
+  description = "Name of private dns zone"
+}

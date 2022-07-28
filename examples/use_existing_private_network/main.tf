@@ -62,6 +62,7 @@ module "deploy_weka" {
   yum_repo_server          = var.yum_repo_server
   create_cloudscheduler_sa = var.create_cloudscheduler_sa
   private_network          = var.private_network
+  private_dns_zone         = module.setup_network.output-private-zone-name
   providers = {
     google = google.deployment
   }

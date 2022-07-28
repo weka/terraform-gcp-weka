@@ -103,7 +103,7 @@ module "deploy_weka" {
   sa_email                 = module.create_service_account.outputs-service-account-email
   yum_repo_server          = var.yum_repo_server
   create_cloudscheduler_sa = var.create_cloudscheduler_sa
-
+  private_dns_zone         = module.setup_network.output-private-zone-name
   providers = {
     google = google.deployment
   }
