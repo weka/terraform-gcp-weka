@@ -5,7 +5,7 @@
 This Terraform is made for weka deployment on GCP including auto-scaling.
 This Terraform can use existing network (vpcs/subnets etc.) or create new network.<br>
 
-We supply 5 modules:
+We supply 4 modules:
 1. [**setup_network**](modules/setup_network): includes vpcs, subnets, peering, firewall and health check.
 2. [**service_account**](modules/service_account): includes the service account that will be used for deployment with all necessary permissions.
 3. [**deploy_weka**](modules/deploy_weka): includes the actual weka deployment, instance template, cloud functions, workflows, job schedulers, secret manger, buckets, health check.
@@ -15,8 +15,8 @@ We support deploying weka on public and private network.
 * public network deployment:
   * requires passing `get.weka.io` token to terraform.
 * private network deployment:
-  - requires weka installation tar file in some GCP bucket.
-  - yum repo server connectivity.
+  - requires weka installation tar file in some GCP bucket, see example [**here**](https://github.com/weka/gcp-tf-utils/tree/main/scripts/upload_weka_tar.sh)
+  - yum repo server connectivity or weka custom image, see examples [**here**](https://github.com/weka/gcp-tf-utils/tree/main/tf)
 
 You can find several usage examples under [**examples**](examples) in this repo.
 
@@ -47,8 +47,7 @@ In case you want different bucket name, you will need to change it in `backend.t
     * Update in `tf-deploy-all.tfvars` the following values:
       * `private_network = true`
       * `install_url = YOUR_TAR_OBJECT_URL`
-      * `yum_repo_server = YOUR_YUM_REPO_URL`
-      * *Optional in case you wish to use our option for private yum repo server:* `create_local_repo = true`
+      * `yum_repo_server = YOUR_YUM_REPO_URL` or `weka_image_name=WEKA_CUSTOM_IMAGE_NAME; weka_image_project=WEKA_CUSTOM_IMAGE_PROJECT`
     *
     ```
     TF_VAR_weka_username=$USERNAME terraform apply -auto-approve -var-file tf-deploy-all.tfvars
