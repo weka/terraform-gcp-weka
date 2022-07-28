@@ -104,6 +104,9 @@ resource "google_compute_instance_group" "instance_group" {
   zone = var.zone
   network = data.google_compute_network.vpc_list_ids[0].self_link
   depends_on = [google_compute_region_health_check.health_check]
+  lifecycle {
+    ignore_changes = [network]
+  }
 }
 
 
