@@ -148,7 +148,18 @@ func GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, joinFin
 	for device in $devices; do
 		weka local exec /weka/tools/weka_sign_drive $device
 	done
-	sleep 60
+	ready=0
+	while [ $ready -eq 0 ] ; do
+		ready=1
+		lsblk
+		for device in $devices; do
+			if [ ! "$(lsblk | grep ${device#"/dev/"} | grep part)" ]; then
+				ready=0
+				sleep 5
+				break
+			fi
+		done
+	done
 	weka cluster drive scan $host_id
 	curl $JOIN_FINALIZATION_URL -H "Authorization:bearer $(gcloud auth print-identity-token)" -H "Content-Type:application/json"  -d "{\"name\": \"$HOSTNAME\"}"
 	echo "completed successfully" > /tmp/weka_join_completion_validation
