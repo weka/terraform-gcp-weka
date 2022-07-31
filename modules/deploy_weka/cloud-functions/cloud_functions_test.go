@@ -81,7 +81,7 @@ func Test_deploy(t *testing.T) {
 	}
 
 	token := os.Getenv("GET_WEKA_IO_TOKEN")
-	version := "4.0.0.68-gcp-beta"
+	version := "4.0.0.70-gcp"
 
 	bucket := "weka-poc-state"
 	installUrl := fmt.Sprintf("https://%s@get.weka.io/dist/v1/install/%s/%s", token, version, version)

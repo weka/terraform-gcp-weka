@@ -23,7 +23,7 @@ sa_name        = "deploy-sa"
 
 
 ### Deploy weka module ###
-weka_version             = "4.0.0.68-gcp-beta"
+weka_version             = "4.0.0.70-gcp"
 cluster_size             = 7
 nvmes_number             = 2
 machine_type             = "c2-standard-8"
