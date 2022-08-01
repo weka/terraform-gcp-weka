@@ -65,21 +65,21 @@ EOF
   depends_on = [google_project_service.workflows , google_cloudfunctions_function.scale_down_function]
 }
 
-resource "google_cloud_scheduler_job" "scale_down_job" {
-  name        = "${var.prefix}-${var.cluster_name}-scale-down"
-  region      = var.region
-  description = "scale down job"
-  schedule    = "* * * * *"
+#resource "google_cloud_scheduler_job" "scale_down_job" {
+ # name        = "${var.prefix}-${var.cluster_name}-scale-down"
+ # region      = var.region
+  #description = "scale down job"
+  #schedule    = "* * * * *"
 
-  http_target {
-    http_method = "POST"
-    uri         = "https://workflowexecutions.googleapis.com/v1/${google_workflows_workflow.scale_down.id}/executions"
-    oauth_token {
-      service_account_email = var.sa_email
-    }
-  }
-  depends_on = [google_workflows_workflow.scale_down]
-}
+  #http_target {
+   # http_method = "POST"
+    #uri         = "https://workflowexecutions.googleapis.com/v1/${google_workflows_workflow.scale_down.id}/executions"
+    #oauth_token {
+     # service_account_email = var.sa_email
+    #}
+  #}
+  #depends_on = [google_workflows_workflow.scale_down]
+#}
 
 resource "google_workflows_workflow" "scale_up" {
   name            = "${var.prefix}-${var.cluster_name}-scale-up-workflow"
@@ -102,18 +102,18 @@ EOF
   depends_on = [google_project_service.workflows, google_cloudfunctions_function.scale_up_function, google_cloudfunctions_function.deploy_function, google_cloudfunctions_function.clusterize_function, google_cloudfunctions_function.clusterize_finalization_function]
 }
 
-resource "google_cloud_scheduler_job" "scale_up_job" {
-  name        = "${var.prefix}-${var.cluster_name}-scale-up"
-  region      = var.region
-  description = "scale up job"
-  schedule    = "* * * * *"
+#resource "google_cloud_scheduler_job" "scale_up_job" {
+ # name        = "${var.prefix}-${var.cluster_name}-scale-up"
+  #region      = var.region
+  #description = "scale up job"
+  #schedule    = "* * * * *"
 
-  http_target {
-    http_method = "POST"
-    uri         = "https://workflowexecutions.googleapis.com/v1/${google_workflows_workflow.scale_up.id}/executions"
-    oauth_token {
-      service_account_email = var.sa_email
-    }
-  }
-  depends_on = [google_workflows_workflow.scale_up]
-}
+  #http_target {
+   # http_method = "POST"
+    #uri         = "https://workflowexecutions.googleapis.com/v1/${google_workflows_workflow.scale_up.id}/executions"
+    #oauth_token {
+     # service_account_email = var.sa_email
+    #}
+  #}
+  #depends_on = [google_workflows_workflow.scale_up]
+#}

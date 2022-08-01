@@ -3,7 +3,7 @@ subnets-cidr-range       = ["10.0.0.0/24", "10.1.0.0/24", "10.2.0.0/24", "10.3.0
 set_peering              = true
 vpc_connector_range      = "10.8.0.0/28"
 create_vpc_connector     = true
-private_network          = true
+private_network          = false
 sg_public_ssh_cidr_range = ["0.0.0.0/0"]
 
 
@@ -14,11 +14,11 @@ subnets = []
 
 ### Mandatory vars ###
 nics_number    = 4
-project        = "wekaio-rnd"
-region         = "europe-west1"
-zone           = "europe-west1-b"
-prefix         = "weka"
-cluster_name   = "poc"
+project        = "wekaio-qa"
+region         = "us-east1"
+zone           = "us-east1-b"
+prefix         = "yariv"
+cluster_name   = "test"
 sa_name        = "deploy-sa"
 
 
