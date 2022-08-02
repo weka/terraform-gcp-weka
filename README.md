@@ -15,8 +15,8 @@ We support deploying weka on public and private network.
 * public network deployment:
   * requires passing `get.weka.io` token to terraform.
 * private network deployment:
-  - requires weka installation tar file in some GCP bucket, see example [**here**](https://github.com/weka/gcp-tf-utils/tree/main/scripts/upload_weka_tar.sh)
-  - yum repo server connectivity or weka custom image, see examples [**here**](https://github.com/weka/gcp-tf-utils/tree/main/tf)
+  - requires weka installation tar file in some GCP bucket
+  - utils folder contains helper script [`utils/sync_weka_tar.sh`](utils/sync_weka_tar.sh)
 
 You can find several usage examples under [**examples**](examples) in this repo.
 
