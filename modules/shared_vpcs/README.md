@@ -38,7 +38,6 @@ No modules.
 | <a name="input_prefix"></a> [prefix](#input\_prefix) | prefix for all resources | `string` | n/a | yes |
 | <a name="input_project"></a> [project](#input\_project) | project name | `string` | n/a | yes |
 | <a name="input_sa_email"></a> [sa\_email](#input\_sa\_email) | service account email | `string` | `""` | no |
-| <a name="input_service_project"></a> [service\_project](#input\_service\_project) | project id of service project | `string` | `""` | no |
 | <a name="input_shared_vpcs"></a> [shared\_vpcs](#input\_shared\_vpcs) | list of shared vpc name | `list(string)` | n/a | yes |
 | <a name="input_vpcs"></a> [vpcs](#input\_vpcs) | list of vpcs name | `list(string)` | n/a | yes |
 

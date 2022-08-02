@@ -13,7 +13,6 @@ cluster_size             = 7
 install_url              = "gs://weka-installation/weka-3.14.2.3-gcp-beta.tar"
 machine_type             = "c2-standard-8"
 nvmes_number             = 2
-username                 = "weka"
 weka_version             = "3.14.2.3-gcp-beta"
 bucket_location          = "EU"
 yum_repo_server          = "http://yum.weka.private.net"
