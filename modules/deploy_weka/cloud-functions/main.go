@@ -203,9 +203,9 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 
 	err := resize.UpdateValue(bucket, d.Value)
 	if err != nil {
-		fmt.Fprintf(w, "Updade failed: %s", err)
+		fmt.Fprintf(w, "Update failed: %s", err)
 	} else {
-		fmt.Fprintf(w, "Updade completed successfully")
+		fmt.Fprintf(w, "Update completed successfully")
 	}
 }
 
