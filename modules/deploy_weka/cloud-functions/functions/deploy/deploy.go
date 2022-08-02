@@ -31,7 +31,7 @@ func shuffleSlice(slice []string) {
 
 func getBackendCoreCounts() BackendCoreCounts {
 	backendCoreCounts := BackendCoreCounts{
-		"c2-standard-16": BackendCoreCount{total: 3, frontend: 1, drive: 1},
+		"c2-standard-16": BackendCoreCount{total: 6, frontend: 1, drive: 1},
 		"c2-standard-8":  BackendCoreCount{total: 3, frontend: 1, drive: 1},
 	}
 	return backendCoreCounts
