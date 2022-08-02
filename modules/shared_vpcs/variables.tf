@@ -23,16 +23,6 @@ variable "vpcs" {
   description = "list of vpcs name"
 }
 
-variable "deploy_on_host_project" {
-  type = bool
-}
-
-variable "service_project" {
-  type        = string
-  description = "project id of service project"
-  default     = ""
-}
-
 variable "sa_email" {
   type = string
   description = "service account email"
