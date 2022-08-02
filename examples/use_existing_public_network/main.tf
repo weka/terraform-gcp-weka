@@ -46,10 +46,10 @@ module "deploy_weka" {
   cluster_name             = var.cluster_name
   project                  = var.project
   nics_number              = var.nics_number
-  vpcs                     = module.setup_network.output-vpcs-names
+  vpcs                     = var.vpcs
   prefix                   = var.prefix
   region                   = var.region
-  subnets_name             = module.setup_network.output-subnetwork-name
+  subnets_name             = var.subnets
   zone                     = var.zone
   cluster_size             = var.cluster_size
   machine_type             = var.machine_type
