@@ -11,7 +11,6 @@ locals {
 }
 
 
-
 resource "google_project_iam_binding" "iam-binding" {
   count   = var.deploy_on_host_project ? 0 : 1
   project = var.project

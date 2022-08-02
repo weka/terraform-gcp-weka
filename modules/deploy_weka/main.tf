@@ -103,9 +103,31 @@ resource "google_compute_instance_group" "instance_group" {
   name = "${var.prefix}-${var.cluster_name}-instance-group"
   zone = var.zone
   network = data.google_compute_network.vpc_list_ids[0].self_link
-  depends_on = [google_compute_region_health_check.health_check]
+  project = "${var.project}"
+  depends_on = [
+    google_compute_region_health_check.health_check,
+    google_storage_bucket.state_bucket
+  ]
+
   lifecycle {
     ignore_changes = [network]
+  }
+  provisioner "local-exec" {
+    when = destroy
+    command = <<-EOT
+      zone="${self.zone}"
+      cluster_name="${self.name}"
+
+      instances=$(gcloud compute instance-groups list-instances --project ${self.project} ${self.name} --zone ${self.zone} | awk '{print $1}' | sed '1d')
+      while IFS= read -r instance_name; do
+          echo "$instance_name"
+          gcloud compute instances update --project ${self.project} $instance_name --no-deletion-protection --zone "$zone"
+      done <<< "$instances"
+
+      gcloud compute instances delete --project ${self.project} $(echo "$instances" | tr '\n' ' ') --zone "$zone" --quiet
+      sleep 20 # TODO: Better solution, as we rely here on google timings
+    EOT
+    interpreter = ["bash", "-ce"]
   }
 }
 

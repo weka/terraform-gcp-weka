@@ -35,45 +35,6 @@ module "setup_network" {
 }
 
 /***********************************
-      Shared vpc - host side
-***********************************/
-module "host_vpc_peering" {
-  count = 0
-  source                 = "../../modules/shared_vpcs"
-  deploy_on_host_project = true
-  service_project        = var.project
-  prefix                 = var.prefix
-  project                = var.host_project
-  shared_vpcs            = var.shared_vpcs
-  vpcs                   = module.setup_network.output-vpcs-names
-  providers = {
-    google = google.shared-vpc
-  }
-
-  depends_on = [module.create_service_account, module.setup_network ]
-}
-
-/***********************************
-      Shared vpc - service side
-***********************************/
-module "shared_vpc_peering" {
-  count = 0
-  source                 = "../../modules/shared_vpcs"
-  deploy_on_host_project = false
-  prefix                 = var.prefix
-  project                = var.project
-  host_project           = var.host_project
-  shared_vpcs            = var.shared_vpcs
-  vpcs                   = module.setup_network.output-vpcs-names
-  sa_email               = module.create_service_account.outputs-service-account-email
-  host_shared_range        = var.host_shared_range
-  providers = {
-    google = google.deployment
-  }
-  depends_on = [module.host_vpc_peering, module.setup_network ]
-}
-
-/***********************************
      Deploy weka cluster
 ***********************************/
 module "deploy_weka" {

@@ -128,3 +128,9 @@ variable "weka_image_project" {
   type = string
   description = "weka image project"
 }
+
+variable "path_to_modules" {
+  type = string
+  description = "path to modules, relative to actual project location or absolute"
+  default = "../.."
+}

@@ -33,23 +33,16 @@ curl -m 70 -X POST RESIZE_CLOUD_FUNCTION_URL -H "Authorization:bearer $(gcloud a
 
 ### Weka cluster deployment:
 - **Authentication**: `gcloud auth application-default login`
-- **State**: for our state we use a bucket named `weka-infra-backend` ( - see `backend/`) you can apply it (using your relevant variables). 
-In case you want different bucket name, you will need to change it in `backend.tf` as well.
 - **Deployment**:<br>
-  Update the variables in `tf-deploy-all.tfvars` according to your env.<br>
-  You can see the full variables' description in the modules links above.
-  * **Public deployment**:
-    * 
-      ```
-      TF_VAR_get_weka_io_token=$TOKEN terraform apply -auto-approve -var-file tf-deploy-all.tfvars
-      ```
-  * **Private deployment**:
-    * Update in `tf-deploy-all.tfvars` the following values:
-      * `private_network = true`
-      * `install_url = YOUR_TAR_OBJECT_URL`
-      * `yum_repo_server = YOUR_YUM_REPO_URL` or `weka_image_name=WEKA_CUSTOM_IMAGE_NAME; weka_image_project=WEKA_CUSTOM_IMAGE_PROJECT`
-    *
-    ```
-    terraform apply -auto-approve -var-file tf-deploy-all.tfvars
-    ```
-
+  This repository provides TF modules and examples,
+  actual usage assumes use of modules in new or existing project,
+  similar way as shown in examples. Examples include examples for public and private networks  
+  **Important to note:**
+  - Public deployment requires to pass `get_weka_io_token` in order to download release from public get.weka.io service
+  - Private deployment requires to upload weka software tarfile into GSC bucket, so instances will be able to download software from it
+  - Private network deployment/examples must come with:
+    - `private_network = true` on `setup_network` and `deploy_weka` modules level, this adapts various configuration for private networks
+  - In addition, following params are optional for private networking, depending on how network topology looks like:
+    - `install_url` on `deploy_weka` module level, this allows to download weka from local bucket and not public get.weka.io service
+    - `yum_repo_server` - Centos7 only, instructions to auto-configure yum to use alternative repository. Distributive repository required in order to download kernel headers and additional build software
+    - `weka_image_name` - custom image to use, `weka_image_project` - project that serves `weka_image_project` 

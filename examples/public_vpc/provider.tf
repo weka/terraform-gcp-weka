@@ -1,13 +1,9 @@
 terraform {
-  backend "gcs" {
-    bucket = "weka-infra-backend"
-    prefix = "terrafrom/state"
-  }
   required_providers {
     google = {
       source  = "hashicorp/google"
       version = "~>4.27.0"
-      configuration_aliases = [google.main,google.deployment,google.shared-vpc]
+      configuration_aliases = [google.main,google.deployment]
     }
   }
   required_version = ">=1.2.4"
@@ -26,8 +22,3 @@ provider "google" {
   credentials = module.create_service_account.output-sa-key
 }
 
-provider "google" {
-  alias   = "shared-vpc"
-  project = var.host_project
-  region  = var.region
-}

@@ -18,25 +18,9 @@ variable "prefix" {
   description = "prefix for all resources"
 }
 
-variable "host_project" {
-  type    = string
-  default = "The ID of the project that will serve as a Shared VPC host project"
-}
-
-variable "shared_vpcs" {
-  type        = list(string)
-  description = "list of shared vpc name"
-}
-
 variable "nics_number" {
   type        = number
   description = "number of nics per host"
-}
-
-variable "host_shared_range" {
-  type = list(string)
-  description = "list of host range to allow sg"
-  default = []
 }
 
 variable "cluster_size" {
