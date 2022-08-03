@@ -31,7 +31,7 @@ resource "google_compute_network_peering" "peering-service" {
   name         = "${local.peering_list[count.index]["from"]}-peering-${local.peering_list[count.index]["to"]}"
   network      = "projects/${var.project}/global/networks/${local.peering_list[count.index]["from"]}"
   peer_network = "projects/${var.host_project}/global/networks/${local.peering_list[count.index]["to"]}"
-  depends_on = [google_compute_shared_vpc_service_project.service]
+  depends_on = [google_compute_shared_vpc_service_project.service, google_project_iam_binding.iam-binding]
 }
 
 resource "google_compute_network_peering" "host-peering" {
@@ -40,7 +40,7 @@ resource "google_compute_network_peering" "host-peering" {
   name         = "${local.peering_list[count.index]["to"]}-peering-${local.peering_list[count.index]["from"]}"
   network      = "projects/${var.host_project}/global/networks/${local.peering_list[count.index]["to"]}"
   peer_network = "projects/${var.project}/global/networks/${local.peering_list[count.index]["from"]}"
-  depends_on = [google_compute_shared_vpc_service_project.service]
+  depends_on = [google_compute_shared_vpc_service_project.service, google_project_iam_binding.iam-binding, google_compute_network_peering.peering-service]
 }
 
 data "google_compute_network" "vpc_list_ids" {
