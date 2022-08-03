@@ -116,16 +116,17 @@ resource "google_compute_instance_group" "instance_group" {
     when = destroy
     command = <<-EOT
       zone="${self.zone}"
-      cluster_name="${self.name}"
+      project_id="${self.project}"
 
-      instances=$(gcloud compute instance-groups list-instances --project ${self.project} ${self.name} --zone ${self.zone} | awk '{print $1}' | sed '1d')
-      while IFS= read -r instance_name; do
-          echo "$instance_name"
-          gcloud compute instances update --project ${self.project} $instance_name --no-deletion-protection --zone "$zone"
-      done <<< "$instances"
+      instances=$(gcloud compute instance-groups list-instances ${self.name} --project "$project_id" --zone "$zone" | awk '{print $1}' | sed '1d')
+      if [[ "$instances" ]] ; then
+         while IFS= read -r instance_name; do
+          gcloud compute instances update $instance_name --project "$project_id" --no-deletion-protection --zone "$zone"
+         done <<< "$instances"
 
-      gcloud compute instances delete --project ${self.project} $(echo "$instances" | tr '\n' ' ') --zone "$zone" --quiet
-      sleep 20 # TODO: Better solution, as we rely here on google timings
+         gcloud compute instances delete --project "$project_id" $(echo "$instances" | tr '\n' ' ') --zone "$zone" --quiet
+         sleep 20 # TODO: Better solution, as we rely here on google timings
+      fi
     EOT
     interpreter = ["bash", "-ce"]
   }
