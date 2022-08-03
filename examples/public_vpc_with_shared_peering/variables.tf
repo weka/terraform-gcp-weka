@@ -94,14 +94,10 @@ variable "sg_public_ssh_cidr_range" {
   description = "list of ranges to allow ssh on public deployment"
 }
 
-variable "create_cloudscheduler_sa" {
-  type = bool
-  description = "should or not crate gcp cloudscheduler sa"
-}
-
 variable "private_network" {
   type        = bool
   description = "deploy weka in private network"
+  default     = false
 }
 
 variable "weka_image_name" {
@@ -112,17 +108,6 @@ variable "weka_image_name" {
 variable "weka_image_project" {
   type = string
   description = "weka image project"
-}
-
-
-variable "set_peering" {
-  type = bool
-  description = "apply peering connection between subnets and subnets "
-}
-
-variable "create_vpc_connector" {
-  type = bool
-  description = "create vpc connector"
 }
 
 variable "host_shared_range" {

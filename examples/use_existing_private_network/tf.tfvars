@@ -19,6 +19,5 @@ yum_repo_server          = "http://yum.weka.private.net"
 cluster_name             = "poc"
 sa_name                  = "deploy-sa"
 create_cloudscheduler_sa = true
-private_network          = true
 weka_image_name          = "centos-7-v20220719"
 weka_image_project       = "centos-cloud"

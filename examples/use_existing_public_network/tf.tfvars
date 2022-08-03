@@ -18,6 +18,5 @@ sa_name                  = "deploy-sa"
 cluster_name             = "poc"
 sg_public_ssh_cidr_range = ["0.0.0.0/0"]
 create_cloudscheduler_sa = true
-private_network          = false
 weka_image_name          = "centos-7-v20220719"
 weka_image_project       = "centos-cloud"

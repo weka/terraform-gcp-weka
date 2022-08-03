@@ -96,8 +96,9 @@ variable "sa_email" {
 }
 
 variable "create_cloudscheduler_sa" {
-  type = bool
+  type        = bool
   description = "should or not crate gcp cloudscheduler sa"
+  default     = true
 }
 
 variable "yum_repo_server" {

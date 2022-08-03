@@ -21,9 +21,7 @@ module "setup_network" {
   prefix                   = var.prefix
   region                   = var.region
   subnets-cidr-range       = var.subnets_cidr_range
-  set_peering              = var.set_peering
   zone                     = var.zone
-  create_vpc_connector     = var.create_vpc_connector
   vpc_connector_range      = var.vpc_connector_range
   private_network          = var.private_network
   sg_public_ssh_cidr_range = var.sg_public_ssh_cidr_range
@@ -76,7 +74,6 @@ module "deploy_weka" {
   weka_image_project       = var.weka_image_project
   vpc_connector            = module.setup_network.output-vpc-connector-name
   sa_email                 = module.create_service_account.outputs-service-account-email
-  create_cloudscheduler_sa = var.create_cloudscheduler_sa
   get_weka_io_token        = var.get_weka_io_token
   private_network          = var.private_network
   private_dns_zone         = module.setup_network.output-private-zone-name

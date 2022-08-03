@@ -88,14 +88,10 @@ variable "cluster_name" {
   description = "cluster prefix for all resources"
 }
 
-variable "create_cloudscheduler_sa" {
-  type        = bool
-  description = "should or not crate gcp cloudscheduler sa"
-}
-
 variable "private_network" {
   type        = bool
   description = "deploy weka in private network"
+  default     = true
 }
 
 
@@ -113,16 +109,6 @@ variable "weka_username" {
   type        = string
   description = "weka cluster username"
   default = "admin"
-}
-
-variable "set_peering" {
-  type = bool
-  description = "apply peering connection between subnets and subnets "
-}
-
-variable "create_vpc_connector" {
-  type = bool
-  description = "create vpc connector"
 }
 
 variable "host_shared_range" {

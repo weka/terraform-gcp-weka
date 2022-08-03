@@ -111,6 +111,7 @@ variable "create_cloudscheduler_sa" {
 variable "private_network" {
   type        = bool
   description = "deploy weka in private network"
+  default     = false
 }
 
 variable "set_peering" {
