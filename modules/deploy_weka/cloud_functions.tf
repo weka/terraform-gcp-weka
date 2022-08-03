@@ -15,15 +15,10 @@ resource "null_resource" "generate_cloud_functions_zips" {
   }
 }
 
-# ================== function bucket =======================
-resource "google_storage_bucket" "cloud_functions" {
-  name     = "${var.prefix}-${var.cluster_name}-${var.project}-cloud-functions"
-  location = var.bucket-location
-}
-
+# ================== function zip =======================
 resource "google_storage_bucket_object" "cloud_functions_zip" {
   name   = "${var.prefix}-${var.cluster_name}-cloud-functions.zip"
-  bucket = google_storage_bucket.cloud_functions.name
+  bucket = google_storage_bucket.weka_deployment.name
   source = local.function_zip_path
   depends_on = [null_resource.generate_cloud_functions_zips]
 }
@@ -35,7 +30,7 @@ resource "google_cloudfunctions_function" "deploy_function" {
   runtime     = "go116"
 
   available_memory_mb   = 128
-  source_archive_bucket = google_storage_bucket.cloud_functions.name
+  source_archive_bucket = google_storage_bucket.weka_deployment.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "Deploy"
@@ -48,7 +43,7 @@ resource "google_cloudfunctions_function" "deploy_function" {
     USER_NAME_ID: google_secret_manager_secret_version.user_secret_key.id
     PASSWORD_ID: google_secret_manager_secret_version.password_secret_key.id
     TOKEN_ID: var.private_network ? "" : google_secret_manager_secret_version.token_secret_key[0].id
-    BUCKET : google_storage_bucket.state_bucket.name
+    BUCKET : google_storage_bucket.weka_deployment.name
     INSTALL_URL: var.install_url != "" ? var.install_url : "https://$TOKEN@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}"
     CLUSTERIZE_URL:google_cloudfunctions_function.clusterize_function.https_trigger_url
     JOIN_FINALIZATION_URL:google_cloudfunctions_function.join_finalization_function.https_trigger_url
@@ -91,7 +86,7 @@ resource "google_cloudfunctions_function" "fetch_function" {
   runtime     = "go116"
 
   available_memory_mb   = 128
-  source_archive_bucket = google_storage_bucket.cloud_functions.name
+  source_archive_bucket = google_storage_bucket.weka_deployment.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "Fetch"
@@ -99,7 +94,7 @@ resource "google_cloudfunctions_function" "fetch_function" {
     PROJECT: var.project
     ZONE: var.zone
     INSTANCE_GROUP: google_compute_instance_group.instance_group.name
-    BUCKET : google_storage_bucket.state_bucket.name
+    BUCKET : google_storage_bucket.weka_deployment.name
     USER_NAME_ID: google_secret_manager_secret_version.user_secret_key.id
     PASSWORD_ID: google_secret_manager_secret_version.password_secret_key.id
   }
@@ -125,7 +120,7 @@ resource "google_cloudfunctions_function" "scale_down_function" {
   runtime     = "go116"
 
   available_memory_mb   = 128
-  source_archive_bucket = google_storage_bucket.cloud_functions.name
+  source_archive_bucket = google_storage_bucket.weka_deployment.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "ScaleDown"
@@ -153,7 +148,7 @@ resource "google_cloudfunctions_function" "scale_up_function" {
   timeout     = 540
 
   available_memory_mb   = 128
-  source_archive_bucket = google_storage_bucket.cloud_functions.name
+  source_archive_bucket = google_storage_bucket.weka_deployment.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "ScaleUp"
@@ -162,7 +157,7 @@ resource "google_cloudfunctions_function" "scale_up_function" {
     ZONE: var.zone
     CLUSTER_NAME: var.cluster_name
     BACKEND_TEMPLATE: google_compute_instance_template.backends-template.id
-    BUCKET : google_storage_bucket.state_bucket.name
+    BUCKET : google_storage_bucket.weka_deployment.name
     INSTANCE_BASE_NAME: "${var.prefix}-${var.cluster_name}-vm"
   }
   service_account_email = var.sa_email
@@ -188,7 +183,7 @@ resource "google_cloudfunctions_function" "clusterize_function" {
   timeout     = 540
 
   available_memory_mb   = 128
-  source_archive_bucket = google_storage_bucket.cloud_functions.name
+  source_archive_bucket = google_storage_bucket.weka_deployment.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "Clusterize"
@@ -202,7 +197,7 @@ resource "google_cloudfunctions_function" "clusterize_function" {
     NVMES_NUM: var.nvmes_number
     USER_NAME_ID: google_secret_manager_secret_version.user_secret_key.id
     PASSWORD_ID: google_secret_manager_secret_version.password_secret_key.id
-    BUCKET: google_storage_bucket.state_bucket.name
+    BUCKET: google_storage_bucket.weka_deployment.name
     CLUSTERIZE_FINALIZATION_URL: google_cloudfunctions_function.clusterize_finalization_function.https_trigger_url
   }
   service_account_email = var.sa_email
@@ -227,7 +222,7 @@ resource "google_cloudfunctions_function" "terminate_function" {
   timeout     = 540
 
   available_memory_mb   = 128
-  source_archive_bucket = google_storage_bucket.cloud_functions.name
+  source_archive_bucket = google_storage_bucket.weka_deployment.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "Terminate"
@@ -259,7 +254,7 @@ resource "google_cloudfunctions_function" "transient_function" {
   timeout     = 540
 
   available_memory_mb   = 128
-  source_archive_bucket = google_storage_bucket.cloud_functions.name
+  source_archive_bucket = google_storage_bucket.weka_deployment.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "Transient"
@@ -285,7 +280,7 @@ resource "google_cloudfunctions_function" "clusterize_finalization_function" {
   timeout     = 540
 
   available_memory_mb   = 128
-  source_archive_bucket = google_storage_bucket.cloud_functions.name
+  source_archive_bucket = google_storage_bucket.weka_deployment.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "ClusterizeFinalization"
@@ -293,7 +288,7 @@ resource "google_cloudfunctions_function" "clusterize_finalization_function" {
     PROJECT: var.project
     ZONE: var.zone
     INSTANCE_GROUP: google_compute_instance_group.instance_group.name
-    BUCKET: google_storage_bucket.state_bucket.name
+    BUCKET: google_storage_bucket.weka_deployment.name
   }
   service_account_email = var.sa_email
   depends_on = [google_project_service.project-function-api]
@@ -317,12 +312,12 @@ resource "google_cloudfunctions_function" "resize_function" {
   timeout     = 540
 
   available_memory_mb   = 128
-  source_archive_bucket = google_storage_bucket.cloud_functions.name
+  source_archive_bucket = google_storage_bucket.weka_deployment.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "Resize"
   environment_variables = {
-    BUCKET: google_storage_bucket.state_bucket.name
+    BUCKET: google_storage_bucket.weka_deployment.name
   }
   service_account_email = var.sa_email
   depends_on = [google_project_service.project-function-api]
@@ -346,7 +341,7 @@ resource "google_cloudfunctions_function" "join_finalization_function" {
   timeout     = 540
 
   available_memory_mb   = 128
-  source_archive_bucket = google_storage_bucket.cloud_functions.name
+  source_archive_bucket = google_storage_bucket.weka_deployment.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "JoinFinalization"

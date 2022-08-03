@@ -1,3 +1,9 @@
+# ======================== bucket ============================
+resource "google_storage_bucket" "weka_deployment" {
+  name     = "${var.prefix}-${var.cluster_name}-${var.project}"
+  location = var.bucket-location
+}
+
 # ======================== instances ============================
 
 data "google_compute_image" "weka_image" {
@@ -106,7 +112,7 @@ resource "google_compute_instance_group" "instance_group" {
   project = "${var.project}"
   depends_on = [
     google_compute_region_health_check.health_check,
-    google_storage_bucket.state_bucket
+    google_storage_bucket.weka_deployment
   ]
 
   lifecycle {
