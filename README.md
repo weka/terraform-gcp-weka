@@ -46,3 +46,21 @@ curl -m 70 -X POST RESIZE_CLOUD_FUNCTION_URL -H "Authorization:bearer $(gcloud a
     - `install_url` on `deploy_weka` module level, this allows to download weka from local bucket and not public get.weka.io service
     - `yum_repo_server` - Centos7 only, instructions to auto-configure yum to use alternative repository. Distributive repository required in order to download kernel headers and additional build software
     - `weka_image_id` - custom image to use
+
+### Notes
+- You have 2 ways to know that your weka cluster is ready:
+  * all vms where added to the instance group 
+  * go to the state file on the bucket our deployment created (`"${var.prefix}-${var.cluster_name}-${var.project}"`) and check if `clusterized` field is set to `true`.
+- In case you deployed a public cluster you can't change it to private and vise versa
+- You can't change vpc or number of nics after deployment
+- In order to see the input and output of each step in the scale down workflow, you can go to `EDIT`, then you can edit
+the scheduler, go to `Configure the execution` and choose for log level `All calls` . (We can't set this option via TF)
+- In order to run `terraform destroy`, you have to kill all the vms that were created by `scale_up` workflow. We added
+a script on the instance group destroy that will delete all vms. This script will kill all the instances that are attached to
+the instance group. In case something bad happened and there are instances that are not attached to the instance group,
+you will need to remove them manually.
+Sometimes we have a race where vms deletion isn't finished on time so vpc/subnet is failing to delete, for example:
+```
+│ Error: Error when reading or editing Subnetwork: googleapi: Error 400: The subnetwork resource 'projects/wekaio-rnd/regions/europe-west1/subnetworks/weka-subnet-1' is already being used by 'projects/wekaio-rnd/zones/europe-west1-b/instances/weka-poc-vm-98b6bab9-6fc4-4e5f-8902-1c5971521099', resourceInUseByAnotherResource
+```
+In this case, just run `terrafor destroy` again and everything should be OK.
