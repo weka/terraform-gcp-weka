@@ -130,7 +130,7 @@ resource "google_compute_instance_group" "instance_group" {
          done <<< "$instances"
 
          gcloud compute instances delete --project "$project_id" $(echo "$instances" | tr '\n' ' ') --zone "$zone" --quiet
-         sleep 20 # TODO: Better solution, as we rely here on google timings
+         sleep 60 # TODO: Better solution, as we rely here on google timings
       fi
     EOT
     interpreter = ["bash", "-ce"]
