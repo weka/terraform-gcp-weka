@@ -26,7 +26,7 @@ resource "google_compute_instance_template" "backends-template" {
 
   tags = ["${var.prefix}-${var.cluster_name}-backends", "allow-health-check"]
   labels = {
-    cluster_name = var.cluster_name
+    weka_cluster_name = var.cluster_name
   }
   service_account {
     email = var.sa_email

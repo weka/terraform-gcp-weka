@@ -267,7 +267,7 @@ func GetInstancesByClusterLabel(project, zone, clusterName string) (instances []
 	}
 	defer instanceClient.Close()
 
-	clusterNameFilter := fmt.Sprintf("labels.cluster_name=%s", clusterName)
+	clusterNameFilter := fmt.Sprintf("labels.weka_cluster_name=%s", clusterName)
 	listInstanceRequest := &computepb.ListInstancesRequest{
 		Project: project,
 		Zone:    zone,
@@ -299,7 +299,8 @@ func addInstanceToStateInstances(client *storage.Client, ctx context.Context, bu
 	}
 	if len(state.Instances) == state.InitialSize {
 		//This might happen if someone increases the desired number before the clusterization id done
-		err = errors.New(" number of instances is already the initial size, not adding instance to state instances list")
+		err = errors.New(fmt.Sprintf("number of instances is already the initial size, not adding instance %s to state instances list", newInstance))
+		log.Error().Msgf("%s", err)
 		return
 	}
 	state.Instances = append(state.Instances, newInstance)
@@ -363,26 +364,14 @@ func SetDeletionProtection(project, zone, instanceName string) (err error) {
 func AddInstancesToGroup(project, zone, instanceGroup string, instancesNames []string) (err error) {
 	log.Info().Msgf("Adding instances: %s to instance group %s", instancesNames, instanceGroup)
 	ctx := context.Background()
-	instancesClient, err := compute.NewInstancesRESTClient(ctx)
+
+	instances, err := GetInstances(project, zone, instancesNames)
 	if err != nil {
-		log.Error().Msgf("%s", err)
 		return
 	}
-	defer instancesClient.Close()
-
-	var instances []*computepb.InstanceReference
-	var instance *computepb.Instance
-	for _, instanceName := range instancesNames {
-		instance, err = instancesClient.Get(ctx, &computepb.GetInstanceRequest{
-			Instance: instanceName,
-			Project:  project,
-			Zone:     zone,
-		})
-		if err != nil {
-			log.Error().Msgf("%s", err)
-			return
-		}
-		instances = append(instances, &computepb.InstanceReference{Instance: instance.SelfLink})
+	var instanceReferences []*computepb.InstanceReference
+	for _, instance := range instances {
+		instanceReferences = append(instanceReferences, &computepb.InstanceReference{Instance: instance.SelfLink})
 	}
 
 	instancesGroupClient, err := compute.NewInstanceGroupsRESTClient(ctx)
@@ -394,7 +383,7 @@ func AddInstancesToGroup(project, zone, instanceGroup string, instancesNames []s
 	_, err = instancesGroupClient.AddInstances(ctx, &computepb.AddInstancesInstanceGroupRequest{
 		InstanceGroup: instanceGroup,
 		InstanceGroupsAddInstancesRequestResource: &computepb.InstanceGroupsAddInstancesRequest{
-			Instances: instances,
+			Instances: instanceReferences,
 		},
 		Project: project,
 		Zone:    zone,

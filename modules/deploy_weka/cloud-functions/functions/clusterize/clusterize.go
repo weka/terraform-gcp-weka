@@ -9,8 +9,11 @@ import (
 	"strings"
 )
 
-func getAllBackendsIps(project, zone, clusterName string) (backendsIps []string) {
-	instances := common.GetInstancesByClusterLabel(project, zone, clusterName)
+func getAllBackendsIps(project, zone string, instancesNames []string) (backendsIps []string) {
+	instances, err := common.GetInstances(project, zone, instancesNames)
+	if err != nil {
+		return
+	}
 	for _, instance := range instances {
 		for _, networkInterface := range instance.NetworkInterfaces {
 			backendsIps = append(backendsIps, *networkInterface.NetworkIP)
@@ -19,8 +22,9 @@ func getAllBackendsIps(project, zone, clusterName string) (backendsIps []string)
 	return
 }
 
-func generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, instanceNames, clusterizeFinalizationUrl string) (clusterizeScript string) {
+func generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, clusterizeFinalizationUrl string, instancesNames []string) (clusterizeScript string) {
 	log.Info().Msg("Generating clusterization scrtipt")
+	instancesNamesStr := strings.Join(instancesNames, " ")
 	creds, err := common.GetUsernameAndPassword(usernameId, passwordId)
 	if err != nil {
 		log.Error().Msgf("%s", err)
@@ -85,9 +89,9 @@ func generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, cluster
 
 	curl $CLUSTERIZE_FINALIZATION_URL -H "Authorization:bearer $(gcloud auth print-identity-token)"
 	`
-	ips := fmt.Sprintf("(%s)", strings.Join(getAllBackendsIps(project, zone, clusterName), " "))
+	ips := fmt.Sprintf("(%s)", strings.Join(getAllBackendsIps(project, zone, instancesNames), " "))
 	log.Info().Msgf("Formatting clusterization script template")
-	clusterizeScript = fmt.Sprintf(dedent.Dedent(clusterizeScriptTemplate), ips, hostsNum, nicsNum, gws, clusterName, nvmesMumber, creds.Username, creds.Password, instanceNames, clusterizeFinalizationUrl)
+	clusterizeScript = fmt.Sprintf(dedent.Dedent(clusterizeScriptTemplate), ips, hostsNum, nicsNum, gws, clusterName, nvmesMumber, creds.Username, creds.Password, instancesNamesStr, clusterizeFinalizationUrl)
 	return
 }
 
@@ -112,8 +116,7 @@ func Clusterize(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber,
 	}
 
 	if len(instancesNames) == initialSize {
-		instancesNamesStr := strings.Join(instancesNames, " ")
-		clusterizeScript = generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, instancesNamesStr, clusterizeFinalizationUrl)
+		clusterizeScript = generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, clusterizeFinalizationUrl, instancesNames)
 	}
 
 	return
