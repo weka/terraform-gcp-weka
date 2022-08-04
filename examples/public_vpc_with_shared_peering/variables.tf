@@ -104,16 +104,10 @@ variable "private_network" {
   description = "deploy weka in private network"
 }
 
-variable "weka_image_name" {
+variable "weka_image_id" {
   type = string
-  description = "weka image name"
+  description = "weka image id"
 }
-
-variable "weka_image_project" {
-  type = string
-  description = "weka image project"
-}
-
 
 variable "set_peering" {
   type = bool

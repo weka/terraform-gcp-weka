@@ -106,17 +106,17 @@ variable "yum_repo_server" {
   default     = ""
 }
 
-variable "weka_image_name" {
+variable "weka_image_id" {
   type = string
-  description = "weka image name"
-}
-
-variable "weka_image_project" {
-  type = string
-  description = "weka image project"
+  description = "weka image id"
 }
 
 variable "private_dns_zone" {
   type = string
   description = "Name of private dns zone"
+}
+
+variable "private_dns_name" {
+  type = string
+  description = "Private dns name"
 }

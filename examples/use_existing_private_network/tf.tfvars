@@ -20,5 +20,4 @@ cluster_name             = "poc"
 sa_name                  = "deploy-sa"
 create_cloudscheduler_sa = true
 private_network          = true
-weka_image_name          = "centos-7-v20220719"
-weka_image_project       = "centos-cloud"
+weka_image_id          = "projects/centos-cloud/global/images/centos-7-v20220719"

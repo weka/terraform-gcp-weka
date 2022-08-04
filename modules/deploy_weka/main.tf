@@ -5,11 +5,6 @@ resource "google_storage_bucket" "weka_deployment" {
 }
 
 # ======================== instances ============================
-
-data "google_compute_image" "weka_image" {
-  name  = var.weka_image_name
-  project = var.weka_image_project
-}
 locals {
   private_nic_first_index = var.private_network ? 0 : 1
 }
@@ -38,7 +33,7 @@ resource "google_compute_instance_template" "backends-template" {
     scopes = ["cloud-platform"]
   }
   disk {
-    source_image = data.google_compute_image.weka_image.id
+    source_image = var.weka_image_id
     disk_size_gb = 50
     boot         = true
   }
@@ -70,6 +65,10 @@ resource "google_compute_instance_template" "backends-template" {
       disk_type    = "local-ssd"
       disk_size_gb = 375
     }
+  }
+
+  lifecycle {
+    ignore_changes = [network_interface]
   }
 
   metadata_startup_script = <<-EOT

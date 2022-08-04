@@ -21,3 +21,7 @@ output "output-vpc-connector-name" {
 output "output-private-zone-name" {
   value = google_dns_managed_zone.private-zone.name
 }
+
+output "output-private-dns-name" {
+  value = google_dns_managed_zone.private-zone.dns_name
+}

@@ -45,4 +45,4 @@ curl -m 70 -X POST RESIZE_CLOUD_FUNCTION_URL -H "Authorization:bearer $(gcloud a
   - In addition, following params are optional for private networking, depending on how network topology looks like:
     - `install_url` on `deploy_weka` module level, this allows to download weka from local bucket and not public get.weka.io service
     - `yum_repo_server` - Centos7 only, instructions to auto-configure yum to use alternative repository. Distributive repository required in order to download kernel headers and additional build software
-    - `weka_image_name` - custom image to use, `weka_image_project` - project that serves `weka_image_project` 
+    - `weka_image_id` - custom image to use

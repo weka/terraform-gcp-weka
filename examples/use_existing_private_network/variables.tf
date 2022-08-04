@@ -125,12 +125,7 @@ variable "set_peering" {
   description = "apply peering connection between subnets and subnets "
 }
 
-variable "weka_image_name" {
+variable "weka_image_id" {
   type = string
-  description = "weka image name"
-}
-
-variable "weka_image_project" {
-  type = string
-  description = "weka image project"
+  description = "weka image id"
 }

@@ -35,15 +35,14 @@ resource "google_compute_forwarding_rule" "google_compute_forwarding_rule" {
   all_ports             = true
   network               = data.google_compute_network.vpc_list_ids[0].self_link
   subnetwork            = data.google_compute_subnetwork.subnets_list_ids[0].self_link
-}
-
-data "google_dns_managed_zone" "zone" {
-  name = var.private_dns_zone
+  lifecycle {
+    ignore_changes = [network, subnetwork]
+  }
 }
 
 resource "google_dns_record_set" "record-a" {
-  name         = "${var.cluster_name}.${data.google_dns_managed_zone.zone.dns_name}"
-  managed_zone = data.google_dns_managed_zone.zone.name
+  name         = "${var.cluster_name}.${var.private_dns_name}"
+  managed_zone = var.private_dns_zone
   project      = var.project
   type         = "A"
   ttl          = 120

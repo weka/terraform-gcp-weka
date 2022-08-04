@@ -18,6 +18,5 @@ clusters_name            = ["poc", "poc1"]
 sg_public_ssh_cidr_range = ["0.0.0.0/0"]
 create_cloudscheduler_sa = true
 private_network          = false
-weka_image_name          = "centos-7-v20220719"
-weka_image_project       = "centos-cloud"
+weka_image_id          = "projects/centos-cloud/global/images/centos-7-v20220719"
 set_peering              = true

@@ -72,14 +72,14 @@ module "deploy_weka" {
   weka_username            = var.weka_username
   weka_version             = var.weka_version
   bucket-location          = var.bucket_location
-  weka_image_name          = var.weka_image_name
-  weka_image_project       = var.weka_image_project
+  weka_image_id          = var.weka_image_id
   vpc_connector            = module.setup_network.output-vpc-connector-name
   sa_email                 = module.create_service_account.outputs-service-account-email
   create_cloudscheduler_sa = var.create_cloudscheduler_sa
   get_weka_io_token        = var.get_weka_io_token
   private_network          = var.private_network
   private_dns_zone         = module.setup_network.output-private-zone-name
+  private_dns_name         = module.setup_network.output-private-dns-name
   providers = {
     google = google.deployment
   }

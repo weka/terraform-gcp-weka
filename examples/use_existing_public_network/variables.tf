@@ -119,14 +119,9 @@ variable "set_peering" {
 }
 
 
-variable "weka_image_name" {
+variable "weka_image_id" {
   type = string
-  description = "weka image name"
-}
-
-variable "weka_image_project" {
-  type = string
-  description = "weka image project"
+  description = "weka image id"
 }
 
 variable "path_to_modules" {
