@@ -44,6 +44,7 @@ variable "prefix" {
 variable "set_peering" {
   type = bool
   description = "apply peering connection between subnets and subnets "
+  default = true
 }
 
 
@@ -56,6 +57,7 @@ variable "vpc_connector_range" {
 variable "create_vpc_connector" {
   type = bool
   description = ""
+  default = true
 }
 
 variable "vpc_connector_name" {

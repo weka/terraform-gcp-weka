@@ -21,9 +21,7 @@ module "setup_network" {
   prefix               = var.prefix
   region               = var.region
   subnets-cidr-range   = var.subnets_cidr_range
-  set_peering          = var.set_peering
   zone                 = var.zone
-  create_vpc_connector = var.create_vpc_connector
   vpc_connector_range  = var.vpc_connector_range
   private_network      = var.private_network
 
@@ -53,12 +51,10 @@ module "deploy_weka" {
   nvmes_number             = var.nvmes_number
   weka_version             = var.weka_version
   internal_bucket_location = var.internal_bucket_location
-  weka_image_id          = var.weka_image_id
   weka_username            = var.weka_username
   vpc_connector            = module.setup_network.output-vpc-connector-name
   sa_email                 = module.create_service_account.outputs-service-account-email
   yum_repo_server          = var.yum_repo_server
-  create_cloudscheduler_sa = var.create_cloudscheduler_sa
   private_network          = var.private_network
   private_dns_zone         = module.setup_network.output-private-zone-name
   private_dns_name         = module.setup_network.output-private-dns-name

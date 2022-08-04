@@ -36,11 +36,6 @@ variable "vpc_connector_range" {
   description = "list of connector to use for serverless vpc access"
 }
 
-variable "create_vpc_connector" {
-  type = bool
-  description = "create vpc connector"
-}
-
 variable "vpc_connector_name" {
   type = string
   description = "name of existing vpc connector"
@@ -103,25 +98,9 @@ variable "sg_public_ssh_cidr_range" {
   description = "list of ranges to allow ssh on public deployment"
 }
 
-variable "create_cloudscheduler_sa" {
-  type = bool
-  description = "should or not crate gcp cloudscheduler sa"
-}
-
 variable "private_network" {
   type        = bool
   description = "deploy weka in private network"
-}
-
-variable "set_peering" {
-  type = bool
-  description = "apply peering connection between subnets and subnets "
-}
-
-
-variable "weka_image_id" {
-  type = string
-  description = "weka image id"
 }
 
 variable "path_to_modules" {

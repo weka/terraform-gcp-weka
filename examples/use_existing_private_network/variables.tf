@@ -30,16 +30,9 @@ variable "subnets" {
   default = []
 }
 
-
 variable "vpc_connector_range" {
   type = string
   description = "list of connector to use for serverless vpc access"
-}
-
-variable "create_vpc_connector" {
-  type = bool
-  description = "create vpc connector"
-  default = true
 }
 
 variable "vpc_connector_name" {
@@ -110,22 +103,7 @@ variable "sa_name" {
   description = "service account name"
 }
 
-variable "create_cloudscheduler_sa" {
-  type = bool
-  description = "should or not crate gcp cloudscheduler sa"
-}
-
 variable "private_network" {
   type        = bool
   description = "deploy weka in private network"
-}
-
-variable "set_peering" {
-  type = bool
-  description = "apply peering connection between subnets and subnets "
-}
-
-variable "weka_image_id" {
-  type = string
-  description = "weka image id"
 }

@@ -98,6 +98,7 @@ variable "sa_email" {
 variable "create_cloudscheduler_sa" {
   type = bool
   description = "should or not crate gcp cloudscheduler sa"
+  default = true
 }
 
 variable "yum_repo_server" {
@@ -109,6 +110,7 @@ variable "yum_repo_server" {
 variable "weka_image_id" {
   type = string
   description = "weka image id"
+  default = "projects/centos-cloud/global/images/centos-7-v20220719"
 }
 
 variable "private_dns_zone" {
