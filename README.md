@@ -30,6 +30,7 @@ Example:
 ```
 curl -m 70 -X POST RESIZE_CLOUD_FUNCTION_URL -H "Authorization:bearer $(gcloud auth print-identity-token)" -H "Content-Type:application/json" -d '{"value":6}'
 ```
+Similar command   
 
 ### Weka cluster deployment:
 - **Authentication**: `gcloud auth application-default login`
@@ -50,7 +51,8 @@ curl -m 70 -X POST RESIZE_CLOUD_FUNCTION_URL -H "Authorization:bearer $(gcloud a
 ### Notes
 - You have 2 ways to know that your weka cluster is ready:
   * all vms where added to the instance group 
-  * go to the state file on the bucket our deployment created (`"${var.prefix}-${var.cluster_name}-${var.project}"`) and check if `clusterized` field is set to `true`.
+  * run resize curl command with target size equal to initial size.  Until cluster is fully formed, it will return error indication that cluster is not ready yet
+  * future versions will include status api with more information
 - In case you deployed a public cluster you can't change it to private and vise versa
 - You can't change vpc or number of nics after deployment
 - In order to see the input and output of each step in the scale down workflow, you can go to `EDIT`, then you can edit
@@ -59,8 +61,14 @@ the scheduler, go to `Configure the execution` and choose for log level `All cal
 a script on the instance group destroy that will delete all vms. This script will kill all the instances that are attached to
 the instance group. In case something bad happened and there are instances that are not attached to the instance group,
 you will need to remove them manually.
-Sometimes we have a race where vms deletion isn't finished on time so vpc/subnet is failing to delete, for example:
+- When destroying cluster using `terraform destroy` we will remove only instances that belong to instance group.   
+In case destroy runs during scale up, some instances might not yet be added to instance group and deletion of VPC and other shared resources will be rejected by GCP.
+Please ensure to run destroy in a stable state of cluster  
+Example of such case:
 ```
 │ Error: Error when reading or editing Subnetwork: googleapi: Error 400: The subnetwork resource 'projects/wekaio-rnd/regions/europe-west1/subnetworks/weka-subnet-1' is already being used by 'projects/wekaio-rnd/zones/europe-west1-b/instances/weka-poc-vm-98b6bab9-6fc4-4e5f-8902-1c5971521099', resourceInUseByAnotherResource
 ```
-In this case, just run `terrafor destroy` again and everything should be OK.
+In this case, ensure that you have no instances in VPC and re-run `terrafor destroy` again
+- Right now only two configurations are supported:
+  - nics_number == 4 with instance type c2-standard-8
+  - nics_number == 7 with instance type c2-standard-16

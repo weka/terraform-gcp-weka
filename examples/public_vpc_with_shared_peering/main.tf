@@ -41,7 +41,7 @@ module "shared_vpc_peering" {
   project           = var.project
   host_project      = var.host_project
   shared_vpcs       = var.shared_vpcs
-  vpcs              = module.setup_network.output-vpcs-names
+  vpcs              = module.setup_network.vpcs_names
   sa_email          = module.create_service_account.outputs-service-account-email
   host_shared_range = var.host_shared_range
   providers = {
@@ -59,10 +59,10 @@ module "deploy_weka" {
   cluster_name             = var.cluster_name
   project                  = var.project
   nics_number              = var.nics_number
-  vpcs                     = module.setup_network.output-vpcs-names
+  vpcs                     = module.setup_network.vpcs_names
   prefix                   = var.prefix
   region                   = var.region
-  subnets_name             = module.setup_network.output-subnetwork-name
+  subnets_name             = module.setup_network.subnetwork_name
   zone                     = var.zone
   cluster_size             = var.cluster_size
   machine_type             = var.machine_type
@@ -70,12 +70,12 @@ module "deploy_weka" {
   weka_username            = var.weka_username
   weka_version             = var.weka_version
   internal_bucket_location = var.internal_bucket_location
-  vpc_connector            = module.setup_network.output-vpc-connector-name
+  vpc_connector            = module.setup_network.vpc_connector_name
   sa_email                 = module.create_service_account.outputs-service-account-email
   get_weka_io_token        = var.get_weka_io_token
   private_network          = var.private_network
-  private_dns_zone         = module.setup_network.output-private-zone-name
-  private_dns_name         = module.setup_network.output-private-dns-name
+  private_dns_zone         = module.setup_network.private_zone_name
+  private_dns_name         = module.setup_network.private_dns_name
   providers = {
     google = google.deployment
   }
