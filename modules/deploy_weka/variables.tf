@@ -76,9 +76,9 @@ variable "cluster_size" {
   description = "weka cluster size"
 }
 
-variable "bucket-location" {
-  type = string
-  description = "bucket function location"
+variable "internal_bucket_location" {
+  type        = string
+  description = "functions and state bucket location"
 }
 
 variable "subnets_name" {

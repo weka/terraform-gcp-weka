@@ -59,11 +59,10 @@ variable "weka_username" {
   default = "admin"
 }
 
-variable "bucket_location" {
-  type = string
-  description = "bucket function location"
+variable "internal_bucket_location" {
+  type        = string
+  description = "functions and state bucket location"
 }
-
 
 variable "subnets_cidr_range" {
   type        = list(string)

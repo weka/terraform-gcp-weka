@@ -57,7 +57,7 @@ module "deploy_weka" {
   weka_version             = var.weka_version
   weka_username            = var.weka_username
   get_weka_io_token        = var.get_weka_io_token
-  bucket-location          = var.bucket_location
+  internal_bucket_location = var.internal_bucket_location
   weka_image_id          = var.weka_image_id
   vpc_connector            = module.setup_network.output-vpc-connector-name
   sa_email                 = module.create_service_account.outputs-service-account-email

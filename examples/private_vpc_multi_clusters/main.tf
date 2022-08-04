@@ -52,7 +52,7 @@ module "deploy_weka" {
   machine_type             = var.machine_type
   nvmes_number             = var.nvmes_number
   weka_version             = var.weka_version
-  bucket-location          = var.bucket_location
+  internal_bucket_location = var.internal_bucket_location
   weka_image_id          = var.weka_image_id
   weka_username            = var.weka_username
   vpc_connector            = module.setup_network.output-vpc-connector-name
