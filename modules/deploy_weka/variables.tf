@@ -5,7 +5,7 @@ variable "cluster_name" {
 
 variable "project" {
   type        = string
-  description = "project name"
+  description = "project id"
 }
 
 variable "nics_number" {
