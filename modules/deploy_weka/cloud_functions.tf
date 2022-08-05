@@ -380,6 +380,7 @@ resource "google_cloudfunctions_function" "terminate_cluster_function" {
     PROJECT: var.project
     ZONE: var.zone
     BUCKET : google_storage_bucket.weka_deployment.name
+    CLUSTER_NAME: var.cluster_name
   }
   service_account_email = var.sa_email
   depends_on = [google_project_service.project-function-api]

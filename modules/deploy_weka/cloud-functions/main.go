@@ -236,6 +236,7 @@ func TerminateCluster(w http.ResponseWriter, r *http.Request) {
 	project := os.Getenv("PROJECT")
 	zone := os.Getenv("ZONE")
 	bucket := os.Getenv("BUCKET")
+	clusterName := os.Getenv("CLUSTER_NAME")
 
 	// to lower the risk of unintended cluster termination, we will not have the cluster name as an env var but require
 	//to pass it as param on the termination request
@@ -245,6 +246,11 @@ func TerminateCluster(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
 		fmt.Fprint(w, "Failed decoding request")
+		return
+	}
+
+	if clusterName != d.Name {
+		fmt.Fprintf(w, fmt.Sprintf("Wrong cluster name :%s", d.Name))
 		return
 	}
 
