@@ -69,34 +69,6 @@ func setForExplicitRemoval(instance *computepb.Instance, toRemove []protocol.HgI
 	return false
 }
 
-func terminateInstances(project, zone string, instanceIds []string) (terminatingInstances []string, errs []error) {
-
-	ctx := context.Background()
-	instanceClient, err := compute.NewInstancesRESTClient(ctx)
-	if err != nil {
-		log.Fatal().Err(err)
-		errs = append(errs, err)
-		return
-	}
-	defer instanceClient.Close()
-
-	log.Info().Msgf("Terminating instances %s", instanceIds)
-	for _, instanceId := range instanceIds {
-		_, err := instanceClient.Delete(ctx, &computepb.DeleteInstanceRequest{
-			Project:  project,
-			Zone:     zone,
-			Instance: instanceId,
-		})
-		if err != nil {
-			log.Error().Msgf("error terminating instances %s", err.Error())
-			errs = append(errs, err)
-			continue
-		}
-		terminatingInstances = append(terminatingInstances, instanceId)
-	}
-	return
-}
-
 func terminateUnneededInstances(project, zone string, instances []*computepb.Instance, explicitRemoval []protocol.HgInstance) (terminated []*computepb.Instance, errs []error) {
 	terminateInstanceIds := make([]string, 0, 0)
 	imap := instancesToMap(instances)
@@ -135,47 +107,19 @@ func min(a, b int) int {
 	return b
 }
 
-func unsetDeletionProtection(project, zone, instanceName string) (err error) {
-	log.Info().Msgf("Setting deletion protection on %s", instanceName)
-	ctx := context.Background()
-
-	c, err := compute.NewInstancesRESTClient(ctx)
-	if err != nil {
-		log.Error().Msgf("%s", err)
-		return
-	}
-	defer c.Close()
-
-	value := false
-	req := &computepb.SetDeletionProtectionInstanceRequest{
-		Project:            project,
-		Zone:               zone,
-		Resource:           instanceName,
-		DeletionProtection: &value,
-	}
-
-	_, err = c.SetDeletionProtection(ctx, req)
-	if err != nil {
-		log.Error().Msgf("%s", err)
-		return
-	}
-
-	return
-}
-
 func terminateAsgInstances(project, zone string, terminateInstanceIds []string) (terminatedInstances []string, errs []error) {
 	if len(terminateInstanceIds) == 0 {
 		return
 	}
 	setToTerminate := terminateInstanceIds[:min(len(terminateInstanceIds), 50)]
 	for _, instanceId := range setToTerminate {
-		err := unsetDeletionProtection(project, zone, instanceId)
+		err := common.UnsetDeletionProtection(project, zone, instanceId)
 		if err != nil {
 			errs = append(errs, err)
 		}
 	}
 
-	terminatedInstances, errs = terminateInstances(project, zone, setToTerminate)
+	terminatedInstances, errs = common.TerminateInstances(project, zone, setToTerminate)
 	return
 }
 
@@ -264,7 +208,7 @@ func TerminateUnhealthyInstances(project, zone, instanceGroup, loadBalancerName 
 	}
 
 	log.Debug().Msgf("found %d suspended instances", len(toTerminate))
-	_, terminateErrors := terminateInstances(project, zone, toTerminate)
+	_, terminateErrors := common.TerminateInstances(project, zone, toTerminate)
 	errs = append(errs, terminateErrors...)
 
 	return

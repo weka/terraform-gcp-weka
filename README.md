@@ -61,14 +61,14 @@ the scheduler, go to `Configure the execution` and choose for log level `All cal
 a script on the instance group destroy that will delete all vms. This script will kill all the instances that are attached to
 the instance group. In case something bad happened and there are instances that are not attached to the instance group,
 you will need to remove them manually.
-- When destroying cluster using `terraform destroy` we will remove only instances that belong to instance group.   
-In case destroy runs during scale up, some instances might not yet be added to instance group and deletion of VPC and other shared resources will be rejected by GCP.
-Please ensure to run destroy in a stable state of cluster  
-Example of such case:
+- **All weka vms must be removed before running** `terraform destroy`. Since the vms were not create vie terraform,
+you will need to run the following cloud function before destroying:
 ```
-│ Error: Error when reading or editing Subnetwork: googleapi: Error 400: The subnetwork resource 'projects/wekaio-rnd/regions/europe-west1/subnetworks/weka-subnet-1' is already being used by 'projects/wekaio-rnd/zones/europe-west1-b/instances/weka-poc-vm-98b6bab9-6fc4-4e5f-8902-1c5971521099', resourceInUseByAnotherResource
+curl -m 70 -X POST https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-$CLUSTER_NAME-terminate-cluster \                                                                                 
+-H "Authorization:bearer $(gcloud auth print-identity-token)" \
+-H "Content-Type:application/json" \
+-d '{"name":"$CLUSTER_NAME"}'
 ```
-In this case, ensure that you have no instances in VPC and re-run `terrafor destroy` again
 - Right now only two configurations are supported:
   - nics_number == 4 with instance type c2-standard-8
   - nics_number == 7 with instance type c2-standard-16

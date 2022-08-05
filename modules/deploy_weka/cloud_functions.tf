@@ -363,3 +363,34 @@ resource "google_cloudfunctions_function_iam_member" "join_finalization_invoker"
   role   = "roles/cloudfunctions.invoker"
   member = "allAuthenticatedUsers"
 }
+
+# ======================== terminate_cluster ============================
+resource "google_cloudfunctions_function" "terminate_cluster_function" {
+  name        = "${var.prefix}-${var.cluster_name}-terminate-cluster"
+  description = "terminate cluster"
+  runtime     = "go116"
+  timeout     = 540
+
+  available_memory_mb   = 128
+  source_archive_bucket = google_storage_bucket.weka_deployment.name
+  source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
+  trigger_http          = true
+  entry_point           = "TerminateCluster"
+  environment_variables = {
+    PROJECT: var.project
+    ZONE: var.zone
+    BUCKET : google_storage_bucket.weka_deployment.name
+  }
+  service_account_email = var.sa_email
+  depends_on = [google_project_service.project-function-api]
+}
+
+# IAM entry for all users to invoke the function
+resource "google_cloudfunctions_function_iam_member" "terminate_cluster_invoker" {
+  project        = google_cloudfunctions_function.terminate_cluster_function.project
+  region         = google_cloudfunctions_function.terminate_cluster_function.region
+  cloud_function = google_cloudfunctions_function.terminate_cluster_function.name
+
+  role   = "roles/cloudfunctions.invoker"
+  member = "allAuthenticatedUsers"
+}

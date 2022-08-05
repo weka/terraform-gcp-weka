@@ -109,31 +109,10 @@ resource "google_compute_instance_group" "instance_group" {
   zone = var.zone
   network = data.google_compute_network.vpc_list_ids[0].self_link
   project = "${var.project}"
-  depends_on = [
-    google_compute_region_health_check.health_check,
-    google_storage_bucket.weka_deployment
-  ]
+  depends_on = [google_compute_region_health_check.health_check]
 
   lifecycle {
     ignore_changes = [network]
-  }
-  provisioner "local-exec" {
-    when = destroy
-    command = <<-EOT
-      zone="${self.zone}"
-      project_id="${self.project}"
-
-      instances=$(gcloud compute instance-groups list-instances ${self.name} --project "$project_id" --zone "$zone" | awk '{print $1}' | sed '1d')
-      if [[ "$instances" ]] ; then
-         while IFS= read -r instance_name; do
-          gcloud compute instances update $instance_name --project "$project_id" --no-deletion-protection --zone "$zone"
-         done <<< "$instances"
-
-         gcloud compute instances delete --project "$project_id" $(echo "$instances" | tr '\n' ' ') --zone "$zone" --quiet
-         sleep 60 # TODO: Better solution, as we rely here on google timings
-      fi
-    EOT
-    interpreter = ["bash", "-ce"]
   }
 }
 

@@ -397,3 +397,59 @@ func AddInstancesToGroup(project, zone, instanceGroup string, instancesNames []s
 	log.Info().Msgf("Instances: %s, were added to instance group successfully", instancesNames)
 	return
 }
+
+func UnsetDeletionProtection(project, zone, instanceName string) (err error) {
+	log.Info().Msgf("Setting deletion protection on %s", instanceName)
+	ctx := context.Background()
+
+	c, err := compute.NewInstancesRESTClient(ctx)
+	if err != nil {
+		log.Error().Msgf("%s", err)
+		return
+	}
+	defer c.Close()
+
+	value := false
+	req := &computepb.SetDeletionProtectionInstanceRequest{
+		Project:            project,
+		Zone:               zone,
+		Resource:           instanceName,
+		DeletionProtection: &value,
+	}
+
+	_, err = c.SetDeletionProtection(ctx, req)
+	if err != nil {
+		log.Error().Msgf("%s", err)
+		return
+	}
+
+	return
+}
+
+func TerminateInstances(project, zone string, instanceNames []string) (terminatingInstances []string, errs []error) {
+
+	ctx := context.Background()
+	instanceClient, err := compute.NewInstancesRESTClient(ctx)
+	if err != nil {
+		log.Fatal().Err(err)
+		errs = append(errs, err)
+		return
+	}
+	defer instanceClient.Close()
+
+	log.Info().Msgf("Terminating instances %s", instanceNames)
+	for _, instanceName := range instanceNames {
+		_, err := instanceClient.Delete(ctx, &computepb.DeleteInstanceRequest{
+			Project:  project,
+			Zone:     zone,
+			Instance: instanceName,
+		})
+		if err != nil {
+			log.Error().Msgf("error terminating instances %s", err.Error())
+			errs = append(errs, err)
+			continue
+		}
+		terminatingInstances = append(terminatingInstances, instanceName)
+	}
+	return
+}

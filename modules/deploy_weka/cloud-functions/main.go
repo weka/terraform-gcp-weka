@@ -15,6 +15,7 @@ import (
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/scale_down"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/scale_up"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/terminate"
+	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/terminate_cluster"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/protocol"
 	"net/http"
 	"os"
@@ -228,5 +229,38 @@ func JoinFinalization(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "%s", err)
 	} else {
 		fmt.Fprintf(w, "JoinFinalization completed successfully")
+	}
+}
+
+func TerminateCluster(w http.ResponseWriter, r *http.Request) {
+	project := os.Getenv("PROJECT")
+	zone := os.Getenv("ZONE")
+	bucket := os.Getenv("BUCKET")
+
+	// to lower the risk of unintended cluster termination, we will not have the cluster name as an env var but require
+	//to pass it as param on the termination request
+
+	var d struct {
+		Name string `json:"name"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
+		fmt.Fprint(w, "Failed decoding request")
+		return
+	}
+
+	err := terminate_cluster.DeleteStateObject(bucket)
+	if err != nil {
+		fmt.Fprintf(w, fmt.Sprintf("Failed deleting state object:%s", err))
+		return
+	}
+	fmt.Fprintf(w, "Deleted cluster state successfully.")
+
+	terminatingInstances, errs := terminate_cluster.TerminateInstances(project, zone, d.Name)
+	if len(errs) > 0 {
+		fmt.Fprintf(w, fmt.Sprintf("Got the following failure while terminating instances:%s", errs))
+	}
+
+	if len(terminatingInstances) > 0 {
+		fmt.Fprintf(w, fmt.Sprintf("Terminated %d instances:%s", len(terminatingInstances), terminatingInstances))
 	}
 }
