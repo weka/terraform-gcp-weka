@@ -1,25 +1,44 @@
 # ======================== cloud function ============================
-
 locals {
-  function_zip_path = "/tmp/${var.project}-${var.cluster_name}-cloud-functions.zip"
+  functions_zip_dir = "/tmp/${var.project}-${var.cluster_name}"
+  functions_zip_version = "/tmp/${var.project}-${var.cluster_name}/version"
 }
 
-resource "null_resource" "generate_cloud_functions_zips" {
+resource "null_resource" "calc_version" {
+  triggers  =  { always_run = timestamp() }
   provisioner "local-exec" {
     command = <<-EOT
-      rm -f ${local.function_zip_path}
+      mkdir -p ${local.functions_zip_dir}
       cd ${path.module}/cloud-functions
-      zip -r ${local.function_zip_path} * -x "cloud_functions_test.go"
+      echo -n $(md5sum $(find . -name "*.go") | md5sum | awk '{print $1}') > ${local.functions_zip_version}
     EOT
     interpreter = ["bash", "-ce"]
   }
 }
 
+data "local_file" "zip_version" {
+  filename = local.functions_zip_version
+  depends_on = [null_resource.calc_version]
+}
+
+
+resource "null_resource" "generate_cloud_functions_zips" {
+  triggers = {version =data.local_file.zip_version.content}
+  provisioner "local-exec" {
+    command = <<-EOT
+      cd ${path.module}/cloud-functions
+      zip -r ${local.functions_zip_dir}/cloud-functions-${data.local_file.zip_version.content}.zip * -x "cloud_functions_test.go"
+    EOT
+    interpreter = ["bash", "-ce"]
+  }
+  depends_on = [null_resource.calc_version]
+}
+
 # ================== function zip =======================
 resource "google_storage_bucket_object" "cloud_functions_zip" {
-  name   = "${var.prefix}-${var.cluster_name}-cloud-functions.zip"
+  name   = "${var.prefix}-${var.cluster_name}-cloud-functions-${data.local_file.zip_version.content}.zip"
   bucket = google_storage_bucket.weka_deployment.name
-  source = local.function_zip_path
+  source = "${local.functions_zip_dir}/cloud-functions-${data.local_file.zip_version.content}.zip"
   depends_on = [null_resource.generate_cloud_functions_zips]
 }
 
