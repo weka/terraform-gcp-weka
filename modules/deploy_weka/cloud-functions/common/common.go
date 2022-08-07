@@ -99,6 +99,13 @@ func GetInstances(project, zone string, instanceNames []string) (instances []*co
 	return
 }
 
+func GetInstanceGroupBackendsIps(instances []*computepb.Instance) (instanceGroupBackendsIps []string) {
+	for _, instance := range instances {
+		instanceGroupBackendsIps = append(instanceGroupBackendsIps, *instance.NetworkInterfaces[0].NetworkIP)
+	}
+	return
+}
+
 func GetInstanceGroupInstanceNames(project, zone, instanceGroup string) (instanceNames []string) {
 	ctx := context.Background()
 

@@ -16,6 +16,7 @@ const (
 	JrpcDeactivateDrives JrpcMethod = "cluster_deactivate_drives"
 	JrpcDeactivateHosts  JrpcMethod = "cluster_deactivate_hosts"
 	JrpcStatus           JrpcMethod = "status"
+	JrpcRebuildStatus    JrpcMethod = "system_get_rebuild_status"
 )
 
 type HostListResponse map[HostId]Host
@@ -50,4 +51,19 @@ type Node struct {
 	Status          string     `json:"status"`
 	UpSince         *time.Time `json:"up_since"`
 	HostId          HostId     `json:"host_id"`
+}
+
+type Protection map[string]interface{}
+type RebuildStatus struct {
+	EnoughActiveFDs       bool         `json:"enoughActiveFDs"`
+	IsInited              bool         `json:"isInited"`
+	NumActiveFDs          int          `json:"numActiveFDs"`
+	ProgressPercent       float32      `json:"progressPercent"`
+	ProtectionState       []Protection `json:"protectionState"`
+	RequiredFDsForRebuild int          `json:"requiredFDsForRebuild"`
+	StripeDisks           int          `json:"stripeDisks"`
+	TotalCopiesDoneMiB    int          `json:"totalCopiesDoneMiB"`
+	TotalCopiesMiB        int          `json:"totalCopiesMiB"`
+	UnavailableMiB        int          `json:"unavailableMiB"`
+	UnavailablePercent    int          `json:"unavailablePercent"`
 }

@@ -395,3 +395,41 @@ resource "google_cloudfunctions_function_iam_member" "terminate_cluster_invoker"
   role   = "roles/cloudfunctions.invoker"
   member = "allAuthenticatedUsers"
 }
+
+# ======================== status ============================
+resource "google_cloudfunctions_function" "status_function" {
+  name        = "${var.prefix}-${var.cluster_name}-status"
+  description = "get cluster status"
+  runtime     = "go116"
+  timeout     = 540
+
+  available_memory_mb   = 128
+  source_archive_bucket = google_storage_bucket.weka_deployment.name
+  source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
+  trigger_http          = true
+  entry_point           = "Status"
+  vpc_connector         = var.vpc_connector
+  ingress_settings      = "ALLOW_ALL"
+  vpc_connector_egress_settings = "PRIVATE_RANGES_ONLY"
+  environment_variables = {
+    PROJECT: var.project
+    ZONE: var.zone
+    BUCKET : google_storage_bucket.weka_deployment.name
+    CLUSTER_NAME: var.cluster_name
+    INSTANCE_GROUP: google_compute_instance_group.instance_group.name
+    USER_NAME_ID: google_secret_manager_secret_version.user_secret_key.id
+    PASSWORD_ID: google_secret_manager_secret_version.password_secret_key.id
+  }
+  service_account_email = var.sa_email
+  depends_on = [google_project_service.project-function-api]
+}
+
+# IAM entry for all users to invoke the function
+resource "google_cloudfunctions_function_iam_member" "status_invoker" {
+  project        = google_cloudfunctions_function.status_function.project
+  region         = google_cloudfunctions_function.status_function.region
+  cloud_function = google_cloudfunctions_function.status_function.name
+
+  role   = "roles/cloudfunctions.invoker"
+  member = "allAuthenticatedUsers"
+}
