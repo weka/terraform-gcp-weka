@@ -55,7 +55,13 @@ func Test_fetch(t *testing.T) {
 	bucket := "weka-poc-state"
 	usernameId := "projects/896245720241/secrets/weka-poc-username/versions/1"
 	passwordId := "projects/896245720241/secrets/weka-poc-password/versions/1"
-	b, err := json.Marshal(fetch.GetFetchDataParams(project, zone, instanceGroup, bucket, usernameId, passwordId))
+
+	result, err := fetch.GetFetchDataParams(project, zone, instanceGroup, bucket, usernameId, passwordId)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	b, err := json.Marshal(result)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -70,7 +76,7 @@ func Test_deploy(t *testing.T) {
 	instanceGroup := "weka-instance-group"
 	usernameId := "projects/896245720241/secrets/weka-poc-username/versions/1"
 	passwordId := "projects/896245720241/secrets/weka-poc-password/versions/1"
-	tokenId := "projects/896245720241/secrets/weka-poc-token/versions/1
+	tokenId := "projects/896245720241/secrets/weka-poc-token/versions/1"
 	joinFinalizationUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-join-finalization"
 	bashScript, err := deploy.GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, joinFinalizationUrl)
 	if err != nil {
