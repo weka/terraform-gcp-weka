@@ -103,3 +103,9 @@ variable "host_shared_range" {
   type = list(string)
   description = "list of host range to allow sg"
 }
+
+variable "attach_service_project" {
+  type        = bool
+  description = "Add service project to host project"
+  default     = false
+}

@@ -19,6 +19,7 @@ resource "google_project_iam_binding" "iam-binding" {
 }
 
 resource "google_compute_shared_vpc_service_project" "service" {
+  count           = var.attach_service_project ? 1 : 0
   provider        = google.shared-vpc
   host_project    = var.host_project
   service_project = var.project
@@ -26,21 +27,27 @@ resource "google_compute_shared_vpc_service_project" "service" {
 
 
 resource "google_compute_network_peering" "peering-service" {
-  provider     = google.deployment
-  count        = length(local.peering_list)
-  name         = "${local.peering_list[count.index]["from"]}-peering-${local.peering_list[count.index]["to"]}"
-  network      = "projects/${var.project}/global/networks/${local.peering_list[count.index]["from"]}"
-  peer_network = "projects/${var.host_project}/global/networks/${local.peering_list[count.index]["to"]}"
-  depends_on = [google_compute_shared_vpc_service_project.service, google_project_iam_binding.iam-binding]
+  provider                            = google.deployment
+  count                               = length(local.peering_list)
+  name                                = "${local.peering_list[count.index]["from"]}-peering-${local.peering_list[count.index]["to"]}"
+  network                             = "projects/${var.project}/global/networks/${local.peering_list[count.index]["from"]}"
+  peer_network                        = "projects/${var.host_project}/global/networks/${local.peering_list[count.index]["to"]}"
+  export_custom_routes                = true
+  import_custom_routes                = true
+  import_subnet_routes_with_public_ip = true
+depends_on                          = [google_compute_shared_vpc_service_project.service, google_project_iam_binding.iam-binding]
 }
 
 resource "google_compute_network_peering" "host-peering" {
-  provider     = google.shared-vpc
-  count        = length(local.peering_list)
-  name         = "${local.peering_list[count.index]["to"]}-peering-${local.peering_list[count.index]["from"]}"
-  network      = "projects/${var.host_project}/global/networks/${local.peering_list[count.index]["to"]}"
-  peer_network = "projects/${var.project}/global/networks/${local.peering_list[count.index]["from"]}"
-  depends_on = [google_compute_shared_vpc_service_project.service, google_project_iam_binding.iam-binding, google_compute_network_peering.peering-service]
+  provider                            = google.shared-vpc
+  count                               = length(local.peering_list)
+  name                                = "${local.peering_list[count.index]["to"]}-peering-${local.peering_list[count.index]["from"]}"
+  network                             = "projects/${var.host_project}/global/networks/${local.peering_list[count.index]["to"]}"
+  peer_network                        = "projects/${var.project}/global/networks/${local.peering_list[count.index]["from"]}"
+  export_custom_routes                = true
+  import_custom_routes                = true
+  import_subnet_routes_with_public_ip = true
+  depends_on                          = [google_compute_shared_vpc_service_project.service, google_project_iam_binding.iam-binding, google_compute_network_peering.peering-service]
 }
 
 data "google_compute_network" "vpc_list_ids" {

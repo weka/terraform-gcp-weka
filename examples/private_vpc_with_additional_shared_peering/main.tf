@@ -35,14 +35,15 @@ module "setup_network" {
             Shared vpc
 ***********************************/
 module "shared_vpc_peering" {
-  source            = "../../modules/shared_vpcs"
-  prefix            = var.prefix
-  project           = var.project
-  host_project      = var.host_project
-  shared_vpcs       = var.shared_vpcs
-  vpcs              = module.setup_network.vpcs_names
-  sa_email          = module.create_service_account.outputs-service-account-email
-  host_shared_range = var.host_shared_range
+  source              = "../../modules/shared_vpcs"
+  prefix              = var.prefix
+  project             = var.project
+  host_project        = var.host_project
+  shared_vpcs         = var.shared_vpcs
+  vpcs                = module.setup_network.vpcs_names
+  sa_email            = module.create_service_account.outputs-service-account-email
+  host_shared_range   = var.host_shared_range
+  attach_service_project = var.attach_service_project
   providers = {
     google.deployment = google.deployment
     google.shared-vpc = google.shared-vpc
