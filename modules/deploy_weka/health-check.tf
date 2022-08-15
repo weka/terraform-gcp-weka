@@ -61,7 +61,7 @@ resource "google_compute_region_health_check" "ui_check" {
   unhealthy_threshold = 5
   http_health_check {
     port         = "14000"
-    request_path = "/ui/healthcheck"
+    request_path = "/api/v2/ui/healthcheck"
   }
 }
 
