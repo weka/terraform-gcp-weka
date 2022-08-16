@@ -29,7 +29,7 @@ func shuffleSlice(slice []string) {
 	rand.Shuffle(len(slice), func(i, j int) { slice[i], slice[j] = slice[j], slice[i] })
 }
 
-func getBackendCoreCounts() BackendCoreCounts {
+func getBackendCoreCountsDefaults() BackendCoreCounts {
 	backendCoreCounts := BackendCoreCounts{
 		"c2-standard-16": BackendCoreCount{total: 6, frontend: 1, drive: 1},
 		"c2-standard-8":  BackendCoreCount{total: 3, frontend: 1, drive: 1},
@@ -53,7 +53,7 @@ func getToken(tokenId string) (token string, err error) {
 	return
 }
 
-func GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, joinFinalizationUrl string) (bashScript string, err error) {
+func GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, joinFinalizationUrl string, nicNum int) (bashScript string, err error) {
 	role := "backend"
 
 	instances, err := common.GetInstances(project, zone, common.GetInstanceGroupInstanceNames(project, zone, instanceGroup))
@@ -166,13 +166,13 @@ func GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, joinFin
 	`
 	var cores, frontend, drive int
 	if role == "backend" {
-		backendCoreCounts := getBackendCoreCounts()
+		backendCoreCounts := getBackendCoreCountsDefaults()
 		instanceParams, ok := backendCoreCounts[instanceType]
 		if !ok {
 			err = errors.New(fmt.Sprintf("Unsupported instance type: %s", instanceType))
 			return
 		}
-		cores = instanceParams.total
+		cores = nicNum - 1 // TODO: udp_fallback: not compatible with udp clusters
 		frontend = instanceParams.frontend
 		drive = instanceParams.drive
 		if !instanceParams.converged {
@@ -191,7 +191,18 @@ func GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, joinFin
 	return
 }
 
-func GetDeployScript(project, zone, instanceGroup, usernameId, passwordId, tokenId, bucket, installUrl, clusterizeUrl, joinFinalizationUrl string) (bashScript string, err error) {
+func GetDeployScript(
+	project,
+	zone,
+	instanceGroup,
+	usernameId,
+	passwordId,
+	tokenId,
+	bucket,
+	installUrl,
+	clusterizeUrl,
+	joinFinalizationUrl string,
+	nicNum int) (bashScript string, err error) {
 	state, err := common.GetClusterState(bucket)
 	if err != nil {
 		return
@@ -265,7 +276,7 @@ func GetDeployScript(project, zone, instanceGroup, usernameId, passwordId, token
 			bashScript = fmt.Sprintf(installTemplate, initialSize, token, installUrl, clusterizeUrl)
 		}
 	} else {
-		bashScript, err = GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, joinFinalizationUrl)
+		bashScript, err = GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, joinFinalizationUrl, nicNum)
 		if err != nil {
 			return
 		}

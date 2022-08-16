@@ -19,6 +19,7 @@ import (
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/protocol"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -92,12 +93,18 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 	installUrl := os.Getenv("INSTALL_URL")
 	clusterizeUrl := os.Getenv("CLUSTERIZE_URL")
 	joinFinalizationUrl := os.Getenv("JOIN_FINALIZATION_URL")
-
-	bashScript, err := deploy.GetDeployScript(project, zone, instanceGroup, usernameId, passwordId, tokenId, bucket, installUrl, clusterizeUrl, joinFinalizationUrl)
+	nics_num_str := os.Getenv("NICS_NUM")
+	nic_num, err := strconv.Atoi(nics_num_str)
 	if err != nil {
-		fmt.Fprintf(w, "%s", err)
+		_, _ = fmt.Fprintf(w, "%s", err)
+		panic(fmt.Sprintf("nic_num is not set or not valid string %s", err))
+	}
+
+	bashScript, err := deploy.GetDeployScript(project, zone, instanceGroup, usernameId, passwordId, tokenId, bucket, installUrl, clusterizeUrl, joinFinalizationUrl, nic_num)
+	if err != nil {
+		_, _ = fmt.Fprintf(w, "%s", err)
 	} else {
-		fmt.Fprintf(w, bashScript)
+		_, _ = fmt.Fprintf(w, bashScript)
 	}
 }
 

@@ -93,7 +93,7 @@ func Test_deploy(t *testing.T) {
 	installUrl := fmt.Sprintf("https://%s@get.weka.io/dist/v1/install/%s/%s", token, version, version)
 	clusterizeUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-clusterize"
 
-	bashScript, err = deploy.GetDeployScript(project, zone, instanceGroup, usernameId, passwordId, tokenId, bucket, installUrl, clusterizeUrl, joinFinalizationUrl)
+	bashScript, err = deploy.GetDeployScript(project, zone, instanceGroup, usernameId, passwordId, tokenId, bucket, installUrl, clusterizeUrl, joinFinalizationUrl, 3)
 	if err != nil {
 		t.Logf("Generating deploy scripts failed: %s", err)
 	} else {
