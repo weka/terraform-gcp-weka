@@ -5,6 +5,9 @@ locals {
 }
 
 resource "null_resource" "generate_cloud_functions_zips" {
+  triggers = {
+    always_run = true
+  }
   provisioner "local-exec" {
     command = <<-EOT
       rm -f ${local.function_zip_path}
@@ -51,6 +54,12 @@ resource "google_cloudfunctions_function" "deploy_function" {
   }
   service_account_email = var.sa_email
   depends_on = [google_project_service.project-function-api]
+
+  lifecycle {
+    replace_triggered_by = [
+      google_storage_bucket_object.cloud_functions_zip.md5hash
+    ]
+  }
 }
 
 
@@ -101,6 +110,12 @@ resource "google_cloudfunctions_function" "fetch_function" {
   }
   service_account_email = var.sa_email
   depends_on = [google_project_service.project-function-api]
+
+  lifecycle {
+    replace_triggered_by = [
+      google_storage_bucket_object.cloud_functions_zip.md5hash
+    ]
+  }
 }
 
 
@@ -130,6 +145,12 @@ resource "google_cloudfunctions_function" "scale_down_function" {
   vpc_connector_egress_settings = "PRIVATE_RANGES_ONLY"
   service_account_email = var.sa_email
   depends_on = [google_project_service.project-function-api]
+
+  lifecycle {
+    replace_triggered_by = [
+      google_storage_bucket_object.cloud_functions_zip.md5hash
+    ]
+  }
 }
 
 # IAM entry for all users to invoke the function
@@ -163,6 +184,12 @@ resource "google_cloudfunctions_function" "scale_up_function" {
   }
   service_account_email = var.sa_email
   depends_on = [google_project_service.project-function-api]
+
+  lifecycle {
+    replace_triggered_by = [
+      google_storage_bucket_object.cloud_functions_zip.md5hash
+    ]
+  }
 }
 
 # IAM entry for all users to invoke the function
@@ -203,6 +230,12 @@ resource "google_cloudfunctions_function" "clusterize_function" {
   }
   service_account_email = var.sa_email
   depends_on = [google_project_service.project-function-api]
+
+  lifecycle {
+    replace_triggered_by = [
+      google_storage_bucket_object.cloud_functions_zip.md5hash
+    ]
+  }
 }
 
 # IAM entry for all users to invoke the function
@@ -235,6 +268,12 @@ resource "google_cloudfunctions_function" "terminate_function" {
   }
   service_account_email = var.sa_email
   depends_on = [google_project_service.project-function-api]
+
+  lifecycle {
+    replace_triggered_by = [
+      google_storage_bucket_object.cloud_functions_zip.md5hash
+    ]
+  }
 }
 
 # IAM entry for all users to invoke the function
@@ -261,6 +300,12 @@ resource "google_cloudfunctions_function" "transient_function" {
   entry_point           = "Transient"
   service_account_email = var.sa_email
   depends_on = [google_project_service.project-function-api]
+
+  lifecycle {
+    replace_triggered_by = [
+      google_storage_bucket_object.cloud_functions_zip.md5hash
+    ]
+  }
 }
 
 # IAM entry for all users to invoke the function
@@ -293,6 +338,12 @@ resource "google_cloudfunctions_function" "clusterize_finalization_function" {
   }
   service_account_email = var.sa_email
   depends_on = [google_project_service.project-function-api]
+
+  lifecycle {
+    replace_triggered_by = [
+      google_storage_bucket_object.cloud_functions_zip.md5hash
+    ]
+  }
 }
 
 # IAM entry for all users to invoke the function
@@ -322,6 +373,12 @@ resource "google_cloudfunctions_function" "resize_function" {
   }
   service_account_email = var.sa_email
   depends_on = [google_project_service.project-function-api]
+
+  lifecycle {
+    replace_triggered_by = [
+      google_storage_bucket_object.cloud_functions_zip.md5hash
+    ]
+  }
 }
 
 # IAM entry for all users to invoke the function
@@ -353,6 +410,12 @@ resource "google_cloudfunctions_function" "join_finalization_function" {
   }
   service_account_email = var.sa_email
   depends_on = [google_project_service.project-function-api]
+
+  lifecycle {
+    replace_triggered_by = [
+      google_storage_bucket_object.cloud_functions_zip.md5hash
+    ]
+  }
 }
 
 # IAM entry for all users to invoke the function
@@ -385,6 +448,12 @@ resource "google_cloudfunctions_function" "terminate_cluster_function" {
   }
   service_account_email = var.sa_email
   depends_on = [google_project_service.project-function-api]
+
+  lifecycle {
+    replace_triggered_by = [
+      google_storage_bucket_object.cloud_functions_zip.md5hash
+    ]
+  }
 }
 
 # IAM entry for all users to invoke the function
