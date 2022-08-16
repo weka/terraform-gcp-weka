@@ -35,7 +35,7 @@ resource "google_compute_network_peering" "peering-service" {
   export_custom_routes                = true
   import_custom_routes                = true
   import_subnet_routes_with_public_ip = true
-depends_on                          = [google_compute_shared_vpc_service_project.service, google_project_iam_binding.iam-binding]
+  depends_on                          = [google_compute_shared_vpc_service_project.service, google_project_iam_binding.iam-binding]
 }
 
 resource "google_compute_network_peering" "host-peering" {
@@ -69,6 +69,10 @@ resource "google_compute_firewall" "sg_private" {
     protocol = "all"
   }
   source_tags = ["all"]
+
+  lifecycle {
+    ignore_changes = [network]
+  }
 }
 
 
@@ -82,5 +86,9 @@ resource "google_compute_firewall" "sg_private_egress" {
   destination_ranges  = var.host_shared_range
   allow {
     protocol = "all"
+  }
+
+  lifecycle {
+    ignore_changes = [network]
   }
 }

@@ -42,7 +42,7 @@ resource "google_compute_instance_template" "backends-template" {
   dynamic "network_interface" {
     for_each = range(local.private_nic_first_index)
     content {
-      subnetwork = "https://www.googleapis.com/compute/v1/projects/${var.project}/regions/${var.region}/subnetworks/${var.subnets_name[network_interface.value]}"
+      subnetwork = data.google_compute_subnetwork.subnets_list_ids[network_interface.value].self_link
       access_config {}
     }
   }
