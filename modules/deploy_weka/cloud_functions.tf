@@ -4,18 +4,11 @@ locals {
   function_zip_path = "/tmp/${var.project}-${var.cluster_name}-cloud-functions.zip"
 }
 
-resource "null_resource" "generate_cloud_functions_zips" {
-  triggers = {
-    always_run = true
-  }
-  provisioner "local-exec" {
-    command = <<-EOT
-      rm -f ${local.function_zip_path}
-      cd ${path.module}/cloud-functions
-      zip -r ${local.function_zip_path} * -x "cloud_functions_test.go"
-    EOT
-    interpreter = ["bash", "-ce"]
-  }
+data "archive_file" "function_zip" {
+  type        = "zip"
+  output_path = local.function_zip_path
+  excludes    = [ "${path.module}/cloud-functions/cloud_functions_test.go" ]
+  source_dir = "${path.module}/cloud-functions/"
 }
 
 # ================== function zip =======================
@@ -23,7 +16,7 @@ resource "google_storage_bucket_object" "cloud_functions_zip" {
   name   = "${var.prefix}-${var.cluster_name}-cloud-functions.zip"
   bucket = google_storage_bucket.weka_deployment.name
   source = local.function_zip_path
-  depends_on = [null_resource.generate_cloud_functions_zips]
+  depends_on = [data.archive_file.function_zip]
 }
 
 # ======================== deploy ============================
