@@ -31,5 +31,10 @@ curl -m 70 -X POST ${google_cloudfunctions_function.terminate_cluster_function.h
 -H "Authorization:bearer $(gcloud auth print-identity-token)" \
 -H "Content-Type:application/json" \
 -d '{"name":"CLUSTER_NAME"}'
+
+
+################################# get weka password secret login ############################################
+
+gcloud secrets versions access 1 --secret=${google_secret_manager_secret.secret_weka_password.secret_id} --format='get(payload.data)' | base64 -d
 EOT
 }

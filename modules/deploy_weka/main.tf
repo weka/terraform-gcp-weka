@@ -115,14 +115,3 @@ resource "google_compute_instance_group" "instance_group" {
     ignore_changes = [network]
   }
 }
-
-
-# ======================== install-weka ============================
-resource "null_resource" "write_weka_password_to_local_file" {
-  provisioner "local-exec" {
-    command = <<-EOT
-      echo "${random_password.password.result}" > weka_cluster_admin_password
-    EOT
-    interpreter = ["bash", "-ce"]
-  }
-}
