@@ -76,3 +76,11 @@ variable "sg_public_ssh_cidr_range" {
   description = "list of ranges to allow ssh on public deployment"
   default     = []
 }
+
+variable "vpc_connector_region_map" {
+  type = map(string)
+  description = "Map of region to use for vpc connector, as some regions do not have cloud functions enabled, and vpc connector needs to be in the same region"
+  default = {
+    europe-west4 = "europe-west1"
+  }
+}

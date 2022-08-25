@@ -122,3 +122,20 @@ variable "private_dns_name" {
   type = string
   description = "Private dns name"
 }
+
+
+variable "cloud_scheduler_region_map" {
+  type = map(string)
+  description = "Map of region to use for workflows scheduler, as some regions do not have scheduler enabled"
+  default = {
+    europe-west4 = "europe-west1"
+  }
+}
+
+variable "cloud_functions_region_map" {
+  type = map(string)
+  description = "Map of region to use for cloud functions, as some regions do not have cloud functions enabled"
+  default = {
+    europe-west4 = "europe-west1"
+  }
+}
