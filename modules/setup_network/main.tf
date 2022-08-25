@@ -112,7 +112,7 @@ resource "google_vpc_access_connector" "connector" {
   count         = var.create_vpc_connector ? 1 : 0
   name          = "${var.prefix}-connector"
   ip_cidr_range = var.vpc_connector_range
-  region        = var.region
+  region = lookup(var.vpc_connector_region_map, var.region, var.region)
   network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[0].id :  data.google_compute_network.vpc_list_ids[count.index].id
 
   depends_on = [google_project_service.project-vpc]
@@ -124,7 +124,6 @@ resource "google_compute_firewall" "fw_hc" {
   name          = "${var.prefix}-fw-allow-hc"
   direction     = "INGRESS"
   network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[0].self_link : data.google_compute_network.vpc_list_ids[0].self_link
-  source_ranges = ["130.211.0.0/22", "35.191.0.0/16", "35.235.240.0/20"]
   allow {
     protocol = "tcp"
   }

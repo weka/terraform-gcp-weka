@@ -85,7 +85,7 @@ resource "google_compute_instance_template" "backends-template" {
   EOL
   fi
 
-  curl https://${var.region}-${var.project}.cloudfunctions.net/${var.prefix}-${var.cluster_name}-deploy -H "Authorization:bearer $(gcloud auth print-identity-token)" > /tmp/deploy.sh
+  curl ${google_cloudfunctions_function.deploy_function.https_trigger_url} -H "Authorization:bearer $(gcloud auth print-identity-token)" > /tmp/deploy.sh
   chmod +x /tmp/deploy.sh
   /tmp/deploy.sh
  EOT

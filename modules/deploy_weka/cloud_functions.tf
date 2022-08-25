@@ -24,6 +24,7 @@ resource "google_cloudfunctions_function" "deploy_function" {
   name        = "${var.prefix}-${var.cluster_name}-deploy"
   description = "deploy new instance"
   runtime     = "go116"
+  region = lookup(var.cloud_functions_region_map, var.region, var.region)
 
   available_memory_mb   = 128
   source_archive_bucket = google_storage_bucket.weka_deployment.name
@@ -87,6 +88,7 @@ resource "google_cloudfunctions_function" "fetch_function" {
   name        = "${var.prefix}-${var.cluster_name}-fetch"
   description = "fetch cluster info"
   runtime     = "go116"
+  region = lookup(var.cloud_functions_region_map, var.region, var.region)
 
   available_memory_mb   = 128
   source_archive_bucket = google_storage_bucket.weka_deployment.name
@@ -127,6 +129,7 @@ resource "google_cloudfunctions_function" "scale_down_function" {
   name        = "${var.prefix}-${var.cluster_name}-scale-down"
   description = "scale cluster down"
   runtime     = "go116"
+  region = lookup(var.cloud_functions_region_map, var.region, var.region)
 
   available_memory_mb   = 128
   source_archive_bucket = google_storage_bucket.weka_deployment.name
@@ -161,6 +164,7 @@ resource "google_cloudfunctions_function" "scale_up_function" {
   description = "scale cluster up"
   runtime     = "go116"
   timeout     = 540
+  region = lookup(var.cloud_functions_region_map, var.region, var.region)
 
   available_memory_mb   = 128
   source_archive_bucket = google_storage_bucket.weka_deployment.name
@@ -202,6 +206,7 @@ resource "google_cloudfunctions_function" "clusterize_function" {
   description = "return clusterize script"
   runtime     = "go116"
   timeout     = 540
+  region = lookup(var.cloud_functions_region_map, var.region, var.region)
 
   available_memory_mb   = 128
   source_archive_bucket = google_storage_bucket.weka_deployment.name
@@ -247,6 +252,7 @@ resource "google_cloudfunctions_function" "terminate_function" {
   description = "terminate instances"
   runtime     = "go116"
   timeout     = 540
+  region = lookup(var.cloud_functions_region_map, var.region, var.region)
 
   available_memory_mb   = 128
   source_archive_bucket = google_storage_bucket.weka_deployment.name
@@ -285,6 +291,7 @@ resource "google_cloudfunctions_function" "transient_function" {
   description = "transient errors"
   runtime     = "go116"
   timeout     = 540
+  region = lookup(var.cloud_functions_region_map, var.region, var.region)
 
   available_memory_mb   = 128
   source_archive_bucket = google_storage_bucket.weka_deployment.name
@@ -317,6 +324,7 @@ resource "google_cloudfunctions_function" "clusterize_finalization_function" {
   description = "clusterization finalization"
   runtime     = "go116"
   timeout     = 540
+  region = lookup(var.cloud_functions_region_map, var.region, var.region)
 
   available_memory_mb   = 128
   source_archive_bucket = google_storage_bucket.weka_deployment.name
@@ -356,6 +364,7 @@ resource "google_cloudfunctions_function" "resize_function" {
   runtime     = "go116"
   timeout     = 540
 
+  region = lookup(var.cloud_functions_region_map, var.region, var.region)
   available_memory_mb   = 128
   source_archive_bucket = google_storage_bucket.weka_deployment.name
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
@@ -390,6 +399,7 @@ resource "google_cloudfunctions_function" "join_finalization_function" {
   description = "join finalization"
   runtime     = "go116"
   timeout     = 540
+  region = lookup(var.cloud_functions_region_map, var.region, var.region)
 
   available_memory_mb   = 128
   source_archive_bucket = google_storage_bucket.weka_deployment.name
@@ -427,6 +437,7 @@ resource "google_cloudfunctions_function" "terminate_cluster_function" {
   description = "terminate cluster"
   runtime     = "go116"
   timeout     = 540
+  region = lookup(var.cloud_functions_region_map, var.region, var.region)
 
   available_memory_mb   = 128
   source_archive_bucket = google_storage_bucket.weka_deployment.name
