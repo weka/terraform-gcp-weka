@@ -119,7 +119,6 @@ resource "google_vpc_access_connector" "connector" {
 }
 
 #============== Health check ============================
-# allow all access from health check ranges
 resource "google_compute_firewall" "fw_hc" {
   name          = "${var.prefix}-fw-allow-hc"
   direction     = "INGRESS"
@@ -127,6 +126,8 @@ resource "google_compute_firewall" "fw_hc" {
   allow {
     protocol = "tcp"
   }
+  # allow all access from GCP internal health check ranges
+  source_ranges = ["130.211.0.0/22", "35.191.0.0/16", "35.235.240.0/20"]
   source_tags = ["allow-health-check"]
 }
 
