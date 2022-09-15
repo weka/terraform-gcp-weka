@@ -1,9 +1,3 @@
-resource "google_project_service" "appengine" {
-  project = var.project
-  service = "appengine.googleapis.com"
-  disable_on_destroy = false
-}
-
 resource "google_project_service" "project-function-api" {
   project = var.project
   service = "cloudfunctions.googleapis.com"
