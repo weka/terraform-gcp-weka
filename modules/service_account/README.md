@@ -1,3 +1,4 @@
+
 ## Requirements
 
 | Name | Version |
@@ -28,7 +29,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_prefix"></a> [prefix](#input\_prefix) | prefix for all resources | `string` | n/a | yes |
-| <a name="input_project"></a> [project](#input\_project) | project name | `string` | n/a | yes |
+| <a name="input_project"></a> [project](#input\_project) | project id | `string` | n/a | yes |
 | <a name="input_sa_name"></a> [sa\_name](#input\_sa\_name) | service account name | `string` | n/a | yes |
 
 ## Outputs
