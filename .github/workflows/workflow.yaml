@@ -1,0 +1,77 @@
+name: 'Terraform CI'
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  release:
+    types: [published]
+
+concurrency: ci
+
+jobs:
+  terraform:
+    name: Terraform
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./ci/deployment
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v0
+        with:
+          credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Apply
+        run: terraform apply -var-file=tf.tfvars -var="get_weka_io_token=$GET_WEKA_IO_TOKEN" -auto-approve
+        env:
+          GET_WEKA_IO_TOKEN: ${{ secrets.GET_WEKA_IO_TOKEN }}
+
+      - name: Wait for weka cluster
+        run: ./wait_for_cluster.sh 7 30
+
+      - name: Scale up
+        run: >
+          curl -m 70 -X POST https://europe-west1-wekaio-ci.cloudfunctions.net/weka-poc-resize
+          -H "Authorization:bearer $(gcloud auth print-identity-token)"
+          -H "Content-Type:application/json"
+          -d '{"value": 8}'
+
+      - name: Wait for weka cluster
+        run: ./wait_for_cluster.sh 8 15
+
+      - name: Scale down
+        run: >
+          curl -m 70 -X POST https://europe-west1-wekaio-ci.cloudfunctions.net/weka-poc-resize
+          -H "Authorization:bearer $(gcloud auth print-identity-token)"
+          -H "Content-Type:application/json"
+          -d '{"value": 6}'
+
+      - name: Wait for weka cluster
+        run: ./wait_for_cluster.sh 6 15
+
+      - name: Terminate cluster
+        if: always()
+        run: >
+          curl -m 70 -X POST https://europe-west1-wekaio-ci.cloudfunctions.net/weka-poc-terminate-cluster
+          -H "Authorization:bearer $(gcloud auth print-identity-token)"
+          -H "Content-Type:application/json"
+          -d '{"name":"poc"}'
+
+      - name: Terraform Destroy
+        if: always()
+        run: terraform destroy -var-file=tf.tfvars -var="get_weka_io_token=$GET_WEKA_IO_TOKEN" -auto-approve
+        env:
+          GET_WEKA_IO_TOKEN: ${{ secrets.GET_WEKA_IO_TOKEN }}
