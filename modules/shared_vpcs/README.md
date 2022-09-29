@@ -1,17 +1,16 @@
-
 ## Requirements
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >=1.2.4 |
-| <a name="requirement_google"></a> [google](#requirement\_google) | ~>4.27.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >=1.3.1 |
+| <a name="requirement_google"></a> [google](#requirement\_google) | ~>4.38.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_google.deployment"></a> [google.deployment](#provider\_google.deployment) | ~>4.27.0 |
-| <a name="provider_google.shared-vpc"></a> [google.shared-vpc](#provider\_google.shared-vpc) | ~>4.27.0 |
+| <a name="provider_google.deployment"></a> [google.deployment](#provider\_google.deployment) | ~>4.38.0 |
+| <a name="provider_google.shared-vpc"></a> [google.shared-vpc](#provider\_google.shared-vpc) | ~>4.38.0 |
 
 ## Modules
 

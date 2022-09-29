@@ -1,6 +1,6 @@
 # ===================== service account ===================
-resource "google_service_account" "sa" {
-  account_id   = "${var.prefix}-${var.sa_name}"
+resource "google_service_account" "internal-sa" {
+  account_id   = "${var.prefix}-internal-sa"
   display_name = "A service account for deploy weka"
   project = var.project
 }
@@ -12,25 +12,16 @@ resource "google_project_iam_member" "sa-member-role" {
     "roles/secretmanager.secretAccessor",
     "roles/compute.serviceAgent",
     "roles/compute.admin",
-    "roles/compute.networkAdmin",
-    "roles/networkmanagement.admin",
     "roles/cloudfunctions.admin",
     "roles/cloudfunctions.serviceAgent",
     "roles/workflows.admin",
     "roles/storage.admin",
-    "roles/iam.serviceAccountAdmin",
-    "roles/iam.securityAdmin",
-    "roles/vpcaccess.admin",
-    "roles/vpcaccess.serviceAgent",
     "roles/cloudscheduler.admin",
     "roles/cloudscheduler.serviceAgent",
-    "roles/dns.admin"
+    "roles/vpcaccess.admin",
+    "roles/vpcaccess.serviceAgent"
   ])
   role = each.key
-  member = "serviceAccount:${google_service_account.sa.email}"
+  member = "serviceAccount:${google_service_account.internal-sa.email}"
   project = var.project
-}
-
-resource "google_service_account_key" "sa-key" {
-  service_account_id = google_service_account.sa.name
 }

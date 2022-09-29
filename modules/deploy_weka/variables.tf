@@ -155,3 +155,9 @@ variable "workflow_map_region" {
     southamerica-west1 = "southamerica-east1"
   }
 }
+
+variable "worker_pool_name" {
+  type = string
+  description = "Name of worker pool, Must be on the same project and region"
+  default = ""
+}

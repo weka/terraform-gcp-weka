@@ -29,7 +29,7 @@ resource "google_compute_instance_template" "backends-template" {
     weka_cluster_name = var.cluster_name
   }
   service_account {
-    email = var.sa_email
+    email = google_service_account.internal-sa.email
     scopes = ["cloud-platform"]
   }
   disk {
@@ -85,7 +85,7 @@ resource "google_compute_instance_template" "backends-template" {
   EOL
   fi
 
-  curl ${google_cloudfunctions_function.deploy_function.https_trigger_url} -H "Authorization:bearer $(gcloud auth print-identity-token)" > /tmp/deploy.sh
+  curl ${google_cloudfunctions2_function.deploy_function.service_config[0].uri} -H "Authorization:bearer $(gcloud auth print-identity-token)" > /tmp/deploy.sh
   chmod +x /tmp/deploy.sh
   /tmp/deploy.sh
  EOT
