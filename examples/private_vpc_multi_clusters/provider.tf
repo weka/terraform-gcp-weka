@@ -1,16 +1,12 @@
 terraform {
-  backend "gcs" {
-    bucket = "xxx"
-    prefix = "terrafrom/state"
-  }
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "~>4.27.0"
+      version = "~>4.38.0"
       configuration_aliases = [google.main,google.deployment]
     }
   }
-  required_version = ">=1.2.4"
+  required_version = ">=1.3.1"
 }
 
 

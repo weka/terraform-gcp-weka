@@ -5,7 +5,7 @@ output "output-lb-dns" {
 output "cluster_helpers_commands" {
   value = <<EOT
 ########################################## resize cluster command ##########################################
-curl -m 70 -X POST ${google_cloudfunctions_function.resize_function.https_trigger_url} \
+curl -m 70 -X POST ${google_cloudfunctions2_function.resize_function.service_config[0].uri} \
 -H "Authorization:bearer $(gcloud auth print-identity-token)" \
 -H "Content-Type:application/json" \
 -d '{"value":ENTER_NEW_VALUE_HERE}'
@@ -27,7 +27,7 @@ mount -t wekafs "$lb_url/$FILESYSTEM_NAME" $MOUNT_POINT
 
 # replace CLUSTER_NAME with the actual cluster name, as a confirmation of the destructive action
 # this function needs to be executed prior to terraform destroy
-curl -m 70 -X POST ${google_cloudfunctions_function.terminate_cluster_function.https_trigger_url} \
+curl -m 70 -X POST ${google_cloudfunctions2_function.terminate_cluster_function.service_config[0].uri} \
 -H "Authorization:bearer $(gcloud auth print-identity-token)" \
 -H "Content-Type:application/json" \
 -d '{"name":"CLUSTER_NAME"}'

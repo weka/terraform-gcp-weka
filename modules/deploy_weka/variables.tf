@@ -139,3 +139,9 @@ variable "cloud_functions_region_map" {
     europe-west4 = "europe-west1"
   }
 }
+
+variable "worker_pool_name" {
+  type = string
+  description = "Name of worker pool, Must be on the same project and region"
+  default = ""
+}

@@ -12,6 +12,16 @@ resource "google_project_service" "cloud-build-api" {
   disable_dependent_services = false
 }
 
+resource "google_project_service" "run-api" {
+  service = "run.googleapis.com"
+  disable_on_destroy = true
+}
+
+resource "google_project_service" "artifactregistry-api" {
+  service = "artifactregistry.googleapis.com"
+  disable_on_destroy = true
+}
+
 resource "google_project_service" "service-usage-api" {
   project = var.project
   service = "serviceusage.googleapis.com"
