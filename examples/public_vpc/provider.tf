@@ -1,8 +1,13 @@
 terraform {
+
+  backend "gcs" {
+    bucket  = "tf-vars-infra-backend"
+    prefix  = "terraform/state"
+  }
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "~>4.27.0"
+      version = ">=4.38.0"
       configuration_aliases = [google.main,google.deployment]
     }
   }

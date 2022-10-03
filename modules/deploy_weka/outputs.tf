@@ -25,12 +25,7 @@ mount -t wekafs "$lb_url/$FILESYSTEM_NAME" $MOUNT_POINT
 
 ########################################## pre-terraform destroy, cluster terminate function ################
 
-# replace CLUSTER_NAME with the actual cluster name, as a confirmation of the destructive action
-# this function needs to be executed prior to terraform destroy
-curl -m 70 -X POST ${google_cloudfunctions_function.terminate_cluster_function.https_trigger_url} \
--H "Authorization:bearer $(gcloud auth print-identity-token)" \
--H "Content-Type:application/json" \
--d '{"name":"CLUSTER_NAME"}'
+
 
 
 ################################# get weka password secret login ############################################

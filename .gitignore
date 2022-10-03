@@ -14,3 +14,4 @@ bucket/.terraform.lock.hcl
 bucket/terraform.tfstate
 bucket/terraform.tfstate.backup
 .DS_Store
+**/myplan.txt

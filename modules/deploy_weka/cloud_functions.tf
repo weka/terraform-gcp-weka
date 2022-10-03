@@ -16,7 +16,7 @@ resource "google_storage_bucket_object" "cloud_functions_zip" {
   name   = "${var.prefix}-${var.cluster_name}-cloud-functions.zip"
   bucket = google_storage_bucket.weka_deployment.name
   source = local.function_zip_path
-  depends_on = [data.archive_file.function_zip]
+  depends_on = [data.archive_file.function_zip, google_project_iam_member.sa-member-role]
 }
 
 # ======================== deploy ============================
@@ -46,8 +46,8 @@ resource "google_cloudfunctions_function" "deploy_function" {
     CLUSTERIZE_URL:google_cloudfunctions_function.clusterize_function.https_trigger_url
     JOIN_FINALIZATION_URL:google_cloudfunctions_function.join_finalization_function.https_trigger_url
   }
-  service_account_email = var.sa_email
-  depends_on = [google_project_service.project-function-api]
+  service_account_email = google_service_account.function-sa.email
+  depends_on = [google_project_service.project-function-api,google_project_iam_member.sa-member-role]
 
   lifecycle {
     replace_triggered_by = [
@@ -103,8 +103,8 @@ resource "google_cloudfunctions_function" "fetch_function" {
     USER_NAME_ID: google_secret_manager_secret_version.user_secret_key.id
     PASSWORD_ID: google_secret_manager_secret_version.password_secret_key.id
   }
-  service_account_email = var.sa_email
-  depends_on = [google_project_service.project-function-api]
+  service_account_email = google_service_account.function-sa.email
+  depends_on = [google_project_service.project-function-api,google_project_iam_member.sa-member-role]
 
   lifecycle {
     replace_triggered_by = [
@@ -139,8 +139,8 @@ resource "google_cloudfunctions_function" "scale_down_function" {
   vpc_connector         = var.vpc_connector
   ingress_settings      = "ALLOW_ALL"
   vpc_connector_egress_settings = "PRIVATE_RANGES_ONLY"
-  service_account_email = var.sa_email
-  depends_on = [google_project_service.project-function-api]
+  service_account_email = google_service_account.function-sa.email
+  depends_on = [google_project_service.project-function-api,google_project_iam_member.sa-member-role]
 
   lifecycle {
     replace_triggered_by = [
@@ -179,8 +179,8 @@ resource "google_cloudfunctions_function" "scale_up_function" {
     BUCKET : google_storage_bucket.weka_deployment.name
     INSTANCE_BASE_NAME: "${var.prefix}-${var.cluster_name}-vm"
   }
-  service_account_email = var.sa_email
-  depends_on = [google_project_service.project-function-api]
+  service_account_email = google_service_account.function-sa.email
+  depends_on = [google_project_service.project-function-api,google_project_iam_member.sa-member-role]
 
   lifecycle {
     replace_triggered_by = [
@@ -226,8 +226,8 @@ resource "google_cloudfunctions_function" "clusterize_function" {
     BUCKET: google_storage_bucket.weka_deployment.name
     CLUSTERIZE_FINALIZATION_URL: google_cloudfunctions_function.clusterize_finalization_function.https_trigger_url
   }
-  service_account_email = var.sa_email
-  depends_on = [google_project_service.project-function-api]
+  service_account_email = google_service_account.function-sa.email
+  depends_on = [google_project_service.project-function-api,google_project_iam_member.sa-member-role]
 
   lifecycle {
     replace_triggered_by = [
@@ -265,8 +265,8 @@ resource "google_cloudfunctions_function" "terminate_function" {
     INSTANCE_GROUP: google_compute_instance_group.instance_group.name
     LOAD_BALANCER_NAME: google_compute_region_backend_service.backend_service.name
   }
-  service_account_email = var.sa_email
-  depends_on = [google_project_service.project-function-api]
+  service_account_email = google_service_account.function-sa.email
+  depends_on = [google_project_service.project-function-api,google_project_iam_member.sa-member-role]
 
   lifecycle {
     replace_triggered_by = [
@@ -298,8 +298,8 @@ resource "google_cloudfunctions_function" "transient_function" {
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "Transient"
-  service_account_email = var.sa_email
-  depends_on = [google_project_service.project-function-api]
+  service_account_email = google_service_account.function-sa.email
+  depends_on = [google_project_service.project-function-api,google_project_iam_member.sa-member-role]
 
   lifecycle {
     replace_triggered_by = [
@@ -337,7 +337,7 @@ resource "google_cloudfunctions_function" "clusterize_finalization_function" {
     INSTANCE_GROUP: google_compute_instance_group.instance_group.name
     BUCKET: google_storage_bucket.weka_deployment.name
   }
-  service_account_email = var.sa_email
+  service_account_email = google_service_account.function-sa.email
   depends_on = [google_project_service.project-function-api]
 
   lifecycle {
@@ -373,8 +373,8 @@ resource "google_cloudfunctions_function" "resize_function" {
   environment_variables = {
     BUCKET: google_storage_bucket.weka_deployment.name
   }
-  service_account_email = var.sa_email
-  depends_on = [google_project_service.project-function-api]
+  service_account_email = google_service_account.function-sa.email
+  depends_on = [google_project_service.project-function-api,google_project_iam_member.sa-member-role]
 
   lifecycle {
     replace_triggered_by = [
@@ -411,8 +411,8 @@ resource "google_cloudfunctions_function" "join_finalization_function" {
     ZONE: var.zone
     INSTANCE_GROUP: google_compute_instance_group.instance_group.name
   }
-  service_account_email = var.sa_email
-  depends_on = [google_project_service.project-function-api]
+  service_account_email = google_service_account.function-sa.email
+  depends_on = [google_project_service.project-function-api,google_project_iam_member.sa-member-role]
 
   lifecycle {
     replace_triggered_by = [
@@ -450,8 +450,8 @@ resource "google_cloudfunctions_function" "terminate_cluster_function" {
     BUCKET : google_storage_bucket.weka_deployment.name
     CLUSTER_NAME: var.cluster_name
   }
-  service_account_email = var.sa_email
-  depends_on = [google_project_service.project-function-api]
+  service_account_email = google_service_account.function-sa.email
+  depends_on = [google_project_service.project-function-api,google_project_iam_member.sa-member-role]
 
   lifecycle {
     replace_triggered_by = [

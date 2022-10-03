@@ -1,7 +1,7 @@
-project                  = "wekaio-rnd"
-region                   = "europe-west1"
-zone                     = "europe-west1-b"
-prefix                   = "weka"
+project                  = "test-tf-vars" #"wekaio-rnd"
+region                   = "us-east1" #"europe-west1"
+zone                     = "us-east1-b" #"europe-west1-b"
+prefix                   = "weka1"
 subnets_cidr_range       = ["10.0.0.0/24", "10.1.0.0/24", "10.2.0.0/24", "10.3.0.0/24"]
 nics_number              = 4
 cluster_size             = 7
@@ -14,3 +14,4 @@ sa_name                  = "deploy-sa"
 cluster_name             = "poc"
 sg_public_ssh_cidr_range = ["0.0.0.0/0"]
 private_network          = false
+get_weka_io_token        = ""
