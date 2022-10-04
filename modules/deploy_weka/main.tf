@@ -20,7 +20,7 @@ data "google_compute_subnetwork" "subnets_list_ids" {
 }
 
 resource "google_compute_instance_template" "backends-template" {
-  name           = "${var.prefix}-${var.cluster_name}-backends"
+  name           = "${var.prefix}-${var.cluster_name}-backends-sa"
   machine_type   = var.machine_type
   can_ip_forward = false
 
@@ -69,7 +69,7 @@ resource "google_compute_instance_template" "backends-template" {
 
   lifecycle {
     ignore_changes = [network_interface]
-    create_before_destroy = true
+    create_before_destroy = false
   }
 
   metadata_startup_script = <<-EOT

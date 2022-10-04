@@ -25,3 +25,7 @@ resource "google_project_iam_member" "sa-member-role" {
   member = "serviceAccount:${google_service_account.internal-sa.email}"
   project = var.project
 }
+
+locals {
+  sa_email = google_service_account.internal-sa.email
+}

@@ -21,7 +21,7 @@ resource "google_storage_bucket_object" "cloud_functions_zip" {
 
 # ======================== deploy ============================
 resource "google_cloudfunctions_function" "deploy_function" {
-  name        = "${var.prefix}-${var.cluster_name}-deploy-${local.function_hash}"
+  name        = "${var.prefix}-${var.cluster_name}-deploy-sa"
   description = "deploy new instance"
   runtime     = "go116"
   region = lookup(var.cloud_functions_region_map, var.region, var.region)
@@ -46,7 +46,7 @@ resource "google_cloudfunctions_function" "deploy_function" {
     CLUSTERIZE_URL:google_cloudfunctions_function.clusterize_function.https_trigger_url
     JOIN_FINALIZATION_URL:google_cloudfunctions_function.join_finalization_function.https_trigger_url
   }
-  service_account_email = var.sa_email
+  service_account_email = local.sa_email
   depends_on = [google_project_service.project-function-api]
 
   lifecycle {
@@ -78,7 +78,7 @@ resource "google_secret_manager_secret_iam_binding" "member-sa-username-secret" 
   project   = google_secret_manager_secret.secret_weka_username.project
   secret_id = google_secret_manager_secret.secret_weka_username.id
   role      = "roles/secretmanager.secretAccessor"
-  members    = ["serviceAccount:${var.sa_email}"]
+  members    = ["serviceAccount:${local.sa_email}"]
 }
 
 
@@ -86,12 +86,12 @@ resource "google_secret_manager_secret_iam_binding" "member-sa-password-secret" 
   project   = google_secret_manager_secret.secret_weka_password.project
   secret_id = google_secret_manager_secret.secret_weka_password.id
   role      = "roles/secretmanager.secretAccessor"
-  members   = ["serviceAccount:${var.sa_email}"]
+  members   = ["serviceAccount:${local.sa_email}"]
 }
 
 # ======================== fetch ============================
 resource "google_cloudfunctions_function" "fetch_function" {
-  name        = "${var.prefix}-${var.cluster_name}-fetch--${local.function_hash}"
+  name        = "${var.prefix}-${var.cluster_name}-fetch--sa"
   description = "fetch cluster info"
   runtime     = "go116"
   region = lookup(var.cloud_functions_region_map, var.region, var.region)
@@ -109,7 +109,7 @@ resource "google_cloudfunctions_function" "fetch_function" {
     USER_NAME_ID: google_secret_manager_secret_version.user_secret_key.id
     PASSWORD_ID: google_secret_manager_secret_version.password_secret_key.id
   }
-  service_account_email = var.sa_email
+  service_account_email = local.sa_email
   depends_on = [google_project_service.project-function-api]
 
 }
@@ -130,7 +130,7 @@ resource "google_cloudfunctions_function_iam_member" "fetch_invoker" {
 
 # ======================== scale_down ============================
 resource "google_cloudfunctions_function" "scale_down_function" {
-  name        = "${var.prefix}-${var.cluster_name}-scale-down-${local.function_hash}"
+  name        = "${var.prefix}-${var.cluster_name}-scale-down-sa"
   description = "scale cluster down"
   runtime     = "go116"
   region = lookup(var.cloud_functions_region_map, var.region, var.region)
@@ -143,7 +143,7 @@ resource "google_cloudfunctions_function" "scale_down_function" {
   vpc_connector         = var.vpc_connector
   ingress_settings      = "ALLOW_ALL"
   vpc_connector_egress_settings = "PRIVATE_RANGES_ONLY"
-  service_account_email = var.sa_email
+  service_account_email = local.sa_email
   depends_on = [google_project_service.project-function-api]
 
   lifecycle {
@@ -167,7 +167,7 @@ resource "google_cloudfunctions_function_iam_member" "scale_invoker" {
 }
 # ======================== scale_up ============================
 resource "google_cloudfunctions_function" "scale_up_function" {
-  name        = "${var.prefix}-${var.cluster_name}-scale-up-${local.function_hash}"
+  name        = "${var.prefix}-${var.cluster_name}-scale-up-sa"
   description = "scale cluster up"
   runtime     = "go116"
   timeout     = 540
@@ -186,7 +186,7 @@ resource "google_cloudfunctions_function" "scale_up_function" {
     BUCKET : google_storage_bucket.weka_deployment.name
     INSTANCE_BASE_NAME: "${var.prefix}-${var.cluster_name}-vm"
   }
-  service_account_email = var.sa_email
+  service_account_email = local.sa_email
   depends_on = [google_project_service.project-function-api]
 
   lifecycle {
@@ -212,7 +212,7 @@ resource "google_cloudfunctions_function_iam_member" "scale_up_invoker" {
 
 # ======================== clusterize ============================
 resource "google_cloudfunctions_function" "clusterize_function" {
-  name        = "${var.prefix}-${var.cluster_name}-clusterize-${local.function_hash}"
+  name        = "${var.prefix}-${var.cluster_name}-clusterize-sa"
   description = "return clusterize script"
   runtime     = "go116"
   timeout     = 540
@@ -236,7 +236,7 @@ resource "google_cloudfunctions_function" "clusterize_function" {
     BUCKET: google_storage_bucket.weka_deployment.name
     CLUSTERIZE_FINALIZATION_URL: google_cloudfunctions_function.clusterize_finalization_function.https_trigger_url
   }
-  service_account_email = var.sa_email
+  service_account_email = local.sa_email
   depends_on = [google_project_service.project-function-api]
 
   lifecycle {
@@ -256,11 +256,12 @@ resource "google_cloudfunctions_function_iam_member" "clusterize_invoker" {
   member = "allAuthenticatedUsers"
   lifecycle {
     create_before_destroy = true
-  }}
+  }
+}
 
 # ======================== terminate ============================
 resource "google_cloudfunctions_function" "terminate_function" {
-  name        = "${var.prefix}-${var.cluster_name}-terminate-${local.function_hash}"
+  name        = "${var.prefix}-${var.cluster_name}-terminate-sa"
   description = "terminate instances"
   runtime     = "go116"
   timeout     = 540
@@ -277,7 +278,7 @@ resource "google_cloudfunctions_function" "terminate_function" {
     INSTANCE_GROUP: google_compute_instance_group.instance_group.name
     LOAD_BALANCER_NAME: google_compute_region_backend_service.backend_service.name
   }
-  service_account_email = var.sa_email
+  service_account_email = local.sa_email
   depends_on = [google_project_service.project-function-api]
 
   lifecycle {
@@ -297,11 +298,12 @@ resource "google_cloudfunctions_function_iam_member" "terminate_invoker" {
   member = "allAuthenticatedUsers"
   lifecycle {
     create_before_destroy = true
-  }}
+  }
+}
 
 # ======================== transient ============================
 resource "google_cloudfunctions_function" "transient_function" {
-  name        = "${var.prefix}-${var.cluster_name}-transient-${local.function_hash}"
+  name        = "${var.prefix}-${var.cluster_name}-transient-sa"
   description = "transient errors"
   runtime     = "go116"
   timeout     = 540
@@ -312,7 +314,7 @@ resource "google_cloudfunctions_function" "transient_function" {
   source_archive_object = google_storage_bucket_object.cloud_functions_zip.name
   trigger_http          = true
   entry_point           = "Transient"
-  service_account_email = var.sa_email
+  service_account_email = google_service_account.internal-sa.email
   depends_on = [google_project_service.project-function-api]
 
   lifecycle {
@@ -332,11 +334,12 @@ resource "google_cloudfunctions_function_iam_member" "transient_invoker" {
   member = "allAuthenticatedUsers"
   lifecycle {
     create_before_destroy = true
-  }}
+  }
+}
 
 # ======================== clusterize_finalization ============================
 resource "google_cloudfunctions_function" "clusterize_finalization_function" {
-  name        = "${var.prefix}-${var.cluster_name}-clusterize-finalization-${local.function_hash}"
+  name        = "${var.prefix}-${var.cluster_name}-clusterize-finalization-sa"
   description = "clusterization finalization"
   runtime     = "go116"
   timeout     = 540
@@ -353,7 +356,7 @@ resource "google_cloudfunctions_function" "clusterize_finalization_function" {
     INSTANCE_GROUP: google_compute_instance_group.instance_group.name
     BUCKET: google_storage_bucket.weka_deployment.name
   }
-  service_account_email = var.sa_email
+  service_account_email = local.sa_email
   depends_on = [google_project_service.project-function-api]
 
   lifecycle {
@@ -373,11 +376,12 @@ resource "google_cloudfunctions_function_iam_member" "clusterize_finalization_in
   member = "allAuthenticatedUsers"
   lifecycle {
     create_before_destroy = true
-  }}
+  }
+}
 
 # ======================== resize ============================
 resource "google_cloudfunctions_function" "resize_function" {
-  name        = "${var.prefix}-${var.cluster_name}-resize-${local.function_hash}"
+  name        = "${var.prefix}-${var.cluster_name}-resize-sa"
   description = "update db"
   runtime     = "go116"
   timeout     = 540
@@ -391,7 +395,7 @@ resource "google_cloudfunctions_function" "resize_function" {
   environment_variables = {
     BUCKET: google_storage_bucket.weka_deployment.name
   }
-  service_account_email = var.sa_email
+  service_account_email = local.sa_email
   depends_on = [google_project_service.project-function-api]
 
   lifecycle {
@@ -411,11 +415,12 @@ resource "google_cloudfunctions_function_iam_member" "resize_invoker" {
   member = "allAuthenticatedUsers"
   lifecycle {
     create_before_destroy = true
-  }}
+  }
+}
 
 # ======================== join_finalization ============================
 resource "google_cloudfunctions_function" "join_finalization_function" {
-  name        = "${var.prefix}-${var.cluster_name}-join-finalization-${local.function_hash}"
+  name        = "${var.prefix}-${var.cluster_name}-join-finalization-sa"
   description = "join finalization"
   runtime     = "go116"
   timeout     = 540
@@ -431,7 +436,7 @@ resource "google_cloudfunctions_function" "join_finalization_function" {
     ZONE: var.zone
     INSTANCE_GROUP: google_compute_instance_group.instance_group.name
   }
-  service_account_email = var.sa_email
+  service_account_email = local.sa_email
   depends_on = [google_project_service.project-function-api]
 
   lifecycle {
@@ -459,7 +464,7 @@ locals {
 }
 # ======================== terminate_cluster ============================
 resource "google_cloudfunctions_function" "terminate_cluster_function" {
-  name        = "${var.prefix}-${var.cluster_name}-terminate-cluster-${local.function_hash}"
+  name        = "${var.prefix}-${var.cluster_name}-terminate-cluster-sa"
   description = "terminate cluster"
   runtime     = "go116"
   timeout     = 540
@@ -476,7 +481,7 @@ resource "google_cloudfunctions_function" "terminate_cluster_function" {
     BUCKET : google_storage_bucket.weka_deployment.name
     CLUSTER_NAME: var.cluster_name
   }
-  service_account_email = var.sa_email
+  service_account_email = local.sa_email
   depends_on = [google_project_service.project-function-api]
 }
 
