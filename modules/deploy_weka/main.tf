@@ -29,7 +29,7 @@ resource "google_compute_instance_template" "backends-template" {
     weka_cluster_name = var.cluster_name
   }
   service_account {
-    email = var.sa_email
+    email = google_service_account.internal-sa.email
     scopes = ["cloud-platform"]
   }
   disk {
@@ -69,6 +69,7 @@ resource "google_compute_instance_template" "backends-template" {
 
   lifecycle {
     ignore_changes = [network_interface]
+    create_before_destroy = true
   }
 
   metadata_startup_script = <<-EOT
@@ -89,6 +90,8 @@ resource "google_compute_instance_template" "backends-template" {
   chmod +x /tmp/deploy.sh
   /tmp/deploy.sh
  EOT
+
+  depends_on = [google_cloudfunctions_function.deploy_function]
 }
 
 resource "random_password" "password" {

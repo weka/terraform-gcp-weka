@@ -21,7 +21,7 @@ resource "google_storage_bucket_object" "cloud_functions_zip" {
 
 # ======================== deploy ============================
 resource "google_cloudfunctions_function" "deploy_function" {
-  name        = "${var.prefix}-${var.cluster_name}-deploy"
+  name        = "${var.prefix}-${var.cluster_name}-deploy-${local.function_hash}"
   description = "deploy new instance"
   runtime     = "go116"
   region = lookup(var.cloud_functions_region_map, var.region, var.region)
@@ -51,7 +51,7 @@ resource "google_cloudfunctions_function" "deploy_function" {
 
   lifecycle {
     replace_triggered_by = [
-      google_storage_bucket_object.cloud_functions_zip.md5hash
+      google_storage_bucket_object.cloud_functions_zip.md5hash,
     ]
   }
 }
@@ -65,6 +65,12 @@ resource "google_cloudfunctions_function_iam_member" "deploy_invoker" {
 
   role   = "roles/cloudfunctions.invoker"
   member = "allAuthenticatedUsers"
+  lifecycle {
+    create_before_destroy = true
+    replace_triggered_by = [
+      google_cloudfunctions_function.deploy_function.labels
+    ]
+  }
 }
 
 
@@ -85,7 +91,7 @@ resource "google_secret_manager_secret_iam_binding" "member-sa-password-secret" 
 
 # ======================== fetch ============================
 resource "google_cloudfunctions_function" "fetch_function" {
-  name        = "${var.prefix}-${var.cluster_name}-fetch"
+  name        = "${var.prefix}-${var.cluster_name}-fetch--${local.function_hash}"
   description = "fetch cluster info"
   runtime     = "go116"
   region = lookup(var.cloud_functions_region_map, var.region, var.region)
@@ -106,11 +112,6 @@ resource "google_cloudfunctions_function" "fetch_function" {
   service_account_email = var.sa_email
   depends_on = [google_project_service.project-function-api]
 
-  lifecycle {
-    replace_triggered_by = [
-      google_storage_bucket_object.cloud_functions_zip.md5hash
-    ]
-  }
 }
 
 
@@ -122,11 +123,14 @@ resource "google_cloudfunctions_function_iam_member" "fetch_invoker" {
 
   role   = "roles/cloudfunctions.invoker"
   member = "allAuthenticatedUsers"
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # ======================== scale_down ============================
 resource "google_cloudfunctions_function" "scale_down_function" {
-  name        = "${var.prefix}-${var.cluster_name}-scale-down"
+  name        = "${var.prefix}-${var.cluster_name}-scale-down-${local.function_hash}"
   description = "scale cluster down"
   runtime     = "go116"
   region = lookup(var.cloud_functions_region_map, var.region, var.region)
@@ -157,10 +161,13 @@ resource "google_cloudfunctions_function_iam_member" "scale_invoker" {
 
   role   = "roles/cloudfunctions.invoker"
   member = "allAuthenticatedUsers"
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 # ======================== scale_up ============================
 resource "google_cloudfunctions_function" "scale_up_function" {
-  name        = "${var.prefix}-${var.cluster_name}-scale-up"
+  name        = "${var.prefix}-${var.cluster_name}-scale-up-${local.function_hash}"
   description = "scale cluster up"
   runtime     = "go116"
   timeout     = 540
@@ -197,12 +204,15 @@ resource "google_cloudfunctions_function_iam_member" "scale_up_invoker" {
 
   role   = "roles/cloudfunctions.invoker"
   member = "allAuthenticatedUsers"
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 
 # ======================== clusterize ============================
 resource "google_cloudfunctions_function" "clusterize_function" {
-  name        = "${var.prefix}-${var.cluster_name}-clusterize"
+  name        = "${var.prefix}-${var.cluster_name}-clusterize-${local.function_hash}"
   description = "return clusterize script"
   runtime     = "go116"
   timeout     = 540
@@ -244,11 +254,13 @@ resource "google_cloudfunctions_function_iam_member" "clusterize_invoker" {
 
   role   = "roles/cloudfunctions.invoker"
   member = "allAuthenticatedUsers"
-}
+  lifecycle {
+    create_before_destroy = true
+  }}
 
 # ======================== terminate ============================
 resource "google_cloudfunctions_function" "terminate_function" {
-  name        = "${var.prefix}-${var.cluster_name}-terminate"
+  name        = "${var.prefix}-${var.cluster_name}-terminate-${local.function_hash}"
   description = "terminate instances"
   runtime     = "go116"
   timeout     = 540
@@ -283,11 +295,13 @@ resource "google_cloudfunctions_function_iam_member" "terminate_invoker" {
 
   role   = "roles/cloudfunctions.invoker"
   member = "allAuthenticatedUsers"
-}
+  lifecycle {
+    create_before_destroy = true
+  }}
 
 # ======================== transient ============================
 resource "google_cloudfunctions_function" "transient_function" {
-  name        = "${var.prefix}-${var.cluster_name}-transient"
+  name        = "${var.prefix}-${var.cluster_name}-transient-${local.function_hash}"
   description = "transient errors"
   runtime     = "go116"
   timeout     = 540
@@ -316,11 +330,13 @@ resource "google_cloudfunctions_function_iam_member" "transient_invoker" {
 
   role   = "roles/cloudfunctions.invoker"
   member = "allAuthenticatedUsers"
-}
+  lifecycle {
+    create_before_destroy = true
+  }}
 
 # ======================== clusterize_finalization ============================
 resource "google_cloudfunctions_function" "clusterize_finalization_function" {
-  name        = "${var.prefix}-${var.cluster_name}-clusterize-finalization"
+  name        = "${var.prefix}-${var.cluster_name}-clusterize-finalization-${local.function_hash}"
   description = "clusterization finalization"
   runtime     = "go116"
   timeout     = 540
@@ -355,11 +371,13 @@ resource "google_cloudfunctions_function_iam_member" "clusterize_finalization_in
 
   role   = "roles/cloudfunctions.invoker"
   member = "allAuthenticatedUsers"
-}
+  lifecycle {
+    create_before_destroy = true
+  }}
 
 # ======================== resize ============================
 resource "google_cloudfunctions_function" "resize_function" {
-  name        = "${var.prefix}-${var.cluster_name}-resize"
+  name        = "${var.prefix}-${var.cluster_name}-resize-${local.function_hash}"
   description = "update db"
   runtime     = "go116"
   timeout     = 540
@@ -391,11 +409,13 @@ resource "google_cloudfunctions_function_iam_member" "resize_invoker" {
 
   role   = "roles/cloudfunctions.invoker"
   member = "allAuthenticatedUsers"
-}
+  lifecycle {
+    create_before_destroy = true
+  }}
 
 # ======================== join_finalization ============================
 resource "google_cloudfunctions_function" "join_finalization_function" {
-  name        = "${var.prefix}-${var.cluster_name}-join-finalization"
+  name        = "${var.prefix}-${var.cluster_name}-join-finalization-${local.function_hash}"
   description = "join finalization"
   runtime     = "go116"
   timeout     = 540
@@ -429,11 +449,17 @@ resource "google_cloudfunctions_function_iam_member" "join_finalization_invoker"
 
   role   = "roles/cloudfunctions.invoker"
   member = "allAuthenticatedUsers"
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
+locals {
+  function_hash = replace(google_storage_bucket_object.cloud_functions_zip.md5hash,"=","")
+}
 # ======================== terminate_cluster ============================
 resource "google_cloudfunctions_function" "terminate_cluster_function" {
-  name        = "${var.prefix}-${var.cluster_name}-terminate-cluster"
+  name        = "${var.prefix}-${var.cluster_name}-terminate-cluster-${local.function_hash}"
   description = "terminate cluster"
   runtime     = "go116"
   timeout     = 540
@@ -452,12 +478,6 @@ resource "google_cloudfunctions_function" "terminate_cluster_function" {
   }
   service_account_email = var.sa_email
   depends_on = [google_project_service.project-function-api]
-
-  lifecycle {
-    replace_triggered_by = [
-      google_storage_bucket_object.cloud_functions_zip.md5hash
-    ]
-  }
 }
 
 # IAM entry for all users to invoke the function
@@ -468,4 +488,7 @@ resource "google_cloudfunctions_function_iam_member" "terminate_cluster_invoker"
 
   role   = "roles/cloudfunctions.invoker"
   member = "allAuthenticatedUsers"
+  lifecycle {
+    create_before_destroy = true
+  }
 }
