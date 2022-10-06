@@ -24,7 +24,7 @@ resource "google_workflows_workflow" "scale_down" {
   name            = "${var.prefix}-${var.cluster_name}-scale-down-workflow"
   region          = var.region
   description     = "scale down workflow"
-  service_account = google_service_account.internal-sa.email
+  service_account = local.sa_email
   source_contents = <<-EOF
   - fetch:
       call: http.post
@@ -78,7 +78,7 @@ resource "google_cloud_scheduler_job" "scale_down_job" {
     http_method = "POST"
     uri         = "https://workflowexecutions.googleapis.com/v1/${google_workflows_workflow.scale_down.id}/executions"
     oauth_token {
-      service_account_email = google_service_account.internal-sa.email
+      service_account_email = local.sa_email
     }
   }
   depends_on = [google_workflows_workflow.scale_down]
@@ -88,7 +88,7 @@ resource "google_workflows_workflow" "scale_up" {
   name            = "${var.prefix}-${var.cluster_name}-scale-up-workflow"
   region          = var.region
   description     = "scale up workflow"
-  service_account = google_service_account.internal-sa.email
+  service_account = local.sa_email
   source_contents = <<-EOF
   - scale_up:
       call: http.post
@@ -115,7 +115,7 @@ resource "google_cloud_scheduler_job" "scale_up_job" {
     http_method = "POST"
     uri         = "https://workflowexecutions.googleapis.com/v1/${google_workflows_workflow.scale_up.id}/executions"
     oauth_token {
-      service_account_email = google_service_account.internal-sa.email
+      service_account_email = local.sa_email
     }
   }
   depends_on = [google_workflows_workflow.scale_up]

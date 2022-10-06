@@ -3,6 +3,8 @@
 locals {
   function_zip_path = "/tmp/${var.project}-${var.cluster_name}-cloud-functions.zip"
   worker_pool_id = var.worker_pool_name != "" ? "projects/${var.project}/locations/${var.region}/workerPools/${var.worker_pool_name}" : var.worker_pool_name
+#  sa_email=google_service_account.internal-sa.email
+  sa_email=var.sa_email
 }
 
 data "archive_file" "function_zip" {
@@ -43,7 +45,7 @@ resource "google_cloudfunctions2_function" "deploy_function" {
     available_memory               = "256Mi"
     timeout_seconds                = 60
     all_traffic_on_latest_revision = true
-    service_account_email          = google_service_account.internal-sa.email
+    service_account_email          = local.sa_email
     environment_variables = {
       PROJECT : var.project
       ZONE : var.zone
@@ -83,7 +85,7 @@ resource "google_secret_manager_secret_iam_binding" "member-sa-username-secret" 
   project   = google_secret_manager_secret.secret_weka_username.project
   secret_id = google_secret_manager_secret.secret_weka_username.id
   role      = "roles/secretmanager.secretAccessor"
-  members    = ["serviceAccount:${google_service_account.internal-sa.email}"]
+  members    = ["serviceAccount:${local.sa_email}"]
 }
 
 
@@ -91,7 +93,7 @@ resource "google_secret_manager_secret_iam_binding" "member-sa-password-secret" 
   project   = google_secret_manager_secret.secret_weka_password.project
   secret_id = google_secret_manager_secret.secret_weka_password.id
   role      = "roles/secretmanager.secretAccessor"
-  members   = ["serviceAccount:${google_service_account.internal-sa.email}"]
+  members   = ["serviceAccount:${local.sa_email}"]
 }
 
 # ======================== fetch ============================
@@ -116,7 +118,7 @@ resource "google_cloudfunctions2_function" "fetch_function" {
     available_memory               = "256Mi"
     timeout_seconds                = 60
     all_traffic_on_latest_revision = true
-    service_account_email          = google_service_account.internal-sa.email
+    service_account_email          = local.sa_email
     environment_variables = {
       PROJECT: var.project
       ZONE: var.zone
@@ -169,7 +171,7 @@ resource "google_cloudfunctions2_function" "scale_down_function" {
     ingress_settings               = "ALLOW_ALL"
     vpc_connector_egress_settings  = "PRIVATE_RANGES_ONLY"
     all_traffic_on_latest_revision = true
-    service_account_email          = google_service_account.internal-sa.email
+    service_account_email          = local.sa_email
   }
   lifecycle {
     replace_triggered_by = [
@@ -209,7 +211,7 @@ resource "google_cloudfunctions2_function" "scale_up_function" {
     available_memory               = "256Mi"
     timeout_seconds                = 60
     all_traffic_on_latest_revision = true
-    service_account_email          = google_service_account.internal-sa.email
+    service_account_email          = local.sa_email
     environment_variables = {
       PROJECT: var.project
       ZONE: var.zone
@@ -260,7 +262,7 @@ resource "google_cloudfunctions2_function" "clusterize_function" {
     available_memory               = "256Mi"
     timeout_seconds                = 540
     all_traffic_on_latest_revision = true
-    service_account_email          = google_service_account.internal-sa.email
+    service_account_email          = local.sa_email
     environment_variables = {
       PROJECT: var.project
       ZONE: var.zone
@@ -315,7 +317,7 @@ resource "google_cloudfunctions2_function" "terminate_function" {
     available_memory               = "256Mi"
     timeout_seconds                = 540
     all_traffic_on_latest_revision = true
-    service_account_email          = google_service_account.internal-sa.email
+    service_account_email          = local.sa_email
     environment_variables = {
       PROJECT: var.project
       ZONE: var.zone
@@ -363,7 +365,7 @@ resource "google_cloudfunctions2_function" "transient_function" {
     available_memory               = "256Mi"
     timeout_seconds                = 540
     all_traffic_on_latest_revision = true
-    service_account_email          = google_service_account.internal-sa.email
+    service_account_email          = local.sa_email
   }
   lifecycle {
     replace_triggered_by = [
@@ -405,7 +407,7 @@ resource "google_cloudfunctions2_function" "clusterize_finalization_function" {
     available_memory               = "256Mi"
     timeout_seconds                = 540
     all_traffic_on_latest_revision = true
-    service_account_email          = google_service_account.internal-sa.email
+    service_account_email          = local.sa_email
     environment_variables = {
       PROJECT: var.project
       ZONE: var.zone
@@ -453,7 +455,7 @@ resource "google_cloudfunctions2_function" "resize_function" {
     available_memory               = "256Mi"
     timeout_seconds                = 540
     all_traffic_on_latest_revision = true
-    service_account_email          = google_service_account.internal-sa.email
+    service_account_email          = local.sa_email
     environment_variables = {
       BUCKET: google_storage_bucket.weka_deployment.name
     }
@@ -498,7 +500,7 @@ resource "google_cloudfunctions2_function" "join_finalization_function" {
     available_memory               = "256Mi"
     timeout_seconds                = 540
     all_traffic_on_latest_revision = true
-    service_account_email          = google_service_account.internal-sa.email
+    service_account_email          = local.sa_email
     environment_variables = {
       PROJECT: var.project
       ZONE: var.zone
@@ -545,7 +547,7 @@ resource "google_cloudfunctions2_function" "terminate_cluster_function" {
     available_memory               = "256Mi"
     timeout_seconds                = 540
     all_traffic_on_latest_revision = true
-    service_account_email          = google_service_account.internal-sa.email
+    service_account_email          = local.sa_email
     environment_variables = {
       PROJECT: var.project
       ZONE: var.zone

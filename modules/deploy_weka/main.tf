@@ -29,7 +29,7 @@ resource "google_compute_instance_template" "backends-template" {
     weka_cluster_name = var.cluster_name
   }
   service_account {
-    email = google_service_account.internal-sa.email
+    email = local.sa_email
     scopes = ["cloud-platform"]
   }
   disk {
@@ -69,6 +69,7 @@ resource "google_compute_instance_template" "backends-template" {
 
   lifecycle {
     ignore_changes = [network_interface]
+    create_before_destroy = false
   }
 
   metadata_startup_script = <<-EOT
