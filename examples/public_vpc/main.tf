@@ -26,7 +26,7 @@ module "setup_network" {
   private_network          = var.private_network
   sg_public_ssh_cidr_range = var.sg_public_ssh_cidr_range
   providers = {
-    google = google.deployment
+    google = google.main
   }
   depends_on = [ module.create_service_account]
 
@@ -58,7 +58,7 @@ module "deploy_weka" {
   private_dns_zone         = module.setup_network.private_zone_name
   private_dns_name         = module.setup_network.private_dns_name
   providers = {
-    google = google.deployment
+    google = google.main
   }
 
   depends_on = [module.create_service_account]
