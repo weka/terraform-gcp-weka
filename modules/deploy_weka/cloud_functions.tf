@@ -3,8 +3,7 @@
 locals {
   function_zip_path = "/tmp/${var.project}-${var.cluster_name}-cloud-functions.zip"
   worker_pool_id = var.worker_pool_name != "" ? "projects/${var.project}/locations/${var.region}/workerPools/${var.worker_pool_name}" : var.worker_pool_name
-#  sa_email=google_service_account.internal-sa.email
-  sa_email=var.sa_email
+  sa_email = var.sa_email
 }
 
 data "archive_file" "function_zip" {
