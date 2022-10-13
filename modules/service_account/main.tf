@@ -24,7 +24,8 @@ resource "google_project_iam_member" "sa-member-role" {
     "roles/vpcaccess.serviceAgent",
     "roles/cloudscheduler.admin",
     "roles/cloudscheduler.serviceAgent",
-    "roles/dns.admin"
+    "roles/dns.admin",
+    "roles/pubsub.editor"
   ])
   role = each.key
   member = "serviceAccount:${google_service_account.sa.email}"
