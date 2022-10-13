@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./ci/deployment
+        working-directory: ./examples/public_vpc
 
     steps:
       - name: Checkout
@@ -29,16 +29,19 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
 
+      - name: Copy Terraform State
+        run: cp "../../ci/deployment/state.tf" .
+
       - name: Terraform Init
         run: terraform init
 
       - name: Terraform Apply
-        run: terraform apply -var-file=tf.tfvars -var="get_weka_io_token=$GET_WEKA_IO_TOKEN" -auto-approve
+        run: terraform apply -var-file=../../ci/deployment/tf.tfvars -var="get_weka_io_token=$GET_WEKA_IO_TOKEN" -auto-approve
         env:
           GET_WEKA_IO_TOKEN: ${{ secrets.GET_WEKA_IO_TOKEN }}
 
       - name: Wait for weka cluster
-        run: ./wait_for_cluster.sh 7 30
+        run: ../../ci/deployment/wait_for_cluster.sh 7 30
 
       - name: Scale up
         run: >
@@ -48,7 +51,7 @@ jobs:
           -d '{"value": 8}'
 
       - name: Wait for weka cluster
-        run: ./wait_for_cluster.sh 8 15
+        run: ../../ci/deployment/wait_for_cluster.sh 8 15
 
       - name: Scale down
         run: >
@@ -58,7 +61,7 @@ jobs:
           -d '{"value": 6}'
 
       - name: Wait for weka cluster
-        run: ./wait_for_cluster.sh 6 15
+        run: ../../ci/deployment/wait_for_cluster.sh 6 15
 
       - name: Terminate cluster
         if: always()
