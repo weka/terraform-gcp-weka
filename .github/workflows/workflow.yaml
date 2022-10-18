@@ -45,20 +45,20 @@ jobs:
 
       - name: Scale up
         run: >
-          curl -m 70 -X POST https://europe-west1-wekaio-ci.cloudfunctions.net/weka-poc-resize
-          -H "Authorization:bearer $(gcloud auth print-identity-token)"
-          -H "Content-Type:application/json"
-          -d '{"value": 8}'
+          gcloud functions call weka-poc-resize
+          --project wekaio-ci
+          --region europe-west1
+          --data '{"value": 8}'
 
       - name: Wait for weka cluster
         run: ../../ci/deployment/wait_for_cluster.sh 8 15
 
       - name: Scale down
         run: >
-          curl -m 70 -X POST https://europe-west1-wekaio-ci.cloudfunctions.net/weka-poc-resize
-          -H "Authorization:bearer $(gcloud auth print-identity-token)"
-          -H "Content-Type:application/json"
-          -d '{"value": 6}'
+          gcloud functions call weka-poc-resize
+          --project wekaio-ci
+          --region europe-west1
+          --data '{"value": 6}'
 
       - name: Wait for weka cluster
         run: ../../ci/deployment/wait_for_cluster.sh 6 15
@@ -66,10 +66,10 @@ jobs:
       - name: Terminate cluster
         if: always()
         run: >
-          curl -m 70 -X POST https://europe-west1-wekaio-ci.cloudfunctions.net/weka-poc-terminate-cluster
-          -H "Authorization:bearer $(gcloud auth print-identity-token)"
-          -H "Content-Type:application/json"
-          -d '{"name":"poc"}'
+          gcloud functions call weka-poc-terminate-cluster
+          --project wekaio-ci
+          --region europe-west1
+          --data '{"name": "poc"}'
 
       - name: Terraform Destroy
         if: always()
