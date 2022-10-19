@@ -49,6 +49,7 @@ jobs:
           --project wekaio-ci
           --region europe-west1
           --data '{"value": 8}'
+          --gen2
 
       - name: Wait for weka cluster
         run: ../../ci/deployment/wait_for_cluster.sh 8 15
@@ -59,6 +60,7 @@ jobs:
           --project wekaio-ci
           --region europe-west1
           --data '{"value": 6}'
+          --gen2
 
       - name: Wait for weka cluster
         run: ../../ci/deployment/wait_for_cluster.sh 6 15
@@ -70,6 +72,7 @@ jobs:
           --project wekaio-ci
           --region europe-west1
           --data '{"name": "poc"}'
+          --gen2
 
       - name: Terraform Destroy
         if: always()
