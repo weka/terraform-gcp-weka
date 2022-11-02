@@ -14,8 +14,12 @@ output "subnets_range" {
   value = length(var.subnets) == 0 ? var.subnets-cidr-range : [ for i in data.google_compute_subnetwork.subnets_list_ids: i.ip_cidr_range ]
 }
 
+locals {
+  vpc_connector_name = var.create_vpc_connector ? google_vpc_access_connector.connector[0].name : var.vpc_connector_name
+}
+
 output "vpc_connector_name" {
-  value = var.create_vpc_connector ? google_vpc_access_connector.connector[0].name : "projects/${var.project}/locations/${var.region}/connectors/${var.vpc_connector_name}"
+  value = "projects/${var.project}/locations/${lookup(var.vpc_connector_region_map, var.region, var.region)}/connectors/${local.vpc_connector_name}"
 }
 
 output "private_zone_name" {
