@@ -22,9 +22,31 @@ type HostListResponse map[HostId]Host
 type DriveListResponse map[DriveId]Drive
 type NodeListResponse map[NodeId]Node
 
+type Activity struct {
+	NumOps                    int `json:"num_ops"`
+	NumReads                  int `json:"num_reads"`
+	NumWrites                 int `json:"num_writes"`
+	ObsDownloadBytesPerSecond int `json:"obs_download_bytes_per_second"`
+	ObsUploadBytesPerSecond   int `json:"obs_upload_bytes_per_second"`
+	SumBytesRead              int `json:"sum_bytes_read"`
+	SumBytesWritten           int `json:"sum_bytes_written"`
+}
+
+type HostsCount struct {
+	Active int `json:"active"`
+	Total  int `json:"total"`
+}
+type ClusterCount struct {
+	ActiveCount int        `json:"active_count"`
+	Backends    HostsCount `json:"backends"`
+	Clients     HostsCount `json:"clients"`
+	TotalCount  int        `json:"totalCount"`
+}
 type StatusResponse struct {
-	IoStatus string `json:"io_status"`
-	Upgrade  string `json:"upgrade"`
+	IoStatus string       `json:"io_status"`
+	Upgrade  string       `json:"upgrade"`
+	Activity Activity     `json:"activity"`
+	Hosts    ClusterCount `json:"hosts"`
 }
 
 type Host struct {
