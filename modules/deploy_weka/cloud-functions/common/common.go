@@ -230,7 +230,13 @@ func GetClusterState(bucket string) (state ClusterState, err error) {
 	stateHandler := client.Bucket(bucket).Object("state")
 
 	state, err = ReadState(stateHandler, ctx)
-	err = Unlock(client, ctx, bucket, id)
+	unlockErr := Unlock(client, ctx, bucket, id)
+	if unlockErr != nil {
+		log.Error().Msgf("State unlock failed: %s", unlockErr)
+		if err == nil {
+			err = unlockErr
+		}
+	}
 
 	return
 }
@@ -450,6 +456,13 @@ func TerminateInstances(project, zone string, instanceNames []string) (terminati
 			continue
 		}
 		terminatingInstances = append(terminatingInstances, instanceName)
+	}
+	return
+}
+
+func GetInstanceGroupBackendsIps(instances []*computepb.Instance) (instanceGroupBackendsIps []string) {
+	for _, instance := range instances {
+		instanceGroupBackendsIps = append(instanceGroupBackendsIps, *instance.NetworkInterfaces[0].NetworkIP)
 	}
 	return
 }

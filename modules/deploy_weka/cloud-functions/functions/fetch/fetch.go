@@ -21,13 +21,6 @@ type HostGroupInfoResponse struct {
 	Version         int          `json:"version"`
 }
 
-func getInstanceGroupBackendsIps(instances []*computepb.Instance) (instanceGroupBackendsIps []string) {
-	for _, instance := range instances {
-		instanceGroupBackendsIps = append(instanceGroupBackendsIps, *instance.NetworkInterfaces[0].NetworkIP)
-	}
-	return
-}
-
 func GetFetchDataParams(project, zone, instanceGroup, bucket, usernameId, passwordId string) (hostGroupInfoResponse HostGroupInfoResponse, err error) {
 
 	creds, err := common.GetUsernameAndPassword(usernameId, passwordId)
@@ -50,7 +43,7 @@ func GetFetchDataParams(project, zone, instanceGroup, bucket, usernameId, passwo
 		Password:        creds.Password,
 		DesiredCapacity: desiredCapacity,
 		Instances:       getHostGroupInfoInstances(instances),
-		BackendIps:      getInstanceGroupBackendsIps(instances),
+		BackendIps:      common.GetInstanceGroupBackendsIps(instances),
 		Role:            "backend",
 		Version:         1,
 	}

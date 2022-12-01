@@ -571,3 +571,57 @@ resource "google_cloudfunctions2_function_iam_member" "terminate_cluster_invoker
   role   = "roles/cloudfunctions.invoker"
   member = "allAuthenticatedUsers"
 }
+
+# ======================== status ============================
+resource "google_cloudfunctions2_function" "status_function" {
+  name        = "${var.prefix}-${var.cluster_name}-status"
+  description = "get cluster status"
+  location    = lookup(var.cloud_functions_region_map, var.region, var.region)
+  build_config {
+    runtime = "go116"
+    entry_point = "Status"
+    worker_pool = local.worker_pool_id
+    source {
+      storage_source {
+        bucket = google_storage_bucket.weka_deployment.name
+        object = google_storage_bucket_object.cloud_functions_zip.name
+      }
+    }
+  }
+
+  service_config {
+    max_instance_count             = 3
+    min_instance_count             = 1
+    available_memory               = "256Mi"
+    timeout_seconds                = 540
+    vpc_connector                  = var.vpc_connector
+    ingress_settings               = "ALLOW_ALL"
+    vpc_connector_egress_settings  = "PRIVATE_RANGES_ONLY"
+    all_traffic_on_latest_revision = true
+    service_account_email          = local.sa_email
+    environment_variables = {
+      PROJECT: var.project
+      ZONE: var.zone
+      BUCKET : google_storage_bucket.weka_deployment.name
+      INSTANCE_GROUP : google_compute_instance_group.instance_group.name
+      USER_NAME_ID : google_secret_manager_secret_version.user_secret_key.id
+      PASSWORD_ID : google_secret_manager_secret_version.password_secret_key.id
+    }
+  }
+  lifecycle {
+    replace_triggered_by = [
+      google_storage_bucket_object.cloud_functions_zip.md5hash
+    ]
+  }
+  depends_on = [google_project_service.project-function-api, google_project_service.run-api, google_project_service.artifactregistry-api]
+}
+
+# IAM entry for all users to invoke the function
+resource "google_cloudfunctions2_function_iam_member" "status_invoker" {
+  project        = google_cloudfunctions2_function.status_function.project
+  location       = google_cloudfunctions2_function.status_function.location
+  cloud_function = google_cloudfunctions2_function.status_function.name
+
+  role   = "roles/cloudfunctions.invoker"
+  member = "allAuthenticatedUsers"
+}
