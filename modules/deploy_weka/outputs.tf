@@ -4,6 +4,11 @@ output "output-lb-dns" {
 
 output "cluster_helpers_commands" {
   value = <<EOT
+########################################## get cluster status ##########################################
+curl -m 70 -X POST ${google_cloudfunctions2_function.status_function.service_config[0].uri} \
+-H "Authorization:bearer $(gcloud auth print-identity-token)" \
+-H "Content-Type:application/json"
+
 ########################################## resize cluster command ##########################################
 curl -m 70 -X POST ${google_cloudfunctions2_function.resize_function.service_config[0].uri} \
 -H "Authorization:bearer $(gcloud auth print-identity-token)" \
