@@ -14,6 +14,7 @@ import (
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/resize"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/scale_down"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/scale_up"
+	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/status"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/terminate"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/terminate_cluster"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/protocol"
@@ -275,5 +276,26 @@ func TerminateCluster(w http.ResponseWriter, r *http.Request) {
 
 	if len(terminatingInstances) > 0 {
 		fmt.Fprintf(w, fmt.Sprintf("Terminated %d instances:%s", len(terminatingInstances), terminatingInstances))
+	}
+}
+
+func Status(w http.ResponseWriter, r *http.Request) {
+	project := os.Getenv("PROJECT")
+	zone := os.Getenv("ZONE")
+	bucket := os.Getenv("BUCKET")
+	instanceGroup := os.Getenv("INSTANCE_GROUP")
+	usernameId := os.Getenv("USER_NAME_ID")
+	passwordId := os.Getenv("PASSWORD_ID")
+
+	clusterStatus, err := status.GetClusterStatus(project, zone, bucket, instanceGroup, usernameId, passwordId)
+	if err != nil {
+		fmt.Fprintf(w, "Failed retrieving status: %s", err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(clusterStatus)
+	if err != nil {
+		fmt.Fprintf(w, "Failed decoding status: %s", err)
 	}
 }

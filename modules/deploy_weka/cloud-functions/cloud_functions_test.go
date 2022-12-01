@@ -11,6 +11,7 @@ import (
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/resize"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/scale_down"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/scale_up"
+	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/status"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/terminate"
 	"os"
 	"testing"
@@ -78,7 +79,8 @@ func Test_deploy(t *testing.T) {
 	passwordId := "projects/896245720241/secrets/weka-poc-password/versions/1"
 	tokenId := "projects/896245720241/secrets/weka-poc-token/versions/1"
 	joinFinalizationUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-join-finalization"
-	bashScript, err := deploy.GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, joinFinalizationUrl)
+	nicNum := 3
+	bashScript, err := deploy.GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, joinFinalizationUrl, nicNum)
 	if err != nil {
 		t.Logf("Generating join scripts failed: %s", err)
 		return
@@ -182,4 +184,25 @@ func Test_resize(t *testing.T) {
 	bucket := "weka-poc-state"
 	newDesiredValue := 6
 	resize.UpdateValue(bucket, newDesiredValue)
+}
+
+func Test_status(t *testing.T) {
+	// This will pass only before clusterization, after clusterization it will fail trying to fetch weka status
+	project := "wekaio-rnd"
+	zone := "europe-west1-b"
+	bucket := "weka-poc-wekaio-rnd"
+	instanceGroup := "weka-poc-instance-group"
+	usernameId := "projects/896245720241/secrets/weka-poc-username/versions/1"
+	passwordId := "projects/896245720241/secrets/weka-poc-password/versions/1"
+
+	clusterStatus, err := status.GetClusterStatus(project, zone, bucket, instanceGroup, usernameId, passwordId)
+	if err != nil {
+		t.Logf("Failed getting status %s", err)
+	} else {
+		clusterStatusJson, err := json.Marshal(clusterStatus)
+		if err != nil {
+			t.Logf("Failed decoding status %s", err)
+		}
+		fmt.Println(string(clusterStatusJson))
+	}
 }
