@@ -128,7 +128,15 @@ variable "cloud_scheduler_region_map" {
   type = map(string)
   description = "Map of region to use for workflows scheduler, as some regions do not have scheduler enabled"
   default = {
-    europe-west4 = "europe-west1"
+    europe-west4 = "europe-west1",
+    europe-west8 = "europe-west1",
+    europe-west9 = "europe-west1",
+    europe-north1 = "europe-west1",
+    us-east5 = "us-east4",
+    us-south1 = "us-east4",
+    northamerica-northeast2 = "northamerica-northeast1",
+    asia-south2 = "asia-south1",
+    australia-southeast2 ="australia-southeast1"
   }
 }
 
@@ -137,5 +145,25 @@ variable "cloud_functions_region_map" {
   description = "Map of region to use for cloud functions, as some regions do not have cloud functions enabled"
   default = {
     europe-west4 = "europe-west1"
+    europe-west4 = "europe-west1",
+    europe-west8 = "europe-west1",
+    europe-west9 = "europe-west1",
+    europe-north1 = "europe-west1",
+    europe-southwest1 = "europe-west1",
+    us-east5 = "us-east1",
+    us-south1 = "us-east1",
+    northamerica-northeast2 = "northamerica-northeast1",
+    southamerica-east1 = "southamerica-west1",
+    asia-south2 = "asia-south1",
+    australia-southeast2 = "australia-southeast1"
+  }
+}
+
+variable "load_balancer_region_map" {
+  type        = map(string)
+  description = "Map of region to use for load balancer, as some regions do not have cloud load balancer enabled"
+  default     = {
+    us-east5 = "us-east4",
+    us-south1 = "us-east4",
   }
 }
