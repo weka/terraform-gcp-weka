@@ -100,7 +100,7 @@ func Clusterize(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber,
 	if err != nil {
 		clusterizeScript = dedent.Dedent(`
 		#!/bin/bash
-		shutdown -P
+		exit 1
 		`)
 		return
 	}
