@@ -86,9 +86,17 @@ resource "google_compute_instance_template" "backends-template" {
   EOL
   fi
 
+  self_deleting() {
+    echo "deploy failed, self deleting..."
+    instance_name=$(curl -X GET http://metadata.google.internal/computeMetadata/v1/instance/name -H 'Metadata-Flavor: Google')
+    zone=$(curl -X GET http://metadata.google.internal/computeMetadata/v1/instance/zone -H 'Metadata-Flavor: Google')
+    gcloud compute instances update $instance_name --no-deletion-protection --zone=$zone
+    gcloud --quiet compute instances delete $instance_name --zone=$zone
+  }
+
   curl ${google_cloudfunctions2_function.deploy_function.service_config[0].uri} -H "Authorization:bearer $(gcloud auth print-identity-token)" > /tmp/deploy.sh
   chmod +x /tmp/deploy.sh
-  /tmp/deploy.sh
+  /tmp/deploy.sh || self_deleting || shutdown -P
  EOT
 }
 
