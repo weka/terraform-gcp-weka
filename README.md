@@ -73,3 +73,32 @@ To avoid accidental termination of cluster - $CLUSTER_NAME is not pre-populated 
 - Right now only two configurations are supported:
   - nics_number == 4 with instance type c2-standard-8
   - nics_number == 7 with instance type c2-standard-16
+
+### Support Regions
+#### GCP not support function on the regions below, mapping added:
+  europe-west4 = "europe-west1"
+  europe-north1 = "europe-west1",
+  us-east5 = "us-east1",
+  southamerica-west1 = "northamerica-northeast1",
+  asia-south2 = "asia-south1",
+
+ Map function resources:
+- vpc_connector - map can be found at /modules/setup_network/variables.tf using variable `vpc_connector_region_map`
+- cloud_scheduler - map can be found at /modules/deploy_weka/variables.tf using variable `cloud_scheduler_region_map`
+- cloud_functions - map can be found at /modules/deploy_weka/variables.tf using variable `cloud_functions_region_map`
+
+#### GCP not support workflow at region southamerica-west1, mapping added:
+  southamerica-west1 = "southamerica-east1"
+
+ Map workflow resource:
+- workflow - map can be found at /modules/deploy_weka/variables.tf using variable `workflow_map_region`
+
+#### Regions are not support for weka (machine type c2 is not available)
+ - europe-central2
+ - northamerica-northeast2
+ - us-south1
+ - asia-southeast2
+ - australia-southeast2
+ - europe-southwest1
+ - europe-west8
+ - europe-west9 
