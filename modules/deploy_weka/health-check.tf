@@ -1,7 +1,7 @@
 # health check
 resource "google_compute_region_health_check" "health_check" {
   name                = "${var.prefix}-${var.cluster_name}-health-check"
-  region              = lookup(var.load_balancer_region_map, var.region, var.region)
+  region              = var.region
   timeout_sec         = 1
   check_interval_sec  = 1
   healthy_threshold   = 4
@@ -16,7 +16,7 @@ resource "google_compute_region_health_check" "health_check" {
 # backend service
 resource "google_compute_region_backend_service" "backend_service" {
   name                  = "${var.prefix}-${var.cluster_name}-lb-backend"
-  region                = lookup(var.load_balancer_region_map, var.region, var.region)
+  region                = var.region
   protocol              = "TCP"
   load_balancing_scheme = "INTERNAL"
   health_checks         = [ google_compute_region_health_check.health_check.id]
@@ -54,7 +54,7 @@ resource "google_dns_record_set" "record-a" {
 # health check
 resource "google_compute_region_health_check" "ui_check" {
   name                = "${var.prefix}-${var.cluster_name}-ui-check"
-  region              = lookup(var.load_balancer_region_map, var.region, var.region)
+  region              = var.region
   timeout_sec         = 1
   check_interval_sec  = 1
   healthy_threshold   = 4
@@ -69,7 +69,7 @@ resource "google_compute_region_health_check" "ui_check" {
 # backend service
 resource "google_compute_region_backend_service" "ui_backend_service" {
   name                  = "${var.prefix}-${var.cluster_name}-ui-lb-backend"
-  region                = lookup(var.load_balancer_region_map, var.region, var.region)
+  region                = var.region
   protocol              = "TCP"
   load_balancing_scheme = "INTERNAL"
   health_checks         = [google_compute_region_health_check.ui_check.id]

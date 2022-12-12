@@ -22,7 +22,7 @@ resource "google_project_iam_binding" "cloudscheduler-binding" {
 
 resource "google_workflows_workflow" "scale_down" {
   name            = "${var.prefix}-${var.cluster_name}-scale-down-workflow"
-  region          = var.region
+  region          = lookup(var.workflow_map_region, var.region, var.region)
   description     = "scale down workflow"
   service_account = var.sa_email
   source_contents = <<-EOF
@@ -86,7 +86,7 @@ resource "google_cloud_scheduler_job" "scale_down_job" {
 
 resource "google_workflows_workflow" "scale_up" {
   name            = "${var.prefix}-${var.cluster_name}-scale-up-workflow"
-  region          = var.region
+  region          = lookup(var.workflow_map_region, var.region, var.region)
   description     = "scale up workflow"
   service_account = var.sa_email
   source_contents = <<-EOF
