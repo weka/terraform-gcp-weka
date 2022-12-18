@@ -1,3 +1,8 @@
+provider "google" {
+  project = var.project
+  region  = var.region
+}
+
 /***********************************
       Create Service Account
 ***********************************/
@@ -6,9 +11,6 @@ module "create_service_account" {
   project = var.project
   prefix  = var.prefix
   sa_name = var.sa_name
-  providers = {
-    google = google.main
-  }
 }
 
 /***********************************
@@ -25,11 +27,6 @@ module "setup_network" {
   vpc_connector_range      = var.vpc_connector_range
   private_network          = var.private_network
   sg_public_ssh_cidr_range = var.sg_public_ssh_cidr_range
-  providers = {
-    google = google.deployment
-  }
-  depends_on = [ module.create_service_account]
-
 }
 
 /**********************************************
@@ -46,10 +43,6 @@ module "worker_pool" {
   cluster_name        = var.cluster_name
   sa_email            = module.create_service_account.outputs-service-account-email
   set_worker_pool_network_peering = var.set_worker_pool_network_peering
-  providers = {
-    google = google.deployment
-  }
-
   depends_on = [module.setup_network]
 }
 
@@ -79,10 +72,6 @@ module "deploy_weka" {
   private_dns_zone         = module.setup_network.private_zone_name
   private_dns_name         = module.setup_network.private_dns_name
   worker_pool_name         = var.worker_pool_name
-  providers = {
-    google = google.deployment
-  }
-
-  depends_on = [module.create_service_account, module.worker_pool]
+  depends_on               = [module.worker_pool]
 
 }
