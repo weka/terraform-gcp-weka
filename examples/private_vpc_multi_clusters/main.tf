@@ -1,3 +1,8 @@
+provider "google" {
+  project = var.project
+  region  = var.region
+}
+
 /***********************************
       Create Service Account
 ***********************************/
@@ -6,9 +11,6 @@ module "create_service_account" {
   project = var.project
   prefix  = var.prefix
   sa_name = var.sa_name
-  providers = {
-    google = google.main
-  }
 }
 
 /***********************************
@@ -24,11 +26,6 @@ module "setup_network" {
   zone                 = var.zone
   vpc_connector_range  = var.vpc_connector_range
   private_network      = var.private_network
-
-  providers = {
-    google = google.deployment
-  }
-  depends_on = [ module.create_service_account]
 }
 
 /***********************************
@@ -58,9 +55,5 @@ module "deploy_weka" {
   private_network          = var.private_network
   private_dns_zone         = module.setup_network.private_zone_name
   private_dns_name         = module.setup_network.private_dns_name
-  providers = {
-    google = google.deployment
-  }
-
-  depends_on = [module.create_service_account]
+  depends_on               = [module.setup_network]
 }

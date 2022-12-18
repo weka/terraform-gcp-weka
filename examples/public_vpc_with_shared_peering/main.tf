@@ -1,3 +1,14 @@
+provider "google" {
+  project = var.project
+  region  = var.region
+}
+
+provider "google" {
+  alias   = "shared-vpc"
+  project = var.host_project
+  region  = var.region
+}
+
 /***********************************
       Create Service Account
 ***********************************/
@@ -6,9 +17,6 @@ module "create_service_account" {
   project = var.project
   prefix  = var.prefix
   sa_name = var.sa_name
-  providers = {
-    google = google.main
-  }
 }
 
 /***********************************
@@ -25,11 +33,6 @@ module "setup_network" {
   vpc_connector_range      = var.vpc_connector_range
   private_network          = var.private_network
   sg_public_ssh_cidr_range = var.sg_public_ssh_cidr_range
-  providers = {
-    google = google.deployment
-  }
-  depends_on = [ module.create_service_account]
-
 }
 
 /***********************************
@@ -46,7 +49,6 @@ module "shared_vpc_peering" {
   host_shared_range   = var.host_shared_range
   attach_service_project = var.attach_service_project
   providers = {
-    google.deployment = google.deployment
     google.shared-vpc = google.shared-vpc
   }
   depends_on = [module.setup_network]
@@ -77,10 +79,6 @@ module "deploy_weka" {
   private_network          = var.private_network
   private_dns_zone         = module.setup_network.private_zone_name
   private_dns_name         = module.setup_network.private_dns_name
-  providers = {
-    google = google.deployment
-  }
-
-  depends_on = [module.create_service_account, module.setup_network]
+  depends_on               = [module.setup_network]
 
 }
