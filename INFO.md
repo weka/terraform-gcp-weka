@@ -5,10 +5,13 @@
 This Terraform is made for weka deployment on GCP including auto-scaling.
 This Terraform can use existing network (vpcs/subnets etc.) or create new network.<br>
 
-We supply 4 modules:
+On our root module you will find the actual weka deployment.
+It includes instance template, cloud functions, workflows, job schedulers, secret manger, buckets, health check
+
+We supply additional 4 modules:
 1. [**setup_network**](modules/setup_network): includes vpcs, subnets, peering, firewall and health check.
 2. [**service_account**](modules/service_account): includes the service account that will be used for deployment with all necessary permissions.
-3. [**deploy_weka**](modules/deploy_weka): includes the actual weka deployment, instance template, cloud functions, workflows, job schedulers, secret manger, buckets, health check.
+3. [**worker_pool**](modules/worker_pool): includes build private pool creation.
 4. [**shared_vpcs**(*optional*)](modules/shared_vpcs): includes vpc sharing between the weka deployment network and another notwork.
 
 We support deploying weka on public and private network.
