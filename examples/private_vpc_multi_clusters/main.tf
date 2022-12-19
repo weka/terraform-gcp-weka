@@ -33,7 +33,7 @@ module "setup_network" {
 ***********************************/
 module "deploy_weka" {
   count                    = length(var.clusters_name)
-  source                   = "../../modules/deploy_weka"
+  source                   = "../.."
   cluster_name             = var.clusters_name[count.index]
   project                  = var.project
   nics_number              = var.nics_number
