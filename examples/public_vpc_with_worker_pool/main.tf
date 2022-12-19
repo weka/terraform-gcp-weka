@@ -49,7 +49,7 @@ module "create_worker_pool" {
      Deploy weka cluster
 ***********************************/
 module "deploy_weka" {
-  source                   = "../../modules/deploy_weka"
+  source                   = "../.."
   cluster_name             = var.cluster_name
   project                  = var.project
   nics_number              = var.nics_number
