@@ -87,6 +87,7 @@ variable "cluster_name" {
 variable "get_weka_io_token" {
   type        = string
   description = "get.weka.io token for downloading weka"
+  sensitive   = true
 }
 
 variable "sg_public_ssh_cidr_range" {

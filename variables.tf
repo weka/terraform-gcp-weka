@@ -51,6 +51,7 @@ variable "private_network" {
 variable "get_weka_io_token" {
   type        = string
   description = "get.weka.io token for downloading weka"
+  sensitive   = true
   default     = ""
 }
 
