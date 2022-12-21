@@ -36,7 +36,7 @@ jobs:
         run: terraform init
 
       - name: Terraform Apply
-        run: terraform apply -var-file=../../ci/deployment/tf.tfvars -var="get_weka_io_token=$GET_WEKA_IO_TOKEN" -auto-approve
+        run: terraform apply -var-file=../../ci/deployment/terraform.tfvars -var="get_weka_io_token=$GET_WEKA_IO_TOKEN" -auto-approve
         env:
           GET_WEKA_IO_TOKEN: ${{ secrets.GET_WEKA_IO_TOKEN }}
 
@@ -76,6 +76,6 @@ jobs:
 
       - name: Terraform Destroy
         if: always()
-        run: terraform destroy -var-file=../../ci/deployment/tf.tfvars -var="get_weka_io_token=$GET_WEKA_IO_TOKEN" -auto-approve
+        run: terraform destroy -var-file=../../ci/deployment/terraform.tfvars -var="get_weka_io_token=$GET_WEKA_IO_TOKEN" -auto-approve
         env:
           GET_WEKA_IO_TOKEN: ${{ secrets.GET_WEKA_IO_TOKEN }}
