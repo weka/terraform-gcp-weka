@@ -1,3 +1,4 @@
+<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
@@ -54,3 +55,4 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_worker_pool"></a> [worker\_pool](#output\_worker\_pool) | n/a |
+<!-- END_TF_DOCS -->

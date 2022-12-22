@@ -1,3 +1,4 @@
+<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
@@ -123,3 +124,4 @@ No modules.
 |------|-------------|
 | <a name="output_cluster_helpers_commands"></a> [cluster\_helpers\_commands](#output\_cluster\_helpers\_commands) | n/a |
 | <a name="output_output-lb-dns"></a> [output-lb-dns](#output\_output-lb-dns) | n/a |
+<!-- END_TF_DOCS -->
