@@ -1,4 +1,4 @@
-
+<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
@@ -38,3 +38,4 @@ No modules.
 |------|-------------|
 | <a name="output_output-sa-key"></a> [output-sa-key](#output\_output-sa-key) | n/a |
 | <a name="output_outputs-service-account-email"></a> [outputs-service-account-email](#output\_outputs-service-account-email) | n/a |
+<!-- END_TF_DOCS -->
