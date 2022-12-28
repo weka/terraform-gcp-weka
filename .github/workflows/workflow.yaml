@@ -65,15 +65,6 @@ jobs:
       - name: Wait for weka cluster
         run: ../../ci/deployment/wait_for_cluster.sh 6 15
 
-      - name: Terminate cluster
-        if: always()
-        run: >
-          gcloud functions call weka-poc-terminate-cluster
-          --project wekaio-ci
-          --region europe-west1
-          --data '{"name": "poc"}'
-          --gen2
-
       - name: Terraform Destroy
         if: always()
         run: terraform destroy -var-file=../../ci/deployment/terraform.tfvars -var="get_weka_io_token=$GET_WEKA_IO_TOKEN" -auto-approve
