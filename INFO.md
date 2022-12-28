@@ -60,19 +60,6 @@ Similar command
 - You can't change vpc or number of nics after deployment
 - In order to see the input and output of each step in the scale down workflow, you can go to `EDIT`, then you can edit
 the scheduler, go to `Configure the execution` and choose for log level `All calls` . (We can't set this option via TF)
-- In order to run `terraform destroy`, you have to kill all the vms that were created by `scale_up` workflow. We added
-a script on the instance group destroy that will delete all vms. This script will kill all the instances that are attached to
-the instance group. In case something bad happened and there are instances that are not attached to the instance group,
-you will need to remove them manually.
-- **All weka vms must be removed before running** `terraform destroy`. Since the vms were not create vie terraform,
-you will need to run the terminate-cluster function before destroying with terraform. Output of weka_deploy module includes the command, that looks like:
-```
-curl -m 70 -X POST https://<cluster-dns>.cloudfunctions.net/weka-$CLUSTER_NAME-terminate-cluster \                                                                                 
--H "Authorization:bearer $(gcloud auth print-identity-token)" \
--H "Content-Type:application/json" \
--d '{"name":"$CLUSTER_NAME"}'
-```
-To avoid accidental termination of cluster - $CLUSTER_NAME is not pre-populated and left to user as a confirmation of the destructive action.
 - Right now only two configurations are supported:
   - nics_number == 4 with instance type c2-standard-8
   - nics_number == 7 with instance type c2-standard-16

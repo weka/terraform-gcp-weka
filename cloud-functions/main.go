@@ -1,7 +1,9 @@
 package cloud_functions
 
 import (
+	"cloud.google.com/go/storage"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -264,18 +266,25 @@ func TerminateCluster(w http.ResponseWriter, r *http.Request) {
 
 	err := terminate_cluster.DeleteStateObject(bucket)
 	if err != nil {
-		fmt.Fprintf(w, fmt.Sprintf("Failed deleting state object:%s", err))
-		return
+		if errors.Is(err, storage.ErrObjectNotExist) {
+			fmt.Fprintf(w, "No cluster state object to delete.")
+		} else {
+			fmt.Fprintf(w, fmt.Sprintf("Failed deleting state object:%s.", err))
+			return
+		}
+	} else {
+		fmt.Fprintf(w, "Deleted cluster state successfully.")
 	}
-	fmt.Fprintf(w, "Deleted cluster state successfully.")
 
 	terminatingInstances, errs := terminate_cluster.TerminateInstances(project, zone, d.Name)
 	if len(errs) > 0 {
-		fmt.Fprintf(w, fmt.Sprintf("Got the following failure while terminating instances:%s", errs))
+		fmt.Fprintf(w, fmt.Sprintf("Got the following failure while terminating instances:%s.", errs))
 	}
 
 	if len(terminatingInstances) > 0 {
 		fmt.Fprintf(w, fmt.Sprintf("Terminated %d instances:%s", len(terminatingInstances), terminatingInstances))
+	} else {
+		fmt.Fprintf(w, "No instances to terminate")
 	}
 }
 
