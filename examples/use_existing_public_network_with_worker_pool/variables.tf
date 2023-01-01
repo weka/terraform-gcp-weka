@@ -73,11 +73,6 @@ variable "weka_username" {
   default = "admin"
 }
 
-variable "internal_bucket_location" {
-  type        = string
-  description = "functions and state bucket location"
-}
-
 variable "sa_name" {
   type = string
   description = "service account name"
