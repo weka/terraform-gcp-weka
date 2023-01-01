@@ -10,7 +10,7 @@
 
 | Name | Version |
 |------|---------|
-| <a name="provider_google.deployment"></a> [google.deployment](#provider\_google.deployment) | ~>4.38.0 |
+| <a name="provider_google"></a> [google](#provider\_google) | ~>4.38.0 |
 | <a name="provider_google.shared-vpc"></a> [google.shared-vpc](#provider\_google.shared-vpc) | ~>4.38.0 |
 
 ## Modules
