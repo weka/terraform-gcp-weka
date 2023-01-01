@@ -59,11 +59,6 @@ variable "weka_username" {
   default = "admin"
 }
 
-variable "internal_bucket_location" {
-  type        = string
-  description = "functions and state bucket location"
-}
-
 variable "subnets_cidr_range" {
   type        = list(string)
   description = "list of subnets to use for creating the cluster, the number of subnets must be 'nics_number'"

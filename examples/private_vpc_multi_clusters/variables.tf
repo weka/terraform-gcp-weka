@@ -48,11 +48,6 @@ variable "weka_version" {
   description = "weka version"
 }
 
-variable "internal_bucket_location" {
-  type        = string
-  description = "functions and state bucket location"
-}
-
 variable "yum_repo_server" {
   type        = string
   description = "yum repo server address"

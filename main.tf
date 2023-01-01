@@ -1,7 +1,7 @@
 # ======================== bucket ============================
 resource "google_storage_bucket" "weka_deployment" {
   name     = "${var.prefix}-${var.cluster_name}-${var.project}"
-  location = var.internal_bucket_location
+  location = var.region
 }
 
 # ======================== instances ============================

@@ -11,7 +11,6 @@ cluster_size             = 7
 machine_type             = "c2-standard-8"
 nvmes_number             = 2
 weka_version             = "4.0.1.37-gcp"
-internal_bucket_location          = "EU"
 sa_name                  = "deploy-sa"
 cluster_name             = "poc"
 sg_public_ssh_cidr_range = ["0.0.0.0/0"]
