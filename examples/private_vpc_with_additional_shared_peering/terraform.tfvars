@@ -12,7 +12,6 @@ install_url              = "gs://weka-installation/weka-4.0.1.37-gcp.tar"
 machine_type             = "c2-standard-8"
 nvmes_number             = 2
 weka_version             = "4.0.1.37-gcp"
-internal_bucket_location  = "EU"
 yum_repo_server          = "http://yum.weka.private.net"
 vpc_connector_range      = "10.8.0.0/28"
 sa_name                  = "deploy-sa"

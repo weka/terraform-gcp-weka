@@ -2,7 +2,6 @@ project                  = "wekaio-rnd"
 region                   = "europe-west1"
 zone                     = "europe-west1-b"
 prefix                   = "weka"
-internal_bucket_location = "EU"
 subnets_cidr_range       = ["10.0.0.0/24", "10.1.0.0/24", "10.2.0.0/24", "10.3.0.0/24"]
 nics_number              = 4
 cluster_size             = 7
