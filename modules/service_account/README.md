@@ -1,3 +1,14 @@
+# GCP service account Terraform module
+Terraform module which creates service account with all needed permissions for weka deployment resources.
+
+## Usage
+```hcl
+module "service_account" {
+    source  = "../../modules/service_account"
+    project = "myProject"
+}
+```
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

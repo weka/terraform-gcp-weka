@@ -1,3 +1,22 @@
+# GCP shared vpc Terraform module
+Terraform module which sets up peering between vpcs on different projects
+
+## Usage
+```hcl
+module "shared_vpc" {
+  source              = "../../modules/shared_vpcs"
+  project             = "myProject"
+  host_project        = "myHostProject"
+  shared_vpcs         = ["shared-vpc"]
+  vpcs                = ["weka-vpc-0", "weka-vpc-1", "weka-vpc-2", "weka-vpc-3"]
+  sa_email            = "weka-deploy-sa@myProject.iam.gserviceaccount.com"
+  host_shared_range   = ["10.26.1.0/24"]
+  providers = {
+    google.shared-vpc = hostProvider
+  }
+}
+```
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

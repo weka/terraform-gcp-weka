@@ -48,7 +48,7 @@ resource "google_cloudfunctions2_function" "deploy_function" {
     environment_variables = {
       PROJECT : var.project
       ZONE : var.zone
-      NICS_NUM : var.nics_number
+      NICS_NUM : local.nics_number
       INSTANCE_GROUP : google_compute_instance_group.instance_group.name
       GATEWAYS : format("(%s)", join(" ", [for s in data.google_compute_subnetwork.subnets_list_ids : s.gateway_address] ))
       SUBNETS : format("(%s)", join(" ", [for s in data.google_compute_subnetwork.subnets_list_ids : s.ip_cidr_range] ))
@@ -266,7 +266,7 @@ resource "google_cloudfunctions2_function" "clusterize_function" {
       PROJECT: var.project
       ZONE: var.zone
       HOSTS_NUM: var.cluster_size
-      NICS_NUM: var.nics_number
+      NICS_NUM: local.nics_number
       GWS: format("(%s)", join(" ", [for s in data.google_compute_subnetwork.subnets_list_ids: s.gateway_address] ))
       CLUSTER_NAME: var.cluster_name
       NVMES_NUM: var.nvmes_number

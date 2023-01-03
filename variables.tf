@@ -1,16 +1,17 @@
 variable "cluster_name" {
   type        = string
-  description = "cluster prefix for all resources"
+  description = "Cluster prefix for all resources"
 }
 
 variable "project" {
   type        = string
-  description = "project id"
+  description = "Project id"
 }
 
 variable "nics_number" {
   type        = number
-  description = "number of nics per host"
+  description = "Number of nics per host"
+  default = -1
 }
 
 variable "vpcs" {
@@ -20,92 +21,101 @@ variable "vpcs" {
 
 variable "prefix" {
   type        = string
-  description = "prefix for all resources"
+  description = "Prefix for all resources"
+  default = "weka"
 }
 
 variable "zone" {
   type        = string
-  description = "zone name"
+  description = "Zone name"
 }
 
 variable "machine_type" {
   type        = string
-  description = "weka cluster backends machines type"
+  description = "Weka cluster backends machines type"
+  default = "c2-standard-8"
+  validation {
+    condition = contains(["c2-standard-8", "c2-standard-16"], var.machine_type)
+    error_message = "Machine type isn't supported"
+  }
 }
 
 variable "region" {
   type        = string
-  description = "region name"
+  description = "Region name"
 }
 
 variable "nvmes_number" {
   type        = number
-  description = "number of local nvmes per host"
+  description = "Number of local nvmes per host"
 }
 
 variable "private_network" {
   type        = bool
-  description = "deploy weka in private network"
+  description = "Deploy weka in private network"
+  default = false
 }
 
 variable "get_weka_io_token" {
   type        = string
-  description = "get.weka.io token for downloading weka"
+  description = "Get get.weka.io token for downloading weka"
   sensitive   = true
   default     = ""
 }
 
 variable "install_url" {
   type        = string
-  description = "path to weka installation tar object"
+  description = "Path to weka installation tar object"
   default     = ""
 }
 
 variable "weka_version" {
   type        = string
-  description = "weka version"
+  description = "Weka version"
+  default = "4.1.0"
 }
 
 variable "weka_username" {
   type        = string
-  description = "weka cluster username"
+  description = "Weka cluster username"
   default = "admin"
 }
 
 variable "cluster_size" {
   type        = number
-  description = "weka cluster size"
+  description = "Weka cluster size"
 }
 
 variable "subnets_name" {
   type = list(string)
+  description = "Subnets list name "
 }
 
 variable "vpc_connector" {
   type        = string
-  description = "connector name to use for serverless vpc access"
+  description = "Connector name to use for serverless vpc access"
 }
 
 variable "sa_email" {
   type = string
-  description = "service account email"
+  description = "Service account email"
 }
 
 variable "create_cloudscheduler_sa" {
   type = bool
-  description = "should or not crate gcp cloudscheduler sa"
+  description = "Should or not crate gcp cloudscheduler sa"
   default = true
 }
 
 variable "yum_repo_server" {
   type = string
-  description = "yum repo server address"
+  description = "Yum repo server address"
   default     = ""
 }
 
 variable "weka_image_id" {
   type = string
-  description = "weka image id"
+  description = "Weka image id"
   default = "projects/centos-cloud/global/images/centos-7-v20220719"
 }
 
@@ -140,4 +150,13 @@ variable "worker_pool_name" {
   type = string
   description = "Name of worker pool, Must be on the same project and region"
   default = ""
+}
+
+variable "machine_types_nics_number_map" {
+  type = map(number)
+  description = "Map of machine type to supported nics number"
+  default = {
+    c2-standard-8 = 4
+    c2-standard-16 = 7
+  }
 }

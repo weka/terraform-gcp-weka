@@ -18,7 +18,6 @@ resource "google_project_iam_binding" "iam-binding" {
 }
 
 resource "google_compute_shared_vpc_service_project" "service" {
-  count           = var.attach_service_project ? 1 : 0
   provider        = google.shared-vpc
   host_project    = var.host_project
   service_project = var.project

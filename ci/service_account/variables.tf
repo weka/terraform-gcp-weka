@@ -10,7 +10,7 @@ variable "prefix" {
   default = "weka"
 }
 
-variable "sa_name" {
+variable "service_account_name" {
   type = string
   description = "service account name"
   default = "botty"
