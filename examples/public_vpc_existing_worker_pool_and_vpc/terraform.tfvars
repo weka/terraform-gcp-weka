@@ -1,0 +1,11 @@
+project                  = "wekaio-rnd"
+region                   = "europe-west1"
+zone                     = "europe-west1-b"
+vpcs                     = ["weka-vpc-0","weka-vpc-1","weka-vpc-2","weka-vpc-3"]
+subnets                  = ["weka-subnet-0","weka-subnet-1","weka-subnet-2","weka-subnet-3"]
+vpc_connector_range      = "10.8.0.0/28"
+nvmes_number             = 2
+cluster_size             = 7
+cluster_name             = "poc"
+worker_pool_name         = "weka-poc-worker-pool"
+worker_pool_network      = "weka-vpc-0"

@@ -1,3 +1,16 @@
+# Private VPC multi cluster
+This example creates service account for weka deployment,
+<br>all the network resources needed for weka deployment, including vpcs, peering, etc.
+<br>and 2 weka clusters without internet access that uses the same service account and network resources.
+
+## Usage
+```hcl
+$ terraform init
+$ terraform plan
+$ terraform apply
+```
+
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

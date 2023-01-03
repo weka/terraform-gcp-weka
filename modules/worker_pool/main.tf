@@ -44,6 +44,7 @@ resource "google_project_service" "servicenetworking" {
 }
 
 resource "null_resource" "wait-service-enable" {
+  count = var.worker_pool_name == "" ? 1 : 0
   provisioner "local-exec" {
     command = <<EOT
     echo "Waiting for service to enable..."
@@ -54,7 +55,7 @@ resource "null_resource" "wait-service-enable" {
 }
 
 resource "google_compute_global_address" "worker_range_ip" {
-  count         = var.set_worker_pool_network_peering ? 0 : 1
+  count         = var.worker_pool_name == "" ? 1 : 0
   name          = "${var.prefix}-${var.cluster_name}-worker-pool-range"
   purpose       = "VPC_PEERING"
   address_type  = "INTERNAL"
@@ -67,7 +68,7 @@ resource "google_compute_global_address" "worker_range_ip" {
 }
 
 resource "google_service_networking_connection" "worker_pool_conn" {
-  count                   = var.set_worker_pool_network_peering ? 0 : 1
+  count                   = var.worker_pool_name == "" ? 1 : 0
   network                 =  data.google_compute_network.vpc_list_ids[0].id
   service                 = "servicenetworking.googleapis.com"
   reserved_peering_ranges = [google_compute_global_address.worker_range_ip[0].name]
@@ -78,7 +79,7 @@ resource "google_service_networking_connection" "worker_pool_conn" {
 }
 
 resource "google_cloudbuild_worker_pool" "worker_pool" {
-  count    = var.set_worker_pool_network_peering ? 0 : 1
+  count    = var.worker_pool_name == "" ? 1 : 0
   name     = "${var.prefix}-${var.cluster_name}-worker-pool"
   location = var.region
   worker_config {
