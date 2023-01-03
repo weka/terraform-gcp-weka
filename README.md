@@ -1,3 +1,29 @@
+# GCP weka deployment Terraform module
+Terraform module that creates weka deployments.
+This module creates many resources as launch template, cloud functions, workflows, cloud scheduler etc.
+<br>**Note**: when applying this module it will create workflow that will automatically start instances according to the
+given cluster size.
+
+## Usage
+```hcl
+module "deploy_weka" {
+  source                   = "../.."
+  cluster_name             = "myCluster"
+  project                  = "myProject"
+  vpcs                     = ["weka-vpc-0", "weka-vpc-1", "weka-vpc-2", "weka-vpc-3"]
+  region                   = "europe-west1"
+  subnets_name             = ["weka-subnet-0","weka-subnet-1","weka-subnet-2","weka-subnet-3"]
+  zone                     = "europe-west1-b"
+  cluster_size             = 7
+  nvmes_number             = 2
+  vpc_connector            = "weka-connector"
+  sa_email                 = "weka-deploy-sa@myProject.iam.gserviceaccount.com"
+  get_weka_io_token        = "GET_WEKA_IO_TOKEN"
+  private_dns_zone         = "weka-private-zone"
+  private_dns_name         = "weka.private.net."
+}
+```
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

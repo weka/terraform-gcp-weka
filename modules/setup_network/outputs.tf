@@ -14,8 +14,12 @@ output "subnets_range" {
   value = length(var.subnets) == 0 ? var.subnets-cidr-range : [ for i in data.google_compute_subnetwork.subnets_list_ids: i.ip_cidr_range ]
 }
 
+output "nics_number" {
+  value = var.vpcs_number
+}
+
 locals {
-  vpc_connector_name = var.create_vpc_connector ? google_vpc_access_connector.connector[0].name : var.vpc_connector_name
+  vpc_connector_name = var.vpc_connector_name == "" ? google_vpc_access_connector.connector[0].name : var.vpc_connector_name
 }
 
 output "vpc_connector_name" {

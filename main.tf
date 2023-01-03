@@ -7,6 +7,7 @@ resource "google_storage_bucket" "weka_deployment" {
 # ======================== instances ============================
 locals {
   private_nic_first_index = var.private_network ? 0 : 1
+  nics_number = var.nics_number != -1 ? var.nics_number : lookup(var.machine_types_nics_number_map, var.machine_type)
 }
 
 data "google_compute_network" "vpc_list_ids"{
@@ -50,7 +51,7 @@ resource "google_compute_instance_template" "backends-template" {
 
 # nics with private ip
   dynamic "network_interface" {
-    for_each = range(local.private_nic_first_index, var.nics_number)
+    for_each = range(local.private_nic_first_index, local.nics_number)
      content {
       subnetwork = data.google_compute_subnetwork.subnets_list_ids[network_interface.value].self_link
     }

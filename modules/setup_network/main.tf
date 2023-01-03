@@ -1,5 +1,5 @@
 locals {
-  vpc_length = length(var.vpcs) == 0 ? var.nics_number : length(var.vpcs)
+  vpc_length = length(var.vpcs) == 0 ? var.vpcs_number : length(var.vpcs)
   temp = flatten([
   for from in range(local.vpc_length) : [
   for to in range(local.vpc_length) : {
@@ -46,7 +46,7 @@ data "google_compute_subnetwork" "subnets_list_ids" {
 
 
 resource "google_compute_network" "vpc_network" {
-  count                   = length(var.vpcs) == 0 ? var.nics_number :0
+  count                   = length(var.vpcs) == 0 ? var.vpcs_number :0
   name                    = "${var.prefix}-vpc-${count.index}"
   auto_create_subnetworks = false
   mtu                     = 1460
@@ -56,7 +56,7 @@ resource "google_compute_network" "vpc_network" {
 
 # ======================= subnet ==========================
 resource "google_compute_subnetwork" "subnetwork" {
-  count         = length(var.subnets) == 0 ? var.nics_number : 0
+  count         = length(var.subnets) == 0 ? var.vpcs_number : 0
   name          = "${var.prefix}-subnet-${count.index}"
   ip_cidr_range = var.subnets-cidr-range[count.index]
   region        = var.region
@@ -109,7 +109,7 @@ resource "google_project_service" "project-vpc" {
 }
 
 resource "google_vpc_access_connector" "connector" {
-  count         = var.create_vpc_connector ? 1 : 0
+  count         = var.vpc_connector_name == "" ? 1 : 0
   name          = "${var.prefix}-connector"
   ip_cidr_range = var.vpc_connector_range
   region = lookup(var.vpc_connector_region_map, var.region, var.region)

@@ -8,7 +8,7 @@ terraform {
 
 # ===================== service account ===================
 resource "google_service_account" "sa" {
-  account_id   = "${var.prefix}-${var.sa_name}"
+  account_id   = "${var.prefix}-${var.service_account_name}"
   display_name = "A service account for weka ci"
   project = var.project
 }

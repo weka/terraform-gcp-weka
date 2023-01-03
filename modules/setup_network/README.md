@@ -1,3 +1,19 @@
+# GCP network setup Terraform module
+Terraform module which sets up all network resources needed for weka deployment: vpcs, subnets, peering, 
+security groups, vpc connector, health checks and dns.
+
+## Usage
+```hcl
+module "setup_network" {
+  source                   = "../../modules/setup_network"
+  project                  = "myProject"
+  region                   = "europe-west1"
+  subnets-cidr-range       = ["10.0.0.0/24", "10.1.0.0/24", "10.2.0.0/24", "10.3.0.0/24"]
+  zone                     = "europe-west1-b"
+  vpc_connector_range      = "10.8.0.0/28"
+}
+```
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

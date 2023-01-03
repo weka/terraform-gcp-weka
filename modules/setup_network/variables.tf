@@ -13,38 +13,40 @@ variable "zone" {
   description = "zone name"
 }
 
-variable "nics_number" {
+variable "vpcs_number" {
   type        = number
-  description = "number of nics per host"
+  description = "number of vpcs"
+  default = 4
 }
 
 variable "vpcs" {
-  type       = list(string)
+  type        = list(string)
   description = "List of vpcs name"
-  default = []
+  default     = []
 }
 
 variable "subnets-cidr-range" {
   type        = list(string)
-  description = "list of subnets to use for creating the cluster, the number of subnets must be 'nics_number'"
+  description = "list of subnets to use for creating the cluster, the number of subnets must be 'vpcs_number'"
   default     = []
 }
 
 variable "subnets" {
-  type = list(string)
+  type        = list(string)
   description = "List of subnets name"
-  default = []
+  default     = []
 }
 
 variable "prefix" {
   type        = string
   description = "prefix for all resources"
+  default     = "weka"
 }
 
 variable "set_peering" {
-  type = bool
+  type        = bool
   description = "apply peering connection between subnets and subnets "
-  default = true
+  default     = true
 }
 
 
@@ -54,33 +56,28 @@ variable "vpc_connector_range" {
   default     = ""
 }
 
-variable "create_vpc_connector" {
-  type = bool
-  description = ""
-  default = true
-}
-
 variable "vpc_connector_name" {
-  type = string
-  description = ""
-  default = ""
+  type        = string
+  description = "exiting vpc connector name to use for cloud functions"
+  default     = ""
 }
 
 variable "private_network" {
   type        = bool
   description = "deploy weka in private network"
+  default     = false
 }
 
 variable "sg_public_ssh_cidr_range" {
   type        = list(string)
   description = "list of ranges to allow ssh on public deployment"
-  default     = []
+  default     = ["0.0.0.0/0"]
 }
 
 variable "vpc_connector_region_map" {
-  type = map(string)
+  type        = map(string)
   description = "Map of region to use for vpc connector, as some regions do not have cloud functions enabled, and vpc connector needs to be in the same region"
-  default = {
+  default     = {
     europe-west4 = "europe-west1"
     europe-north1 = "europe-west1",
     us-east5 = "us-east1",
