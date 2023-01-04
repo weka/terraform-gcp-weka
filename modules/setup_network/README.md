@@ -57,20 +57,19 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_create_vpc_connector"></a> [create\_vpc\_connector](#input\_create\_vpc\_connector) | n/a | `bool` | `true` | no |
-| <a name="input_nics_number"></a> [nics\_number](#input\_nics\_number) | number of nics per host | `number` | n/a | yes |
-| <a name="input_prefix"></a> [prefix](#input\_prefix) | prefix for all resources | `string` | n/a | yes |
-| <a name="input_private_network"></a> [private\_network](#input\_private\_network) | deploy weka in private network | `bool` | n/a | yes |
+| <a name="input_prefix"></a> [prefix](#input\_prefix) | prefix for all resources | `string` | `"weka"` | no |
+| <a name="input_private_network"></a> [private\_network](#input\_private\_network) | deploy weka in private network | `bool` | `false` | no |
 | <a name="input_project"></a> [project](#input\_project) | project id | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | region name | `string` | n/a | yes |
 | <a name="input_set_peering"></a> [set\_peering](#input\_set\_peering) | apply peering connection between subnets and subnets | `bool` | `true` | no |
-| <a name="input_sg_public_ssh_cidr_range"></a> [sg\_public\_ssh\_cidr\_range](#input\_sg\_public\_ssh\_cidr\_range) | list of ranges to allow ssh on public deployment | `list(string)` | `[]` | no |
+| <a name="input_sg_public_ssh_cidr_range"></a> [sg\_public\_ssh\_cidr\_range](#input\_sg\_public\_ssh\_cidr\_range) | list of ranges to allow ssh on public deployment | `list(string)` | <pre>[<br>  "0.0.0.0/0"<br>]</pre> | no |
 | <a name="input_subnets"></a> [subnets](#input\_subnets) | List of subnets name | `list(string)` | `[]` | no |
-| <a name="input_subnets-cidr-range"></a> [subnets-cidr-range](#input\_subnets-cidr-range) | list of subnets to use for creating the cluster, the number of subnets must be 'nics\_number' | `list(string)` | `[]` | no |
-| <a name="input_vpc_connector_name"></a> [vpc\_connector\_name](#input\_vpc\_connector\_name) | n/a | `string` | `""` | no |
+| <a name="input_subnets-cidr-range"></a> [subnets-cidr-range](#input\_subnets-cidr-range) | list of subnets to use for creating the cluster, the number of subnets must be 'vpcs\_number' | `list(string)` | `[]` | no |
+| <a name="input_vpc_connector_name"></a> [vpc\_connector\_name](#input\_vpc\_connector\_name) | exiting vpc connector name to use for cloud functions | `string` | `""` | no |
 | <a name="input_vpc_connector_range"></a> [vpc\_connector\_range](#input\_vpc\_connector\_range) | list of connector to use for serverless vpc access | `string` | `""` | no |
 | <a name="input_vpc_connector_region_map"></a> [vpc\_connector\_region\_map](#input\_vpc\_connector\_region\_map) | Map of region to use for vpc connector, as some regions do not have cloud functions enabled, and vpc connector needs to be in the same region | `map(string)` | <pre>{<br>  "europe-west4": "europe-west1"<br>}</pre> | no |
 | <a name="input_vpcs"></a> [vpcs](#input\_vpcs) | List of vpcs name | `list(string)` | `[]` | no |
+| <a name="input_vpcs_number"></a> [vpcs\_number](#input\_vpcs\_number) | number of vpcs | `number` | `4` | no |
 | <a name="input_zone"></a> [zone](#input\_zone) | zone name | `string` | n/a | yes |
 
 ## Outputs
@@ -78,6 +77,7 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_gateway_address"></a> [gateway\_address](#output\_gateway\_address) | n/a |
+| <a name="output_nics_number"></a> [nics\_number](#output\_nics\_number) | n/a |
 | <a name="output_private_dns_name"></a> [private\_dns\_name](#output\_private\_dns\_name) | n/a |
 | <a name="output_private_zone_name"></a> [private\_zone\_name](#output\_private\_zone\_name) | n/a |
 | <a name="output_subnets_range"></a> [subnets\_range](#output\_subnets\_range) | n/a |

@@ -29,28 +29,18 @@ No resources.
 
 ## Inputs
 
-| Name | Description                                                      | Type | Default | Required |
-|------|------------------------------------------------------------------|------|---------|:--------:|
-| <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | Cluster name                                                     | `string` | n/a | yes |
-| <a name="input_cluster_size"></a> [cluster\_size](#input\_cluster\_size) | Weka cluster size                                                | `number` | n/a | yes |
-| <a name="input_get_weka_io_token"></a> [get\_weka\_io\_token](#input\_get\_weka\_io\_token) | get.weka.io token for downloading weka                           | `string` | n/a | yes |
-| <a name="input_machine_type"></a> [machine\_type](#input\_machine\_type) | Weka cluster backends machines type                              | `string` | n/a | yes |
-| <a name="input_nics_number"></a> [nics\_number](#input\_nics\_number) | Number of nics per host                                          | `number` | n/a | yes |
-| <a name="input_nvmes_number"></a> [nvmes\_number](#input\_nvmes\_number) | Number of local nvmes per host                                   | `number` | n/a | yes |
-| <a name="input_path_to_modules"></a> [path\_to\_modules](#input\_path\_to\_modules) | path to modules, relative to actual project location or absolute | `string` | `"../.."` | no |
-| <a name="input_prefix"></a> [prefix](#input\_prefix) | prefix for all resources                                         | `string` | n/a | yes |
-| <a name="input_private_network"></a> [private\_network](#input\_private\_network) | deploy weka in private network                                   | `bool` | n/a | yes |
-| <a name="input_project"></a> [project](#input\_project) | project id                                                       | `string` | n/a | yes |
-| <a name="input_region"></a> [region](#input\_region) | region name                                                      | `string` | n/a | yes |
-| <a name="input_sa_name"></a> [sa\_name](#input\_sa\_name) | service account name                                             | `string` | n/a | yes |
-| <a name="input_sg_public_ssh_cidr_range"></a> [sg\_public\_ssh\_cidr\_range](#input\_sg\_public\_ssh\_cidr\_range) | list of ranges to allow ssh on public deployment                 | `list(string)` | n/a | yes |
-| <a name="input_subnets"></a> [subnets](#input\_subnets) | Details of existing subnets, the key is contain subnet name      | `list(string)` | `[]` | no |
-| <a name="input_vpc_connector_name"></a> [vpc\_connector\_name](#input\_vpc\_connector\_name) | name of existing vpc connector                                   | `string` | `""` | no |
-| <a name="input_vpc_connector_range"></a> [vpc\_connector\_range](#input\_vpc\_connector\_range) | list of connector to use for serverless vpc access               | `string` | n/a | yes |
-| <a name="input_vpcs"></a> [vpcs](#input\_vpcs) | List of vpcs name                                                | `list(string)` | `[]` | no |
-| <a name="input_weka_username"></a> [weka\_username](#input\_weka\_username) | weka cluster username                                            | `string` | `"admin"` | no |
-| <a name="input_weka_version"></a> [weka\_version](#input\_weka\_version) | weka version                                                     | `string` | n/a | yes |
-| <a name="input_zone"></a> [zone](#input\_zone) | zone name                                                        | `string` | n/a | yes |
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | Cluster name | `string` | n/a | yes |
+| <a name="input_cluster_size"></a> [cluster\_size](#input\_cluster\_size) | Weka cluster size | `number` | n/a | yes |
+| <a name="input_get_weka_io_token"></a> [get\_weka\_io\_token](#input\_get\_weka\_io\_token) | Get get.weka.io token for downloading weka | `string` | n/a | yes |
+| <a name="input_nvmes_number"></a> [nvmes\_number](#input\_nvmes\_number) | Number of local nvmes per host | `number` | n/a | yes |
+| <a name="input_project"></a> [project](#input\_project) | Project id | `string` | n/a | yes |
+| <a name="input_region"></a> [region](#input\_region) | Region name | `string` | n/a | yes |
+| <a name="input_subnets"></a> [subnets](#input\_subnets) | Details of existing subnets, the key is contain subnet name | `list(string)` | `[]` | no |
+| <a name="input_vpc_connector_range"></a> [vpc\_connector\_range](#input\_vpc\_connector\_range) | List of connector to use for serverless vpc access | `string` | n/a | yes |
+| <a name="input_vpcs"></a> [vpcs](#input\_vpcs) | List of vpcs name | `list(string)` | `[]` | no |
+| <a name="input_zone"></a> [zone](#input\_zone) | Zone name | `string` | n/a | yes |
 
 ## Outputs
 
