@@ -1,7 +1,3 @@
-output "output-lb-dns" {
-  value = google_dns_record_set.record-a.name
-}
-
 output "cluster_helpers_commands" {
   value = <<EOT
 ########################################## get cluster status ##########################################
@@ -43,4 +39,5 @@ curl -m 70 -X POST ${google_cloudfunctions2_function.terminate_cluster_function.
 gcloud secrets versions access 1 --secret=${google_secret_manager_secret.secret_weka_password.secret_id}  --project ${var.project} --format='get(payload.data)' | base64 -d
 
 EOT
+  description = "Useful commands and script to interact with weka cluster"
 }
