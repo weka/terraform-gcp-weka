@@ -157,6 +157,5 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_cluster_helpers_commands"></a> [cluster\_helpers\_commands](#output\_cluster\_helpers\_commands) | n/a |
-| <a name="output_output-lb-dns"></a> [output-lb-dns](#output\_output-lb-dns) | n/a |
+| <a name="output_cluster_helpers_commands"></a> [cluster\_helpers\_commands](#output\_cluster\_helpers\_commands) | Useful commands and script to interact with weka cluster |
 <!-- END_TF_DOCS -->
