@@ -45,7 +45,6 @@ module "deploy_weka" {
   source                   = "../.."
   cluster_name             = var.cluster_name
   project                  = var.project
-  nics_number              = module.setup_network.nics_number
   vpcs                     = module.setup_network.vpcs_names
   region                   = var.region
   subnets_name             = module.setup_network.subnetwork_name
