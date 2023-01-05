@@ -69,5 +69,5 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_worker_pool"></a> [worker\_pool](#output\_worker\_pool) | n/a |
+| <a name="output_worker_pool"></a> [worker\_pool](#output\_worker\_pool) | Worker pool name |
 <!-- END_TF_DOCS -->

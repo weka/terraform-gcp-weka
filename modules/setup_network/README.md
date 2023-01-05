@@ -76,12 +76,11 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_gateway_address"></a> [gateway\_address](#output\_gateway\_address) | n/a |
-| <a name="output_nics_number"></a> [nics\_number](#output\_nics\_number) | n/a |
-| <a name="output_private_dns_name"></a> [private\_dns\_name](#output\_private\_dns\_name) | n/a |
-| <a name="output_private_zone_name"></a> [private\_zone\_name](#output\_private\_zone\_name) | n/a |
-| <a name="output_subnets_range"></a> [subnets\_range](#output\_subnets\_range) | n/a |
-| <a name="output_subnetwork_name"></a> [subnetwork\_name](#output\_subnetwork\_name) | n/a |
-| <a name="output_vpc_connector_name"></a> [vpc\_connector\_name](#output\_vpc\_connector\_name) | n/a |
-| <a name="output_vpcs_names"></a> [vpcs\_names](#output\_vpcs\_names) | n/a |
+| <a name="output_gateway_address"></a> [gateway\_address](#output\_gateway\_address) | List of vpcs gateway addresses |
+| <a name="output_private_dns_name"></a> [private\_dns\_name](#output\_private\_dns\_name) | Private zone dns name |
+| <a name="output_private_zone_name"></a> [private\_zone\_name](#output\_private\_zone\_name) | Private zone name |
+| <a name="output_subnets_range"></a> [subnets\_range](#output\_subnets\_range) | List of vpcs subnets ranges |
+| <a name="output_subnetwork_name"></a> [subnetwork\_name](#output\_subnetwork\_name) | List of vpcs subnets names |
+| <a name="output_vpc_connector_name"></a> [vpc\_connector\_name](#output\_vpc\_connector\_name) | Vpc connector name |
+| <a name="output_vpcs_names"></a> [vpcs\_names](#output\_vpcs\_names) | List of vpcs names |
 <!-- END_TF_DOCS -->
