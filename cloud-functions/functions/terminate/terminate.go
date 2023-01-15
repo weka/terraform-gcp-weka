@@ -214,25 +214,20 @@ func TerminateUnhealthyInstances(project, zone, instanceGroup, loadBalancerName 
 	return
 }
 
-func Terminate(w http.ResponseWriter, scaleResponse protocol.ScaleResponse, project, zone, instanceGroup, loadBalancerName string) (err error) {
-	var response protocol.TerminatedInstancesResponse
-
+func Terminate(scaleResponse protocol.ScaleResponse, project, zone, instanceGroup, loadBalancerName string) (response protocol.TerminatedInstancesResponse, err error) {
 	response.Version = protocol.Version
 
 	if scaleResponse.Version != protocol.Version {
 		err = errors.New("incompatible scale response version")
-		writeResponse(w, response)
 		return
 	}
 
 	if instanceGroup == "" {
 		err = errors.New("instance group is mandatory")
-		writeResponse(w, response)
 		return
 	}
 	if len(scaleResponse.Hosts) == 0 {
 		err = errors.New("hosts list must not be empty")
-		writeResponse(w, response)
 		return
 	}
 
@@ -242,7 +237,6 @@ func Terminate(w http.ResponseWriter, scaleResponse protocol.ScaleResponse, proj
 	log.Info().Msgf("Found %d instances on ASG", len(asgInstanceIds))
 	if err != nil {
 		log.Error().Msgf("%s", err)
-		writeResponse(w, response)
 		return
 	}
 
@@ -254,20 +248,17 @@ func Terminate(w http.ResponseWriter, scaleResponse protocol.ScaleResponse, proj
 	deltaInstanceIds, err := getDeltaInstancesIds(project, zone, asgInstanceIds, scaleResponse)
 	if err != nil {
 		log.Error().Msgf("%s", err)
-		writeResponse(w, response)
 		return
 	}
 
 	if len(deltaInstanceIds) == 0 {
 		log.Info().Msgf("No delta instances ids")
-		writeResponse(w, response)
 		return
 	}
 
 	candidatesToTerminate, err := common.GetInstances(project, zone, deltaInstanceIds)
 	if err != nil {
 		log.Error().Msgf("%s", err)
-		writeResponse(w, response)
 		return
 	}
 
@@ -289,8 +280,6 @@ func Terminate(w http.ResponseWriter, scaleResponse protocol.ScaleResponse, proj
 			Creation:   date,
 		})
 	}
-
-	writeResponse(w, response)
 
 	return
 }
