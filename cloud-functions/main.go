@@ -74,12 +74,13 @@ func Fetch(w http.ResponseWriter, r *http.Request) {
 	usernameId := os.Getenv("USER_NAME_ID")
 	passwordId := os.Getenv("PASSWORD_ID")
 
-	fmt.Println("Writing fetch result")
-	w.Header().Set("Content-Type", "application/json")
 	hostGroupInfoResponse, err := fetch.GetFetchDataParams(project, zone, instanceGroup, bucket, usernameId, passwordId)
+	log.Debug().Msgf("result: %#v", hostGroupInfoResponse)
 	if err != nil {
 		panic(fmt.Sprintf("An error occurred: %s", err))
 	}
+	fmt.Println("Writing fetch result")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(hostGroupInfoResponse)
 }
 
@@ -117,14 +118,16 @@ func ScaleDown(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "Failed decoding request body")
 		return
 	}
-
-	fmt.Println("Writing scale result")
-	w.Header().Set("Content-Type", "application/json")
+	log.Debug().Msgf("input: %#v", info)
 
 	scaleResponse, err := scale_down.ScaleDown(info)
+	log.Debug().Msgf("result: %#v", scaleResponse)
+
 	if err != nil {
 		panic(fmt.Sprintf("An error occurred: %s", err))
 	}
+	fmt.Println("Writing scale result")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(scaleResponse)
 }
 
@@ -174,10 +177,16 @@ func Terminate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := terminate.Terminate(w, scaleResponse, project, zone, instanceGroup, loadBalancerName)
+	log.Debug().Msgf("input: %#v", scaleResponse)
+	terminateResponse, err := terminate.Terminate(scaleResponse, project, zone, instanceGroup, loadBalancerName)
+	log.Debug().Msgf("result: %#v", terminateResponse)
 	if err != nil {
 		panic(fmt.Sprintf("An error occurred: %s", err))
 	}
+	fmt.Println("Writing terminate result")
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(terminateResponse)
+
 }
 
 func Transient(w http.ResponseWriter, r *http.Request) {
@@ -188,15 +197,14 @@ func Transient(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "Failed decoding request body")
 		return
 	}
-
+	log.Debug().Msgf("input: %#v", terminateResponse)
 	errs := terminateResponse.TransientErrors
 	output := ""
 	if len(errs) > 0 {
 		output = fmt.Sprintf("the following errors were found:\n%s", strings.Join(errs, "\n"))
 	}
-
+	log.Debug().Msgf("result: %s", output)
 	fmt.Println("Writing Transient result")
-
 	fmt.Fprintf(w, output)
 }
 
