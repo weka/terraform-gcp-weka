@@ -402,7 +402,6 @@ func ScaleDown(info protocol.HostGroupInfoResponse) (response protocol.ScaleResp
 
 	deactivateHost := func(host hostInfo) {
 		log.Info().Msgf("Trying to deactivate host %s", host.id)
-		jpool.Drop(host.HostIp)
 		for _, drive := range host.drives {
 			if drive.ShouldBeActive {
 				err := jpool.Call(weka.JrpcDeactivateDrives, types.JsonDict{
@@ -422,6 +421,8 @@ func ScaleDown(info protocol.HostGroupInfoResponse) (response protocol.ScaleResp
 		if err != nil {
 			log.Error().Err(err)
 			response.AddTransientError(err, "deactivateHost")
+		} else {
+			jpool.Drop(host.HostIp)
 		}
 
 	}
