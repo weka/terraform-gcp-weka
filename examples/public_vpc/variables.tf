@@ -3,6 +3,12 @@ variable "project" {
   description = "Project id"
 }
 
+variable "prefix" {
+  type        = string
+  description = "Prefix for all resources"
+  default = "weka"
+}
+
 variable "region" {
   type        = string
   description = "Region name"
