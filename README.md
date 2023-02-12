@@ -7,7 +7,7 @@ given cluster size.
 ## Usage
 ```hcl
 module "deploy_weka" {
-  source                   = "../.."
+  source                   = "weka/weka/gcp"
   cluster_name             = "myCluster"
   project                  = "myProject"
   vpcs                     = ["weka-vpc-0", "weka-vpc-1", "weka-vpc-2", "weka-vpc-3"]
