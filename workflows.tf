@@ -10,7 +10,7 @@ data "google_project" "project" {
 resource "google_project_iam_binding" "cloudscheduler-binding" {
   count   = var.create_cloudscheduler_sa ? 1 : 0
   project = var.project
-  role    = "roles/cloudscheduler.serviceAgent"
+  role    = "roles/cloudscheduler.jobRunner"
   members = [
     "serviceAccount:service-${data.google_project.project.number}@gcp-sa-cloudscheduler.iam.gserviceaccount.com"
   ]
