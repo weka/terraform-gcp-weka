@@ -84,22 +84,6 @@ resource "google_cloudfunctions2_function_iam_member" "deploy_invoker" {
   member = "allAuthenticatedUsers"
 }
 
-
-resource "google_secret_manager_secret_iam_binding" "member-sa-username-secret" {
-  project   = google_secret_manager_secret.secret_weka_username.project
-  secret_id = google_secret_manager_secret.secret_weka_username.id
-  role      = "roles/secretmanager.secretAccessor"
-  members    = ["serviceAccount:${local.sa_email}"]
-}
-
-
-resource "google_secret_manager_secret_iam_binding" "member-sa-password-secret" {
-  project   = google_secret_manager_secret.secret_weka_password.project
-  secret_id = google_secret_manager_secret.secret_weka_password.id
-  role      = "roles/secretmanager.secretAccessor"
-  members   = ["serviceAccount:${local.sa_email}"]
-}
-
 # ======================== fetch ============================
 resource "google_cloudfunctions2_function" "fetch_function" {
   name        = "${var.prefix}-${var.cluster_name}-fetch"
