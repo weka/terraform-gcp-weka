@@ -2,12 +2,19 @@ package clusterize
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/lithammer/dedent"
 	"github.com/rs/zerolog/log"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
-	"strconv"
-	"strings"
 )
+
+type DataProtectionParams struct {
+	StripeWidth     int
+	ProtectionLevel int
+	Hotspare        int
+}
 
 func getAllBackendsIps(project, zone string, instancesNames []string) (backendsIps []string) {
 	instances, err := common.GetInstances(project, zone, instancesNames)
@@ -22,7 +29,7 @@ func getAllBackendsIps(project, zone string, instancesNames []string) (backendsI
 	return
 }
 
-func generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, clusterizeFinalizationUrl string, instancesNames []string) (clusterizeScript string) {
+func generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, clusterizeFinalizationUrl string, instancesNames []string, dataProtection DataProtectionParams) (clusterizeScript string) {
 	log.Info().Msg("Generating clusterization scrtipt")
 	instancesNamesStr := strings.Join(instancesNames, " ")
 	creds, err := common.GetUsernameAndPassword(usernameId, passwordId)
@@ -46,6 +53,9 @@ func generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, cluster
 	ADMIN_PASSWORD=%s
 	INSTANCE_NAMES="%s"
 	CLUSTERIZE_FINALIZATION_URL=%s
+	STRIPE_WIDTH=%d
+	PROTECTION_LEVEL=%d
+	HOTSPARE=%d
 
 	cluster_creation_str="weka cluster create $INSTANCE_NAMES"
 	cluster_creation_str="$cluster_creation_str --host-ips "
@@ -76,13 +86,14 @@ func generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, cluster
 		done
 	done
 	sleep 15s
-	weka cluster hot-spare 1
-	sleep 15s
 	weka cluster update --cluster-name="$CLUSTER_NAME"
 	sleep 15s
 	weka cluster host activate
 	sleep 15s
 	weka cluster host apply --all --force
+	sleep 15s
+	weka cluster update --data-drives $STRIPE_WIDTH --parity-drives $PROTECTION_LEVEL
+	weka cluster hot-spare $HOTSPARE
 	sleep 30s
 	weka cluster start-io
 	echo "completed successfully" > /tmp/weka_clusterization_completion_validation
@@ -91,11 +102,17 @@ func generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, cluster
 	`
 	ips := fmt.Sprintf("(%s)", strings.Join(getAllBackendsIps(project, zone, instancesNames), " "))
 	log.Info().Msgf("Formatting clusterization script template")
-	clusterizeScript = fmt.Sprintf(dedent.Dedent(clusterizeScriptTemplate), ips, hostsNum, nicsNum, gws, clusterName, nvmesMumber, creds.Username, creds.Password, instancesNamesStr, clusterizeFinalizationUrl)
+	clusterizeScript = fmt.Sprintf(
+		dedent.Dedent(clusterizeScriptTemplate), ips, hostsNum, nicsNum, gws, clusterName, nvmesMumber, creds.Username, creds.Password, instancesNamesStr, clusterizeFinalizationUrl,
+		dataProtection.StripeWidth, dataProtection.ProtectionLevel, dataProtection.Hotspare,
+	)
 	return
 }
 
-func Clusterize(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, bucket, instanceName, clusterizeFinalizationUrl string) (clusterizeScript string) {
+func Clusterize(
+	project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, bucket, instanceName, clusterizeFinalizationUrl string,
+	dataProtectionParams DataProtectionParams,
+) (clusterizeScript string) {
 	instancesNames, err := common.AddInstanceToStateInstances(bucket, instanceName)
 	if err != nil {
 		clusterizeScript = dedent.Dedent(`
@@ -116,7 +133,7 @@ func Clusterize(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber,
 	}
 
 	if len(instancesNames) == initialSize {
-		clusterizeScript = generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, clusterizeFinalizationUrl, instancesNames)
+		clusterizeScript = generateClusterizationScript(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, clusterizeFinalizationUrl, instancesNames, dataProtectionParams)
 	}
 
 	return
