@@ -1,10 +1,15 @@
 package cloud_functions
 
 import (
-	"cloud.google.com/go/storage"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"os"
+	"strconv"
+	"strings"
+
+	"cloud.google.com/go/storage"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
@@ -20,10 +25,6 @@ import (
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/terminate"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/terminate_cluster"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/protocol"
-	"net/http"
-	"os"
-	"strconv"
-	"strings"
 )
 
 func ClusterizeFinalization(w http.ResponseWriter, r *http.Request) {
@@ -54,6 +55,21 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 	passwordId := os.Getenv("PASSWORD_ID")
 	bucket := os.Getenv("BUCKET")
 	clusterizeFinalizationUrl := os.Getenv("CLUSTERIZE_FINALIZATION_URL")
+	// data protection-related vars
+	stripeWidth, _ := strconv.Atoi(os.Getenv("STRIPE_WIDTH"))
+	protectionLevel, _ := strconv.Atoi(os.Getenv("PROTECTION_LEVEL"))
+	hotspare, _ := strconv.Atoi(os.Getenv("HOTSPARE"))
+
+	if stripeWidth == 0 || protectionLevel == 0 || hotspare == 0 {
+		fmt.Fprint(w, "Failed getting data protection params")
+		return
+	}
+
+	dataProtectionParams := clusterize.DataProtectionParams{
+		StripeWidth:     stripeWidth,
+		ProtectionLevel: protectionLevel,
+		Hotspare:        hotspare,
+	}
 
 	var d struct {
 		Name string `json:"name"`
@@ -63,7 +79,13 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, clusterize.Clusterize(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId, bucket, d.Name, clusterizeFinalizationUrl))
+	fmt.Fprintf(
+		w,
+		clusterize.Clusterize(
+			project, zone, hostsNum, nicsNum, gws, clusterName, nvmesMumber, usernameId, passwordId,
+			bucket, d.Name, clusterizeFinalizationUrl, dataProtectionParams,
+		),
+	)
 }
 
 func Fetch(w http.ResponseWriter, r *http.Request) {

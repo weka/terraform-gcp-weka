@@ -6,6 +6,11 @@ locals {
   sa_email = var.sa_email
 }
 
+locals {
+  stripe_width_calculated = var.cluster_size - var.protection_level - 1
+  stripe_width = local.stripe_width_calculated < 16 ? local.stripe_width_calculated : 16
+}
+
 data "archive_file" "function_zip" {
   type        = "zip"
   output_path = local.function_zip_path
@@ -274,6 +279,9 @@ resource "google_cloudfunctions2_function" "clusterize_function" {
       PASSWORD_ID: google_secret_manager_secret_version.password_secret_key.id
       BUCKET: google_storage_bucket.weka_deployment.name
       CLUSTERIZE_FINALIZATION_URL: google_cloudfunctions2_function.clusterize_finalization_function.service_config[0].uri
+      PROTECTION_LEVEL : var.protection_level
+      STRIPE_WIDTH : var.stripe_width != -1 ? var.stripe_width : local.stripe_width
+      HOTSPARE : var.hotspare
     }
   }
   lifecycle {

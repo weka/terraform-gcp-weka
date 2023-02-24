@@ -3,6 +3,10 @@ package cloud_functions
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"testing"
+	"time"
+
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/clusterize"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/clusterize_finalization"
@@ -13,9 +17,6 @@ import (
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/scale_up"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/status"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/terminate"
-	"os"
-	"testing"
-	"time"
 )
 
 func Test_bunch(t *testing.T) {
@@ -46,7 +47,16 @@ func Test_clusterize(t *testing.T) {
 	bucket := "weka-poc-wekaio-rnd-state"
 	instanceName := "weka-poc-vm-test"
 
-	fmt.Printf("res:%s", clusterize.Clusterize(project, zone, hostsNum, nicsNum, gws, clusterName, nvmesNumber, usernameId, passwordId, bucket, instanceName, clusterizeFinalizationUrl))
+	dataProtectionParams := clusterize.DataProtectionParams{
+		StripeWidth:     2,
+		ProtectionLevel: 2,
+		Hotspare:        1,
+	}
+
+	fmt.Printf("res:%s", clusterize.Clusterize(
+		project, zone, hostsNum, nicsNum, gws, clusterName, nvmesNumber, usernameId, passwordId, bucket, instanceName,
+		clusterizeFinalizationUrl, dataProtectionParams,
+	))
 }
 
 func Test_fetch(t *testing.T) {
