@@ -7,7 +7,7 @@ resource "google_storage_bucket" "weka_deployment" {
 # ======================== instances ============================
 locals {
   private_nic_first_index = var.private_network ? 0 : 1
-  nics_number = var.nics_number != -1 ? var.nics_number : lookup(var.machine_types_nics_number_map, var.machine_type)
+  nics_number = var.nics_number != -1 ? var.nics_number : var.container_number_map[var.machine_type].nics
 }
 
 data "google_compute_network" "vpc_list_ids"{
@@ -87,17 +87,20 @@ resource "google_compute_instance_template" "backends-template" {
   EOL
   fi
 
+  sudo yum install -y jq  
+
+  instance_name=$(curl -X GET http://metadata.google.internal/computeMetadata/v1/instance/name -H 'Metadata-Flavor: Google')
+
   self_deleting() {
     echo "deploy failed, self deleting..."
-    instance_name=$(curl -X GET http://metadata.google.internal/computeMetadata/v1/instance/name -H 'Metadata-Flavor: Google')
     zone=$(curl -X GET http://metadata.google.internal/computeMetadata/v1/instance/zone -H 'Metadata-Flavor: Google')
     gcloud compute instances update $instance_name --no-deletion-protection --zone=$zone
     gcloud --quiet compute instances delete $instance_name --zone=$zone
   }
 
-  curl ${google_cloudfunctions2_function.deploy_function.service_config[0].uri} -H "Authorization:bearer $(gcloud auth print-identity-token)" > /tmp/deploy.sh
+  curl ${google_cloudfunctions2_function.deploy_function.service_config[0].uri} --fail -H "Authorization:bearer $(gcloud auth print-identity-token)" -d "{\"vm\": \"$instance_name\"}" > /tmp/deploy.sh
   chmod +x /tmp/deploy.sh
-  /tmp/deploy.sh || self_deleting || shutdown -P
+  (/tmp/deploy.sh 2>&1 | tee /tmp/weka_deploy.log) || self_deleting || shutdown -P
  EOT
 }
 

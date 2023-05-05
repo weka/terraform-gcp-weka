@@ -1,6 +1,7 @@
 package cloud_functions
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -13,10 +14,11 @@ import (
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/deploy"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/fetch"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/resize"
-	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/scale_down"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/scale_up"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/status"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/terminate"
+	clusterizeCommon "github.com/weka/go-cloud-lib/clusterize"
+	"github.com/weka/go-cloud-lib/scale_down"
 )
 
 func Test_bunch(t *testing.T) {
@@ -24,7 +26,9 @@ func Test_bunch(t *testing.T) {
 	zone := "europe-west1-b"
 	instanceGroup := "weka-instance-group"
 	bucket := "weka-poc-state"
-	err := clusterize_finalization.ClusterizeFinalization(project, zone, instanceGroup, bucket)
+
+	ctx := context.TODO()
+	err := clusterize_finalization.ClusterizeFinalization(ctx, project, zone, instanceGroup, bucket)
 	if err != nil {
 		t.Log("bunch test passed")
 	} else {
@@ -35,28 +39,39 @@ func Test_bunch(t *testing.T) {
 func Test_clusterize(t *testing.T) {
 	project := "wekaio-rnd"
 	zone := "europe-west1-b"
-	hostsNum := "5"
-	nicsNum := "4"
-	gws := "(10.0.0.1 10.1.0.1 10.2.0.1 10.3.0.1)"
+	hostsNum := 5
 	clusterName := "poc"
-	nvmesNumber := "2"
+	nvmesNumber := 2
 	usernameId := "projects/896245720241/secrets/weka-poc-username/versions/1"
 	passwordId := "projects/896245720241/secrets/weka-poc-password/versions/1"
-	clusterizeFinalizationUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-clusterize-finalization"
 
 	bucket := "weka-poc-wekaio-rnd-state"
 	instanceName := "weka-poc-vm-test"
 
-	dataProtectionParams := clusterize.DataProtectionParams{
+	dataProtectionParams := clusterizeCommon.DataProtectionParams{
 		StripeWidth:     2,
 		ProtectionLevel: 2,
 		Hotspare:        1,
 	}
 
-	fmt.Printf("res:%s", clusterize.Clusterize(
-		project, zone, hostsNum, nicsNum, gws, clusterName, nvmesNumber, usernameId, passwordId, bucket, instanceName,
-		clusterizeFinalizationUrl, dataProtectionParams,
-	))
+	params := clusterize.ClusterizationParams{
+		Project:    project,
+		Zone:       zone,
+		UsernameId: usernameId,
+		PasswordId: passwordId,
+		Bucket:     bucket,
+		VmName:     instanceName,
+		Cluster: clusterizeCommon.ClusterParams{
+			HostsNum:       hostsNum,
+			ClusterName:    clusterName,
+			NvmesNum:       nvmesNumber,
+			SetObs:         false,
+			DataProtection: dataProtectionParams,
+		},
+	}
+
+	ctx := context.TODO()
+	fmt.Printf("res:%s", clusterize.Clusterize(ctx, params))
 }
 
 func Test_fetch(t *testing.T) {
@@ -67,7 +82,8 @@ func Test_fetch(t *testing.T) {
 	usernameId := "projects/896245720241/secrets/weka-poc-username/versions/1"
 	passwordId := "projects/896245720241/secrets/weka-poc-password/versions/1"
 
-	result, err := fetch.GetFetchDataParams(project, zone, instanceGroup, bucket, usernameId, passwordId)
+	ctx := context.TODO()
+	result, err := fetch.GetFetchDataParams(ctx, project, zone, instanceGroup, bucket, usernameId, passwordId)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -88,24 +104,25 @@ func Test_deploy(t *testing.T) {
 	usernameId := "projects/896245720241/secrets/weka-poc-username/versions/1"
 	passwordId := "projects/896245720241/secrets/weka-poc-password/versions/1"
 	tokenId := "projects/896245720241/secrets/weka-poc-token/versions/1"
-	joinFinalizationUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-join-finalization"
-	nicNum := 3
-	bashScript, err := deploy.GetJoinParams(project, zone, instanceGroup, usernameId, passwordId, joinFinalizationUrl, nicNum)
-	if err != nil {
-		t.Logf("Generating join scripts failed: %s", err)
-		return
-	} else {
-		t.Logf("%s", bashScript)
-	}
+	nicNum := "3"
+	gws := []string{"10.0.0.1", "10.1.0.1", "10.2.0.1", "10.3.0.1"}
+	computeMemory := "8GB"
+	computeContainerNum := "1"
+	frontendContainerNum := "1"
+	driveContainerNum := "1"
+	instanceName := "abc"
 
 	token := os.Getenv("GET_WEKA_IO_TOKEN")
 	version := "4.0.1.37-gcp"
+	installUrl := fmt.Sprintf("https://%s@get.weka.io/dist/v1/install/%s/%s", token, version, version)
 
 	bucket := "weka-poc-state"
-	installUrl := fmt.Sprintf("https://%s@get.weka.io/dist/v1/install/%s/%s", token, version, version)
-	clusterizeUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net/weka-poc-clusterize"
 
-	bashScript, err = deploy.GetDeployScript(project, zone, instanceGroup, usernameId, passwordId, tokenId, bucket, installUrl, clusterizeUrl, joinFinalizationUrl, 3)
+	ctx := context.TODO()
+	bashScript, err := deploy.GetDeployScript(
+		ctx, project, zone, instanceGroup, usernameId, passwordId, tokenId, bucket, instanceName,
+		computeMemory, computeContainerNum, frontendContainerNum, driveContainerNum, nicNum, installUrl, gws,
+	)
 	if err != nil {
 		t.Logf("Generating deploy scripts failed: %s", err)
 	} else {
@@ -152,8 +169,9 @@ func Test_scaleUp(t *testing.T) {
 	clusterName := "poc"
 	instanceName := "weka-poc-vm-test"
 	backendTemplate := "projects/wekaio-rnd/global/instanceTemplates/weka-poc-backends"
-	scale_up.CreateInstance(project, zone, backendTemplate, instanceName)
-	instances := common.GetInstancesByClusterLabel(project, zone, clusterName)
+	ctx := context.TODO()
+	scale_up.CreateInstance(ctx, project, zone, backendTemplate, instanceName)
+	instances := common.GetInstancesByClusterLabel(ctx, project, zone, clusterName)
 	instanceGroupSize := len(instances)
 	t.Logf("Instance group size is: %d", instanceGroupSize)
 	for _, instance := range instances {
@@ -175,7 +193,8 @@ func Test_Terminate(t *testing.T) {
 	instanceGroup := "weka-poc-instance-group"
 	loadBalancerName := "weka-poc-lb-backend"
 
-	errs := terminate.TerminateUnhealthyInstances(project, zone, instanceGroup, loadBalancerName)
+	ctx := context.TODO()
+	errs := terminate.TerminateUnhealthyInstances(ctx, project, zone, instanceGroup, loadBalancerName)
 
 	if len(errs) > 0 {
 		t.Logf("error calling TerminateUnhealthyInstances %s", errs)
@@ -193,7 +212,8 @@ func Test_Transient(t *testing.T) {
 func Test_resize(t *testing.T) {
 	bucket := "weka-poc-state"
 	newDesiredValue := 6
-	resize.UpdateValue(bucket, newDesiredValue)
+	ctx := context.TODO()
+	resize.UpdateValue(ctx, bucket, newDesiredValue)
 }
 
 func Test_status(t *testing.T) {
@@ -205,7 +225,8 @@ func Test_status(t *testing.T) {
 	usernameId := "projects/896245720241/secrets/weka-poc-username/versions/1"
 	passwordId := "projects/896245720241/secrets/weka-poc-password/versions/1"
 
-	clusterStatus, err := status.GetClusterStatus(project, zone, bucket, instanceGroup, usernameId, passwordId)
+	ctx := context.TODO()
+	clusterStatus, err := status.GetClusterStatus(ctx, project, zone, bucket, instanceGroup, usernameId, passwordId)
 	if err != nil {
 		t.Logf("Failed getting status %s", err)
 	} else {

@@ -1,15 +1,15 @@
 package scale_up
 
 import (
-	compute "cloud.google.com/go/compute/apiv1"
 	"context"
+
+	compute "cloud.google.com/go/compute/apiv1"
+	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/rs/zerolog/log"
-	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
 	"google.golang.org/protobuf/proto"
 )
 
-func CreateInstance(project, zone, template, instanceName string) (err error) {
-	ctx := context.Background()
+func CreateInstance(ctx context.Context, project, zone, template, instanceName string) (err error) {
 	instancesClient, err := compute.NewInstancesRESTClient(ctx)
 	if err != nil {
 		log.Error().Msgf("%s", err)
@@ -23,7 +23,6 @@ func CreateInstance(project, zone, template, instanceName string) (err error) {
 		InstanceResource: &computepb.Instance{
 			Name: proto.String(instanceName),
 		},
-
 		SourceInstanceTemplate: &template,
 	}
 

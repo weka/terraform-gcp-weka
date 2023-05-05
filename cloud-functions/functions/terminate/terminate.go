@@ -1,18 +1,19 @@
 package terminate
 
 import (
-	compute "cloud.google.com/go/compute/apiv1"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
-	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/protocol"
-	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
 	"net/http"
 	"strings"
 	"time"
+
+	compute "cloud.google.com/go/compute/apiv1"
+	"cloud.google.com/go/compute/apiv1/computepb"
+	"github.com/rs/zerolog/log"
+	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
+	"github.com/weka/go-cloud-lib/protocol"
 )
 
 type Nilt struct{}
@@ -39,9 +40,9 @@ func instancesToMap(instances []*computepb.Instance) instancesMap {
 	return im
 }
 
-func getDeltaInstancesIds(project, zone string, asgInstanceIds []string, scaleResponse protocol.ScaleResponse) (deltaInstanceIDs []string, err error) {
+func getDeltaInstancesIds(ctx context.Context, project, zone string, asgInstanceIds []string, scaleResponse protocol.ScaleResponse) (deltaInstanceIDs []string, err error) {
 	log.Info().Msg("Getting delta instances")
-	asgInstances, err := common.GetInstances(project, zone, asgInstanceIds)
+	asgInstances, err := common.GetInstances(ctx, project, zone, asgInstanceIds)
 	if err != nil {
 		return
 	}
@@ -69,7 +70,7 @@ func setForExplicitRemoval(instance *computepb.Instance, toRemove []protocol.HgI
 	return false
 }
 
-func terminateUnneededInstances(project, zone string, instances []*computepb.Instance, explicitRemoval []protocol.HgInstance) (terminated []*computepb.Instance, errs []error) {
+func terminateUnneededInstances(ctx context.Context, project, zone string, instances []*computepb.Instance, explicitRemoval []protocol.HgInstance) (terminated []*computepb.Instance, errs []error) {
 	terminateInstanceIds := make([]string, 0, 0)
 	imap := instancesToMap(instances)
 
@@ -92,7 +93,7 @@ func terminateUnneededInstances(project, zone string, instances []*computepb.Ins
 		}
 	}
 
-	terminatedInstances, errs := terminateAsgInstances(project, zone, terminateInstanceIds)
+	terminatedInstances, errs := terminateAsgInstances(ctx, project, zone, terminateInstanceIds)
 
 	for _, id := range terminatedInstances {
 		terminated = append(terminated, imap[id])
@@ -107,19 +108,19 @@ func min(a, b int) int {
 	return b
 }
 
-func terminateAsgInstances(project, zone string, terminateInstanceIds []string) (terminatedInstances []string, errs []error) {
+func terminateAsgInstances(ctx context.Context, project, zone string, terminateInstanceIds []string) (terminatedInstances []string, errs []error) {
 	if len(terminateInstanceIds) == 0 {
 		return
 	}
 	setToTerminate := terminateInstanceIds[:min(len(terminateInstanceIds), 50)]
 	for _, instanceId := range setToTerminate {
-		err := common.UnsetDeletionProtection(project, zone, instanceId)
+		err := common.UnsetDeletionProtection(ctx, project, zone, instanceId)
 		if err != nil {
 			errs = append(errs, err)
 		}
 	}
 
-	terminatedInstances, errs = common.TerminateInstances(project, zone, setToTerminate)
+	terminatedInstances, errs = common.TerminateInstances(ctx, project, zone, setToTerminate)
 	return
 }
 
@@ -129,10 +130,8 @@ func writeResponse(w http.ResponseWriter, response protocol.TerminatedInstancesR
 	json.NewEncoder(w).Encode(response)
 }
 
-func TerminateUnhealthyInstances(project, zone, instanceGroup, loadBalancerName string) (errs []error) {
+func TerminateUnhealthyInstances(ctx context.Context, project, zone, instanceGroup, loadBalancerName string) (errs []error) {
 	var toTerminate []string
-
-	ctx := context.Background()
 
 	c, err := compute.NewRegionBackendServicesRESTClient(ctx)
 	if err != nil {
@@ -208,13 +207,15 @@ func TerminateUnhealthyInstances(project, zone, instanceGroup, loadBalancerName 
 	}
 
 	log.Debug().Msgf("found %d suspended instances", len(toTerminate))
-	_, terminateErrors := common.TerminateInstances(project, zone, toTerminate)
+	_, terminateErrors := common.TerminateInstances(ctx, project, zone, toTerminate)
 	errs = append(errs, terminateErrors...)
 
 	return
 }
 
-func Terminate(scaleResponse protocol.ScaleResponse, project, zone, instanceGroup, loadBalancerName string) (response protocol.TerminatedInstancesResponse, err error) {
+func Terminate(
+	ctx context.Context, scaleResponse protocol.ScaleResponse, project, zone, instanceGroup, loadBalancerName string,
+) (response protocol.TerminatedInstancesResponse, err error) {
 	response.Version = protocol.Version
 
 	if scaleResponse.Version != protocol.Version {
@@ -233,19 +234,19 @@ func Terminate(scaleResponse protocol.ScaleResponse, project, zone, instanceGrou
 
 	response.TransientErrors = scaleResponse.TransientErrors[0:len(scaleResponse.TransientErrors):len(scaleResponse.TransientErrors)]
 
-	asgInstanceIds := common.GetInstanceGroupInstanceNames(project, zone, instanceGroup)
+	asgInstanceIds := common.GetInstanceGroupInstanceNames(ctx, project, zone, instanceGroup)
 	log.Info().Msgf("Found %d instances on ASG", len(asgInstanceIds))
 	if err != nil {
 		log.Error().Msgf("%s", err)
 		return
 	}
 
-	errs := TerminateUnhealthyInstances(project, zone, instanceGroup, loadBalancerName)
+	errs := TerminateUnhealthyInstances(ctx, project, zone, instanceGroup, loadBalancerName)
 	if len(errs) != 0 {
 		response.AddTransientErrors(errs)
 	}
 
-	deltaInstanceIds, err := getDeltaInstancesIds(project, zone, asgInstanceIds, scaleResponse)
+	deltaInstanceIds, err := getDeltaInstancesIds(ctx, project, zone, asgInstanceIds, scaleResponse)
 	if err != nil {
 		log.Error().Msgf("%s", err)
 		return
@@ -256,13 +257,13 @@ func Terminate(scaleResponse protocol.ScaleResponse, project, zone, instanceGrou
 		return
 	}
 
-	candidatesToTerminate, err := common.GetInstances(project, zone, deltaInstanceIds)
+	candidatesToTerminate, err := common.GetInstances(ctx, project, zone, deltaInstanceIds)
 	if err != nil {
 		log.Error().Msgf("%s", err)
 		return
 	}
 
-	terminatedInstances, errs := terminateUnneededInstances(project, zone, candidatesToTerminate, scaleResponse.ToTerminate)
+	terminatedInstances, errs := terminateUnneededInstances(ctx, project, zone, candidatesToTerminate, scaleResponse.ToTerminate)
 	response.AddTransientErrors(errs)
 
 	//detachTerminated(asgName)

@@ -33,7 +33,7 @@ resource "google_cloudfunctions2_function" "deploy_function" {
   description = "deploy new instance"
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
   build_config {
-    runtime               = "go116"
+    runtime               = "go120"
     entry_point           = "Deploy"
     worker_pool           = local.worker_pool_id
     source {
@@ -53,9 +53,8 @@ resource "google_cloudfunctions2_function" "deploy_function" {
     environment_variables = {
       PROJECT : var.project
       ZONE : var.zone
-      NICS_NUM : local.nics_number
       INSTANCE_GROUP : google_compute_instance_group.instance_group.name
-      GATEWAYS : format("(%s)", join(" ", [for s in data.google_compute_subnetwork.subnets_list_ids : s.gateway_address] ))
+      GATEWAYS : join(",", [for s in data.google_compute_subnetwork.subnets_list_ids : s.gateway_address] )
       SUBNETS : format("(%s)", join(" ", [for s in data.google_compute_subnetwork.subnets_list_ids : s.ip_cidr_range] ))
       USER_NAME_ID : google_secret_manager_secret_version.user_secret_key.id
       PASSWORD_ID : google_secret_manager_secret_version.password_secret_key.id
@@ -64,6 +63,12 @@ resource "google_cloudfunctions2_function" "deploy_function" {
       INSTALL_URL : var.install_url != "" ? var.install_url : "https://$TOKEN@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}"
       CLUSTERIZE_URL : google_cloudfunctions2_function.clusterize_function.service_config[0].uri
       JOIN_FINALIZATION_URL : google_cloudfunctions2_function.join_finalization_function.service_config[0].uri
+      NICS_NUM : local.nics_number
+      COMPUTE_MEMORY : var.container_number_map[var.machine_type].memory
+      NUM_DRIVE_CONTAINERS : var.container_number_map[var.machine_type].drive
+      NUM_COMPUTE_CONTAINERS : var.container_number_map[var.machine_type].compute
+      NUM_FRONTEND_CONTAINERS : var.container_number_map[var.machine_type].frontend
+      NVMES_NUM : var.nvmes_number
     }
   }
   lifecycle {
@@ -90,7 +95,7 @@ resource "google_cloudfunctions2_function" "fetch_function" {
   description = "fetch cluster info"
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
   build_config {
-    runtime = "go116"
+    runtime = "go120"
     entry_point = "Fetch"
     worker_pool = local.worker_pool_id
     source {
@@ -140,7 +145,7 @@ resource "google_cloudfunctions2_function" "scale_down_function" {
   description = "scale cluster down"
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
   build_config {
-    runtime = "go116"
+    runtime = "go120"
     entry_point = "ScaleDown"
     worker_pool = local.worker_pool_id
     source {
@@ -183,7 +188,7 @@ resource "google_cloudfunctions2_function" "scale_up_function" {
   description = "scale cluster up"
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
   build_config {
-    runtime = "go116"
+    runtime = "go120"
     entry_point = "ScaleUp"
     worker_pool = local.worker_pool_id
     source {
@@ -234,7 +239,7 @@ resource "google_cloudfunctions2_function" "clusterize_function" {
   description = "return clusterize script"
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
   build_config {
-    runtime = "go116"
+    runtime = "go120"
     entry_point = "Clusterize"
     worker_pool = local.worker_pool_id
     source {
@@ -292,7 +297,7 @@ resource "google_cloudfunctions2_function" "terminate_function" {
   description = "terminate instances"
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
   build_config {
-    runtime = "go116"
+    runtime = "go120"
     entry_point = "Terminate"
     worker_pool = local.worker_pool_id
     source {
@@ -340,7 +345,7 @@ resource "google_cloudfunctions2_function" "transient_function" {
   description = "transient errors"
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
   build_config {
-    runtime      = "go116"
+    runtime      = "go120"
     entry_point  = "Transient"
     worker_pool  = local.worker_pool_id
     source {
@@ -382,7 +387,7 @@ resource "google_cloudfunctions2_function" "clusterize_finalization_function" {
   description = "clusterization finalization"
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
   build_config {
-    runtime = "go116"
+    runtime = "go120"
     entry_point = "ClusterizeFinalization"
     worker_pool = local.worker_pool_id
     source {
@@ -430,7 +435,7 @@ resource "google_cloudfunctions2_function" "resize_function" {
   description = "update db"
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
   build_config {
-    runtime = "go116"
+    runtime = "go120"
     entry_point = "Resize"
     worker_pool = local.worker_pool_id
     source {
@@ -475,7 +480,7 @@ resource "google_cloudfunctions2_function" "join_finalization_function" {
   description = "join finalization"
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
   build_config {
-    runtime = "go116"
+    runtime = "go120"
     entry_point = "JoinFinalization"
     worker_pool = local.worker_pool_id
     source {
@@ -522,7 +527,7 @@ resource "google_cloudfunctions2_function" "terminate_cluster_function" {
   description = "terminate cluster"
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
   build_config {
-    runtime = "go116"
+    runtime = "go120"
     entry_point = "TerminateCluster"
     worker_pool = local.worker_pool_id
     source {
@@ -570,7 +575,7 @@ resource "google_cloudfunctions2_function" "status_function" {
   description = "get cluster status"
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
   build_config {
-    runtime = "go116"
+    runtime = "go120"
     entry_point = "Status"
     worker_pool = local.worker_pool_id
     source {

@@ -1,16 +1,16 @@
 package resize
 
 import (
-	"cloud.google.com/go/storage"
 	"context"
 	"errors"
+	"time"
+
+	"cloud.google.com/go/storage"
 	"github.com/rs/zerolog/log"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
-	"time"
 )
 
-func UpdateValue(bucket string, newDesiredSize int) (err error) {
-	ctx := context.Background()
+func UpdateValue(ctx context.Context, bucket string, newDesiredSize int) (err error) {
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		log.Error().Msgf("Failed creating storage client: %s", err)
