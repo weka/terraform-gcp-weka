@@ -3,12 +3,13 @@ package status
 import (
 	"context"
 	"encoding/json"
-	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
-	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/connectors"
-	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/lib/jrpc"
-	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/lib/weka"
 	"math/rand"
 	"time"
+
+	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
+	"github.com/weka/go-cloud-lib/connectors"
+	"github.com/weka/go-cloud-lib/lib/jrpc"
+	"github.com/weka/go-cloud-lib/lib/weka"
 )
 
 type ClusterStatus struct {
@@ -20,8 +21,8 @@ type ClusterStatus struct {
 	RawWekaStatus          json.RawMessage     `json:"raw_weka_status"`
 }
 
-func GetClusterStatus(project, zone, bucket, instanceGroup, usernameId, passwordId string) (clusterStatus ClusterStatus, err error) {
-	state, err := common.GetClusterState(bucket)
+func GetClusterStatus(ctx context.Context, project, zone, bucket, instanceGroup, usernameId, passwordId string) (clusterStatus ClusterStatus, err error) {
+	state, err := common.GetClusterState(ctx, bucket)
 	if err != nil {
 		return
 	}
@@ -33,17 +34,16 @@ func GetClusterStatus(project, zone, bucket, instanceGroup, usernameId, password
 		return
 	}
 
-	creds, err := common.GetUsernameAndPassword(usernameId, passwordId)
+	creds, err := common.GetUsernameAndPassword(ctx, usernameId, passwordId)
 	if err != nil {
 		return
 	}
 
-	ctx := context.Background()
 	jrpcBuilder := func(ip string) *jrpc.BaseClient {
 		return connectors.NewJrpcClient(ctx, ip, weka.ManagementJrpcPort, creds.Username, creds.Password)
 	}
 
-	instances, err := common.GetInstances(project, zone, common.GetInstanceGroupInstanceNames(project, zone, instanceGroup))
+	instances, err := common.GetInstances(ctx, project, zone, common.GetInstanceGroupInstanceNames(ctx, project, zone, instanceGroup))
 	if err != nil {
 		return
 	}

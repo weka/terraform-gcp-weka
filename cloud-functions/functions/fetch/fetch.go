@@ -1,7 +1,9 @@
 package fetch
 
 import (
+	"context"
 	"fmt"
+
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
 	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
 )
@@ -21,19 +23,20 @@ type HostGroupInfoResponse struct {
 	Version         int          `json:"version"`
 }
 
-func GetFetchDataParams(project, zone, instanceGroup, bucket, usernameId, passwordId string) (hostGroupInfoResponse HostGroupInfoResponse, err error) {
-
-	creds, err := common.GetUsernameAndPassword(usernameId, passwordId)
+func GetFetchDataParams(
+	ctx context.Context, project, zone, instanceGroup, bucket, usernameId, passwordId string,
+) (hostGroupInfoResponse HostGroupInfoResponse, err error) {
+	creds, err := common.GetUsernameAndPassword(ctx, usernameId, passwordId)
 	if err != nil {
 		return
 	}
 
-	instances, err := common.GetInstances(project, zone, common.GetInstanceGroupInstanceNames(project, zone, instanceGroup))
+	instances, err := common.GetInstances(ctx, project, zone, common.GetInstanceGroupInstanceNames(ctx, project, zone, instanceGroup))
 	if err != nil {
 		return
 	}
 
-	desiredCapacity, err := getCapacity(bucket)
+	desiredCapacity, err := getCapacity(ctx, bucket)
 	if err != nil {
 		return
 	}
@@ -63,8 +66,8 @@ func getHostGroupInfoInstances(instances []*computepb.Instance) (ret []HgInstanc
 	return
 }
 
-func getCapacity(bucket string) (desired int, err error) {
-	state, err := common.GetClusterState(bucket)
+func getCapacity(ctx context.Context, bucket string) (desired int, err error) {
+	state, err := common.GetClusterState(ctx, bucket)
 	if err != nil {
 		return
 	}

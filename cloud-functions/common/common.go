@@ -1,20 +1,21 @@
 package common
 
 import (
-	compute "cloud.google.com/go/compute/apiv1"
-	secretmanager "cloud.google.com/go/secretmanager/apiv1"
-	"cloud.google.com/go/storage"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"google.golang.org/api/iterator"
-	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
-	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 	"strconv"
 	"strings"
 	"time"
+
+	compute "cloud.google.com/go/compute/apiv1"
+	"cloud.google.com/go/compute/apiv1/computepb"
+	secretmanager "cloud.google.com/go/secretmanager/apiv1"
+	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
+	"cloud.google.com/go/storage"
+	"github.com/rs/zerolog/log"
+	"google.golang.org/api/iterator"
 )
 
 type ClusterCreds struct {
@@ -29,8 +30,7 @@ type ClusterState struct {
 	Clusterized bool     `json:"clusterized"`
 }
 
-func GetUsernameAndPassword(usernameId, passwordId string) (clusterCreds ClusterCreds, err error) {
-	ctx := context.Background()
+func GetUsernameAndPassword(ctx context.Context, usernameId, passwordId string) (clusterCreds ClusterCreds, err error) {
 	client, err := secretmanager.NewClient(ctx)
 	if err != nil {
 		return
@@ -59,7 +59,7 @@ func generateInstanceNamesFilter(instanceNames []string) (namesFilter string) {
 	return
 }
 
-func GetInstances(project, zone string, instanceNames []string) (instances []*computepb.Instance, err error) {
+func GetInstances(ctx context.Context, project, zone string, instanceNames []string) (instances []*computepb.Instance, err error) {
 	if len(instanceNames) == 0 {
 		log.Warn().Msg("Got empty instance names list")
 		return
@@ -67,7 +67,6 @@ func GetInstances(project, zone string, instanceNames []string) (instances []*co
 
 	namesFilter := generateInstanceNamesFilter(instanceNames)
 
-	ctx := context.Background()
 	instanceClient, err := compute.NewInstancesRESTClient(ctx)
 	if err != nil {
 		log.Fatal().Err(err)
@@ -99,9 +98,7 @@ func GetInstances(project, zone string, instanceNames []string) (instances []*co
 	return
 }
 
-func GetInstanceGroupInstanceNames(project, zone, instanceGroup string) (instanceNames []string) {
-	ctx := context.Background()
-
+func GetInstanceGroupInstanceNames(ctx context.Context, project, zone, instanceGroup string) (instanceNames []string) {
 	c, err := compute.NewInstanceGroupsRESTClient(ctx)
 	if err != nil {
 		log.Fatal().Err(err)
@@ -212,8 +209,7 @@ func WriteState(stateHandler *storage.ObjectHandle, ctx context.Context, state C
 	return
 }
 
-func GetClusterState(bucket string) (state ClusterState, err error) {
-	ctx := context.Background()
+func GetClusterState(ctx context.Context, bucket string) (state ClusterState, err error) {
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		log.Error().Msgf("Failed creating storage client: %s", err)
@@ -241,8 +237,7 @@ func GetClusterState(bucket string) (state ClusterState, err error) {
 	return
 }
 
-func UpdateClusterState(bucket string, state ClusterState) (err error) {
-	ctx := context.Background()
+func UpdateClusterState(ctx context.Context, bucket string, state ClusterState) (err error) {
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		log.Error().Msgf("Failed creating storage client: %s", err)
@@ -264,8 +259,7 @@ func UpdateClusterState(bucket string, state ClusterState) (err error) {
 	return
 }
 
-func GetInstancesByClusterLabel(project, zone, clusterName string) (instances []*computepb.Instance) {
-	ctx := context.Background()
+func GetInstancesByClusterLabel(ctx context.Context, project, zone, clusterName string) (instances []*computepb.Instance) {
 	instanceClient, err := compute.NewInstancesRESTClient(ctx)
 	if err != nil {
 		log.Error().Msgf("%s", err)
@@ -318,8 +312,7 @@ func addInstanceToStateInstances(client *storage.Client, ctx context.Context, bu
 	return
 }
 
-func AddInstanceToStateInstances(bucket, newInstance string) (instancesNames []string, err error) {
-	ctx := context.Background()
+func AddInstanceToStateInstances(ctx context.Context, bucket, newInstance string) (instancesNames []string, err error) {
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		log.Error().Msgf("Failed creating storage client: %s", err)
@@ -339,9 +332,8 @@ func AddInstanceToStateInstances(bucket, newInstance string) (instancesNames []s
 	return
 }
 
-func SetDeletionProtection(project, zone, instanceName string) (err error) {
+func SetDeletionProtection(ctx context.Context, project, zone, instanceName string) (err error) {
 	log.Info().Msgf("Setting deletion protection on %s", instanceName)
-	ctx := context.Background()
 
 	c, err := compute.NewInstancesRESTClient(ctx)
 	if err != nil {
@@ -367,11 +359,10 @@ func SetDeletionProtection(project, zone, instanceName string) (err error) {
 	return
 }
 
-func AddInstancesToGroup(project, zone, instanceGroup string, instancesNames []string) (err error) {
+func AddInstancesToGroup(ctx context.Context, project, zone, instanceGroup string, instancesNames []string) (err error) {
 	log.Info().Msgf("Adding instances: %s to instance group %s", instancesNames, instanceGroup)
-	ctx := context.Background()
 
-	instances, err := GetInstances(project, zone, instancesNames)
+	instances, err := GetInstances(ctx, project, zone, instancesNames)
 	if err != nil {
 		return
 	}
@@ -404,9 +395,8 @@ func AddInstancesToGroup(project, zone, instanceGroup string, instancesNames []s
 	return
 }
 
-func UnsetDeletionProtection(project, zone, instanceName string) (err error) {
-	log.Info().Msgf("Setting deletion protection on %s", instanceName)
-	ctx := context.Background()
+func UnsetDeletionProtection(ctx context.Context, project, zone, instanceName string) (err error) {
+	log.Info().Msgf("Removing deletion protection on %s", instanceName)
 
 	c, err := compute.NewInstancesRESTClient(ctx)
 	if err != nil {
@@ -429,12 +419,11 @@ func UnsetDeletionProtection(project, zone, instanceName string) (err error) {
 		return
 	}
 
+	log.Info().Msgf("Removed deletion protection on %s", instanceName)
 	return
 }
 
-func TerminateInstances(project, zone string, instanceNames []string) (terminatingInstances []string, errs []error) {
-
-	ctx := context.Background()
+func TerminateInstances(ctx context.Context, project, zone string, instanceNames []string) (terminatingInstances []string, errs []error) {
 	instanceClient, err := compute.NewInstancesRESTClient(ctx)
 	if err != nil {
 		log.Fatal().Err(err)
@@ -463,6 +452,18 @@ func TerminateInstances(project, zone string, instanceNames []string) (terminati
 func GetInstanceGroupBackendsIps(instances []*computepb.Instance) (instanceGroupBackendsIps []string) {
 	for _, instance := range instances {
 		instanceGroupBackendsIps = append(instanceGroupBackendsIps, *instance.NetworkInterfaces[0].NetworkIP)
+	}
+	return
+}
+
+func GetBackendsIps(ctx context.Context, project, zone string, instancesNames []string) (backendsIps []string) {
+	instances, err := GetInstances(ctx, project, zone, instancesNames)
+	if err != nil {
+		return
+	}
+	for _, instance := range instances {
+		// get one IP per instance
+		backendsIps = append(backendsIps, *instance.NetworkInterfaces[0].NetworkIP)
 	}
 	return
 }

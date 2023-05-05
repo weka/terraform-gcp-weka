@@ -12,6 +12,11 @@ variable "nics_number" {
   type        = number
   description = "Number of nics per host"
   default = -1
+
+  validation {
+    condition     = var.nics_number == -1 || var.nics_number > 0
+    error_message = "The nics_number value can take values > 0 or -1 (for using defaults)."
+  }
 }
 
 variable "vpcs" {
@@ -173,12 +178,34 @@ variable "worker_pool_name" {
   default = ""
 }
 
-variable "machine_types_nics_number_map" {
-  type = map(number)
-  description = "Map of machine type to supported nics number"
+variable "container_number_map" {
+  # NOTE: compute = nics-drive-frontend-1
+  # To calculate memory, weka resource generator was used:
+  # https://github.com/weka/tools/blob/master/install/resources_generator.py
+  # e.g., for 'c2-standard-8': python3 gen.py --net eth0 --compute-dedicated-cores 1 --drive-dedicated-cores 1
+  type = map(object({
+    compute  = number
+    drive    = number
+    frontend = number
+    nics     = number
+    memory   = string
+  }))
+  description = "Maps the number of objects and memory size per machine type."
   default = {
-    c2-standard-8 = 4
-    c2-standard-16 = 7
+    c2-standard-8 = {
+      compute  = 1
+      drive    = 1
+      frontend = 1
+      nics     = 4
+      memory   = "8033846653B"
+    },
+    c2-standard-16 = {
+      compute  = 4
+      drive    = 1
+      frontend = 1
+      nics     = 7
+      memory   = "23156228928B"
+    }
   }
 }
 
