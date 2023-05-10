@@ -7,8 +7,10 @@ locals {
 }
 
 locals {
-  stripe_width_calculated = var.cluster_size - var.protection_level - 1
-  stripe_width = local.stripe_width_calculated < 16 ? local.stripe_width_calculated : 16
+  # protection level should be positive value in order to use it in calculation
+  stripe_width_calculated = var.protection_level > 0 ? min(var.cluster_size - var.protection_level - 1, 16) : var.stripe_width
+  # if stipe_width provided is non-default -- use it, otherwise -- calculate default
+  stripe_width = var.stripe_width != 0 ? var.stripe_width : local.stripe_width_calculated
 }
 
 data "archive_file" "function_zip" {
@@ -269,7 +271,7 @@ resource "google_cloudfunctions2_function" "clusterize_function" {
       BUCKET: google_storage_bucket.weka_deployment.name
       CLUSTERIZE_FINALIZATION_URL: google_cloudfunctions2_function.clusterize_finalization_function.service_config[0].uri
       PROTECTION_LEVEL : var.protection_level
-      STRIPE_WIDTH : var.stripe_width != -1 ? var.stripe_width : local.stripe_width
+      STRIPE_WIDTH : local.stripe_width
       HOTSPARE : var.hotspare
     }
   }
@@ -277,6 +279,10 @@ resource "google_cloudfunctions2_function" "clusterize_function" {
     replace_triggered_by = [
       google_storage_bucket_object.cloud_functions_zip.md5hash
     ]
+    precondition {
+      condition     = var.protection_level > 0 && local.stripe_width > 0 || var.protection_level == -1 && local.stripe_width == -1
+      error_message = "Set both 'protection_level' and 'stripe_width' or disable both setting to -1."
+    }
   }
   depends_on = [google_project_service.project-function-api, google_project_service.run-api, google_project_service.artifactregistry-api]
 }
