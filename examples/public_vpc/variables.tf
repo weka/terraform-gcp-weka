@@ -6,7 +6,7 @@ variable "project" {
 variable "prefix" {
   type        = string
   description = "Prefix for all resources"
-  default = "weka"
+  default     = "weka"
 }
 
 variable "region" {
@@ -48,4 +48,10 @@ variable "get_weka_io_token" {
   type        = string
   description = "Get get.weka.io token for downloading weka"
   sensitive   = true
+}
+
+variable "weka_version" {
+  type        = string
+  description = "Weka version"
+  default     = "4.1.0.77"
 }
