@@ -9,7 +9,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/lithammer/dedent v1.1.0
 	github.com/rs/zerolog v1.29.1
-	github.com/weka/go-cloud-lib v0.0.0-20230510123910-196de4464ee6
+	github.com/weka/go-cloud-lib v0.0.0-20230518051033-2021d84a9920
 	google.golang.org/api v0.121.0
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1
 	google.golang.org/protobuf v1.30.0
