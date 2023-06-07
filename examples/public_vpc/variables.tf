@@ -53,5 +53,5 @@ variable "get_weka_io_token" {
 variable "weka_version" {
   type        = string
   description = "Weka version"
-  default     = "4.1.0.77"
+  default     = "4.2.0"
 }
