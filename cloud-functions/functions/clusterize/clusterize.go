@@ -12,13 +12,14 @@ import (
 )
 
 type ClusterizationParams struct {
-	Project    string
-	Zone       string
-	UsernameId string
-	PasswordId string
-	Bucket     string
-	VmName     string
-	Cluster    clusterize.ClusterParams
+	Project     string
+	Zone        string
+	UsernameId  string
+	PasswordId  string
+	Bucket      string
+	VmName      string
+	Cluster     clusterize.ClusterParams
+	InstallDpdk bool
 }
 
 func GetErrorScript(err error) string {
@@ -76,7 +77,7 @@ func Clusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript s
 	clusterParams.ObsScript = "echo 'nothing here'"
 	clusterParams.WekaPassword = creds.Password
 	clusterParams.WekaUsername = creds.Username
-	clusterParams.InstallDpdk = true
+	clusterParams.InstallDpdk = p.InstallDpdk
 
 	scriptGenerator := clusterize.ClusterizeScriptGenerator{
 		Params:  clusterParams,

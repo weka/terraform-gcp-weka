@@ -121,7 +121,7 @@ func Test_deploy(t *testing.T) {
 	ctx := context.TODO()
 	bashScript, err := deploy.GetDeployScript(
 		ctx, project, zone, instanceGroup, usernameId, passwordId, tokenId, bucket, instanceName,
-		computeMemory, computeContainerNum, frontendContainerNum, driveContainerNum, nicNum, installUrl, gws,
+		computeMemory, computeContainerNum, frontendContainerNum, driveContainerNum, nicNum, installUrl, gws, installDpdk,
 	)
 	if err != nil {
 		t.Logf("Generating deploy scripts failed: %s", err)

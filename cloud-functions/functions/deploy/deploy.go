@@ -65,6 +65,7 @@ func GetDeployScript(
 	nicsNum,
 	installUrl string,
 	gateways []string,
+	installDpdk bool,
 ) (bashScript string, err error) {
 	state, err := common.GetClusterState(ctx, bucket)
 	if err != nil {
@@ -90,7 +91,7 @@ func GetDeployScript(
 			WekaInstallUrl:       installUrl,
 			WekaToken:            token,
 			NicsNum:              nicsNum,
-			InstallDpdk:          true,
+			InstallDpdk:          installDpdk,
 			Gateways:             gateways,
 		}
 		deployScriptGenerator := deploy.DeployScriptGenerator{
@@ -134,7 +135,7 @@ func GetDeployScript(
 			WekaUsername:   creds.Username,
 			WekaPassword:   creds.Password,
 			IPs:            ips,
-			InstallDpdk:    true,
+			InstallDpdk:    installDpdk,
 			InstanceParams: instanceParams,
 			Gateways:       gateways,
 		}

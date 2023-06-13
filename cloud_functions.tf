@@ -69,6 +69,7 @@ resource "google_cloudfunctions2_function" "deploy_function" {
       NUM_COMPUTE_CONTAINERS : var.container_number_map[var.machine_type].compute
       NUM_FRONTEND_CONTAINERS : var.container_number_map[var.machine_type].frontend
       NVMES_NUM : var.nvmes_number
+      INSTALL_DPDK: var.install_cluster_dpdk
     }
   }
   lifecycle {
@@ -271,6 +272,7 @@ resource "google_cloudfunctions2_function" "clusterize_function" {
       PROTECTION_LEVEL : var.protection_level
       STRIPE_WIDTH : var.stripe_width != -1 ? var.stripe_width : local.stripe_width
       HOTSPARE : var.hotspare
+      INSTALL_DPDK: var.install_cluster_dpdk
     }
   }
   lifecycle {

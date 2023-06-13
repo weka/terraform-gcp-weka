@@ -234,3 +234,9 @@ variable "hotspare" {
   default = 1
   description = "Hot-spare value."
 }
+
+variable "install_cluster_dpdk" {
+  type        = bool
+  default     = true
+  description = "Install weka cluster with DPDK"
+}

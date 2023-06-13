@@ -57,6 +57,7 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 	stripeWidth, _ := strconv.Atoi(os.Getenv("STRIPE_WIDTH"))
 	protectionLevel, _ := strconv.Atoi(os.Getenv("PROTECTION_LEVEL"))
 	hotspare, _ := strconv.Atoi(os.Getenv("HOTSPARE"))
+	installDpdk, _ := strconv.ParseBool(os.Getenv("INSTALL_DPDK"))
 
 	if stripeWidth == 0 || protectionLevel == 0 || hotspare == 0 {
 		fmt.Fprint(w, "Failed getting data protection params")
@@ -74,12 +75,13 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	params := clusterize.ClusterizationParams{
-		Project:    project,
-		Zone:       zone,
-		UsernameId: usernameId,
-		PasswordId: passwordId,
-		Bucket:     bucket,
-		VmName:     d.Vm,
+		Project:     project,
+		Zone:        zone,
+		UsernameId:  usernameId,
+		PasswordId:  passwordId,
+		Bucket:      bucket,
+		VmName:      d.Vm,
+		InstallDpdk: installDpdk,
 		Cluster: clusterizeCommon.ClusterParams{
 			HostsNum:    hostsNum,
 			ClusterName: clusterName,
@@ -132,6 +134,7 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 
 	installUrl := os.Getenv("INSTALL_URL")
 	nics_num_str := os.Getenv("NICS_NUM")
+	installDpdk, _ := strconv.ParseBool(os.Getenv("INSTALL_DPDK"))
 
 	var d struct {
 		Vm string `json:"vm"`
@@ -160,6 +163,7 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 		nics_num_str,
 		installUrl,
 		gateways,
+		installDpdk,
 	)
 	if err != nil {
 		_, _ = fmt.Fprintf(w, "%s", err)
