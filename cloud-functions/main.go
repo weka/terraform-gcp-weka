@@ -49,6 +49,7 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 	zone := os.Getenv("ZONE")
 	hostsNum, _ := strconv.Atoi(os.Getenv("HOSTS_NUM"))
 	clusterName := os.Getenv("CLUSTER_NAME")
+	prefix := os.Getenv("PREFIX")
 	nvmesNum, _ := strconv.Atoi(os.Getenv("NVMES_NUM"))
 	usernameId := os.Getenv("USER_NAME_ID")
 	passwordId := os.Getenv("PASSWORD_ID")
@@ -57,6 +58,14 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 	stripeWidth, _ := strconv.Atoi(os.Getenv("STRIPE_WIDTH"))
 	protectionLevel, _ := strconv.Atoi(os.Getenv("PROTECTION_LEVEL"))
 	hotspare, _ := strconv.Atoi(os.Getenv("HOTSPARE"))
+	setObs, _ := strconv.ParseBool(os.Getenv("SET_OBS"))
+	obsName := os.Getenv("OBS_NAME")
+	tieringSsdPercent := os.Getenv("OBS_TIERING_SSD_PERCENT")
+	addFrontendNum, _ := strconv.Atoi(os.Getenv("NUM_FRONTEND_CONTAINERS"))
+	addFrontend := false
+	if addFrontendNum > 0 {
+		addFrontend = true
+	}
 
 	if stripeWidth == 0 || protectionLevel == 0 || hotspare == 0 {
 		fmt.Fprint(w, "Failed getting data protection params")
@@ -83,13 +92,19 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 		Cluster: clusterizeCommon.ClusterParams{
 			HostsNum:    hostsNum,
 			ClusterName: clusterName,
+			Prefix:      prefix,
 			NvmesNum:    nvmesNum,
-			SetObs:      false,
+			SetObs:      setObs,
 			DataProtection: clusterizeCommon.DataProtectionParams{
 				StripeWidth:     stripeWidth,
 				ProtectionLevel: protectionLevel,
 				Hotspare:        hotspare,
 			},
+			AddFrontend: addFrontend,
+		},
+		Obs: common.GcpObsParams{
+			Name:              obsName,
+			TieringSsdPercent: tieringSsdPercent,
 		},
 	}
 	fmt.Fprint(w, clusterize.Clusterize(ctx, params))
@@ -126,9 +141,9 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 	gateways := strings.Split(os.Getenv("GATEWAYS"), ",")
 
 	computeMemory := os.Getenv("COMPUTE_MEMORY")
-	computeContainerNum := os.Getenv("NUM_COMPUTE_CONTAINERS")
-	frontendContainerNum := os.Getenv("NUM_FRONTEND_CONTAINERS")
-	driveContainerNum := os.Getenv("NUM_DRIVE_CONTAINERS")
+	computeContainerNum, _ := strconv.Atoi(os.Getenv("NUM_COMPUTE_CONTAINERS"))
+	frontendContainerNum, _ := strconv.Atoi(os.Getenv("NUM_FRONTEND_CONTAINERS"))
+	driveContainerNum, _ := strconv.Atoi(os.Getenv("NUM_DRIVE_CONTAINERS"))
 
 	installUrl := os.Getenv("INSTALL_URL")
 	nics_num_str := os.Getenv("NICS_NUM")
@@ -153,12 +168,12 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 		tokenId,
 		bucket,
 		d.Vm,
+		nics_num_str,
 		computeMemory,
+		installUrl,
 		computeContainerNum,
 		frontendContainerNum,
 		driveContainerNum,
-		nics_num_str,
-		installUrl,
 		gateways,
 	)
 	if err != nil {

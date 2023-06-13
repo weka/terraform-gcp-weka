@@ -24,6 +24,16 @@ module "deploy_weka" {
 }
 ```
 
+## OBS
+We support tiering to bucket.
+In order to setup tiering, you must supply the following variables:
+```hcl
+set_obs = true
+obs_name = "..."
+tiering_ssd_percent = 20
+```
+
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

@@ -81,7 +81,7 @@ variable "install_url" {
 variable "weka_version" {
   type        = string
   description = "Weka version"
-  default = "4.2.0"
+  default = "4.2.1.14-qa-beta"
 }
 
 variable "weka_username" {
@@ -237,4 +237,22 @@ variable "hotspare" {
   type = number
   default = 1
   description = "Hot-spare value."
+}
+
+variable "obs_name" {
+  type        = string
+  default     = ""
+  description = "Name of OBS cloud storage"
+}
+
+variable "set_obs_integration" {
+  type        = bool
+  default     = false
+  description = "Determines whether to enable object stores integration with the Weka cluster. Set true to enable the integration."
+}
+
+variable "tiering_ssd_percent" {
+  type        = number
+  default     = 20
+  description = "When OBS integration set to true , this parameter sets how much of the filesystem capacity should reside on SSD. For example, if this parameter is 20 and the total available SSD capacity is 20GB, the total capacity would be 100GB"
 }

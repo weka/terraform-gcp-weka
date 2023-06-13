@@ -12,7 +12,7 @@ resource "google_project_iam_member" "sa-member-role" {
     "roles/compute.serviceAgent",
     "roles/cloudfunctions.developer",
     "roles/workflows.invoker",
-    "roles/storage.objectAdmin",
+    "roles/storage.admin",
     "roles/vpcaccess.serviceAgent",
     "roles/pubsub.subscriber"
   ])

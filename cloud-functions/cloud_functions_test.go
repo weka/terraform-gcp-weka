@@ -107,9 +107,9 @@ func Test_deploy(t *testing.T) {
 	nicNum := "3"
 	gws := []string{"10.0.0.1", "10.1.0.1", "10.2.0.1", "10.3.0.1"}
 	computeMemory := "8GB"
-	computeContainerNum := "1"
-	frontendContainerNum := "1"
-	driveContainerNum := "1"
+	computeContainerNum := 1
+	frontendContainerNum := 1
+	driveContainerNum := 1
 	instanceName := "abc"
 
 	token := os.Getenv("GET_WEKA_IO_TOKEN")
@@ -121,7 +121,7 @@ func Test_deploy(t *testing.T) {
 	ctx := context.TODO()
 	bashScript, err := deploy.GetDeployScript(
 		ctx, project, zone, instanceGroup, usernameId, passwordId, tokenId, bucket, instanceName,
-		computeMemory, computeContainerNum, frontendContainerNum, driveContainerNum, nicNum, installUrl, gws,
+		nicNum, computeMemory, installUrl, computeContainerNum, frontendContainerNum, driveContainerNum, gws,
 	)
 	if err != nil {
 		t.Logf("Generating deploy scripts failed: %s", err)

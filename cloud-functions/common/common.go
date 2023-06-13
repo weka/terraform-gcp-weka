@@ -18,6 +18,11 @@ import (
 	"google.golang.org/api/iterator"
 )
 
+type GcpObsParams struct {
+	Name              string
+	TieringSsdPercent string
+}
+
 type ClusterCreds struct {
 	Username string
 	Password string
@@ -464,6 +469,22 @@ func GetBackendsIps(ctx context.Context, project, zone string, instancesNames []
 	for _, instance := range instances {
 		// get one IP per instance
 		backendsIps = append(backendsIps, *instance.NetworkInterfaces[0].NetworkIP)
+	}
+	return
+}
+
+func CreateBucket(ctx context.Context, project, obsName string) (err error) {
+	log.Info().Msgf("Creating bucket %s", obsName)
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return
+	}
+
+	// Creates a Bucket instance.
+	if err = client.Bucket(obsName).Create(ctx, project, nil); err != nil {
+		log.Error().Err(err).Send()
+		return
 	}
 	return
 }
