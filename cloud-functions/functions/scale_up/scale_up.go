@@ -1,10 +1,9 @@
 package scale_up
 
 import (
-	"context"
-
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
+	"context"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
 )

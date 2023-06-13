@@ -3,12 +3,12 @@ package clusterize
 import (
 	"context"
 	"fmt"
-
 	"github.com/lithammer/dedent"
 	"github.com/rs/zerolog/log"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/gcp_functions_def"
 	"github.com/weka/go-cloud-lib/clusterize"
+	"strings"
 )
 
 type ClusterizationParams struct {
@@ -19,6 +19,7 @@ type ClusterizationParams struct {
 	Bucket     string
 	VmName     string
 	Cluster    clusterize.ClusterParams
+	Obs        common.GcpObsParams
 }
 
 func GetErrorScript(err error) string {
@@ -46,15 +47,28 @@ func Clusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript s
 	}
 
 	initialSize := p.Cluster.HostsNum
+	msg := fmt.Sprintf("This (%s) is instance %d/%d that is ready for clusterization", p.VmName, len(instancesNames), initialSize)
+	log.Info().Msgf(msg)
 	if len(instancesNames) != initialSize {
-		msg := fmt.Sprintf("This is instance number %d that is ready for clusterization (not last one), doing nothing.", len(instancesNames))
-		log.Info().Msgf(msg)
-
 		clusterizeScript = dedent.Dedent(fmt.Sprintf(`
 		#!/bin/bash
 		echo "%s"
 		`, msg))
 		return
+	}
+
+	if p.Cluster.SetObs {
+		if p.Obs.Name == "" {
+			bucketName := strings.Join([]string{p.Project, p.Cluster.Prefix, p.Cluster.ClusterName, "obs"}, "-")
+			err = common.CreateBucket(ctx, p.Project, bucketName)
+			if err != nil {
+				clusterizeScript = GetErrorScript(err)
+				return
+			}
+			p.Obs.Name = bucketName
+		} else {
+			log.Info().Msgf("Using existing obs bucket %s", p.Obs.Name)
+		}
 	}
 
 	creds, err := common.GetUsernameAndPassword(ctx, p.UsernameId, p.PasswordId)
@@ -73,7 +87,7 @@ func Clusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript s
 	clusterParams.VMNames = instancesNames
 	clusterParams.IPs = ips
 	clusterParams.DebugOverrideCmds = "echo 'nothing here'"
-	clusterParams.ObsScript = "echo 'nothing here'"
+	clusterParams.ObsScript = GetObsScript(p.Obs)
 	clusterParams.WekaPassword = creds.Password
 	clusterParams.WekaUsername = creds.Username
 	clusterParams.InstallDpdk = true
@@ -86,4 +100,19 @@ func Clusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript s
 
 	log.Info().Msg("Clusterization script generated")
 	return
+}
+
+func GetObsScript(obsParams common.GcpObsParams) string {
+	template := `
+	OBS_TIERING_SSD_PERCENT=%s
+	OBS_NAME="%s"
+
+	weka fs tier s3 add gcp-bucket --hostname storage.googleapis.com --port 443 --bucket "$OBS_NAME" --protocol https --auth-method AWSSignature4
+	weka fs tier s3 attach default gcp-bucket
+	tiering_percent=$(echo "$full_capacity * 100 / $OBS_TIERING_SSD_PERCENT" | bc)
+	weka fs update default --total-capacity "$tiering_percent"B
+	`
+	return fmt.Sprintf(
+		dedent.Dedent(template), obsParams.TieringSsdPercent, obsParams.Name,
+	)
 }

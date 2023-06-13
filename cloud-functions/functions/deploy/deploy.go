@@ -1,12 +1,10 @@
 package deploy
 
 import (
-	"context"
-	"fmt"
-	"strings"
-
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
+	"context"
+	"fmt"
 	"github.com/lithammer/dedent"
 	"github.com/rs/zerolog/log"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
@@ -16,18 +14,6 @@ import (
 	"github.com/weka/go-cloud-lib/join"
 	"github.com/weka/go-cloud-lib/protocol"
 )
-
-func GetBackendCoreCount(machineType string) (backendCoreCount protocol.BackendCoreCount, err error) {
-	switch machineType {
-	case "c2-standard-8":
-		backendCoreCount = protocol.BackendCoreCount{Total: 3, Frontend: 1, Drive: 1, Memory: "8033846653B"}
-	case "c2-standard-16":
-		backendCoreCount = protocol.BackendCoreCount{Total: 6, Frontend: 1, Drive: 1, Memory: "23156228928B"}
-	default:
-		err = fmt.Errorf("unsupported GCP machine type: %s", machineType)
-	}
-	return backendCoreCount, err
-}
 
 func getGCPInstanceNameCmd() string {
 	return "echo $HOSTNAME"
@@ -58,12 +44,12 @@ func GetDeployScript(
 	tokenId,
 	bucket,
 	instanceName,
+	nicsNum,
 	computeMemory,
+	installUrl string,
 	computeContainerNum,
 	frontendContainerNum,
-	driveContainerNum,
-	nicsNum,
-	installUrl string,
+	driveContainerNum int,
 	gateways []string,
 ) (bashScript string, err error) {
 	state, err := common.GetClusterState(ctx, bucket)
@@ -73,6 +59,7 @@ func GetDeployScript(
 	funcDef := gcp_functions_def.NewFuncDef()
 	// used for getting failure domain
 	getHashedIpCommand := bash_functions.GetHashedPrivateIpBashCmd()
+	instanceParams := protocol.BackendCoreCount{Compute: computeContainerNum, Frontend: frontendContainerNum, Drive: driveContainerNum, ComputeMemory: computeMemory}
 
 	if !state.Clusterized {
 		var token string
@@ -82,16 +69,13 @@ func GetDeployScript(
 		}
 
 		deploymentParams := deploy.DeploymentParams{
-			VMName:               instanceName,
-			ComputeMemory:        computeMemory,
-			ComputeContainerNum:  computeContainerNum,
-			FrontendContainerNum: frontendContainerNum,
-			DriveContainerNum:    driveContainerNum,
-			WekaInstallUrl:       installUrl,
-			WekaToken:            token,
-			NicsNum:              nicsNum,
-			InstallDpdk:          true,
-			Gateways:             gateways,
+			VMName:         instanceName,
+			InstanceParams: instanceParams,
+			WekaInstallUrl: installUrl,
+			WekaToken:      token,
+			NicsNum:        nicsNum,
+			InstallDpdk:    true,
+			Gateways:       gateways,
 		}
 		deployScriptGenerator := deploy.DeployScriptGenerator{
 			FuncDef:          funcDef,
@@ -121,10 +105,6 @@ func GetDeployScript(
 			return "", err
 		}
 
-		instanceTypeParts := strings.Split(*instances[0].MachineType, "/")
-		instanceType := instanceTypeParts[len(instanceTypeParts)-1]
-
-		instanceParams, err := GetBackendCoreCount(instanceType)
 		if err != nil {
 			log.Error().Err(err).Send()
 			return "", err

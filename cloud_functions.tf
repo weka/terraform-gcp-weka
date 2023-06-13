@@ -231,7 +231,6 @@ resource "google_cloudfunctions2_function_iam_member" "scale_up_invoker" {
   member = "allAuthenticatedUsers"
 }
 
-
 # ======================== clusterize ============================
 resource "google_cloudfunctions2_function" "clusterize_function" {
   name        = "${var.prefix}-${var.cluster_name}-clusterize"
@@ -262,6 +261,7 @@ resource "google_cloudfunctions2_function" "clusterize_function" {
       NICS_NUM: local.nics_number
       GWS: format("(%s)", join(" ", [for s in data.google_compute_subnetwork.subnets_list_ids: s.gateway_address] ))
       CLUSTER_NAME: var.cluster_name
+      PREFIX: var.prefix
       NVMES_NUM: var.nvmes_number
       USER_NAME_ID: google_secret_manager_secret_version.user_secret_key.id
       PASSWORD_ID: google_secret_manager_secret_version.password_secret_key.id
@@ -270,6 +270,10 @@ resource "google_cloudfunctions2_function" "clusterize_function" {
       PROTECTION_LEVEL : var.protection_level
       STRIPE_WIDTH : var.stripe_width != -1 ? var.stripe_width : local.stripe_width
       HOTSPARE : var.hotspare
+      SET_OBS: var.set_obs_integration
+      OBS_NAME: var.obs_name == "" ? "" : var.obs_name
+      OBS_TIERING_SSD_PERCENT: var.tiering_ssd_percent
+      NUM_FRONTEND_CONTAINERS : var.container_number_map[var.machine_type].frontend
     }
   }
   lifecycle {
