@@ -211,7 +211,6 @@ resource "google_cloudfunctions2_function" "scale_up_function" {
       CLUSTER_NAME: var.cluster_name
       BACKEND_TEMPLATE: google_compute_instance_template.backends-template.id
       BUCKET : google_storage_bucket.weka_deployment.name
-      INSTANCE_BASE_NAME: "${var.prefix}-${var.cluster_name}-vm"
     }
   }
   lifecycle {

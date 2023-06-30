@@ -1,6 +1,10 @@
 variable "cluster_name" {
   type        = string
   description = "Cluster prefix for all resources"
+  validation {
+    condition     = length(var.cluster_name) <= 37
+    error_message = "The cluster name maximum allowed length is 37."
+  }
 }
 
 variable "project" {
