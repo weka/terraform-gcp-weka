@@ -8,9 +8,9 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"cloud.google.com/go/storage"
-	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/clusterize"
@@ -196,7 +196,6 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 	clusterName := os.Getenv("CLUSTER_NAME")
 	backendTemplate := os.Getenv("BACKEND_TEMPLATE")
 	bucket := os.Getenv("BUCKET")
-	instanceBaseName := os.Getenv("INSTANCE_BASE_NAME")
 
 	ctx := r.Context()
 	backendsNumber := len(common.GetInstancesByClusterLabel(ctx, project, zone, clusterName))
@@ -207,9 +206,10 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Info().Msgf("Desired size is: %d", state.DesiredSize)
 
+	currentTime := time.Now().UTC().Format("20060102150405")
 	if backendsNumber < state.DesiredSize {
 		for i := backendsNumber; i < state.DesiredSize; i++ {
-			instanceName := fmt.Sprintf("%s-%s", instanceBaseName, uuid.New().String())
+			instanceName := fmt.Sprintf("%s-%s%03d", clusterName, currentTime, i)
 			log.Info().Msgf("creating new backend instance: %s", instanceName)
 			if err := scale_up.CreateInstance(ctx, project, zone, backendTemplate, instanceName); err != nil {
 				fmt.Fprintf(w, "Instance %s creation failed %s.", instanceName, err)
