@@ -1,14 +1,12 @@
 # ======================== cloud function ============================
 
 locals {
-  function_zip_path = "/tmp/${var.project}-${var.cluster_name}-cloud-functions.zip"
-  worker_pool_id = var.worker_pool_name != "" ? "projects/${var.project}/locations/${var.region}/workerPools/${var.worker_pool_name}" : var.worker_pool_name
-  sa_email = var.sa_email
-}
-
-locals {
+  function_zip_path       = "/tmp/${var.project}-${var.cluster_name}-cloud-functions.zip"
+  worker_pool_id          = var.worker_pool_name != "" ? "projects/${var.project}/locations/${var.region}/workerPools/${var.worker_pool_name}" : var.worker_pool_name
+  sa_email                = var.sa_email
   stripe_width_calculated = var.cluster_size - var.protection_level - 1
-  stripe_width = local.stripe_width_calculated < 16 ? local.stripe_width_calculated : 16
+  stripe_width            = local.stripe_width_calculated < 16 ? local.stripe_width_calculated : 16
+  get_compute_memory      = var.add_frontend_containers ? var.container_number_map[var.machine_type].memory[1] : var.container_number_map[var.machine_type].memory[0]
 }
 
 data "archive_file" "function_zip" {
@@ -64,10 +62,10 @@ resource "google_cloudfunctions2_function" "deploy_function" {
       CLUSTERIZE_URL : google_cloudfunctions2_function.clusterize_function.service_config[0].uri
       JOIN_FINALIZATION_URL : google_cloudfunctions2_function.join_finalization_function.service_config[0].uri
       NICS_NUM : local.nics_number
-      COMPUTE_MEMORY : var.container_number_map[var.machine_type].memory
+      COMPUTE_MEMORY : local.get_compute_memory
       NUM_DRIVE_CONTAINERS : var.container_number_map[var.machine_type].drive
-      NUM_COMPUTE_CONTAINERS : var.container_number_map[var.machine_type].compute
-      NUM_FRONTEND_CONTAINERS : var.container_number_map[var.machine_type].frontend
+      NUM_COMPUTE_CONTAINERS : var.add_frontend_containers ? var.container_number_map[var.machine_type].compute : var.container_number_map[var.machine_type].compute + 1
+      NUM_FRONTEND_CONTAINERS : var.add_frontend_containers ? var.container_number_map[var.machine_type].frontend : 0
       NVMES_NUM : var.nvmes_number
     }
   }
@@ -273,7 +271,7 @@ resource "google_cloudfunctions2_function" "clusterize_function" {
       SET_OBS: var.set_obs_integration
       OBS_NAME: var.obs_name == "" ? "" : var.obs_name
       OBS_TIERING_SSD_PERCENT: var.tiering_ssd_percent
-      NUM_FRONTEND_CONTAINERS : var.container_number_map[var.machine_type].frontend
+      NUM_FRONTEND_CONTAINERS : var.add_frontend_containers ? var.container_number_map[var.machine_type].frontend : 0
     }
   }
   lifecycle {
