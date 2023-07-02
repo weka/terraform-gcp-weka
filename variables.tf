@@ -192,7 +192,7 @@ variable "container_number_map" {
     drive    = number
     frontend = number
     nics     = number
-    memory   = string
+    memory   = list(string)
   }))
   description = "Maps the number of objects and memory size per machine type."
   default = {
@@ -201,14 +201,14 @@ variable "container_number_map" {
       drive    = 1
       frontend = 1
       nics     = 4
-      memory   = "8033846653B"
+      memory   = ["4.2GB","4GB"]
     },
     c2-standard-16 = {
       compute  = 4
       drive    = 1
       frontend = 1
       nics     = 7
-      memory   = "23156228928B"
+      memory   = ["24.2GB","23.2GB"]
     }
   }
 }
@@ -255,4 +255,10 @@ variable "tiering_ssd_percent" {
   type        = number
   default     = 20
   description = "When OBS integration set to true , this parameter sets how much of the filesystem capacity should reside on SSD. For example, if this parameter is 20 and the total available SSD capacity is 20GB, the total capacity would be 100GB"
+}
+
+variable "add_frontend_containers" {
+  type        = bool
+  default     = true
+  description = "Create cluster with FE containers"
 }
