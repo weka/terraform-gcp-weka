@@ -7,9 +7,10 @@ provider "google" {
       Create Service Account
 ***********************************/
 module "create_service_account" {
-  source  = "../../modules/service_account"
-  project = var.project
-  prefix  = var.prefix
+  source       = "../../modules/service_account"
+  project      = var.project
+  prefix       = var.prefix
+  cluster_name = var.cluster_name
 }
 
 /***********************************
@@ -23,6 +24,7 @@ module "setup_network" {
   subnets-cidr-range  = var.subnets_cidr_range
   zone                = var.zone
   vpc_connector_range = var.vpc_connector_range
+  depends_on          = [module.create_service_account]
 }
 
 /***********************************

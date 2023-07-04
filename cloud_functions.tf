@@ -7,6 +7,7 @@ locals {
   stripe_width_calculated = var.cluster_size - var.protection_level - 1
   stripe_width            = local.stripe_width_calculated < 16 ? local.stripe_width_calculated : 16
   get_compute_memory      = var.add_frontend_containers ? var.container_number_map[var.machine_type].memory[1] : var.container_number_map[var.machine_type].memory[0]
+  state_bucket            = var.state_bucket_name == "" ? google_storage_bucket.weka_deployment[0].name : var.state_bucket_name
 }
 
 data "archive_file" "function_zip" {
@@ -19,7 +20,7 @@ data "archive_file" "function_zip" {
 # ================== function zip =======================
 resource "google_storage_bucket_object" "cloud_functions_zip" {
   name   = "${var.prefix}-${var.cluster_name}-cloud-functions.zip"
-  bucket = google_storage_bucket.weka_deployment.name
+  bucket = local.state_bucket
   source = local.function_zip_path
   depends_on = [data.archive_file.function_zip, google_project_service.run-api, google_project_service.artifactregistry-api]
 }
@@ -36,7 +37,7 @@ resource "google_cloudfunctions2_function" "deploy_function" {
     worker_pool           = local.worker_pool_id
     source {
       storage_source {
-        bucket = google_storage_bucket.weka_deployment.name
+        bucket = local.state_bucket
         object = google_storage_bucket_object.cloud_functions_zip.name
       }
     }
@@ -57,7 +58,7 @@ resource "google_cloudfunctions2_function" "deploy_function" {
       USER_NAME_ID : google_secret_manager_secret_version.user_secret_key.id
       PASSWORD_ID : google_secret_manager_secret_version.password_secret_key.id
       TOKEN_ID : google_secret_manager_secret_version.token_secret_key.id
-      BUCKET : google_storage_bucket.weka_deployment.name
+      BUCKET : local.state_bucket
       INSTALL_URL : var.install_url != "" ? var.install_url : "https://$TOKEN@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}"
       CLUSTERIZE_URL : google_cloudfunctions2_function.clusterize_function.service_config[0].uri
       JOIN_FINALIZATION_URL : google_cloudfunctions2_function.join_finalization_function.service_config[0].uri
@@ -98,7 +99,7 @@ resource "google_cloudfunctions2_function" "fetch_function" {
     worker_pool = local.worker_pool_id
     source {
       storage_source {
-        bucket = google_storage_bucket.weka_deployment.name
+        bucket = local.state_bucket
         object = google_storage_bucket_object.cloud_functions_zip.name
       }
     }
@@ -114,7 +115,7 @@ resource "google_cloudfunctions2_function" "fetch_function" {
       PROJECT: var.project
       ZONE: var.zone
       INSTANCE_GROUP: google_compute_instance_group.instance_group.name
-      BUCKET : google_storage_bucket.weka_deployment.name
+      BUCKET : local.state_bucket
       USER_NAME_ID: google_secret_manager_secret_version.user_secret_key.id
       PASSWORD_ID: google_secret_manager_secret_version.password_secret_key.id
     }
@@ -148,7 +149,7 @@ resource "google_cloudfunctions2_function" "scale_down_function" {
     worker_pool = local.worker_pool_id
     source {
       storage_source {
-        bucket = google_storage_bucket.weka_deployment.name
+        bucket = local.state_bucket
         object = google_storage_bucket_object.cloud_functions_zip.name
       }
     }
@@ -191,7 +192,7 @@ resource "google_cloudfunctions2_function" "scale_up_function" {
     worker_pool = local.worker_pool_id
     source {
       storage_source {
-        bucket = google_storage_bucket.weka_deployment.name
+        bucket = local.state_bucket
         object = google_storage_bucket_object.cloud_functions_zip.name
       }
     }
@@ -208,7 +209,7 @@ resource "google_cloudfunctions2_function" "scale_up_function" {
       ZONE: var.zone
       CLUSTER_NAME: var.cluster_name
       BACKEND_TEMPLATE: google_compute_instance_template.backends-template.id
-      BUCKET : google_storage_bucket.weka_deployment.name
+      BUCKET: local.state_bucket
     }
   }
   lifecycle {
@@ -240,7 +241,7 @@ resource "google_cloudfunctions2_function" "clusterize_function" {
     worker_pool = local.worker_pool_id
     source {
       storage_source {
-        bucket = google_storage_bucket.weka_deployment.name
+        bucket = local.state_bucket
         object = google_storage_bucket_object.cloud_functions_zip.name
       }
     }
@@ -263,7 +264,7 @@ resource "google_cloudfunctions2_function" "clusterize_function" {
       NVMES_NUM: var.nvmes_number
       USER_NAME_ID: google_secret_manager_secret_version.user_secret_key.id
       PASSWORD_ID: google_secret_manager_secret_version.password_secret_key.id
-      BUCKET: google_storage_bucket.weka_deployment.name
+      BUCKET: local.state_bucket
       CLUSTERIZE_FINALIZATION_URL: google_cloudfunctions2_function.clusterize_finalization_function.service_config[0].uri
       PROTECTION_LEVEL : var.protection_level
       STRIPE_WIDTH : var.stripe_width != -1 ? var.stripe_width : local.stripe_width
@@ -303,7 +304,7 @@ resource "google_cloudfunctions2_function" "terminate_function" {
     worker_pool = local.worker_pool_id
     source {
       storage_source {
-        bucket = google_storage_bucket.weka_deployment.name
+        bucket = local.state_bucket
         object = google_storage_bucket_object.cloud_functions_zip.name
       }
     }
@@ -318,7 +319,7 @@ resource "google_cloudfunctions2_function" "terminate_function" {
     environment_variables = {
       PROJECT: var.project
       ZONE: var.zone
-      INSTANCE_GROUP: google_compute_instance_group.instance_group.name
+      INSTANCE_GROUP: local.state_bucket
       LOAD_BALANCER_NAME: google_compute_region_backend_service.backend_service.name
     }
   }
@@ -351,7 +352,7 @@ resource "google_cloudfunctions2_function" "transient_function" {
     worker_pool  = local.worker_pool_id
     source {
       storage_source {
-        bucket = google_storage_bucket.weka_deployment.name
+        bucket = local.state_bucket
         object = google_storage_bucket_object.cloud_functions_zip.name
       }
     }
@@ -393,7 +394,7 @@ resource "google_cloudfunctions2_function" "clusterize_finalization_function" {
     worker_pool = local.worker_pool_id
     source {
       storage_source {
-        bucket = google_storage_bucket.weka_deployment.name
+        bucket = local.state_bucket
         object = google_storage_bucket_object.cloud_functions_zip.name
       }
     }
@@ -409,7 +410,7 @@ resource "google_cloudfunctions2_function" "clusterize_finalization_function" {
       PROJECT: var.project
       ZONE: var.zone
       INSTANCE_GROUP: google_compute_instance_group.instance_group.name
-      BUCKET: google_storage_bucket.weka_deployment.name
+      BUCKET: local.state_bucket
     }
   }
   lifecycle {
@@ -441,7 +442,7 @@ resource "google_cloudfunctions2_function" "resize_function" {
     worker_pool = local.worker_pool_id
     source {
       storage_source {
-        bucket = google_storage_bucket.weka_deployment.name
+        bucket = local.state_bucket
         object = google_storage_bucket_object.cloud_functions_zip.name
       }
     }
@@ -454,7 +455,7 @@ resource "google_cloudfunctions2_function" "resize_function" {
     all_traffic_on_latest_revision = true
     service_account_email          = local.sa_email
     environment_variables = {
-      BUCKET: google_storage_bucket.weka_deployment.name
+      BUCKET: local.state_bucket
     }
   }
   lifecycle {
@@ -486,7 +487,7 @@ resource "google_cloudfunctions2_function" "join_finalization_function" {
     worker_pool = local.worker_pool_id
     source {
       storage_source {
-        bucket = google_storage_bucket.weka_deployment.name
+        bucket = local.state_bucket
         object = google_storage_bucket_object.cloud_functions_zip.name
       }
     }
@@ -533,7 +534,7 @@ resource "google_cloudfunctions2_function" "terminate_cluster_function" {
     worker_pool = local.worker_pool_id
     source {
       storage_source {
-        bucket = google_storage_bucket.weka_deployment.name
+        bucket = local.state_bucket
         object = google_storage_bucket_object.cloud_functions_zip.name
       }
     }
@@ -548,7 +549,7 @@ resource "google_cloudfunctions2_function" "terminate_cluster_function" {
     environment_variables = {
       PROJECT: var.project
       ZONE: var.zone
-      BUCKET : google_storage_bucket.weka_deployment.name
+      BUCKET : local.state_bucket
       CLUSTER_NAME: var.cluster_name
     }
   }
@@ -581,7 +582,7 @@ resource "google_cloudfunctions2_function" "status_function" {
     worker_pool = local.worker_pool_id
     source {
       storage_source {
-        bucket = google_storage_bucket.weka_deployment.name
+        bucket = local.state_bucket
         object = google_storage_bucket_object.cloud_functions_zip.name
       }
     }
@@ -600,7 +601,7 @@ resource "google_cloudfunctions2_function" "status_function" {
     environment_variables = {
       PROJECT: var.project
       ZONE: var.zone
-      BUCKET : google_storage_bucket.weka_deployment.name
+      BUCKET : local.state_bucket
       INSTANCE_GROUP : google_compute_instance_group.instance_group.name
       USER_NAME_ID : google_secret_manager_secret_version.user_secret_key.id
       PASSWORD_ID : google_secret_manager_secret_version.password_secret_key.id

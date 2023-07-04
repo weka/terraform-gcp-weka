@@ -262,3 +262,9 @@ variable "add_frontend_containers" {
   default     = true
   description = "Create cluster with FE containers"
 }
+
+variable "state_bucket_name" {
+  type        = string
+  default     = ""
+  description = "Name of bucket state, cloud storage"
+}

@@ -1,5 +1,6 @@
 # ======================== bucket ============================
 resource "google_storage_bucket" "weka_deployment" {
+  count    = var.state_bucket_name == "" ?  1 : 0
   name     = "${var.prefix}-${var.cluster_name}-${var.project}"
   location = var.region
 }
