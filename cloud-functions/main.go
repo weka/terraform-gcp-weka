@@ -18,6 +18,7 @@ import (
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/deploy"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/fetch"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/join_finalization"
+	reportPackage "github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/report"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/resize"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/scale_up"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/status"
@@ -382,8 +383,26 @@ func Status(w http.ResponseWriter, r *http.Request) {
 	usernameId := os.Getenv("USER_NAME_ID")
 	passwordId := os.Getenv("PASSWORD_ID")
 
+	var requestBody struct {
+		Type string `json:"type"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
+		fmt.Fprint(w, "Failed decoding request")
+		return
+	}
+
 	ctx := r.Context()
-	clusterStatus, err := status.GetClusterStatus(ctx, project, zone, bucket, instanceGroup, usernameId, passwordId)
+	var clusterStatus interface{}
+	var err error
+	if requestBody.Type == "" || requestBody.Type == "status" {
+		clusterStatus, err = status.GetClusterStatus(ctx, project, zone, bucket, instanceGroup, usernameId, passwordId)
+	} else if requestBody.Type == "progress" {
+		clusterStatus, err = status.GetReports(ctx, bucket)
+	} else {
+		clusterStatus = "Invalid status type"
+	}
+
 	if err != nil {
 		fmt.Fprintf(w, "Failed retrieving status: %s", err)
 		return
@@ -394,4 +413,23 @@ func Status(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Fprintf(w, "Failed decoding status: %s", err)
 	}
+}
+
+func Report(w http.ResponseWriter, r *http.Request) {
+	bucket := os.Getenv("BUCKET")
+	var report protocol.Report
+
+	if err := json.NewDecoder(r.Body).Decode(&report); err != nil {
+		fmt.Fprint(w, "Failed decoding request")
+		return
+	}
+
+	ctx := r.Context()
+	err := reportPackage.Report(ctx, report, bucket)
+	if err != nil {
+		fmt.Fprintf(w, "Failed reporting: %s", err)
+		return
+	}
+
+	fmt.Fprintf(w, "The report was added successfully")
 }

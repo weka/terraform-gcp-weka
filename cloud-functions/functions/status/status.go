@@ -3,6 +3,7 @@ package status
 import (
 	"context"
 	"encoding/json"
+	"github.com/weka/go-cloud-lib/logging"
 	"math/rand"
 	"time"
 
@@ -10,18 +11,25 @@ import (
 	"github.com/weka/go-cloud-lib/connectors"
 	"github.com/weka/go-cloud-lib/lib/jrpc"
 	"github.com/weka/go-cloud-lib/lib/weka"
+	"github.com/weka/go-cloud-lib/protocol"
 )
 
-type ClusterStatus struct {
-	InitialSize            int                 `json:"initial_size"`
-	DesiredSize            int                 `json:"desired_size"`
-	Clusterized            bool                `json:"clusterized"`
-	ReadyForClusterization []string            `json:"ready_for_clusterization"`
-	SystemStatus           weka.StatusResponse `json:"system_status"`
-	RawWekaStatus          json.RawMessage     `json:"raw_weka_status"`
+func GetReports(ctx context.Context, bucket string) (reports protocol.Reports, err error) {
+	logger := logging.LoggerFromCtx(ctx)
+	logger.Info().Msg("fetching cluster status...")
+
+	state, err := common.GetClusterState(ctx, bucket)
+	if err != nil {
+		return
+	}
+	reports.ReadyForClusterization = state.Instances
+	reports.Progress = state.Progress
+	reports.Errors = state.Errors
+
+	return
 }
 
-func GetClusterStatus(ctx context.Context, project, zone, bucket, instanceGroup, usernameId, passwordId string) (clusterStatus ClusterStatus, err error) {
+func GetClusterStatus(ctx context.Context, project, zone, bucket, instanceGroup, usernameId, passwordId string) (clusterStatus protocol.ClusterStatus, err error) {
 	state, err := common.GetClusterState(ctx, bucket)
 	if err != nil {
 		return
@@ -29,7 +37,7 @@ func GetClusterStatus(ctx context.Context, project, zone, bucket, instanceGroup,
 	clusterStatus.InitialSize = state.InitialSize
 	clusterStatus.DesiredSize = state.DesiredSize
 	clusterStatus.Clusterized = state.Clusterized
-	clusterStatus.ReadyForClusterization = state.Instances
+
 	if !state.Clusterized {
 		return
 	}
@@ -65,13 +73,12 @@ func GetClusterStatus(ctx context.Context, project, zone, bucket, instanceGroup,
 	if err != nil {
 		return
 	}
-	clusterStatus.RawWekaStatus = rawWekaStatus
 
-	systemStatus := weka.StatusResponse{}
-	if err = json.Unmarshal(rawWekaStatus, &systemStatus); err != nil {
+	wekaStatus := protocol.WekaStatus{}
+	if err = json.Unmarshal(rawWekaStatus, &wekaStatus); err != nil {
 		return
 	}
-	clusterStatus.SystemStatus = systemStatus
+	clusterStatus.WekaStatus = wekaStatus
 
 	return
 }

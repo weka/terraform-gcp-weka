@@ -7,7 +7,9 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/gcp_functions_def"
+	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/report"
 	"github.com/weka/go-cloud-lib/clusterize"
+	"github.com/weka/go-cloud-lib/protocol"
 	"strings"
 )
 
@@ -59,13 +61,22 @@ func Clusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript s
 
 	if p.Cluster.SetObs {
 		if p.Obs.Name == "" {
-			bucketName := strings.Join([]string{p.Project, p.Cluster.Prefix, p.Cluster.ClusterName, "obs"}, "-")
-			err = common.CreateBucket(ctx, p.Project, bucketName)
+			p.Obs.Name = strings.Join([]string{p.Project, p.Cluster.Prefix, p.Cluster.ClusterName, "obs"}, "-")
+			err = common.CreateBucket(ctx, p.Project, p.Obs.Name)
 			if err != nil {
-				clusterizeScript = GetErrorScript(err)
-				return
+				log.Error().Err(err).Send()
+				err = report.Report(
+					ctx,
+					protocol.Report{
+						Type:     "error",
+						Hostname: p.VmName,
+						Message:  fmt.Sprintf("Failed creating obs bucket %s: %s", p.Obs.Name, err),
+					},
+					p.Bucket)
+				if err != nil {
+					log.Error().Err(err).Send()
+				}
 			}
-			p.Obs.Name = bucketName
 		} else {
 			log.Info().Msgf("Using existing obs bucket %s", p.Obs.Name)
 		}

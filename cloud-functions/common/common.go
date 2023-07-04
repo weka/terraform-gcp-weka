@@ -15,6 +15,7 @@ import (
 	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 	"cloud.google.com/go/storage"
 	"github.com/rs/zerolog/log"
+	"github.com/weka/go-cloud-lib/protocol"
 	"google.golang.org/api/iterator"
 )
 
@@ -26,13 +27,6 @@ type GcpObsParams struct {
 type ClusterCreds struct {
 	Username string
 	Password string
-}
-
-type ClusterState struct {
-	InitialSize int      `json:"initial_size"`
-	DesiredSize int      `json:"desired_size"`
-	Instances   []string `json:"instances"`
-	Clusterized bool     `json:"clusterized"`
 }
 
 func GetUsernameAndPassword(ctx context.Context, usernameId, passwordId string) (clusterCreds ClusterCreds, err error) {
@@ -177,7 +171,7 @@ func Unlock(client *storage.Client, ctx context.Context, bucket, id string) (err
 	return
 }
 
-func ReadState(stateHandler *storage.ObjectHandle, ctx context.Context) (state ClusterState, err error) {
+func ReadState(stateHandler *storage.ObjectHandle, ctx context.Context) (state protocol.ClusterState, err error) {
 	reader, err := stateHandler.NewReader(ctx)
 	if err != nil {
 		log.Error().Msgf("Failed getting object reader: %s", err)
@@ -193,7 +187,7 @@ func ReadState(stateHandler *storage.ObjectHandle, ctx context.Context) (state C
 	return
 }
 
-func WriteState(stateHandler *storage.ObjectHandle, ctx context.Context, state ClusterState) (err error) {
+func WriteState(stateHandler *storage.ObjectHandle, ctx context.Context, state protocol.ClusterState) (err error) {
 	writer := stateHandler.NewWriter(ctx)
 	writer.ContentType = "application/json"
 
@@ -214,7 +208,7 @@ func WriteState(stateHandler *storage.ObjectHandle, ctx context.Context, state C
 	return
 }
 
-func GetClusterState(ctx context.Context, bucket string) (state ClusterState, err error) {
+func GetClusterState(ctx context.Context, bucket string) (state protocol.ClusterState, err error) {
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		log.Error().Msgf("Failed creating storage client: %s", err)
@@ -242,7 +236,7 @@ func GetClusterState(ctx context.Context, bucket string) (state ClusterState, er
 	return
 }
 
-func UpdateClusterState(ctx context.Context, bucket string, state ClusterState) (err error) {
+func UpdateClusterState(ctx context.Context, bucket string, state protocol.ClusterState) (err error) {
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		log.Error().Msgf("Failed creating storage client: %s", err)
