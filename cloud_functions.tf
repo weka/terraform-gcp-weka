@@ -60,6 +60,7 @@ resource "google_cloudfunctions2_function" "deploy_function" {
       TOKEN_ID : google_secret_manager_secret_version.token_secret_key.id
       BUCKET : local.state_bucket
       INSTALL_URL : var.install_url != "" ? var.install_url : "https://$TOKEN@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}"
+      REPORT_URL : google_cloudfunctions2_function.report_function.service_config[0].uri
       CLUSTERIZE_URL : google_cloudfunctions2_function.clusterize_function.service_config[0].uri
       JOIN_FINALIZATION_URL : google_cloudfunctions2_function.join_finalization_function.service_config[0].uri
       NICS_NUM : local.nics_number
@@ -265,6 +266,7 @@ resource "google_cloudfunctions2_function" "clusterize_function" {
       USER_NAME_ID: google_secret_manager_secret_version.user_secret_key.id
       PASSWORD_ID: google_secret_manager_secret_version.password_secret_key.id
       BUCKET: local.state_bucket
+      REPORT_URL : google_cloudfunctions2_function.report_function.service_config[0].uri
       CLUSTERIZE_FINALIZATION_URL: google_cloudfunctions2_function.clusterize_finalization_function.service_config[0].uri
       PROTECTION_LEVEL : var.protection_level
       STRIPE_WIDTH : var.stripe_width != -1 ? var.stripe_width : local.stripe_width
@@ -620,6 +622,53 @@ resource "google_cloudfunctions2_function_iam_member" "status_invoker" {
   project        = google_cloudfunctions2_function.status_function.project
   location       = google_cloudfunctions2_function.status_function.location
   cloud_function = google_cloudfunctions2_function.status_function.name
+
+  role   = "roles/cloudfunctions.invoker"
+  member = "allAuthenticatedUsers"
+}
+
+# ======================== report ============================
+resource "google_cloudfunctions2_function" "report_function" {
+  name        = "${var.prefix}-${var.cluster_name}-report"
+  description = "report cluster status"
+  location    = lookup(var.cloud_functions_region_map, var.region, var.region)
+  build_config {
+    runtime = "go120"
+    entry_point = "Report"
+    worker_pool = local.worker_pool_id
+    source {
+      storage_source {
+        bucket = local.state_bucket
+        object = google_storage_bucket_object.cloud_functions_zip.name
+      }
+    }
+  }
+
+  service_config {
+    max_instance_count             = 3
+    min_instance_count             = 1
+    available_memory               = "256Mi"
+    timeout_seconds                = 540
+    ingress_settings               = "ALLOW_ALL"
+    all_traffic_on_latest_revision = true
+    service_account_email          = local.sa_email
+    environment_variables = {
+      BUCKET : local.state_bucket
+    }
+  }
+  lifecycle {
+    replace_triggered_by = [
+      google_storage_bucket_object.cloud_functions_zip.md5hash
+    ]
+  }
+  depends_on = [google_project_service.project-function-api, google_project_service.run-api, google_project_service.artifactregistry-api]
+}
+
+# IAM entry for all users to invoke the function
+resource "google_cloudfunctions2_function_iam_member" "report_invoker" {
+  project        = google_cloudfunctions2_function.report_function.project
+  location       = google_cloudfunctions2_function.report_function.location
+  cloud_function = google_cloudfunctions2_function.report_function.name
 
   role   = "roles/cloudfunctions.invoker"
   member = "allAuthenticatedUsers"

@@ -3,7 +3,8 @@ output "cluster_helpers_commands" {
 ########################################## get cluster status ##########################################
 curl -m 70 -X POST ${google_cloudfunctions2_function.status_function.service_config[0].uri} \
 -H "Authorization:bearer $(gcloud auth print-identity-token)" \
--H "Content-Type:application/json"
+-H "Content-Type:application/json" -d '{"type":"progress"}'
+# for fetching cluster status pass: -d '{"type":"status"}'
 
 ########################################## resize cluster command ##########################################
 curl -m 70 -X POST ${google_cloudfunctions2_function.resize_function.service_config[0].uri} \
