@@ -3,6 +3,8 @@ package clusterize
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/lithammer/dedent"
 	"github.com/rs/zerolog/log"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
@@ -10,14 +12,15 @@ import (
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/report"
 	"github.com/weka/go-cloud-lib/clusterize"
 	"github.com/weka/go-cloud-lib/protocol"
-	"strings"
 )
 
 type ClusterizationParams struct {
 	Project    string
+	Region     string
 	Zone       string
 	UsernameId string
 	PasswordId string
+	CloudFunc  string
 	Bucket     string
 	VmName     string
 	Cluster    clusterize.ClusterParams
@@ -90,7 +93,7 @@ func Clusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript s
 	}
 	log.Info().Msgf("Fetched weka cluster creds successfully")
 
-	funcDef := gcp_functions_def.NewFuncDef()
+	funcDef := gcp_functions_def.NewFuncDef(p.Region, p.CloudFunc)
 
 	ips := common.GetBackendsIps(ctx, p.Project, p.Zone, instancesNames)
 

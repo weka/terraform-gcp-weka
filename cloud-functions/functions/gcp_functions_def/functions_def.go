@@ -2,41 +2,34 @@ package gcp_functions_def
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/lithammer/dedent"
 	"github.com/weka/go-cloud-lib/functions_def"
 )
 
 type GCPFuncDef struct {
-	functionUrlMapping map[functions_def.FunctionName]string
+	region             string
+	commonFunctionName string
+	supportedActions   []functions_def.FunctionName
 }
 
-func NewFuncDef() functions_def.FunctionDef {
-	mapping := map[functions_def.FunctionName]string{
-		functions_def.Clusterize:              os.Getenv("CLUSTERIZE_URL"),
-		functions_def.ClusterizeFinalizaition: os.Getenv("CLUSTERIZE_FINALIZATION_URL"),
-		functions_def.Deploy:                  os.Getenv("DEPLOY_URL"),
-		functions_def.Report:                  os.Getenv("REPORT_URL"),
-		functions_def.Join:                    os.Getenv("JOIN_URL"),
-		functions_def.JoinFinalization:        os.Getenv("JOIN_FINALIZATION_URL"),
+func NewFuncDef(region, commonFunctionName string) functions_def.FunctionDef {
+	mapping := []functions_def.FunctionName{
+		functions_def.Clusterize,
+		functions_def.ClusterizeFinalizaition,
+		functions_def.Deploy,
+		functions_def.Report,
+		functions_def.Join,
+		functions_def.JoinFinalization,
 	}
-	return &GCPFuncDef{functionUrlMapping: mapping}
+	return &GCPFuncDef{supportedActions: mapping, commonFunctionName: commonFunctionName, region: region}
 }
 
 // each function takes json payload as an argument
 // e.g. "{\"hostname\": \"$HOSTNAME\", \"type\": \"$message_type\", \"message\": \"$message\"}"
 func (d *GCPFuncDef) GetFunctionCmdDefinition(name functions_def.FunctionName) string {
-	functionUrl, ok := d.functionUrlMapping[name]
 	var funcDef string
-	if !ok {
-		funcDefTemplate := `
-		function %s {
-			echo "%s function is not supported"
-		}
-		`
-		funcDef = fmt.Sprintf(funcDefTemplate, name, name)
-	} else if functionUrl == "" {
+	if !d.isSupportedAction(name) {
 		funcDefTemplate := `
 		function %s {
 			echo "%s function is not implemented"
@@ -47,10 +40,20 @@ func (d *GCPFuncDef) GetFunctionCmdDefinition(name functions_def.FunctionName) s
 		funcDefTemplate := `
 		function %s {
 			local json_data=$1
-			curl %s -H "Authorization:bearer $(gcloud auth print-identity-token)" -H "Content-Type:application/json" -d "$json_data"
+			func_url=$(gcloud functions describe %s --region %s --format='get(serviceConfig.uri)')
+			curl $func_url?action=%s -H "Authorization:bearer $(gcloud auth print-identity-token)" -H "Content-Type:application/json" -d "$json_data"
 		}
 		`
-		funcDef = fmt.Sprintf(funcDefTemplate, name, functionUrl)
+		funcDef = fmt.Sprintf(funcDefTemplate, name, d.commonFunctionName, d.region, name)
 	}
 	return dedent.Dedent(funcDef)
+}
+
+func (d *GCPFuncDef) isSupportedAction(name functions_def.FunctionName) bool {
+	for _, action := range d.supportedActions {
+		if action == name {
+			return true
+		}
+	}
+	return false
 }

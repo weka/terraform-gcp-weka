@@ -29,10 +29,11 @@ resource "google_workflows_workflow" "scale_down" {
   - fetch:
       call: http.post
       args:
-          url: ${google_cloudfunctions2_function.fetch_function.service_config[0].uri}
+          url: ${google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri}
+          query:
+            action: fetch
           auth:
             type: OIDC
-            audience: ${google_cloudfunctions2_function.fetch_function.service_config[0].uri}
       result: FetchResult
   - scale_down:
       call: http.post
@@ -41,31 +42,32 @@ resource "google_workflows_workflow" "scale_down" {
           body: $${FetchResult.body}
           auth:
             type: OIDC
-            audience: ${google_cloudfunctions2_function.scale_down_function.service_config[0].uri}
       result: ScaleResult
   - terminate:
       call: http.post
       args:
-          url: ${google_cloudfunctions2_function.terminate_function.service_config[0].uri}
+          url: ${google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri}
+          query:
+            action: terminate
           body: $${ScaleResult.body}
           auth:
             type: OIDC
-            audience: ${google_cloudfunctions2_function.terminate_function.service_config[0].uri}
       result: TerminateResult
   - transient:
       call: http.post
       args:
-          url: ${google_cloudfunctions2_function.transient_function.service_config[0].uri}
+          url: ${google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri}
+          query:
+            action: transient
           body: $${TerminateResult.body}
           auth:
             type: OIDC
-            audience: ${google_cloudfunctions2_function.transient_function.service_config[0].uri}
       result: TransientResult
   - returnOutput:
       return: $${TransientResult}
 EOF
 
-  depends_on = [google_project_service.workflows , google_cloudfunctions2_function.scale_down_function]
+  depends_on = [google_project_service.workflows, google_cloudfunctions2_function.scale_down_function, google_cloudfunctions2_function.cloud_internal_function]
 }
 
 resource "google_pubsub_topic" "scale_down_trigger_topic" {
@@ -121,18 +123,19 @@ resource "google_workflows_workflow" "scale_up" {
   service_account = local.sa_email
   source_contents = <<-EOF
   - scale_up:
-      call: http.post
+      call: http.get
       args:
-          url: ${google_cloudfunctions2_function.scale_up_function.service_config[0].uri}
+          url: ${google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri}
+          query:
+            action: scale_up
           auth:
             type: OIDC
-            audience: ${google_cloudfunctions2_function.scale_up_function.service_config[0].uri}
       result: ScaleUpResult
   - returnOutput:
       return: $${ScaleUpResult}
 EOF
 
-  depends_on = [google_project_service.workflows, google_cloudfunctions2_function.scale_up_function, google_cloudfunctions2_function.deploy_function, google_cloudfunctions2_function.clusterize_function, google_cloudfunctions2_function.clusterize_finalization_function]
+  depends_on = [google_project_service.workflows, google_cloudfunctions2_function.cloud_internal_function]
 }
 
 resource "google_pubsub_topic" "scale_up_trigger_topic" {

@@ -99,6 +99,7 @@ func Test_fetch(t *testing.T) {
 
 func Test_deploy(t *testing.T) {
 	project := "wekaio-rnd"
+	region := "europe-west1"
 	zone := "europe-west1-b"
 	instanceGroup := "weka-instance-group"
 	usernameId := "projects/896245720241/secrets/weka-poc-username/versions/1"
@@ -111,6 +112,7 @@ func Test_deploy(t *testing.T) {
 	frontendContainerNum := 1
 	driveContainerNum := 1
 	instanceName := "abc"
+	funcitonName := "function-name"
 
 	token := os.Getenv("GET_WEKA_IO_TOKEN")
 	version := "4.0.1.37-gcp"
@@ -120,7 +122,7 @@ func Test_deploy(t *testing.T) {
 
 	ctx := context.TODO()
 	bashScript, err := deploy.GetDeployScript(
-		ctx, project, zone, instanceGroup, usernameId, passwordId, tokenId, bucket, instanceName,
+		ctx, project, region, zone, instanceGroup, usernameId, passwordId, tokenId, bucket, funcitonName, instanceName,
 		nicNum, computeMemory, installUrl, computeContainerNum, frontendContainerNum, driveContainerNum, gws,
 	)
 	if err != nil {

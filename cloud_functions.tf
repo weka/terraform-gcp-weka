@@ -8,6 +8,8 @@ locals {
   stripe_width            = local.stripe_width_calculated < 16 ? local.stripe_width_calculated : 16
   get_compute_memory      = var.add_frontend_containers ? var.container_number_map[var.machine_type].memory[1] : var.container_number_map[var.machine_type].memory[0]
   state_bucket            = var.state_bucket_name == "" ? google_storage_bucket.weka_deployment[0].name : var.state_bucket_name
+  // common function for multiple actions
+  cloud_internal_function_name = "${var.prefix}-${var.cluster_name}-weka-functions"
 }
 
 data "archive_file" "function_zip" {
@@ -27,13 +29,13 @@ resource "google_storage_bucket_object" "cloud_functions_zip" {
 
 
 # ======================== deploy ============================
-resource "google_cloudfunctions2_function" "deploy_function" {
-  name        = "${var.prefix}-${var.cluster_name}-deploy"
-  description = "deploy new instance"
+resource "google_cloudfunctions2_function" "cloud_internal_function" {
+  name        = local.cloud_internal_function_name
+  description = "deploy, fetch, resize, clusterize, clusterize finalization, join, join_finalization, terminate, transient, terminate_cluster, scale_up functions"
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
   build_config {
     runtime               = "go120"
-    entry_point           = "Deploy"
+    entry_point           = "CloudInternal"
     worker_pool           = local.worker_pool_id
     source {
       storage_source {
@@ -46,12 +48,15 @@ resource "google_cloudfunctions2_function" "deploy_function" {
     max_instance_count             = 3
     min_instance_count             = 1
     available_memory               = "256Mi"
-    timeout_seconds                = 60
+    timeout_seconds                = 540
+    ingress_settings               = "ALLOW_ALL" // default value
     all_traffic_on_latest_revision = true
     service_account_email          = local.sa_email
     environment_variables = {
       PROJECT : var.project
+      REGION : var.region
       ZONE : var.zone
+      CLOUD_FUNCTION_NAME : local.cloud_internal_function_name
       INSTANCE_GROUP : google_compute_instance_group.instance_group.name
       GATEWAYS : join(",", [for s in data.google_compute_subnetwork.subnets_list_ids : s.gateway_address] )
       SUBNETS : format("(%s)", join(" ", [for s in data.google_compute_subnetwork.subnets_list_ids : s.ip_cidr_range] ))
@@ -59,16 +64,35 @@ resource "google_cloudfunctions2_function" "deploy_function" {
       PASSWORD_ID : google_secret_manager_secret_version.password_secret_key.id
       TOKEN_ID : google_secret_manager_secret_version.token_secret_key.id
       BUCKET : local.state_bucket
+      CLOUD_COMMON_FUNCTION_NAME : local.cloud_internal_function_name
       INSTALL_URL : var.install_url != "" ? var.install_url : "https://$TOKEN@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}"
-      REPORT_URL : google_cloudfunctions2_function.report_function.service_config[0].uri
-      CLUSTERIZE_URL : google_cloudfunctions2_function.clusterize_function.service_config[0].uri
-      JOIN_FINALIZATION_URL : google_cloudfunctions2_function.join_finalization_function.service_config[0].uri
+      # Configuration for google_cloudfunctions2_function.cloud_internal_function may not refer to itself.
+      # REPORT_URL : format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=report")
+      # CLUSTERIZE_URL : format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=clusterize")
+      # JOIN_FINALIZATION_URL : format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=join_finalization")
+      # CLUSTERIZE_FINALIZATION_URL: format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=clusterize_finalization")
       NICS_NUM : local.nics_number
       COMPUTE_MEMORY : local.get_compute_memory
       NUM_DRIVE_CONTAINERS : var.container_number_map[var.machine_type].drive
       NUM_COMPUTE_CONTAINERS : var.add_frontend_containers ? var.container_number_map[var.machine_type].compute : var.container_number_map[var.machine_type].compute + 1
       NUM_FRONTEND_CONTAINERS : var.add_frontend_containers ? var.container_number_map[var.machine_type].frontend : 0
       NVMES_NUM : var.nvmes_number
+      HOSTS_NUM: var.cluster_size
+      NICS_NUM: local.nics_number
+      GWS: format("(%s)", join(" ", [for s in data.google_compute_subnetwork.subnets_list_ids: s.gateway_address] ))
+      CLUSTER_NAME: var.cluster_name
+      PREFIX: var.prefix
+      PROTECTION_LEVEL : var.protection_level
+      STRIPE_WIDTH : var.stripe_width != -1 ? var.stripe_width : local.stripe_width
+      HOTSPARE : var.hotspare
+      SET_OBS: var.set_obs_integration
+      OBS_NAME: var.obs_name == "" ? "" : var.obs_name
+      OBS_TIERING_SSD_PERCENT: var.tiering_ssd_percent
+      NUM_FRONTEND_CONTAINERS : var.add_frontend_containers ? var.container_number_map[var.machine_type].frontend : 0
+      // for terminate
+      LOAD_BALANCER_NAME: google_compute_region_backend_service.backend_service.name
+      // for scale_up
+      BACKEND_TEMPLATE: google_compute_instance_template.backends_template.id
     }
   }
   lifecycle {
@@ -80,60 +104,10 @@ resource "google_cloudfunctions2_function" "deploy_function" {
 }
 
 # IAM entry for all users to invoke the function
-resource "google_cloudfunctions2_function_iam_member" "deploy_invoker" {
-  project        = google_cloudfunctions2_function.deploy_function.project
-  location       = google_cloudfunctions2_function.deploy_function.location
-  cloud_function = google_cloudfunctions2_function.deploy_function.name
-
-  role   = "roles/cloudfunctions.invoker"
-  member = "allAuthenticatedUsers"
-}
-
-# ======================== fetch ============================
-resource "google_cloudfunctions2_function" "fetch_function" {
-  name        = "${var.prefix}-${var.cluster_name}-fetch"
-  description = "fetch cluster info"
-  location    = lookup(var.cloud_functions_region_map, var.region, var.region)
-  build_config {
-    runtime = "go120"
-    entry_point = "Fetch"
-    worker_pool = local.worker_pool_id
-    source {
-      storage_source {
-        bucket = local.state_bucket
-        object = google_storage_bucket_object.cloud_functions_zip.name
-      }
-    }
-  }
-  service_config {
-    max_instance_count             = 3
-    min_instance_count             = 1
-    available_memory               = "256Mi"
-    timeout_seconds                = 60
-    all_traffic_on_latest_revision = true
-    service_account_email          = local.sa_email
-    environment_variables = {
-      PROJECT: var.project
-      ZONE: var.zone
-      INSTANCE_GROUP: google_compute_instance_group.instance_group.name
-      BUCKET : local.state_bucket
-      USER_NAME_ID: google_secret_manager_secret_version.user_secret_key.id
-      PASSWORD_ID: google_secret_manager_secret_version.password_secret_key.id
-    }
-  }
-  lifecycle {
-    replace_triggered_by = [
-      google_storage_bucket_object.cloud_functions_zip.md5hash
-    ]
-  }
-  depends_on = [google_project_service.project-function-api, google_project_service.run-api, google_project_service.artifactregistry-api]
-}
-
-# IAM entry for all users to invoke the function
-resource "google_cloudfunctions2_function_iam_member" "fetch_invoker" {
-  project        = google_cloudfunctions2_function.fetch_function.project
-  location       = google_cloudfunctions2_function.fetch_function.location
-  cloud_function = google_cloudfunctions2_function.fetch_function.name
+resource "google_cloudfunctions2_function_iam_member" "cloud_internal_invoker" {
+  project        = google_cloudfunctions2_function.cloud_internal_function.project
+  location       = google_cloudfunctions2_function.cloud_internal_function.location
+  cloud_function = google_cloudfunctions2_function.cloud_internal_function.name
 
   role   = "roles/cloudfunctions.invoker"
   member = "allAuthenticatedUsers"
@@ -173,401 +147,12 @@ resource "google_cloudfunctions2_function" "scale_down_function" {
   }
   depends_on = [google_project_service.project-function-api, google_project_service.run-api, google_project_service.artifactregistry-api]
 }
+
 # IAM entry for all users to invoke the function
-resource "google_cloudfunctions2_function_iam_member" "scale_invoker" {
+resource "google_cloudfunctions2_function_iam_member" "weka_internal_invoker" {
   project        = google_cloudfunctions2_function.scale_down_function.project
   location       = google_cloudfunctions2_function.scale_down_function.location
   cloud_function = google_cloudfunctions2_function.scale_down_function.name
-
-  role   = "roles/cloudfunctions.invoker"
-  member = "allAuthenticatedUsers"
-}
-# ======================== scale_up ============================
-resource "google_cloudfunctions2_function" "scale_up_function" {
-  name        = "${var.prefix}-${var.cluster_name}-scale-up"
-  description = "scale cluster up"
-  location    = lookup(var.cloud_functions_region_map, var.region, var.region)
-  build_config {
-    runtime = "go120"
-    entry_point = "ScaleUp"
-    worker_pool = local.worker_pool_id
-    source {
-      storage_source {
-        bucket = local.state_bucket
-        object = google_storage_bucket_object.cloud_functions_zip.name
-      }
-    }
-  }
-  service_config {
-    max_instance_count             = 3
-    min_instance_count             = 1
-    available_memory               = "256Mi"
-    timeout_seconds                = 60
-    all_traffic_on_latest_revision = true
-    service_account_email          = local.sa_email
-    environment_variables = {
-      PROJECT: var.project
-      ZONE: var.zone
-      CLUSTER_NAME: var.cluster_name
-      BACKEND_TEMPLATE: google_compute_instance_template.backends-template.id
-      BUCKET: local.state_bucket
-    }
-  }
-  lifecycle {
-    replace_triggered_by = [
-      google_storage_bucket_object.cloud_functions_zip.md5hash
-    ]
-  }
-  depends_on = [google_project_service.project-function-api, google_project_service.run-api, google_project_service.artifactregistry-api]
-}
-
-# IAM entry for all users to invoke the function
-resource "google_cloudfunctions2_function_iam_member" "scale_up_invoker" {
-  project        = google_cloudfunctions2_function.scale_up_function.project
-  location       = google_cloudfunctions2_function.scale_up_function.location
-  cloud_function = google_cloudfunctions2_function.scale_up_function.name
-
-  role   = "roles/cloudfunctions.invoker"
-  member = "allAuthenticatedUsers"
-}
-
-# ======================== clusterize ============================
-resource "google_cloudfunctions2_function" "clusterize_function" {
-  name        = "${var.prefix}-${var.cluster_name}-clusterize"
-  description = "return clusterize script"
-  location    = lookup(var.cloud_functions_region_map, var.region, var.region)
-  build_config {
-    runtime = "go120"
-    entry_point = "Clusterize"
-    worker_pool = local.worker_pool_id
-    source {
-      storage_source {
-        bucket = local.state_bucket
-        object = google_storage_bucket_object.cloud_functions_zip.name
-      }
-    }
-  }
-  service_config {
-    max_instance_count             = 3
-    min_instance_count             = 1
-    available_memory               = "256Mi"
-    timeout_seconds                = 540
-    all_traffic_on_latest_revision = true
-    service_account_email          = local.sa_email
-    environment_variables = {
-      PROJECT: var.project
-      ZONE: var.zone
-      HOSTS_NUM: var.cluster_size
-      NICS_NUM: local.nics_number
-      GWS: format("(%s)", join(" ", [for s in data.google_compute_subnetwork.subnets_list_ids: s.gateway_address] ))
-      CLUSTER_NAME: var.cluster_name
-      PREFIX: var.prefix
-      NVMES_NUM: var.nvmes_number
-      USER_NAME_ID: google_secret_manager_secret_version.user_secret_key.id
-      PASSWORD_ID: google_secret_manager_secret_version.password_secret_key.id
-      BUCKET: local.state_bucket
-      REPORT_URL : google_cloudfunctions2_function.report_function.service_config[0].uri
-      CLUSTERIZE_FINALIZATION_URL: google_cloudfunctions2_function.clusterize_finalization_function.service_config[0].uri
-      PROTECTION_LEVEL : var.protection_level
-      STRIPE_WIDTH : var.stripe_width != -1 ? var.stripe_width : local.stripe_width
-      HOTSPARE : var.hotspare
-      SET_OBS: var.set_obs_integration
-      OBS_NAME: var.obs_name == "" ? "" : var.obs_name
-      OBS_TIERING_SSD_PERCENT: var.tiering_ssd_percent
-      NUM_FRONTEND_CONTAINERS : var.add_frontend_containers ? var.container_number_map[var.machine_type].frontend : 0
-    }
-  }
-  lifecycle {
-    replace_triggered_by = [
-      google_storage_bucket_object.cloud_functions_zip.md5hash
-    ]
-  }
-  depends_on = [google_project_service.project-function-api, google_project_service.run-api, google_project_service.artifactregistry-api]
-}
-
-# IAM entry for all users to invoke the function
-resource "google_cloudfunctions2_function_iam_member" "clusterize_invoker" {
-  project        = google_cloudfunctions2_function.clusterize_function.project
-  location       = google_cloudfunctions2_function.clusterize_function.location
-  cloud_function = google_cloudfunctions2_function.clusterize_function.name
-
-  role   = "roles/cloudfunctions.invoker"
-  member = "allAuthenticatedUsers"
-}
-
-# ======================== terminate ============================
-resource "google_cloudfunctions2_function" "terminate_function" {
-  name        = "${var.prefix}-${var.cluster_name}-terminate"
-  description = "terminate instances"
-  location    = lookup(var.cloud_functions_region_map, var.region, var.region)
-  build_config {
-    runtime = "go120"
-    entry_point = "Terminate"
-    worker_pool = local.worker_pool_id
-    source {
-      storage_source {
-        bucket = local.state_bucket
-        object = google_storage_bucket_object.cloud_functions_zip.name
-      }
-    }
-  }
-  service_config {
-    max_instance_count             = 3
-    min_instance_count             = 1
-    available_memory               = "256Mi"
-    timeout_seconds                = 540
-    all_traffic_on_latest_revision = true
-    service_account_email          = local.sa_email
-    environment_variables = {
-      PROJECT: var.project
-      ZONE: var.zone
-      INSTANCE_GROUP: local.state_bucket
-      LOAD_BALANCER_NAME: google_compute_region_backend_service.backend_service.name
-    }
-  }
-  lifecycle {
-    replace_triggered_by = [
-      google_storage_bucket_object.cloud_functions_zip.md5hash
-    ]
-  }
-  depends_on = [google_project_service.project-function-api, google_project_service.run-api, google_project_service.artifactregistry-api]
-}
-
-# IAM entry for all users to invoke the function
-resource "google_cloudfunctions2_function_iam_member" "terminate_invoker" {
-  project        = google_cloudfunctions2_function.terminate_function.project
-  location       = google_cloudfunctions2_function.terminate_function.location
-  cloud_function = google_cloudfunctions2_function.terminate_function.name
-
-  role   = "roles/cloudfunctions.invoker"
-  member = "allAuthenticatedUsers"
-}
-
-# ======================== transient ============================
-resource "google_cloudfunctions2_function" "transient_function" {
-  name        = "${var.prefix}-${var.cluster_name}-transient"
-  description = "transient errors"
-  location    = lookup(var.cloud_functions_region_map, var.region, var.region)
-  build_config {
-    runtime      = "go120"
-    entry_point  = "Transient"
-    worker_pool  = local.worker_pool_id
-    source {
-      storage_source {
-        bucket = local.state_bucket
-        object = google_storage_bucket_object.cloud_functions_zip.name
-      }
-    }
-  }
-  service_config {
-    max_instance_count             = 3
-    min_instance_count             = 1
-    available_memory               = "256Mi"
-    timeout_seconds                = 540
-    all_traffic_on_latest_revision = true
-    service_account_email          = local.sa_email
-  }
-  lifecycle {
-    replace_triggered_by = [
-      google_storage_bucket_object.cloud_functions_zip.md5hash
-    ]
-  }
-  depends_on = [google_project_service.project-function-api, google_project_service.run-api]
-}
-
-# IAM entry for all users to invoke the function
-resource "google_cloudfunctions2_function_iam_member" "transient_invoker" {
-  project        = google_cloudfunctions2_function.transient_function.project
-  location       = google_cloudfunctions2_function.transient_function.location
-  cloud_function = google_cloudfunctions2_function.transient_function.name
-
-  role   = "roles/cloudfunctions.invoker"
-  member = "allAuthenticatedUsers"
-}
-
-# ======================== clusterize_finalization ============================
-resource "google_cloudfunctions2_function" "clusterize_finalization_function" {
-  name        = "${var.prefix}-${var.cluster_name}-clusterize-finalization"
-  description = "clusterization finalization"
-  location    = lookup(var.cloud_functions_region_map, var.region, var.region)
-  build_config {
-    runtime = "go120"
-    entry_point = "ClusterizeFinalization"
-    worker_pool = local.worker_pool_id
-    source {
-      storage_source {
-        bucket = local.state_bucket
-        object = google_storage_bucket_object.cloud_functions_zip.name
-      }
-    }
-  }
-  service_config {
-    max_instance_count             = 3
-    min_instance_count             = 1
-    available_memory               = "256Mi"
-    timeout_seconds                = 540
-    all_traffic_on_latest_revision = true
-    service_account_email          = local.sa_email
-    environment_variables = {
-      PROJECT: var.project
-      ZONE: var.zone
-      INSTANCE_GROUP: google_compute_instance_group.instance_group.name
-      BUCKET: local.state_bucket
-    }
-  }
-  lifecycle {
-    replace_triggered_by = [
-      google_storage_bucket_object.cloud_functions_zip.md5hash
-    ]
-  }
-  depends_on = [google_project_service.project-function-api, google_project_service.run-api, google_project_service.artifactregistry-api]
-}
-
-# IAM entry for all users to invoke the function
-resource "google_cloudfunctions2_function_iam_member" "clusterize_finalization_invoker" {
-  project        = google_cloudfunctions2_function.clusterize_finalization_function.project
-  location       = google_cloudfunctions2_function.clusterize_finalization_function.location
-  cloud_function = google_cloudfunctions2_function.clusterize_finalization_function.name
-
-  role   = "roles/cloudfunctions.invoker"
-  member = "allAuthenticatedUsers"
-}
-
-# ======================== resize ============================
-resource "google_cloudfunctions2_function" "resize_function" {
-  name        = "${var.prefix}-${var.cluster_name}-resize"
-  description = "update db"
-  location    = lookup(var.cloud_functions_region_map, var.region, var.region)
-  build_config {
-    runtime = "go120"
-    entry_point = "Resize"
-    worker_pool = local.worker_pool_id
-    source {
-      storage_source {
-        bucket = local.state_bucket
-        object = google_storage_bucket_object.cloud_functions_zip.name
-      }
-    }
-  }
-  service_config {
-    max_instance_count             = 3
-    min_instance_count             = 1
-    available_memory               = "256Mi"
-    timeout_seconds                = 540
-    all_traffic_on_latest_revision = true
-    service_account_email          = local.sa_email
-    environment_variables = {
-      BUCKET: local.state_bucket
-    }
-  }
-  lifecycle {
-    replace_triggered_by = [
-      google_storage_bucket_object.cloud_functions_zip.md5hash
-    ]
-  }
-  depends_on = [google_project_service.project-function-api, google_project_service.run-api, google_project_service.artifactregistry-api]
-}
-
-# IAM entry for all users to invoke the function
-resource "google_cloudfunctions2_function_iam_member" "resize_invoker" {
-  project        = google_cloudfunctions2_function.resize_function.project
-  location       = google_cloudfunctions2_function.resize_function.location
-  cloud_function = google_cloudfunctions2_function.resize_function.name
-
-  role   = "roles/cloudfunctions.invoker"
-  member = "allAuthenticatedUsers"
-}
-
-# ======================== join_finalization ============================
-resource "google_cloudfunctions2_function" "join_finalization_function" {
-  name        = "${var.prefix}-${var.cluster_name}-join-finalization"
-  description = "join finalization"
-  location    = lookup(var.cloud_functions_region_map, var.region, var.region)
-  build_config {
-    runtime = "go120"
-    entry_point = "JoinFinalization"
-    worker_pool = local.worker_pool_id
-    source {
-      storage_source {
-        bucket = local.state_bucket
-        object = google_storage_bucket_object.cloud_functions_zip.name
-      }
-    }
-  }
-  service_config {
-    max_instance_count             = 3
-    min_instance_count             = 1
-    available_memory               = "256Mi"
-    timeout_seconds                = 540
-    all_traffic_on_latest_revision = true
-    service_account_email          = local.sa_email
-    environment_variables = {
-      PROJECT: var.project
-      ZONE: var.zone
-      INSTANCE_GROUP: google_compute_instance_group.instance_group.name
-    }
-  }
-  lifecycle {
-    replace_triggered_by = [
-      google_storage_bucket_object.cloud_functions_zip.md5hash
-    ]
-  }
-  depends_on = [google_project_service.project-function-api, google_project_service.run-api, google_project_service.artifactregistry-api]
-}
-
-# IAM entry for all users to invoke the function
-resource "google_cloudfunctions2_function_iam_member" "join_finalization_invoker" {
-  project        = google_cloudfunctions2_function.join_finalization_function.project
-  location       = google_cloudfunctions2_function.join_finalization_function.location
-  cloud_function = google_cloudfunctions2_function.join_finalization_function.name
-
-  role   = "roles/cloudfunctions.invoker"
-  member = "allAuthenticatedUsers"
-}
-
-# ======================== terminate_cluster ============================
-resource "google_cloudfunctions2_function" "terminate_cluster_function" {
-  name        = "${var.prefix}-${var.cluster_name}-terminate-cluster"
-  description = "terminate cluster"
-  location    = lookup(var.cloud_functions_region_map, var.region, var.region)
-  build_config {
-    runtime = "go120"
-    entry_point = "TerminateCluster"
-    worker_pool = local.worker_pool_id
-    source {
-      storage_source {
-        bucket = local.state_bucket
-        object = google_storage_bucket_object.cloud_functions_zip.name
-      }
-    }
-  }
-  service_config {
-    max_instance_count             = 3
-    min_instance_count             = 1
-    available_memory               = "256Mi"
-    timeout_seconds                = 540
-    all_traffic_on_latest_revision = true
-    service_account_email          = local.sa_email
-    environment_variables = {
-      PROJECT: var.project
-      ZONE: var.zone
-      BUCKET : local.state_bucket
-      CLUSTER_NAME: var.cluster_name
-    }
-  }
-  lifecycle {
-    replace_triggered_by = [
-      google_storage_bucket_object.cloud_functions_zip.md5hash
-    ]
-  }
-  depends_on = [google_project_service.project-function-api, google_project_service.run-api, google_project_service.artifactregistry-api]
-}
-
-# IAM entry for all users to invoke the function
-resource "google_cloudfunctions2_function_iam_member" "terminate_cluster_invoker" {
-  project        = google_cloudfunctions2_function.terminate_cluster_function.project
-  location       = google_cloudfunctions2_function.terminate_cluster_function.location
-  cloud_function = google_cloudfunctions2_function.terminate_cluster_function.name
 
   role   = "roles/cloudfunctions.invoker"
   member = "allAuthenticatedUsers"
@@ -622,53 +207,6 @@ resource "google_cloudfunctions2_function_iam_member" "status_invoker" {
   project        = google_cloudfunctions2_function.status_function.project
   location       = google_cloudfunctions2_function.status_function.location
   cloud_function = google_cloudfunctions2_function.status_function.name
-
-  role   = "roles/cloudfunctions.invoker"
-  member = "allAuthenticatedUsers"
-}
-
-# ======================== report ============================
-resource "google_cloudfunctions2_function" "report_function" {
-  name        = "${var.prefix}-${var.cluster_name}-report"
-  description = "report cluster status"
-  location    = lookup(var.cloud_functions_region_map, var.region, var.region)
-  build_config {
-    runtime = "go120"
-    entry_point = "Report"
-    worker_pool = local.worker_pool_id
-    source {
-      storage_source {
-        bucket = local.state_bucket
-        object = google_storage_bucket_object.cloud_functions_zip.name
-      }
-    }
-  }
-
-  service_config {
-    max_instance_count             = 3
-    min_instance_count             = 1
-    available_memory               = "256Mi"
-    timeout_seconds                = 540
-    ingress_settings               = "ALLOW_ALL"
-    all_traffic_on_latest_revision = true
-    service_account_email          = local.sa_email
-    environment_variables = {
-      BUCKET : local.state_bucket
-    }
-  }
-  lifecycle {
-    replace_triggered_by = [
-      google_storage_bucket_object.cloud_functions_zip.md5hash
-    ]
-  }
-  depends_on = [google_project_service.project-function-api, google_project_service.run-api, google_project_service.artifactregistry-api]
-}
-
-# IAM entry for all users to invoke the function
-resource "google_cloudfunctions2_function_iam_member" "report_invoker" {
-  project        = google_cloudfunctions2_function.report_function.project
-  location       = google_cloudfunctions2_function.report_function.location
-  cloud_function = google_cloudfunctions2_function.report_function.name
 
   role   = "roles/cloudfunctions.invoker"
   member = "allAuthenticatedUsers"

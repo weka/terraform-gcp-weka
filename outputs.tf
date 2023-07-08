@@ -7,7 +7,7 @@ curl -m 70 -X POST ${google_cloudfunctions2_function.status_function.service_con
 # for fetching cluster status pass: -d '{"type":"status"}'
 
 ########################################## resize cluster command ##########################################
-curl -m 70 -X POST ${google_cloudfunctions2_function.resize_function.service_config[0].uri} \
+curl -m 70 -X POST ${format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=resize")} \
 -H "Authorization:bearer $(gcloud auth print-identity-token)" \
 -H "Content-Type:application/json" \
 -d '{"value":ENTER_NEW_VALUE_HERE}'
@@ -29,10 +29,10 @@ mount -t wekafs "$lb_url/$FILESYSTEM_NAME" $MOUNT_POINT
 
 # replace CLUSTER_NAME with the actual cluster name, as a confirmation of the destructive action
 # this function needs to be executed prior to terraform destroy
-curl -m 70 -X POST ${google_cloudfunctions2_function.terminate_cluster_function.service_config[0].uri} \
+curl -m 70 -X POST ${format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=terminate_cluster")} \
 -H "Authorization:bearer $(gcloud auth print-identity-token)" \
 -H "Content-Type:application/json" \
--d '{"name":"CLUSTER_NAME"}'
+-d '{"name":"${var.cluster_name}"}'
 
 
 ################################# get weka password secret login ############################################
