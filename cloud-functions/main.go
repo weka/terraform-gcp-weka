@@ -45,9 +45,43 @@ func ClusterizeFinalization(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func CloudInternal(w http.ResponseWriter, r *http.Request) {
+	queryParams := r.URL.Query()
+	action := queryParams.Get("action")
+
+	switch action {
+	case "clusterize":
+		Clusterize(w, r)
+	case "clusterize_finalization":
+		ClusterizeFinalization(w, r)
+	case "deploy":
+		Deploy(w, r)
+	case "fetch":
+		Fetch(w, r)
+	case "join_finalization":
+		JoinFinalization(w, r)
+	case "report":
+		Report(w, r)
+	case "resize":
+		Resize(w, r)
+	case "terminate":
+		Terminate(w, r)
+	case "terminate_cluster":
+		TerminateCluster(w, r)
+	case "transient":
+		Transient(w, r)
+	case "scale_up":
+		ScaleUp(w, r)
+	default:
+		fmt.Fprintf(w, "Unknown action: %s", action)
+	}
+}
+
 func Clusterize(w http.ResponseWriter, r *http.Request) {
 	project := os.Getenv("PROJECT")
+	region := os.Getenv("REGION")
 	zone := os.Getenv("ZONE")
+	cloudFunctionName := os.Getenv("CLOUD_FUNCTION_NAME")
 	hostsNum, _ := strconv.Atoi(os.Getenv("HOSTS_NUM"))
 	clusterName := os.Getenv("CLUSTER_NAME")
 	prefix := os.Getenv("PREFIX")
@@ -85,9 +119,11 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 
 	params := clusterize.ClusterizationParams{
 		Project:    project,
+		Region:     region,
 		Zone:       zone,
 		UsernameId: usernameId,
 		PasswordId: passwordId,
+		CloudFunc:  cloudFunctionName,
 		Bucket:     bucket,
 		VmName:     d.Vm,
 		Cluster: clusterizeCommon.ClusterParams{
@@ -133,7 +169,9 @@ func Fetch(w http.ResponseWriter, r *http.Request) {
 
 func Deploy(w http.ResponseWriter, r *http.Request) {
 	project := os.Getenv("PROJECT")
+	region := os.Getenv("REGION")
 	zone := os.Getenv("ZONE")
+	cloudFunctionName := os.Getenv("CLOUD_FUNCTION_NAME")
 	instanceGroup := os.Getenv("INSTANCE_GROUP")
 	usernameId := os.Getenv("USER_NAME_ID")
 	passwordId := os.Getenv("PASSWORD_ID")
@@ -162,12 +200,14 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 	bashScript, err := deploy.GetDeployScript(
 		ctx,
 		project,
+		region,
 		zone,
 		instanceGroup,
 		usernameId,
 		passwordId,
 		tokenId,
 		bucket,
+		cloudFunctionName,
 		d.Vm,
 		nics_num_str,
 		computeMemory,

@@ -1,10 +1,11 @@
 package deploy
 
 import (
-	secretmanager "cloud.google.com/go/secretmanager/apiv1"
-	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 	"context"
 	"fmt"
+
+	secretmanager "cloud.google.com/go/secretmanager/apiv1"
+	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 	"github.com/lithammer/dedent"
 	"github.com/rs/zerolog/log"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
@@ -37,12 +38,14 @@ func getWekaIoToken(ctx context.Context, tokenId string) (token string, err erro
 func GetDeployScript(
 	ctx context.Context,
 	project,
+	region,
 	zone,
 	instanceGroup,
 	usernameId,
 	passwordId,
 	tokenId,
 	bucket,
+	cloudFunctionName,
 	instanceName,
 	nicsNum,
 	computeMemory,
@@ -56,7 +59,7 @@ func GetDeployScript(
 	if err != nil {
 		return
 	}
-	funcDef := gcp_functions_def.NewFuncDef()
+	funcDef := gcp_functions_def.NewFuncDef(region, cloudFunctionName)
 	// used for getting failure domain
 	getHashedIpCommand := bash_functions.GetHashedPrivateIpBashCmd()
 	instanceParams := protocol.BackendCoreCount{Compute: computeContainerNum, Frontend: frontendContainerNum, Drive: driveContainerNum, ComputeMemory: computeMemory}

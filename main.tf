@@ -21,7 +21,7 @@ data "google_compute_subnetwork" "subnets_list_ids" {
   name   = var.subnets_name[count.index]
 }
 
-resource "google_compute_instance_template" "backends-template" {
+resource "google_compute_instance_template" "backends_template" {
   name           = "${var.prefix}-${var.cluster_name}-backends"
   machine_type   = var.machine_type
   can_ip_forward = false
@@ -90,6 +90,8 @@ resource "google_compute_instance_template" "backends-template" {
 
   sudo yum install -y jq  
 
+  gcloud config set functions/gen2 true
+
   instance_name=$(curl -X GET http://metadata.google.internal/computeMetadata/v1/instance/name -H 'Metadata-Flavor: Google')
 
   self_deleting() {
@@ -99,7 +101,8 @@ resource "google_compute_instance_template" "backends-template" {
     gcloud --quiet compute instances delete $instance_name --zone=$zone
   }
 
-  curl ${google_cloudfunctions2_function.deploy_function.service_config[0].uri} --fail -H "Authorization:bearer $(gcloud auth print-identity-token)" -d "{\"vm\": \"$instance_name\"}" > /tmp/deploy.sh
+  cloud_function_url=$(gcloud functions describe ${local.cloud_internal_function_name} --region ${var.region} --format='get(serviceConfig.uri)')
+  curl "$cloud_function_url?action=deploy" --fail -H "Authorization:bearer $(gcloud auth print-identity-token)" -d "{\"vm\": \"$instance_name\"}" > /tmp/deploy.sh
   chmod +x /tmp/deploy.sh
   (/tmp/deploy.sh 2>&1 | tee /tmp/weka_deploy.log) || self_deleting || shutdown -P
  EOT
@@ -134,15 +137,15 @@ resource "null_resource" "terminate-cluster" {
   triggers = {
     command = <<EOT
       echo "Terminating cluster..."
-      curl -m 70 -X POST ${google_cloudfunctions2_function.terminate_cluster_function.service_config[0].uri} \
+      curl -m 70 -X POST ${format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=terminate_cluster")} \
       -H "Authorization:bearer $(gcloud auth print-identity-token)" \
       -H "Content-Type:application/json" \
-      -d '{"name":"poc"}'
+      -d '{"name":"${var.cluster_name}"}'
       EOT
   }
   provisioner "local-exec" {
     command = self.triggers.command
     when = destroy
   }
-  depends_on = [google_storage_bucket_object.state,google_cloudfunctions2_function.terminate_cluster_function]
+  depends_on = [google_storage_bucket_object.state,google_cloudfunctions2_function.cloud_internal_function]
 }
