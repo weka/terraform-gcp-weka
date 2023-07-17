@@ -136,7 +136,7 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 			},
 			AddFrontend: addFrontend,
 		},
-		Obs: common.GcpObsParams{
+		Obs: protocol.ObsParams{
 			Name:              obsName,
 			TieringSsdPercent: tieringSsdPercent,
 		},

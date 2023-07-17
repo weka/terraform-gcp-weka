@@ -19,17 +19,7 @@ import (
 	"google.golang.org/api/iterator"
 )
 
-type GcpObsParams struct {
-	Name              string
-	TieringSsdPercent string
-}
-
-type ClusterCreds struct {
-	Username string
-	Password string
-}
-
-func GetUsernameAndPassword(ctx context.Context, usernameId, passwordId string) (clusterCreds ClusterCreds, err error) {
+func GetUsernameAndPassword(ctx context.Context, usernameId, passwordId string) (clusterCreds protocol.ClusterCreds, err error) {
 	client, err := secretmanager.NewClient(ctx)
 	if err != nil {
 		return
@@ -482,3 +472,14 @@ func CreateBucket(ctx context.Context, project, obsName string) (err error) {
 	}
 	return
 }
+
+const FindDrivesScript = `
+import json
+import sys
+for d in json.load(sys.stdin)['disks']:
+	if d['isRotational']: continue
+	if d['type'] != 'DISK': continue
+	if d['isMounted']: continue
+	if d['model'] != 'nvme_card': continue
+	print(d['devPath'])
+`
