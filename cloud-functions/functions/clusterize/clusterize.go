@@ -11,6 +11,7 @@ import (
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/gcp_functions_def"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/report"
 	"github.com/weka/go-cloud-lib/clusterize"
+	cloudCommon "github.com/weka/go-cloud-lib/common"
 	"github.com/weka/go-cloud-lib/protocol"
 )
 
@@ -22,32 +23,21 @@ type ClusterizationParams struct {
 	Bucket     string
 	VmName     string
 	Cluster    clusterize.ClusterParams
-	Obs        common.GcpObsParams
+	Obs        protocol.ObsParams
 	// root url for cloud function calls' definitions
 	CloudFuncRootUrl string
-}
-
-func GetErrorScript(err error) string {
-	s := `
-	#!/bin/bash
-	<<'###ERROR'
-	%s
-	###ERROR
-	exit 1
-	`
-	return fmt.Sprintf(dedent.Dedent(s), err.Error())
 }
 
 func Clusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript string) {
 	instancesNames, err := common.AddInstanceToStateInstances(ctx, p.Bucket, p.VmName)
 	if err != nil {
-		clusterizeScript = GetErrorScript(err)
+		clusterizeScript = cloudCommon.GetErrorScript(err)
 		return
 	}
 
 	err = common.SetDeletionProtection(ctx, p.Project, p.Zone, p.VmName)
 	if err != nil {
-		clusterizeScript = GetErrorScript(err)
+		clusterizeScript = cloudCommon.GetErrorScript(err)
 		return
 	}
 
@@ -88,7 +78,7 @@ func Clusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript s
 	creds, err := common.GetUsernameAndPassword(ctx, p.UsernameId, p.PasswordId)
 	if err != nil {
 		log.Error().Msgf("%s", err)
-		clusterizeScript = GetErrorScript(err)
+		clusterizeScript = cloudCommon.GetErrorScript(err)
 		return
 	}
 	log.Info().Msgf("Fetched weka cluster creds successfully")
@@ -104,6 +94,7 @@ func Clusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript s
 	clusterParams.ObsScript = GetObsScript(p.Obs)
 	clusterParams.WekaPassword = creds.Password
 	clusterParams.WekaUsername = creds.Username
+	clusterParams.FindDrivesScript = dedent.Dedent(common.FindDrivesScript)
 	clusterParams.InstallDpdk = true
 
 	scriptGenerator := clusterize.ClusterizeScriptGenerator{
@@ -116,7 +107,7 @@ func Clusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript s
 	return
 }
 
-func GetObsScript(obsParams common.GcpObsParams) string {
+func GetObsScript(obsParams protocol.ObsParams) string {
 	template := `
 	OBS_TIERING_SSD_PERCENT=%s
 	OBS_NAME="%s"
