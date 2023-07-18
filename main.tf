@@ -73,39 +73,6 @@ resource "google_compute_instance_template" "backends_template" {
     ignore_changes = [network_interface]
     create_before_destroy = false
   }
-
-  metadata_startup_script = <<-EOT
-  if [ "${var.yum_repo_server}" ] ; then
-    mkdir /tmp/yum.repos.d
-    mv /etc/yum.repos.d/*.repo /tmp/yum.repos.d/
-
-    cat >/etc/yum.repos.d/local.repo <<EOL
-  [local]
-  name=Centos Base
-  baseurl=${var.yum_repo_server}
-  enabled=1
-  gpgcheck=0
-  EOL
-  fi
-
-  sudo yum install -y jq  
-
-  gcloud config set functions/gen2 true
-
-  instance_name=$(curl -X GET http://metadata.google.internal/computeMetadata/v1/instance/name -H 'Metadata-Flavor: Google')
-
-  self_deleting() {
-    echo "deploy failed, self deleting..."
-    zone=$(curl -X GET http://metadata.google.internal/computeMetadata/v1/instance/zone -H 'Metadata-Flavor: Google')
-    gcloud compute instances update $instance_name --no-deletion-protection --zone=$zone
-    gcloud --quiet compute instances delete $instance_name --zone=$zone
-  }
-
-  cloud_function_url=$(gcloud functions describe ${local.cloud_internal_function_name} --region ${var.region} --format='get(serviceConfig.uri)')
-  curl "$cloud_function_url?action=deploy" --fail -H "Authorization:bearer $(gcloud auth print-identity-token)" -d "{\"vm\": \"$instance_name\"}" > /tmp/deploy.sh
-  chmod +x /tmp/deploy.sh
-  (/tmp/deploy.sh 2>&1 | tee /tmp/weka_deploy.log) || self_deleting || shutdown -P
- EOT
 }
 
 resource "random_password" "password" {

@@ -16,15 +16,15 @@ import (
 
 type ClusterizationParams struct {
 	Project    string
-	Region     string
 	Zone       string
 	UsernameId string
 	PasswordId string
-	CloudFunc  string
 	Bucket     string
 	VmName     string
 	Cluster    clusterize.ClusterParams
 	Obs        common.GcpObsParams
+	// root url for cloud function calls' definitions
+	CloudFuncRootUrl string
 }
 
 func GetErrorScript(err error) string {
@@ -93,7 +93,7 @@ func Clusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript s
 	}
 	log.Info().Msgf("Fetched weka cluster creds successfully")
 
-	funcDef := gcp_functions_def.NewFuncDef(p.Region, p.CloudFunc)
+	funcDef := gcp_functions_def.NewFuncDef(p.CloudFuncRootUrl)
 
 	ips := common.GetBackendsIps(ctx, p.Project, p.Zone, instancesNames)
 

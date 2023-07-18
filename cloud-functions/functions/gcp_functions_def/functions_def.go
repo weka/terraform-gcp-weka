@@ -8,21 +8,20 @@ import (
 )
 
 type GCPFuncDef struct {
-	region             string
-	commonFunctionName string
-	supportedActions   []functions_def.FunctionName
+	rootUrl          string
+	supportedActions map[functions_def.FunctionName]bool
 }
 
-func NewFuncDef(region, commonFunctionName string) functions_def.FunctionDef {
-	mapping := []functions_def.FunctionName{
-		functions_def.Clusterize,
-		functions_def.ClusterizeFinalizaition,
-		functions_def.Deploy,
-		functions_def.Report,
-		functions_def.Join,
-		functions_def.JoinFinalization,
+func NewFuncDef(rootUrl string) functions_def.FunctionDef {
+	mapping := map[functions_def.FunctionName]bool{
+		functions_def.Clusterize:              true,
+		functions_def.ClusterizeFinalizaition: true,
+		functions_def.Deploy:                  true,
+		functions_def.Report:                  true,
+		functions_def.Join:                    true,
+		functions_def.JoinFinalization:        true,
 	}
-	return &GCPFuncDef{supportedActions: mapping, commonFunctionName: commonFunctionName, region: region}
+	return &GCPFuncDef{supportedActions: mapping, rootUrl: rootUrl}
 }
 
 // each function takes json payload as an argument
@@ -40,20 +39,15 @@ func (d *GCPFuncDef) GetFunctionCmdDefinition(name functions_def.FunctionName) s
 		funcDefTemplate := `
 		function %s {
 			local json_data=$1
-			func_url=$(gcloud functions describe %s --region %s --format='get(serviceConfig.uri)')
-			curl $func_url?action=%s -H "Authorization:bearer $(gcloud auth print-identity-token)" -H "Content-Type:application/json" -d "$json_data"
+			curl %s?action=%s -H "Authorization:bearer $(gcloud auth print-identity-token)" -H "Content-Type:application/json" -d "$json_data"
 		}
 		`
-		funcDef = fmt.Sprintf(funcDefTemplate, name, d.commonFunctionName, d.region, name)
+		funcDef = fmt.Sprintf(funcDefTemplate, name, d.rootUrl, name)
 	}
 	return dedent.Dedent(funcDef)
 }
 
 func (d *GCPFuncDef) isSupportedAction(name functions_def.FunctionName) bool {
-	for _, action := range d.supportedActions {
-		if action == name {
-			return true
-		}
-	}
-	return false
+	val, ok := d.supportedActions[name]
+	return ok && val
 }

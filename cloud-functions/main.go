@@ -79,9 +79,7 @@ func CloudInternal(w http.ResponseWriter, r *http.Request) {
 
 func Clusterize(w http.ResponseWriter, r *http.Request) {
 	project := os.Getenv("PROJECT")
-	region := os.Getenv("REGION")
 	zone := os.Getenv("ZONE")
-	cloudFunctionName := os.Getenv("CLOUD_FUNCTION_NAME")
 	hostsNum, _ := strconv.Atoi(os.Getenv("HOSTS_NUM"))
 	clusterName := os.Getenv("CLUSTER_NAME")
 	prefix := os.Getenv("PREFIX")
@@ -97,6 +95,7 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 	obsName := os.Getenv("OBS_NAME")
 	tieringSsdPercent := os.Getenv("OBS_TIERING_SSD_PERCENT")
 	addFrontendNum, _ := strconv.Atoi(os.Getenv("NUM_FRONTEND_CONTAINERS"))
+	functionRootUrl := fmt.Sprintf("https://%s", r.Host)
 	addFrontend := false
 	if addFrontendNum > 0 {
 		addFrontend = true
@@ -119,11 +118,9 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 
 	params := clusterize.ClusterizationParams{
 		Project:    project,
-		Region:     region,
 		Zone:       zone,
 		UsernameId: usernameId,
 		PasswordId: passwordId,
-		CloudFunc:  cloudFunctionName,
 		Bucket:     bucket,
 		VmName:     d.Vm,
 		Cluster: clusterizeCommon.ClusterParams{
@@ -143,6 +140,7 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 			Name:              obsName,
 			TieringSsdPercent: tieringSsdPercent,
 		},
+		CloudFuncRootUrl: functionRootUrl,
 	}
 	fmt.Fprint(w, clusterize.Clusterize(ctx, params))
 }
@@ -169,9 +167,7 @@ func Fetch(w http.ResponseWriter, r *http.Request) {
 
 func Deploy(w http.ResponseWriter, r *http.Request) {
 	project := os.Getenv("PROJECT")
-	region := os.Getenv("REGION")
 	zone := os.Getenv("ZONE")
-	cloudFunctionName := os.Getenv("CLOUD_FUNCTION_NAME")
 	instanceGroup := os.Getenv("INSTANCE_GROUP")
 	usernameId := os.Getenv("USER_NAME_ID")
 	passwordId := os.Getenv("PASSWORD_ID")
@@ -187,6 +183,8 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 	installUrl := os.Getenv("INSTALL_URL")
 	nics_num_str := os.Getenv("NICS_NUM")
 
+	functionRootUrl := fmt.Sprintf("https://%s", r.Host)
+
 	var d struct {
 		Vm string `json:"vm"`
 	}
@@ -200,18 +198,17 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 	bashScript, err := deploy.GetDeployScript(
 		ctx,
 		project,
-		region,
 		zone,
 		instanceGroup,
 		usernameId,
 		passwordId,
 		tokenId,
 		bucket,
-		cloudFunctionName,
 		d.Vm,
 		nics_num_str,
 		computeMemory,
 		installUrl,
+		functionRootUrl,
 		computeContainerNum,
 		frontendContainerNum,
 		driveContainerNum,
@@ -252,6 +249,8 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 	clusterName := os.Getenv("CLUSTER_NAME")
 	backendTemplate := os.Getenv("BACKEND_TEMPLATE")
 	bucket := os.Getenv("BUCKET")
+	yumRepoServer := os.Getenv("YUM_REPO_SERVER")
+	functionRootUrl := fmt.Sprintf("https://%s", r.Host)
 
 	ctx := r.Context()
 	backendsNumber := len(common.GetInstancesByClusterLabel(ctx, project, zone, clusterName))
@@ -267,7 +266,7 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 		for i := backendsNumber; i < state.DesiredSize; i++ {
 			instanceName := fmt.Sprintf("%s-%s%03d", clusterName, currentTime, i)
 			log.Info().Msgf("creating new backend instance: %s", instanceName)
-			if err := scale_up.CreateInstance(ctx, project, zone, backendTemplate, instanceName); err != nil {
+			if err := scale_up.CreateInstance(ctx, project, zone, backendTemplate, instanceName, yumRepoServer, functionRootUrl); err != nil {
 				fmt.Fprintf(w, "Instance %s creation failed %s.", instanceName, err)
 			} else {
 				log.Info().Msgf("Instance %s creation completed successfully", instanceName)

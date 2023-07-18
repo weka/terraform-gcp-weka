@@ -56,23 +56,26 @@ jobs:
         run: ../../ci/deployment/wait_for_cluster.sh 7 30
 
       - name: Scale up
-        run: >
-          gcloud functions call weka-poc-resize
-          --project wekaio-ci
-          --region europe-west1
-          --data '{"value": 8}'
-          --gen2
+        run: |
+          func_url=$(gcloud functions describe weka-poc-weka-functions \
+            --project wekaio-ci  \
+            --region europe-west1  \
+            --format='get(serviceConfig.uri)' \
+            --gen2)
+          curl "$func_url?action=resize" --fail -H "Authorization:bearer $(gcloud auth print-identity-token)" -d '{"value": 8}'
+
 
       - name: Wait for weka cluster
         run: ../../ci/deployment/wait_for_cluster.sh 8 15
 
       - name: Scale down
-        run: >
-          gcloud functions call weka-poc-resize
-          --project wekaio-ci
-          --region europe-west1
-          --data '{"value": 6}'
-          --gen2
+        run: |
+          func_url=$(gcloud functions describe weka-poc-weka-functions \
+            --project wekaio-ci  \
+            --region europe-west1  \
+            --format='get(serviceConfig.uri)' \
+            --gen2)
+          curl "$func_url?action=resize" --fail -H "Authorization:bearer $(gcloud auth print-identity-token)" -d '{"value": 6}'
 
       - name: Wait for weka cluster
         run: ../../ci/deployment/wait_for_cluster.sh 6 15

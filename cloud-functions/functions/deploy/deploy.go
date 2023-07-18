@@ -38,18 +38,17 @@ func getWekaIoToken(ctx context.Context, tokenId string) (token string, err erro
 func GetDeployScript(
 	ctx context.Context,
 	project,
-	region,
 	zone,
 	instanceGroup,
 	usernameId,
 	passwordId,
 	tokenId,
 	bucket,
-	cloudFunctionName,
 	instanceName,
 	nicsNum,
 	computeMemory,
-	installUrl string,
+	installUrl,
+	functionRootUrl string,
 	computeContainerNum,
 	frontendContainerNum,
 	driveContainerNum int,
@@ -59,7 +58,7 @@ func GetDeployScript(
 	if err != nil {
 		return
 	}
-	funcDef := gcp_functions_def.NewFuncDef(region, cloudFunctionName)
+	funcDef := gcp_functions_def.NewFuncDef(functionRootUrl)
 	// used for getting failure domain
 	getHashedIpCommand := bash_functions.GetHashedPrivateIpBashCmd()
 	instanceParams := protocol.BackendCoreCount{Compute: computeContainerNum, Frontend: frontendContainerNum, Drive: driveContainerNum, ComputeMemory: computeMemory}
