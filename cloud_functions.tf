@@ -54,7 +54,6 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
     service_account_email          = local.sa_email
     environment_variables = {
       PROJECT : var.project
-      REGION : var.region
       ZONE : var.zone
       CLOUD_FUNCTION_NAME : local.cloud_internal_function_name
       INSTANCE_GROUP : google_compute_instance_group.instance_group.name
@@ -64,13 +63,9 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       PASSWORD_ID : google_secret_manager_secret_version.password_secret_key.id
       TOKEN_ID : google_secret_manager_secret_version.token_secret_key.id
       BUCKET : local.state_bucket
-      CLOUD_COMMON_FUNCTION_NAME : local.cloud_internal_function_name
       INSTALL_URL : var.install_url != "" ? var.install_url : "https://$TOKEN@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}"
       # Configuration for google_cloudfunctions2_function.cloud_internal_function may not refer to itself.
       # REPORT_URL : format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=report")
-      # CLUSTERIZE_URL : format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=clusterize")
-      # JOIN_FINALIZATION_URL : format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=join_finalization")
-      # CLUSTERIZE_FINALIZATION_URL: format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=clusterize_finalization")
       NICS_NUM : local.nics_number
       COMPUTE_MEMORY : local.get_compute_memory
       NUM_DRIVE_CONTAINERS : var.container_number_map[var.machine_type].drive
@@ -92,6 +87,7 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       // for terminate
       LOAD_BALANCER_NAME: google_compute_region_backend_service.backend_service.name
       // for scale_up
+      YUM_REPO_SERVER: var.yum_repo_server
       BACKEND_TEMPLATE: google_compute_instance_template.backends_template.id
     }
   }

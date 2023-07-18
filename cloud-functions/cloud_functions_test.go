@@ -99,7 +99,6 @@ func Test_fetch(t *testing.T) {
 
 func Test_deploy(t *testing.T) {
 	project := "wekaio-rnd"
-	region := "europe-west1"
 	zone := "europe-west1-b"
 	instanceGroup := "weka-instance-group"
 	usernameId := "projects/896245720241/secrets/weka-poc-username/versions/1"
@@ -112,7 +111,7 @@ func Test_deploy(t *testing.T) {
 	frontendContainerNum := 1
 	driveContainerNum := 1
 	instanceName := "abc"
-	funcitonName := "function-name"
+	functionRootUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net"
 
 	token := os.Getenv("GET_WEKA_IO_TOKEN")
 	version := "4.0.1.37-gcp"
@@ -122,8 +121,8 @@ func Test_deploy(t *testing.T) {
 
 	ctx := context.TODO()
 	bashScript, err := deploy.GetDeployScript(
-		ctx, project, region, zone, instanceGroup, usernameId, passwordId, tokenId, bucket, funcitonName, instanceName,
-		nicNum, computeMemory, installUrl, computeContainerNum, frontendContainerNum, driveContainerNum, gws,
+		ctx, project, zone, instanceGroup, usernameId, passwordId, tokenId, bucket, instanceName,
+		nicNum, computeMemory, installUrl, functionRootUrl, computeContainerNum, frontendContainerNum, driveContainerNum, gws,
 	)
 	if err != nil {
 		t.Logf("Generating deploy scripts failed: %s", err)
@@ -171,8 +170,10 @@ func Test_scaleUp(t *testing.T) {
 	clusterName := "poc"
 	instanceName := "weka-poc-vm-test"
 	backendTemplate := "projects/wekaio-rnd/global/instanceTemplates/weka-poc-backends"
+	functionRootUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net"
+	yumRepoServer := ""
 	ctx := context.TODO()
-	scale_up.CreateInstance(ctx, project, zone, backendTemplate, instanceName)
+	scale_up.CreateInstance(ctx, project, zone, backendTemplate, instanceName, yumRepoServer, functionRootUrl)
 	instances := common.GetInstancesByClusterLabel(ctx, project, zone, clusterName)
 	instanceGroupSize := len(instances)
 	t.Logf("Instance group size is: %d", instanceGroupSize)
