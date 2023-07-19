@@ -32,6 +32,11 @@ variable "prefix" {
   type        = string
   description = "Prefix for all resources"
   default = "weka"
+
+  validation {
+    condition     = length(var.prefix) <= 15
+    error_message = "The prefix maximum allowed length is 15."
+  }
 }
 
 variable "zone" {

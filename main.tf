@@ -3,6 +3,13 @@ resource "google_storage_bucket" "weka_deployment" {
   count    = var.state_bucket_name == "" ?  1 : 0
   name     = "${var.prefix}-${var.cluster_name}-${var.project_id}"
   location = var.region
+
+  lifecycle {
+    precondition {
+      condition = length(var.prefix) + length(var.cluster_name) + length(var.project_id) <= 63
+      error_message = "The bucket name maximum allowed length is 63."
+    }
+  }
 }
 
 # ======================== instances ============================
