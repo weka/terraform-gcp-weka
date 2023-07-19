@@ -1,4 +1,4 @@
-project                  = "wekaio-rnd"
+project_id               = "wekaio-rnd"
 region                   = "europe-west1"
 zone                     = "europe-west1-b"
 host_project             = "test-tf-vars"

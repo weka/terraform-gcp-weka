@@ -1,8 +1,8 @@
 locals {
-  state_bucket_name        = var.state_bucket_name == "" ? ["${var.prefix}-${var.cluster_name}-${var.project}"] : []
-  obs_bucket_name          = var.obs_name == "" ? ["${var.project}-${var.prefix}-${var.cluster_name}-obs"] : []
-  object_state_bucket_name = var.state_bucket_name == "" ? ["${var.prefix}-${var.cluster_name}-${var.project}"] : [var.state_bucket_name]
-  object_obs_bucket_name   = var.obs_name == "" ? ["${var.project}-${var.prefix}-${var.cluster_name}-obs"] : [var.obs_name]
+  state_bucket_name        = var.state_bucket_name == "" ? ["${var.prefix}-${var.cluster_name}-${var.project_id}"] : []
+  obs_bucket_name          = var.obs_name == "" ? ["${var.project_id}-${var.prefix}-${var.cluster_name}-obs"] : []
+  object_state_bucket_name = var.state_bucket_name == "" ? ["${var.prefix}-${var.cluster_name}-${var.project_id}"] : [var.state_bucket_name]
+  object_obs_bucket_name   = var.obs_name == "" ? ["${var.project_id}-${var.prefix}-${var.cluster_name}-obs"] : [var.obs_name]
 
   bucket_list_name          = concat(local.obs_bucket_name,local.state_bucket_name)
   object_list_name          = concat(local.object_obs_bucket_name, local.object_state_bucket_name)
@@ -12,7 +12,7 @@ locals {
 resource "google_service_account" "sa" {
   account_id   = "${var.prefix}-${var.service_account_name}"
   display_name = "A service account for deploy weka"
-  project      = var.project
+  project      = var.project_id
 }
 
 resource "google_project_iam_member" "sa-member-role" {
@@ -26,12 +26,12 @@ resource "google_project_iam_member" "sa-member-role" {
   ])
   role = each.key
   member = "serviceAccount:${google_service_account.sa.email}"
-  project = var.project
+  project = var.project_id
 }
 
 resource "google_project_iam_member" "storage_admin" {
   count   = length(local.bucket_list_name)
-  project = var.project
+  project = var.project_id
   role    = "roles/storage.admin"
   member  = "serviceAccount:${google_service_account.sa.email}"
 
@@ -45,7 +45,7 @@ resource "google_project_iam_member" "storage_admin" {
 
 resource "google_project_iam_member" "object_iam_member" {
   count   = length(local.object_list_name)
-  project = var.project
+  project = var.project_id
   role    = "roles/storage.objectAdmin"
   member  = "serviceAccount:${google_service_account.sa.email}"
 

@@ -1,4 +1,4 @@
-project                 = "wekaio-rnd"
+project_id              = "wekaio-rnd"
 region                  = "europe-west1"
 zone                    = "europe-west1-b"
 vpcs                    = ["weka-vpc-0","weka-vpc-1","weka-vpc-2","weka-vpc-3"]

@@ -1,5 +1,5 @@
 provider "google" {
-  project = var.project
+  project = var.project_id
   region  = var.region
 }
 
@@ -7,8 +7,8 @@ provider "google" {
       Create Service Account
 ***********************************/
 module "create_service_account" {
-  source  = "../../modules/service_account"
-  project = var.project
+  source     = "../../modules/service_account"
+  project_id = var.project_id
 }
 
 /***********************************
@@ -16,7 +16,7 @@ module "create_service_account" {
 ***********************************/
 module "setup_network" {
   source                   = "../../modules/setup_network"
-  project                  = var.project
+  project_id               = var.project_id
   region                   = var.region
   subnets-cidr-range       = var.subnets_cidr_range
   zone                     = var.zone
@@ -29,7 +29,7 @@ module "setup_network" {
 ***********************************************/
 module "create_worker_pool" {
   source              = "../../modules/worker_pool"
-  project             = var.project
+  project_id          = var.project_id
   region              = var.region
   vpcs                = module.setup_network.vpcs_names
   cluster_name        = var.cluster_name
@@ -44,7 +44,7 @@ module "create_worker_pool" {
 module "deploy_weka" {
   source                   = "../.."
   cluster_name             = var.cluster_name
-  project                  = var.project
+  project_id               = var.project_id
   vpcs                     = module.setup_network.vpcs_names
   region                   = var.region
   subnets_name             = module.setup_network.subnetwork_name

@@ -12,7 +12,7 @@ data "google_compute_network" "worker_pool_network" {
 resource "google_project_iam_binding" "servicenetworking-binding" {
   role    = "roles/compute.networkAdmin"
   members = ["serviceAccount:${var.sa_email}"]
-  project = var.project
+  project = var.project_id
   lifecycle {
     ignore_changes = [members]
   }
@@ -21,7 +21,7 @@ resource "google_project_iam_binding" "servicenetworking-binding" {
 resource "google_project_iam_binding" "servicenetworking-admin-binding" {
   role    = "roles/servicenetworking.networksAdmin"
   members = ["serviceAccount:${var.sa_email}"]
-  project = var.project
+  project = var.project_id
   lifecycle {
     ignore_changes = [members]
   }
@@ -30,7 +30,7 @@ resource "google_project_iam_binding" "servicenetworking-admin-binding" {
 resource "google_project_iam_binding" "worker-pool-binding" {
   role    = "roles/cloudbuild.workerPoolOwner"
   members = ["serviceAccount:${var.sa_email}"]
-  project = var.project
+  project = var.project_id
   lifecycle {
     ignore_changes = [members]
   }

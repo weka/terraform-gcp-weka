@@ -23,7 +23,7 @@ locals {
 }
 
 output "vpc_connector_name" {
-  value = "projects/${var.project}/locations/${lookup(var.vpc_connector_region_map, var.region, var.region)}/connectors/${local.vpc_connector_name}"
+  value = "projects/${var.project_id}/locations/${lookup(var.vpc_connector_region_map, var.region, var.region)}/connectors/${local.vpc_connector_name}"
   description = "Vpc connector name"
 }
 

@@ -13,7 +13,7 @@ locals {
 
 # ====================== vpc ==============================
 resource "google_project_service" "project-compute" {
-  project = var.project
+  project = var.project_id
   service = "compute.googleapis.com"
   disable_on_destroy = false
   disable_dependent_services = false
@@ -21,14 +21,14 @@ resource "google_project_service" "project-compute" {
 }
 
 resource "google_project_service" "project-gcp-api" {
-  project = var.project
+  project = var.project_id
   service = "iam.googleapis.com"
   disable_on_destroy = false
   disable_dependent_services = false
 }
 
 resource "google_project_service" "service-cloud-api" {
-  project = var.project
+  project = var.project_id
   service = "cloudresourcemanager.googleapis.com"
   disable_on_destroy = false
   disable_dependent_services = false
@@ -101,7 +101,7 @@ resource "google_compute_firewall" "sg_private" {
 
 #================ Vpc connector ==========================
 resource "google_project_service" "project-vpc" {
-  project = var.project
+  project = var.project_id
   service = "vpcaccess.googleapis.com"
   disable_on_destroy = false
   disable_dependent_services = false
@@ -154,7 +154,7 @@ locals {
 }
 
 resource "google_project_service" "project-dns" {
-  project = var.project
+  project = var.project_id
   service = "dns.googleapis.com"
   disable_on_destroy = false
   disable_dependent_services = false
@@ -163,7 +163,7 @@ resource "google_project_service" "project-dns" {
 resource "google_dns_managed_zone" "private-zone" {
   name        = "${var.prefix}-private-zone"
   dns_name    = "${var.prefix}.private.net."
-  project     = var.project
+  project     = var.project_id
   description = "private dns weka.private.net"
   visibility  = "private"
 

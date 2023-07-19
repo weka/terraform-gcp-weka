@@ -1,8 +1,8 @@
 # ======================== cloud function ============================
 
 locals {
-  function_zip_path       = "/tmp/${var.project}-${var.cluster_name}-cloud-functions.zip"
-  worker_pool_id          = var.worker_pool_name != "" ? "projects/${var.project}/locations/${var.region}/workerPools/${var.worker_pool_name}" : var.worker_pool_name
+  function_zip_path       = "/tmp/${var.project_id}-${var.cluster_name}-cloud-functions.zip"
+  worker_pool_id          = var.worker_pool_name != "" ? "projects/${var.project_id}/locations/${var.region}/workerPools/${var.worker_pool_name}" : var.worker_pool_name
   sa_email                = var.sa_email
   stripe_width_calculated = var.cluster_size - var.protection_level - 1
   stripe_width            = local.stripe_width_calculated < 16 ? local.stripe_width_calculated : 16
@@ -53,7 +53,7 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
     all_traffic_on_latest_revision = true
     service_account_email          = local.sa_email
     environment_variables = {
-      PROJECT : var.project
+      PROJECT : var.project_id
       ZONE : var.zone
       CLOUD_FUNCTION_NAME : local.cloud_internal_function_name
       INSTANCE_GROUP : google_compute_instance_group.instance_group.name
@@ -182,7 +182,7 @@ resource "google_cloudfunctions2_function" "status_function" {
     all_traffic_on_latest_revision = true
     service_account_email          = local.sa_email
     environment_variables = {
-      PROJECT: var.project
+      PROJECT: var.project_id
       ZONE: var.zone
       BUCKET : local.state_bucket
       INSTANCE_GROUP : google_compute_instance_group.instance_group.name

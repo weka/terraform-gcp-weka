@@ -37,7 +37,7 @@ curl -m 70 -X POST ${format("%s%s", google_cloudfunctions2_function.cloud_intern
 
 ################################# get weka password secret login ############################################
 
-gcloud secrets versions access 1 --secret=${google_secret_manager_secret.secret_weka_password.secret_id}  --project ${var.project} --format='get(payload.data)' | base64 -d
+gcloud secrets versions access 1 --secret=${google_secret_manager_secret.secret_weka_password.secret_id}  --project ${var.project_id} --format='get(payload.data)' | base64 -d
 
 EOT
   description = "Useful commands and script to interact with weka cluster"
