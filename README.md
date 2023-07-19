@@ -9,7 +9,7 @@ given cluster size.
 module "deploy_weka" {
   source                   = "weka/weka/gcp"
   cluster_name             = "myCluster"
-  project                  = "myProject"
+  project_id               = "myProject"
   vpcs                     = ["weka-vpc-0", "weka-vpc-1", "weka-vpc-2", "weka-vpc-3"]
   region                   = "europe-west1"
   subnets_name             = ["weka-subnet-0","weka-subnet-1","weka-subnet-2","weka-subnet-3"]

@@ -1,4 +1,4 @@
-project                  = "wekaio-ci"
+project_id               = "wekaio-ci"
 region                   = "europe-west4"
 zone                     = "europe-west4-a"
 subnets_cidr_range       = ["10.0.0.0/24", "10.1.0.0/24", "10.2.0.0/24", "10.3.0.0/24"]

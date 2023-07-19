@@ -1,7 +1,7 @@
 # ======================== bucket ============================
 resource "google_storage_bucket" "weka_deployment" {
   count    = var.state_bucket_name == "" ?  1 : 0
-  name     = "${var.prefix}-${var.cluster_name}-${var.project}"
+  name     = "${var.prefix}-${var.cluster_name}-${var.project_id}"
   location = var.region
 }
 
@@ -92,7 +92,7 @@ resource "google_compute_instance_group" "instance_group" {
   name = "${var.prefix}-${var.cluster_name}-instance-group"
   zone = var.zone
   network = data.google_compute_network.vpc_list_ids[0].self_link
-  project = "${var.project}"
+  project = "${var.project_id}"
   depends_on = [google_compute_region_health_check.health_check]
 
   lifecycle {

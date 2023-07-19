@@ -7,7 +7,7 @@ variable "cluster_name" {
   }
 }
 
-variable "project" {
+variable "project_id" {
   type        = string
   description = "Project id"
 }

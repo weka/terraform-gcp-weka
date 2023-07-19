@@ -10,7 +10,7 @@ terraform {
 resource "google_service_account" "sa" {
   account_id   = "${var.prefix}-${var.service_account_name}"
   display_name = "A service account for weka ci"
-  project = var.project
+  project = var.project_id
 }
 
 
@@ -37,5 +37,5 @@ resource "google_project_iam_member" "sa-member-role" {
   ])
   role = each.key
   member = "serviceAccount:${google_service_account.sa.email}"
-  project = var.project
+  project = var.project_id
 }

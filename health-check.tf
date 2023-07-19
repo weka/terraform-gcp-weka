@@ -43,7 +43,7 @@ resource "google_compute_forwarding_rule" "google_compute_forwarding_rule" {
 resource "google_dns_record_set" "record-a" {
   name         = "${var.cluster_name}.${var.private_dns_name}"
   managed_zone = var.private_dns_zone
-  project      = var.project
+  project      = var.project_id
   type         = "A"
   ttl          = 120
   rrdatas      = [google_compute_forwarding_rule.google_compute_forwarding_rule.ip_address]
@@ -96,7 +96,7 @@ resource "google_compute_forwarding_rule" "ui_forwarding_rule" {
 resource "google_dns_record_set" "ui-record-a" {
   name         = "ui-${var.cluster_name}.${var.private_dns_name}"
   managed_zone = var.private_dns_zone
-  project      = var.project
+  project      = var.project_id
   type         = "A"
   ttl          = 120
   rrdatas      = [google_compute_forwarding_rule.ui_forwarding_rule.ip_address]
