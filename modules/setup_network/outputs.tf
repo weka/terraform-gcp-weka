@@ -14,7 +14,7 @@ output "subnetwork_name" {
 }
 
 output "subnets_range" {
-  value = length(var.subnets) == 0 ? var.subnets-cidr-range : [ for i in data.google_compute_subnetwork.subnets_list_ids: i.ip_cidr_range ]
+  value = length(var.subnets) == 0 ? var.subnets_cidr_range : [ for i in data.google_compute_subnetwork.subnets_list_ids: i.ip_cidr_range ]
   description = "List of vpcs subnets ranges"
 }
 

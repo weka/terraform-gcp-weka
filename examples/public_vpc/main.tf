@@ -21,7 +21,7 @@ module "setup_network" {
   project_id          = var.project_id
   prefix              = var.prefix
   region              = var.region
-  subnets-cidr-range  = var.subnets_cidr_range
+  subnets_cidr_range  = var.subnets_cidr_range
   zone                = var.zone
   vpc_connector_range = var.vpc_connector_range
   depends_on          = [module.create_service_account]

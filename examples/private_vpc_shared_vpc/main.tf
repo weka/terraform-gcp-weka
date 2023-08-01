@@ -24,7 +24,7 @@ module "setup_network" {
   source               = "../../modules/setup_network"
   project_id           = var.project_id
   region               = var.region
-  subnets-cidr-range   = var.subnets_cidr_range
+  subnets_cidr_range   = var.subnets_cidr_range
   zone                 = var.zone
   vpc_connector_range  = var.vpc_connector_range
   private_network      = var.private_network
