@@ -58,7 +58,7 @@ resource "google_compute_network" "vpc_network" {
 resource "google_compute_subnetwork" "subnetwork" {
   count         = length(var.subnets) == 0 ? var.vpcs_number : 0
   name          = "${var.prefix}-subnet-${count.index}"
-  ip_cidr_range = var.subnets-cidr-range[count.index]
+  ip_cidr_range = var.subnets_cidr_range[count.index]
   region        = var.region
   network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[count.index].name : data.google_compute_network.vpc_list_ids[count.index].name
   private_ip_google_access = true
@@ -136,7 +136,7 @@ resource "google_compute_firewall" "fw_ilb_to_backends" {
   name          = "${var.prefix}-fw-allow-ilb-to-backends"
   direction     = "INGRESS"
   network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[0].self_link :  data.google_compute_network.vpc_list_ids[0].self_link
-  source_ranges = length(var.vpcs) == 0 ? [var.subnets-cidr-range[0]] : [data.google_compute_subnetwork.subnets_list_ids[0].ip_cidr_range]
+  source_ranges = length(var.vpcs) == 0 ? [var.subnets_cidr_range[0]] : [data.google_compute_subnetwork.subnets_list_ids[0].ip_cidr_range]
   allow {
     protocol = "tcp"
   }
