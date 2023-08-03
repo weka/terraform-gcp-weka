@@ -47,7 +47,7 @@ No resources.
 | <a name="input_region"></a> [region](#input\_region) | Region name | `string` | n/a | yes |
 | <a name="input_subnets_cidr_range"></a> [subnets\_cidr\_range](#input\_subnets\_cidr\_range) | List of subnets to use for creating the cluster, the number of subnets must be 'nics\_number' | `list(string)` | n/a | yes |
 | <a name="input_vpc_connector_range"></a> [vpc\_connector\_range](#input\_vpc\_connector\_range) | List of connector to use for serverless vpc access | `string` | n/a | yes |
-| <a name="input_weka_version"></a> [weka\_version](#input\_weka\_version) | Weka version | `string` | `"4.2.1.14-qa-beta"` | no |
+| <a name="input_weka_version"></a> [weka\_version](#input\_weka\_version) | Weka version | `string` | `"4.2.1"` | no |
 | <a name="input_zone"></a> [zone](#input\_zone) | Zone name | `string` | n/a | yes |
 
 ## Outputs
