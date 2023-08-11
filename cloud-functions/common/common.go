@@ -457,7 +457,7 @@ func GetBackendsIps(ctx context.Context, project, zone string, instancesNames []
 	return
 }
 
-func CreateBucket(ctx context.Context, project, obsName string) (err error) {
+func CreateBucket(ctx context.Context, project, region, obsName string) (err error) {
 	log.Info().Msgf("Creating bucket %s", obsName)
 	client, err := storage.NewClient(ctx)
 	if err != nil {
@@ -465,8 +465,11 @@ func CreateBucket(ctx context.Context, project, obsName string) (err error) {
 		return
 	}
 
+	attrs := &storage.BucketAttrs{
+		Location: region,
+	}
 	// Creates a Bucket instance.
-	if err = client.Bucket(obsName).Create(ctx, project, nil); err != nil {
+	if err = client.Bucket(obsName).Create(ctx, project, attrs); err != nil {
 		log.Error().Err(err).Send()
 		return
 	}

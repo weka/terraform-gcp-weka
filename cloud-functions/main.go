@@ -80,6 +80,7 @@ func CloudInternal(w http.ResponseWriter, r *http.Request) {
 func Clusterize(w http.ResponseWriter, r *http.Request) {
 	project := os.Getenv("PROJECT")
 	zone := os.Getenv("ZONE")
+	region := os.Getenv("REGION")
 	hostsNum, _ := strconv.Atoi(os.Getenv("HOSTS_NUM"))
 	clusterName := os.Getenv("CLUSTER_NAME")
 	prefix := os.Getenv("PREFIX")
@@ -118,6 +119,7 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 
 	params := clusterize.ClusterizationParams{
 		Project:    project,
+		Region:     region,
 		Zone:       zone,
 		UsernameId: usernameId,
 		PasswordId: passwordId,
