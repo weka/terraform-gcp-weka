@@ -17,6 +17,7 @@ import (
 
 type ClusterizationParams struct {
 	Project    string
+	Region     string
 	Zone       string
 	UsernameId string
 	PasswordId string
@@ -55,7 +56,7 @@ func Clusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript s
 	if p.Cluster.SetObs {
 		if p.Obs.Name == "" {
 			p.Obs.Name = strings.Join([]string{p.Project, p.Cluster.Prefix, p.Cluster.ClusterName, "obs"}, "-")
-			err = common.CreateBucket(ctx, p.Project, p.Obs.Name)
+			err = common.CreateBucket(ctx, p.Project, p.Region, p.Obs.Name)
 			if err != nil {
 				log.Error().Err(err).Send()
 				err = report.Report(

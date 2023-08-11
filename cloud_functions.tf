@@ -55,6 +55,7 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
     environment_variables = {
       PROJECT : var.project_id
       ZONE : var.zone
+      REGION : var.region
       CLOUD_FUNCTION_NAME : local.cloud_internal_function_name
       INSTANCE_GROUP : google_compute_instance_group.instance_group.name
       GATEWAYS : join(",", [for s in data.google_compute_subnetwork.subnets_list_ids : s.gateway_address] )
