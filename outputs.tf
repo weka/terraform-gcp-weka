@@ -42,13 +42,13 @@ output "weka_cluster_password_secret_id" {
 output "cluster_helper_commands" {
   value = <<EOT
 ########################################## get cluster status ##########################################
-curl -m 70 -X POST ${local.get_cluster_status_uri} \
+curl -m 70 -X POST "${local.get_cluster_status_uri}" \
 -H "Authorization:bearer $(gcloud auth print-identity-token)" \
 -H "Content-Type:application/json" -d '{"type":"progress"}'
 # for fetching cluster status pass: -d '{"type":"status"}'
 
 ########################################## resize cluster command ##########################################
-curl -m 70 -X POST ${local.resize_cluster_uri} \
+curl -m 70 -X POST "${local.resize_cluster_uri}" \
 -H "Authorization:bearer $(gcloud auth print-identity-token)" \
 -H "Content-Type:application/json" \
 -d '{"value":ENTER_NEW_VALUE_HERE}'
@@ -70,7 +70,7 @@ mount -t wekafs "$lb_url/$FILESYSTEM_NAME" $MOUNT_POINT
 
 # replace CLUSTER_NAME with the actual cluster name, as a confirmation of the destructive action
 # this function needs to be executed prior to terraform destroy
-curl -m 70 -X POST ${local.terminate_cluster_uri} \
+curl -m 70 -X POST "${local.terminate_cluster_uri}" \
 -H "Authorization:bearer $(gcloud auth print-identity-token)" \
 -H "Content-Type:application/json" \
 -d '{"name":"${var.cluster_name}"}'
