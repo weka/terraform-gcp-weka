@@ -29,7 +29,7 @@ module "deploy_weka" {
 We support tiering to bucket.
 In order to setup tiering, you must supply the following variables:
 ```hcl
-set_obs = true
+set_obs_integration = true
 obs_name = "..."
 tiering_ssd_percent = 20
 ```
