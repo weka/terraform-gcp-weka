@@ -8,7 +8,7 @@ given cluster size.
 ```hcl
 module "deploy_weka" {
   source                   = "weka/weka/gcp"
-  version                  = "3.0.1"
+  version                  = "3.0.2"
   cluster_name             = "myCluster"
   project_id               = "myProject"
   vpcs                     = ["weka-vpc-0", "weka-vpc-1", "weka-vpc-2", "weka-vpc-3"]
