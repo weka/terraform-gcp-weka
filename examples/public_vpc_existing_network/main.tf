@@ -7,8 +7,11 @@ provider "google" {
       Create Service Account
 ***********************************/
 module "create_service_account" {
-  source     = "../../modules/service_account"
-  project_id = var.project_id
+  source            = "../../modules/service_account"
+  project_id        = var.project_id
+  cluster_name      = var.cluster_name
+  obs_name          = var.obs_name
+  state_bucket_name = var.state_bucket_name
 }
 
 /***********************************
@@ -42,5 +45,8 @@ module "deploy_weka" {
   sa_email                 = module.create_service_account.outputs-service-account-email
   private_dns_zone         = module.setup_network.private_zone_name
   private_dns_name         = module.setup_network.private_dns_name
+  obs_name                 = var.obs_name
+  set_obs_integration      = var.set_obs_integration
+  state_bucket_name        = var.state_bucket_name
   depends_on               = [module.setup_network]
 }

@@ -12,3 +12,4 @@ worker_pool_network     = "weka-vpc-0"
 private_network         = true
 yum_repo_server         = "http://yum.weka.private.net"
 install_url             = "gs://weka-installation/weka-4.0.1.37-gcp.tar"
+set_obs_integration     = true

@@ -10,3 +10,4 @@ nvmes_number            = 2
 yum_repo_server         = "http://yum.weka.private.net"
 cluster_name            = "poc"
 private_network         = true
+set_obs_integration     = true

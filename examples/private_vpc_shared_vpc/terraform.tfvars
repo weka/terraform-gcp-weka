@@ -12,3 +12,4 @@ yum_repo_server          = "http://yum.weka.private.net"
 vpc_connector_range      = "10.8.0.0/28"
 cluster_name             = "poc"
 private_network          = true
+set_obs_integration      = true

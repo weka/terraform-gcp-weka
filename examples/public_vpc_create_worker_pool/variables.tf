@@ -43,3 +43,20 @@ variable "get_weka_io_token" {
   description = "Get get.weka.io token for downloading weka"
   sensitive   = true
 }
+
+variable "obs_name" {
+  type        = string
+  default     = ""
+  description = "Name of OBS cloud storage"
+}
+
+variable "set_obs_integration" {
+  type = bool
+  description = "Should be true to enable OBS integration with weka cluster"
+}
+
+variable "state_bucket_name" {
+  type        = string
+  default     = ""
+  description = "Name of existing state bucket"
+}

@@ -52,3 +52,20 @@ variable "private_network" {
   type        = bool
   description = "Deploy weka in private network"
 }
+
+variable "obs_name" {
+  type        = string
+  default     = ""
+  description = "Name of OBS cloud storage"
+}
+
+variable "set_obs_integration" {
+  type = bool
+  description = "Should be true to enable OBS integration with weka cluster"
+}
+
+variable "state_bucket_name" {
+  type        = string
+  default     = ""
+  description = "Name of existing state bucket"
+}
