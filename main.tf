@@ -64,6 +64,10 @@ resource "google_compute_instance_template" "backends_template" {
       subnetwork = data.google_compute_subnetwork.subnets_list_ids[network_interface.value].self_link
     }
  }
+  disk {
+   mode         = "READ_WRITE"
+   disk_size_gb = 375
+  }
 
   dynamic "disk" {
     for_each = range(var.nvmes_number)

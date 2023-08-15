@@ -34,6 +34,24 @@ obs_name = "..."
 tiering_ssd_percent = 20
 ```
 
+## Clients
+We support creating clients that will be mounted automatically to the cluster.
+<br>In order to create clients you need to provide the number of clients you want (by default the number is 0),
+for example:
+```hcl
+clients_number = 2
+```
+This will automatically create 2 clients.
+<br>In addition you can supply these optional variables:
+```hcl
+client_instance_type = "c2-standard-8"
+client_nics_num = DESIRED_NUM
+```
+### Mounting clients in udp mode
+In order to mount clients in udp mode you should pass the following param (in addition to the above):
+```hcl
+mount_clients_dpdk = false
+```
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements

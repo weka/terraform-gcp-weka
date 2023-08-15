@@ -4,6 +4,7 @@ locals {
   lb_url = trimsuffix(google_dns_record_set.record-a.name, ".")
   terminate_cluster_uri = format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=terminate_cluster")
   weka_cluster_password_secret_id = google_secret_manager_secret.secret_weka_password.secret_id
+  client_ips = var.private_network ? "gcloud compute instances list --filter=\"name~'${var.prefix}-${var.cluster_name}-client'\" --format \"get(networkInterfaces[0].networkIP)\"" : "gcloud compute instances list --filter=\"name~'${var.prefix}-${var.cluster_name}-client'\" --format \"get(networkInterfaces[0].accessConfigs[0].natIP)\""
 }
 
 output "ssh_user" {
@@ -53,18 +54,6 @@ curl -m 70 -X POST "${local.resize_cluster_uri}" \
 -H "Content-Type:application/json" \
 -d '{"value":ENTER_NEW_VALUE_HERE}'
 
-########################################## join new client script ##########################################
-#!/bin/bash
-
-lb_url="${local.lb_url}"
-curl "$lb_url:14000/dist/v1/install" | sh
-
-FILESYSTEM_NAME=default # replace with a different filesystem at need
-MOUNT_POINT=/mnt/weka # replace with a different mount point at need
-
-mkdir -p $MOUNT_POINT
-mount -t wekafs "$lb_url/$FILESYSTEM_NAME" $MOUNT_POINT
-
 
 ########################################## pre-terraform destroy, cluster terminate function ################
 
@@ -82,4 +71,9 @@ gcloud secrets versions access 1 --secret=${local.weka_cluster_password_secret_i
 
 EOT
   description = "Useful commands and script to interact with weka cluster"
+}
+
+output "client_ips" {
+  value       = var.clients_number > 0 ? local.client_ips : ""
+  description = "If 'private_network' is set to false, it will output clients public ips, otherwise private ips."
 }
