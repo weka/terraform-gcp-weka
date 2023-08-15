@@ -6,3 +6,4 @@ cluster_size             = 7
 nvmes_number             = 2
 vpc_connector_range      ="10.8.0.0/28"
 clusters_name            = ["poc", "poc1"]
+set_obs_integration      = true

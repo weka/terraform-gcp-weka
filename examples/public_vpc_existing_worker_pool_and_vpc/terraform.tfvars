@@ -9,3 +9,4 @@ cluster_size             = 7
 cluster_name             = "poc"
 worker_pool_name         = "weka-poc-worker-pool"
 worker_pool_network      = "weka-vpc-0"
+set_obs_integration      = true
