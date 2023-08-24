@@ -316,6 +316,12 @@ variable "state_bucket_name" {
   description = "Name of bucket state, cloud storage"
 }
 
+variable "proxy_url" {
+  type        = string
+  description = "Weka home proxy url"
+  default     = ""
+}
+
 variable "worker_pool_network" {
   type        = string
   default     = ""
@@ -376,12 +382,6 @@ variable "mount_clients_dpdk" {
   type        = bool
   default     = true
   description = "Mount weka clients in DPDK mode"
-}
-
-variable "proxy_url" {
-  type        = string
-  description = "Weka home proxy url"
-  default     = ""
 }
 
 ############################################### nfs protocol gateways variables ###################################################

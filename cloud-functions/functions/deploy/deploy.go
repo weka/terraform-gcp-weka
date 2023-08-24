@@ -48,6 +48,7 @@ func GetDeployScript(
 	nicsNum,
 	computeMemory,
 	installUrl,
+	proxyUrl,
 	functionRootUrl string,
 	computeContainerNum,
 	frontendContainerNum,
@@ -78,6 +79,7 @@ func GetDeployScript(
 			NicsNum:        nicsNum,
 			InstallDpdk:    true,
 			Gateways:       gateways,
+			ProxyUrl:       proxyUrl,
 		}
 		deployScriptGenerator := deploy.DeployScriptGenerator{
 			FuncDef:          funcDef,
@@ -119,6 +121,7 @@ func GetDeployScript(
 			InstallDpdk:    true,
 			InstanceParams: instanceParams,
 			Gateways:       gateways,
+			ProxyUrl:       proxyUrl,
 		}
 
 		scriptBase := `

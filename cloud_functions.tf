@@ -94,6 +94,8 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       BACKEND_TEMPLATE: google_compute_instance_template.this.id
       //SMBW
       SMBW_ENABLED: var.smbw_enabled
+      // Weka proxy url
+      PROXY_URL: var.proxy_url
     }
   }
   lifecycle {
