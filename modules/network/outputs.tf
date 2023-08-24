@@ -14,7 +14,7 @@ output "subnetwork_name" {
 }
 
 output "subnets_range" {
-  value = length(var.subnets) == 0 ? var.subnets_cidr_range : [ for i in data.google_compute_subnetwork.subnets_list_ids: i.ip_cidr_range ]
+  value = length(var.subnets) == 0 ? var.subnets_range : [ for i in data.google_compute_subnetwork.subnets_list_ids: i.ip_cidr_range ]
   description = "List of vpcs subnets ranges"
 }
 
@@ -28,11 +28,11 @@ output "vpc_connector_name" {
 }
 
 output "private_zone_name" {
-  value = google_dns_managed_zone.private-zone.name
+  value       = var.private_zone_name == null ? google_dns_managed_zone.private-zone[0].name : var.private_zone_name
   description = "Private zone name"
 }
 
 output "private_dns_name" {
-  value = google_dns_managed_zone.private-zone.dns_name
+  value = var.private_zone_name == null ? google_dns_managed_zone.private-zone[0].dns_name : var.private_dns_name
   description = "Private zone dns name"
 }

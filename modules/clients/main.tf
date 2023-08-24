@@ -39,7 +39,7 @@ resource "google_compute_instance" "this" {
   tags         = [var.clients_name]
   boot_disk {
     initialize_params {
-      image = var.source_image
+      image = var.source_image_id
     }
   }
 

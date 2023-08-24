@@ -25,7 +25,7 @@ variable "vpcs" {
   default     = []
 }
 
-variable "subnets_cidr_range" {
+variable "subnets_range" {
   type        = list(string)
   description = "list of subnets to use for creating the cluster, the number of subnets must be 'vpcs_number'"
   default     = []
@@ -68,22 +68,33 @@ variable "private_network" {
   default     = false
 }
 
-variable "sg_public_ssh_cidr_range" {
+variable "allow_ssh_ranges" {
   type        = list(string)
   description = "list of ranges to allow ssh on public deployment"
-  default     = ["0.0.0.0/0"]
 }
 
 variable "vpc_connector_region_map" {
   type        = map(string)
   description = "Map of region to use for vpc connector, as some regions do not have cloud functions enabled, and vpc connector needs to be in the same region"
   default     = {
-    europe-west4 = "europe-west1"
-    europe-north1 = "europe-west1",
-    us-east5 = "us-east1",
+    europe-west4       = "europe-west1"
+    europe-north1      = "europe-west1",
+    us-east5           = "us-east1",
     southamerica-west1 = "northamerica-northeast1",
-    asia-south2 = "asia-south1",
+    asia-south2        = "asia-south1",
   }
+}
+
+variable "private_zone_name" {
+  type        = string
+  description = "Private zone name"
+  default     = null
+}
+
+variable "private_dns_name" {
+  type        = string
+  description = "Private dns name"
+  default     = null
 }
 
 variable "mtu_size" {

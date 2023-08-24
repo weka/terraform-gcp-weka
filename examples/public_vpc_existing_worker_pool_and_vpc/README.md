@@ -4,11 +4,21 @@ This example creates service account for weka deployment,
 <br>and weka cluster with internet access.
 <br>The cloud functions will be built by exiting worker pool that is passed given to weka deployment module.
 
-## Usage
+
+In order to create worker pool, you must supply the following variable:
 ```hcl
-$ terraform init
-$ terraform plan
-$ terraform apply
+vpcs_name           = ["vpc-0","vpc-1","vpc-2","vpc-3"]
+subnets_name        = ["subnet-0","subnet-1","subnet-2","subnet-3"]
+private_dns_name    = "existing.private.net."
+private_zone_name   = "existing-private-zone"
+vpc_connector_name  = "existing-connector"
+worker_pool_name    = ".."
+```
+
+If worker pool on different network, and you want to peering worker pool with exiting vpc, You must supply the following variable: 
+```hcl
+worker_pool_network             = "..."
+set_worker_pool_network_peering = true
 ```
 
 <!-- BEGIN_TF_DOCS -->

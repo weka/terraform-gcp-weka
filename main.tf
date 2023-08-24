@@ -14,21 +14,12 @@ resource "google_storage_bucket" "weka_deployment" {
 
 # ======================== instances ============================
 locals {
-  private_nic_first_index = var.private_network ? 0 : 1
-  nics_number = var.nics_number != -1 ? var.nics_number : var.container_number_map[var.machine_type].nics
+  private_nic_first_index = var.assign_public_ip ? 1 : 0
+  nics_number             = var.nics_numbers != -1 ? var.nics_numbers : var.container_number_map[var.machine_type].nics
+  disk_size               = var.default_disk_size + var.traces_per_ionode * (var.container_number_map[var.machine_type].compute + var.container_number_map[var.machine_type].drive + var.container_number_map[var.machine_type].frontend)
 }
 
-data "google_compute_network" "vpc_list_ids"{
-  count = length(var.vpcs)
-  name  = var.vpcs[count.index]
-}
-
-data "google_compute_subnetwork" "subnets_list_ids" {
-  count  = length(var.subnets_name)
-  name   = var.subnets_name[count.index]
-}
-
-resource "google_compute_instance_template" "backends_template" {
+resource "google_compute_instance_template" "this" {
   name           = "${var.prefix}-${var.cluster_name}-backends"
   machine_type   = var.machine_type
   can_ip_forward = false
@@ -42,31 +33,9 @@ resource "google_compute_instance_template" "backends_template" {
     scopes = ["cloud-platform"]
   }
   disk {
-    source_image = var.weka_image_id
+    source_image = var.source_image_id
     disk_size_gb = 50
     boot         = true
-  }
-
-  # nic with public ip
-  dynamic "network_interface" {
-    for_each = range(local.private_nic_first_index)
-    content {
-      subnetwork = data.google_compute_subnetwork.subnets_list_ids[network_interface.value].self_link
-      access_config {}
-    }
-  }
-
-
-# nics with private ip
-  dynamic "network_interface" {
-    for_each = range(local.private_nic_first_index, local.nics_number)
-     content {
-      subnetwork = data.google_compute_subnetwork.subnets_list_ids[network_interface.value].self_link
-    }
- }
-  disk {
-   mode         = "READ_WRITE"
-   disk_size_gb = 375
   }
 
   dynamic "disk" {
@@ -80,10 +49,33 @@ resource "google_compute_instance_template" "backends_template" {
     }
   }
 
+  # nic with public ip
+  dynamic "network_interface" {
+    for_each = range(local.private_nic_first_index)
+    content {
+      subnetwork = data.google_compute_subnetwork.this[network_interface.value].self_link
+      access_config {}
+    }
+  }
+
+
+# nics with private ip
+  dynamic "network_interface" {
+    for_each = range(local.private_nic_first_index, local.nics_number)
+     content {
+      subnetwork = data.google_compute_subnetwork.this[network_interface.value].self_link
+    }
+ }
+  disk {
+   mode         = "READ_WRITE"
+   disk_size_gb = 375
+  }
+
   lifecycle {
     ignore_changes = [network_interface]
     create_before_destroy = false
   }
+  depends_on = [module.network]#time_sleep.wait_30_seconds
 }
 
 resource "random_password" "password" {
@@ -99,12 +91,12 @@ resource "random_password" "password" {
 
 # ======================== instance-group ============================
 
-resource "google_compute_instance_group" "instance_group" {
+resource "google_compute_instance_group" "this" {
   name = "${var.prefix}-${var.cluster_name}-instance-group"
   zone = var.zone
-  network = data.google_compute_network.vpc_list_ids[0].self_link
+  network = data.google_compute_network.this[0].self_link
   project = "${var.project_id}"
-  depends_on = [google_compute_region_health_check.health_check]
+  depends_on = [google_compute_region_health_check.health_check, module.network]
 
   lifecycle {
     ignore_changes = [network]

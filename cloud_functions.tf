@@ -2,8 +2,8 @@
 
 locals {
   function_zip_path       = "/tmp/${var.project_id}-${var.cluster_name}-cloud-functions.zip"
-  worker_pool_id          = var.worker_pool_name != "" ? "projects/${var.project_id}/locations/${var.region}/workerPools/${var.worker_pool_name}" : var.worker_pool_name
-  sa_email                = var.sa_email
+  worker_pool_name        = var.create_worker_pool && var.worker_pool_name == "" ? module.worker_pool[0].worker_pool_name : var.worker_pool_name
+  worker_pool_id          = var.worker_pool_name != "" ? "projects/${var.project_id}/locations/${var.region}/workerPools/${local.worker_pool_name}" : ""
   stripe_width_calculated = var.cluster_size - var.protection_level - 1
   stripe_width            = local.stripe_width_calculated < 16 ? local.stripe_width_calculated : 16
   get_compute_memory      = var.add_frontend_containers ? var.container_number_map[var.machine_type].memory[1] : var.container_number_map[var.machine_type].memory[0]
@@ -57,14 +57,14 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       ZONE : var.zone
       REGION : var.region
       CLOUD_FUNCTION_NAME : local.cloud_internal_function_name
-      INSTANCE_GROUP : google_compute_instance_group.instance_group.name
-      GATEWAYS : join(",", [for s in data.google_compute_subnetwork.subnets_list_ids : s.gateway_address] )
-      SUBNETS : format("(%s)", join(" ", [for s in data.google_compute_subnetwork.subnets_list_ids : s.ip_cidr_range] ))
+      INSTANCE_GROUP : google_compute_instance_group.this.name
+      GATEWAYS : join(",", [for s in data.google_compute_subnetwork.this : s.gateway_address] )
+      SUBNETS : format("(%s)", join(" ", [for s in data.google_compute_subnetwork.this : s.ip_cidr_range] ))
       USER_NAME_ID : google_secret_manager_secret_version.user_secret_key.id
       PASSWORD_ID : google_secret_manager_secret_version.password_secret_key.id
-      TOKEN_ID : google_secret_manager_secret_version.token_secret_key.id
+      TOKEN_ID : var.get_weka_io_token == "" ? "" : google_secret_manager_secret_version.token_secret_key[0].id
       BUCKET : local.state_bucket
-      INSTALL_URL : var.install_url != "" ? var.install_url : "https://$TOKEN@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}"
+      INSTALL_URL : var.install_weka_url != "" ? var.install_weka_url : "https://$TOKEN@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}"
       # Configuration for google_cloudfunctions2_function.cloud_internal_function may not refer to itself.
       # REPORT_URL : format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=report")
       NICS_NUM : local.nics_number
@@ -75,7 +75,7 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       NVMES_NUM : var.nvmes_number
       HOSTS_NUM: var.cluster_size
       NICS_NUM: local.nics_number
-      GWS: format("(%s)", join(" ", [for s in data.google_compute_subnetwork.subnets_list_ids: s.gateway_address] ))
+      GWS: format("(%s)", join(" ", [for s in data.google_compute_subnetwork.this: s.gateway_address] ))
       CLUSTER_NAME: var.cluster_name
       PREFIX: var.prefix
       PROTECTION_LEVEL : var.protection_level
@@ -89,7 +89,7 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       LOAD_BALANCER_NAME: google_compute_region_backend_service.backend_service.name
       // for scale_up
       YUM_REPO_SERVER: var.yum_repo_server
-      BACKEND_TEMPLATE: google_compute_instance_template.backends_template.id
+      BACKEND_TEMPLATE: google_compute_instance_template.this.id
     }
   }
   lifecycle {
@@ -97,7 +97,7 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       google_storage_bucket_object.cloud_functions_zip.md5hash
     ]
   }
-  depends_on = [google_project_service.project-function-api, google_project_service.run-api, google_project_service.artifactregistry-api]
+  depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, google_project_service.project-function-api, google_project_service.run-api, google_project_service.artifactregistry-api]
 }
 
 # IAM entry for all users to invoke the function
@@ -131,7 +131,7 @@ resource "google_cloudfunctions2_function" "scale_down_function" {
     min_instance_count             = 1
     available_memory               = "256Mi"
     timeout_seconds                = 540
-    vpc_connector                  = var.vpc_connector
+    vpc_connector                  = local.vpc_connector
     ingress_settings               = "ALLOW_ALL"
     vpc_connector_egress_settings  = "PRIVATE_RANGES_ONLY"
     all_traffic_on_latest_revision = true
@@ -142,7 +142,7 @@ resource "google_cloudfunctions2_function" "scale_down_function" {
       google_storage_bucket_object.cloud_functions_zip.md5hash
     ]
   }
-  depends_on = [google_project_service.project-function-api, google_project_service.run-api, google_project_service.artifactregistry-api]
+  depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, google_project_service.project-function-api, google_project_service.run-api, google_project_service.artifactregistry-api]
 }
 
 # IAM entry for all users to invoke the function
@@ -177,7 +177,7 @@ resource "google_cloudfunctions2_function" "status_function" {
     min_instance_count             = 1
     available_memory               = "256Mi"
     timeout_seconds                = 540
-    vpc_connector                  = var.vpc_connector
+    vpc_connector                  = local.vpc_connector
     ingress_settings               = "ALLOW_ALL"
     vpc_connector_egress_settings  = "PRIVATE_RANGES_ONLY"
     all_traffic_on_latest_revision = true
@@ -186,7 +186,7 @@ resource "google_cloudfunctions2_function" "status_function" {
       PROJECT: var.project_id
       ZONE: var.zone
       BUCKET : local.state_bucket
-      INSTANCE_GROUP : google_compute_instance_group.instance_group.name
+      INSTANCE_GROUP : google_compute_instance_group.this.name
       USER_NAME_ID : google_secret_manager_secret_version.user_secret_key.id
       PASSWORD_ID : google_secret_manager_secret_version.password_secret_key.id
     }
@@ -196,7 +196,7 @@ resource "google_cloudfunctions2_function" "status_function" {
       google_storage_bucket_object.cloud_functions_zip.md5hash
     ]
   }
-  depends_on = [google_project_service.project-function-api, google_project_service.run-api, google_project_service.artifactregistry-api]
+  depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, google_project_service.project-function-api, google_project_service.run-api, google_project_service.artifactregistry-api]
 }
 
 # IAM entry for all users to invoke the function

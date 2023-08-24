@@ -6,46 +6,7 @@ variable "project_id" {
 variable "region" {
   type        = string
   description = "Region name"
-}
-
-variable "zone" {
-  type        = string
-  description = "Zone name"
-}
-
-variable "host_project" {
-  type = string
-  default = "The ID of the project that will serve as a Shared VPC host project"
-}
-
-variable "shared_vpcs" {
-  type = list(string)
-  description = "List of shared vpc name"
-}
-
-variable "cluster_size" {
-  type        = number
-  description = "Weka cluster size"
-}
-
-variable "nvmes_number" {
-  type        = number
-  description = "Number of local nvmes per host"
-}
-
-variable "subnets_cidr_range" {
-  type        = list(string)
-  description = "List of subnets to use for creating the cluster, the number of subnets must be 'vpcs_number'"
-}
-
-variable "vpc_connector_range" {
-  type        = string
-  description = "List of connector to use for serverless vpc access"
-}
-
-variable "cluster_name" {
-  type        = string
-  description = "Cluster name"
+  default     = "europe-west1"
 }
 
 variable "get_weka_io_token" {
@@ -54,25 +15,7 @@ variable "get_weka_io_token" {
   sensitive   = true
 }
 
-variable "host_shared_range" {
-  type = list(string)
-  description = "List of host range to allow sg"
-  default = []
-}
-
-variable "obs_name" {
+variable "host_project" {
   type        = string
-  default     = ""
-  description = "Name of OBS cloud storage"
-}
-
-variable "set_obs_integration" {
-  type = bool
-  description = "Should be true to enable OBS integration with weka cluster"
-}
-
-variable "state_bucket_name" {
-  type        = string
-  default     = ""
-  description = "Name of existing state bucket"
+  description = "The ID of the project that will serve as a Shared VPC host project"
 }

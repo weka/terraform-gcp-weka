@@ -5,9 +5,9 @@ This example creates service account for weka deployment,
 
 ## Usage
 ```hcl
-$ terraform init
-$ terraform plan
-$ terraform apply
+shared_vpcs        = [".."]
+host_project       = HOST_PROJECT_ID
+host_shared_range  = [".."]
 ```
 
 <!-- BEGIN_TF_DOCS -->

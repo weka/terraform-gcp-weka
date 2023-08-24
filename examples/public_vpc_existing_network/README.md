@@ -1,8 +1,15 @@
 # Public VPC with exiting VPCs and subnets
-This example creates service account for weka deployment,
+This example using exiting vpcs, subnets, service account, private DNS zone, vpc connector
 <br>It will use existing vpcs and subnets, but will create all the necessary peering etc.
 <br>It will create weka cluster with internet access.
-
+#### You **must** provide network params:
+```hcl
+vpcs_name           = ["vpc-0","vpc-1","vpc-2","vpc-3"]
+subnets_name        = ["subnet-0","subnet-1","subnet-2","subnet-3"]
+private_dns_name    = "existing.private.net."
+private_zone_name   = "existing-private-zone"
+vpc_connector_name  = "existing-connector"
+```
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

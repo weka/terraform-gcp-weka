@@ -55,7 +55,7 @@ variable "clients_number" {
   default = "Number of clients"
 }
 
-variable "source_image" {
+variable "source_image_id" {
   type = string
   description = "os of image"
 }

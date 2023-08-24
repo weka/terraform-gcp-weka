@@ -8,10 +8,10 @@ variable "region" {
   description = "Region name"
 }
 
-variable "vpcs" {
-  type        = list(string)
-  description = "List of vpcs name"
-  default     = []
+variable "vpc_name" {
+  type        = string
+  description = "Vpc name"
+  default     = ""
 }
 
 variable "prefix" {
@@ -40,7 +40,6 @@ variable "cluster_name" {
 variable "set_worker_pool_network_peering" {
   type        = bool
   description = "Create peering between worker pool network and vpcs networks"
-  default     = false
 }
 
 variable "worker_pool_network" {
@@ -55,7 +54,7 @@ variable "sa_email" {
 }
 
 variable "worker_pool_name" {
-  type    = string
-  default = ""
+  type        = string
+  default     = ""
   description = "Exiting worker pool name "
 }

@@ -1,9 +1,9 @@
 locals {
   vpc_length = length(var.shared_vpcs)
   peering_list = flatten([
-  for from in range(length (var.vpcs)) : [
+  for from in range(length (var.vpcs_name)) : [
   for to in range(local.vpc_length) : {
-    from = var.vpcs[from]
+    from = var.vpcs_name[from]
     to   = var.shared_vpcs[to]
   }
   ]
@@ -48,13 +48,13 @@ resource "google_compute_network_peering" "host-peering" {
 }
 
 data "google_compute_network" "vpc_list_ids" {
-  count    = length(var.vpcs)
-  name     = var.vpcs[count.index]
+  count    = length(var.vpcs_name)
+  name     = var.vpcs_name[count.index]
   project  = var.project_id
 }
 
 resource "google_compute_firewall" "sg_private" {
-  count         = length(var.vpcs)
+  count         = length(var.vpcs_name)
   project       = var.project_id
   name          = "${var.prefix}-shared-sg-ingress-all-${count.index}"
   direction     = "INGRESS"
@@ -72,7 +72,7 @@ resource "google_compute_firewall" "sg_private" {
 
 
 resource "google_compute_firewall" "sg_private_egress" {
-  count               = length(var.vpcs)
+  count               = length(var.vpcs_name)
   project             = var.project_id
   name                = "${var.prefix}-shared-sg-egress-all-${count.index}"
   direction           = "EGRESS"

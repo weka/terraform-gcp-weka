@@ -3,66 +3,23 @@ provider "google" {
   region  = var.region
 }
 
-/***********************************
-      Create Service Account
-***********************************/
-module "create_service_account" {
-  source            = "../../modules/service_account"
-  project_id        = var.project_id
-  cluster_name      = var.cluster_name
-  obs_name          = var.obs_name
-  state_bucket_name = var.state_bucket_name
-}
-
-/***********************************
-      VPC configuration
-***********************************/
-module "setup_network" {
-  source                   = "../../modules/setup_network"
-  project_id               = var.project_id
-  region                   = var.region
-  vpcs                     = var.vpcs
-  subnets                  = var.subnets
-  zone                     = var.zone
-  vpc_connector_range      = var.vpc_connector_range
-}
-
-/**********************************************
-      Set peering to worker pool
-***********************************************/
-module "worker_pool" {
-  source              = "../../modules/worker_pool"
+module "weka_deployment" {
+  source              = "../.."
+  cluster_name        = "poc"
+  prefix              = "weka"
   project_id          = var.project_id
+  vpcs_name           = ["weka-vpc-0","weka-vpc-1","weka-vpc-2","weka-vpc-3"]
+  subnets_name        = ["weka-subnet-0","weka-subnet-1","weka-subnet-2","weka-subnet-3"]
   region              = var.region
-  vpcs                = var.vpcs
-  worker_pool_network = var.worker_pool_network
-  worker_pool_name    = var.worker_pool_name
-  cluster_name        = var.cluster_name
-  sa_email            = module.create_service_account.outputs-service-account-email
-  depends_on = [module.setup_network]
-}
-
-/***********************************
-     Deploy weka cluster
-***********************************/
-module "deploy_weka" {
-  source                   = "../.."
-  cluster_name             = var.cluster_name
-  project_id               = var.project_id
-  vpcs                     = var.vpcs
-  region                   = var.region
-  subnets_name             = var.subnets
-  zone                     = var.zone
-  cluster_size             = var.cluster_size
-  nvmes_number             = var.nvmes_number
-  vpc_connector            = module.setup_network.vpc_connector_name
-  sa_email                 = module.create_service_account.outputs-service-account-email
-  get_weka_io_token        = var.get_weka_io_token
-  private_dns_zone         = module.setup_network.private_zone_name
-  private_dns_name         = module.setup_network.private_dns_name
-  obs_name                 = var.obs_name
-  set_obs_integration      = var.set_obs_integration
-  state_bucket_name        = var.state_bucket_name
-  worker_pool_name         = var.worker_pool_name
-  depends_on               = [module.worker_pool]
+  zone                = "europe-west1-b"
+  cluster_size        = 6
+  nvmes_number        = 2
+  get_weka_io_token   = var.get_weka_io_token
+  private_dns_name    = "weka.private.net."
+  private_zone_name   = "weka-private-zone"
+  vpc_connector_name  = "weka-connector"
+  create_worker_pool  = false
+  set_obs_integration = true
+  worker_pool_name    = "weka-worker-pool"
+  worker_pool_network = ""
 }

@@ -47,9 +47,9 @@ Similar command
   - Private network deployment/examples must come with:
     - `private_network = true` on `setup_network` and `deploy_weka` modules level, this adapts various configuration for private networks
   - In addition, following params are optional for private networking, depending on how network topology looks like:
-    - `install_url` on `deploy_weka` module level, this allows to download weka from local bucket and not public get.weka.io service
+    - `install_weka_url` on `deploy_weka` module level, this allows to download weka from local bucket and not public get.weka.io service
     - `yum_repo_server` - Centos7 only, instructions to auto-configure yum to use alternative repository. Distributive repository required in order to download kernel headers and additional build software
-    - `weka_image_id` - custom image to use
+    - `source_image_id` - custom image to use
 
 ### Notes
 - You have 2 ways to know that your weka cluster is ready:
