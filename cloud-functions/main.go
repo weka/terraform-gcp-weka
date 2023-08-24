@@ -185,6 +185,7 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 	driveContainerNum, _ := strconv.Atoi(os.Getenv("NUM_DRIVE_CONTAINERS"))
 
 	installUrl := os.Getenv("INSTALL_URL")
+	proxyUrl := os.Getenv("PROXY_URL")
 	nics_num_str := os.Getenv("NICS_NUM")
 
 	functionRootUrl := fmt.Sprintf("https://%s", r.Host)
@@ -212,6 +213,7 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 		nics_num_str,
 		computeMemory,
 		installUrl,
+		proxyUrl,
 		functionRootUrl,
 		computeContainerNum,
 		frontendContainerNum,
