@@ -4,14 +4,27 @@ This module creates many resources as launch template, cloud functions, workflow
 <br>**Note**: when applying this module it will create workflow that will automatically start instances according to the
 given cluster size.
 
+## Network deployment options
+This weka deployment can use existing network, or create network resources (vpcs, subnets, firewall(security group_, private DNS zone, vpc access connector) automatically.
+<br>Check our [examples](examples).
+<br>In case you want to use an existing network, you **must** provide network params.
+<br>**Example**:
+```hcl
+vpcs_name           = ["vpc-0","vpc-1","vpc-2","vpc-3"]
+subnets_name        = ["subnet-0","subnet-1","subnet-2","subnet-3"]
+private_dns_name    = "existing.private.net."
+private_zone_name   = "existing-private-zone"
+vpc_connector_name  = "existing-connector"
+```
+
 ## Usage
 ```hcl
-module "deploy_weka" {
+module "weka_deployment" {
   source                   = "weka/weka/gcp"
   version                  = "3.0.2"
   cluster_name             = "myCluster"
   project_id               = "myProject"
-  vpcs                     = ["weka-vpc-0", "weka-vpc-1", "weka-vpc-2", "weka-vpc-3"]
+  vpcs_name                = ["weka-vpc-0", "weka-vpc-1", "weka-vpc-2", "weka-vpc-3"]
   region                   = "europe-west1"
   subnets_name             = ["weka-subnet-0","weka-subnet-1","weka-subnet-2","weka-subnet-3"]
   zone                     = "europe-west1-b"
@@ -22,7 +35,53 @@ module "deploy_weka" {
   get_weka_io_token        = "GET_WEKA_IO_TOKEN"
   private_dns_zone         = "weka-private-zone"
   private_dns_name         = "weka.private.net."
+  allow_ssh_ranges         = ["0.0.0.0/0"]
 }
+
+output "weka_deployment_output" {
+  value = module.weka_deployment
+}
+```
+
+<br>
+If you don't pass these params, we will automatically create the network resources.**
+
+## Usage
+```hcl
+module "weka_deployment" {
+  source              = "weka/weka/gcp"
+  version             = "3.0.2"
+  cluster_name        = "myCluster"
+  project_id          = "mtProject"
+  prefix              = "weka"
+  region              = "europe-west1"
+  zone                = "europe-west1-b"
+  cluster_size        = 7
+  nvmes_number        = 2
+  get_weka_io_token   = "GET_WEKA_IO_TOKEN"
+  set_obs_integration = true
+  allow_ssh_ranges    = ["0.0.0.0/0"]
+}
+
+output "weka_deployment_output" {
+  value = module.weka_deployment
+}
+```
+
+### Private network deployment:
+```hcl
+private_network = true
+``` 
+#### To avoid public ip assignment:
+```hcl
+assign_public_ip = false
+``` 
+
+#### Instance with no internet outbound:
+In case your vms don't have internet access, you should supply weka tar file url and yum repo server:
+```hcl
+yum_repo_server  = "..."
+install_weka_url = "..."
 ```
 
 ## OBS
@@ -30,7 +89,7 @@ We support tiering to bucket.
 In order to setup tiering, you must supply the following variables:
 ```hcl
 set_obs_integration = true
-obs_name = "..."
+obs_name            = "..."
 tiering_ssd_percent = 20
 ```
 
@@ -51,6 +110,14 @@ client_nics_num = DESIRED_NUM
 In order to mount clients in udp mode you should pass the following param (in addition to the above):
 ```hcl
 mount_clients_dpdk = false
+```
+
+## Shared project
+
+```hcl
+shared_vpcs        = [".."]
+host_project       = HOST_PROJECT_ID
+host_shared_range  = [".."]
 ```
 
 <!-- BEGIN_TF_DOCS -->

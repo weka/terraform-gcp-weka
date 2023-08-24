@@ -12,20 +12,21 @@ variable "project_id" {
   description = "Project id"
 }
 
-variable "nics_number" {
+variable "nics_numbers" {
   type        = number
   description = "Number of nics per host"
   default = -1
 
   validation {
-    condition     = var.nics_number == -1 || var.nics_number > 0
+    condition     = var.nics_numbers == -1 || var.nics_numbers > 0
     error_message = "The nics_number value can take values > 0 or -1 (for using defaults)."
   }
 }
 
-variable "vpcs" {
-  type = list(string)
+variable "vpcs_name" {
+  type        = list(string)
   description = "List of vpcs name"
+  default     = []
 }
 
 variable "prefix" {
@@ -67,7 +68,13 @@ variable "nvmes_number" {
 variable "private_network" {
   type        = bool
   description = "Deploy weka in private network"
-  default = false
+  default     = false
+}
+
+variable "assign_public_ip" {
+  type        = bool
+  default     = true
+  description = "Determines whether to assign public ip."
 }
 
 variable "get_weka_io_token" {
@@ -77,7 +84,7 @@ variable "get_weka_io_token" {
   default     = ""
 }
 
-variable "install_url" {
+variable "install_weka_url" {
   type        = string
   description = "Path to weka installation tar object"
   default     = ""
@@ -86,13 +93,13 @@ variable "install_url" {
 variable "weka_version" {
   type        = string
   description = "Weka version"
-  default = "4.2.1"
+  default     = "4.2.1"
 }
 
 variable "weka_username" {
   type        = string
   description = "Weka cluster username"
-  default = "admin"
+  default     = "admin"
 }
 
 variable "cluster_size" {
@@ -105,47 +112,70 @@ variable "cluster_size" {
   }
 }
 
-variable "subnets_name" {
-  type = list(string)
-  description = "Subnets list name "
+variable "subnets_range" {
+  type        = list(string)
+  description = "List of subnets to use for creating the cluster, the number of subnets must be 'nics_number'"
+  default     = ["10.0.0.0/24", "10.1.0.0/24", "10.2.0.0/24", "10.3.0.0/24"]
 }
 
-variable "vpc_connector" {
+variable "subnets_name" {
+  type        = list(string)
+  description = "Subnets list name "
+  default     = []
+}
+
+variable "vpc_connector_range" {
   type        = string
-  description = "Connector name to use for serverless vpc access"
+  description = "list of connector to use for serverless vpc access"
+  default     = "10.8.0.0/28"
+}
+
+variable "vpc_connector_name" {
+  type        = string
+  description = "exiting vpc connector name to use for cloud functions"
+  default     = null
 }
 
 variable "sa_email" {
-  type = string
+  type        = string
   description = "Service account email"
+  default     = null
 }
 
 variable "create_cloudscheduler_sa" {
-  type = bool
+  type        = bool
   description = "Should or not crate gcp cloudscheduler sa"
-  default = true
+  default     = true
 }
 
 variable "yum_repo_server" {
-  type = string
+  type        = string
   description = "Yum repo server address"
   default     = ""
 }
 
-variable "weka_image_id" {
-  type = string
-  description = "Weka image id"
-  default = "projects/centos-cloud/global/images/centos-7-v20220719"
+variable "allow_ssh_ranges" {
+  type        = list(string)
+  description = "list of ranges to allow ssh on public deployment"
+  default     = []
 }
 
-variable "private_dns_zone" {
-  type = string
-  description = "Name of private dns zone"
+variable "source_image_id" {
+  type        = string
+  description = "Source image id"
+  default     = "projects/centos-cloud/global/images/centos-7-v20220719"
+}
+
+variable "private_zone_name" {
+  type        = string
+  description = "Private zone name"
+  default     = null
 }
 
 variable "private_dns_name" {
-  type = string
+  type        = string
   description = "Private dns name"
+  default     = null
 }
 
 
@@ -153,11 +183,11 @@ variable "cloud_scheduler_region_map" {
   type = map(string)
   description = "Map of region to use for workflows scheduler, as some regions do not have scheduler enabled"
   default = {
-    europe-west4 = "europe-west1"
-    europe-north1 = "europe-west1",
-    us-east5 = "us-east1",
+    europe-west4       = "europe-west1"
+    europe-north1      = "europe-west1",
+    us-east5           = "us-east1",
     southamerica-west1 = "northamerica-northeast1",
-    asia-south2 = "asia-south1",
+    asia-south2        = "asia-south1",
   }
 }
 
@@ -165,11 +195,11 @@ variable "cloud_functions_region_map" {
   type = map(string)
   description = "Map of region to use for cloud functions, as some regions do not have cloud functions enabled"
   default = {
-    europe-west4 = "europe-west1"
-    europe-north1 = "europe-west1",
-    us-east5 = "us-east1",
+    europe-west4       = "europe-west1"
+    europe-north1      = "europe-west1",
+    us-east5           = "us-east1",
     southamerica-west1 = "northamerica-northeast1",
-    asia-south2 = "asia-south1",
+    asia-south2        = "asia-south1",
   }
 }
 
@@ -182,9 +212,9 @@ variable "workflow_map_region" {
 }
 
 variable "worker_pool_name" {
-  type = string
+  type        = string
   description = "Name of worker pool, Must be on the same project and region"
-  default = ""
+  default     = ""
 }
 
 variable "container_number_map" {
@@ -244,6 +274,18 @@ variable "hotspare" {
   description = "Hot-spare value."
 }
 
+variable "default_disk_size" {
+  type        = number
+  default     = 48
+  description = "The default disk size."
+}
+
+variable "traces_per_ionode" {
+  default     = 10
+  type        = number
+  description = "The number of traces per ionode. Traces are low-level events generated by Weka processes and are used as troubleshooting information for support purposes."
+}
+
 variable "obs_name" {
   type        = string
   default     = ""
@@ -274,16 +316,41 @@ variable "state_bucket_name" {
   description = "Name of bucket state, cloud storage"
 }
 
-variable "assign_public_ip" {
-  type        = bool
-  default     = true
-  description = "Determines whether to assign public ip."
+variable "worker_pool_network" {
+  type        = string
+  default     = ""
+  description = "Network name of worker pool, Must be on the same project and region"
 }
 
-variable "traces_per_ionode" {
-  default     = 10
-  type        = number
-  description = "The number of traces per ionode. Traces are low-level events generated by Weka processes and are used as troubleshooting information for support purposes."
+variable "create_worker_pool" {
+  type        = bool
+  default     = false
+  description = "Create worker pool"
+}
+
+variable "set_worker_pool_network_peering" {
+  type        = bool
+  description = "Create peering between worker pool network and vpcs networks"
+  default     = false
+}
+
+######################## shared vpcs variables ##########################
+variable "host_project" {
+  type        = string
+  description = "The ID of the project that will serve as a Shared VPC host project"
+  default     = null
+}
+
+variable "shared_vpcs" {
+  type        = list(string)
+  description = "list of shared vpc name"
+  default     = []
+}
+
+variable "host_shared_range" {
+  type        = list(string)
+  description = "List of host range to allow sg"
+  default     = []
 }
 
 ############################### clients ############################
@@ -309,10 +376,4 @@ variable "mount_clients_dpdk" {
   type        = bool
   default     = true
   description = "Mount weka clients in DPDK mode"
-}
-
-variable "default_disk_size" {
-  type        = number
-  default     = 48
-  description = "The client' default disk size."
 }

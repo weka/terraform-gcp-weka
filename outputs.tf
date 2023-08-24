@@ -1,9 +1,20 @@
 locals {
-  get_cluster_status_uri = google_cloudfunctions2_function.status_function.service_config[0].uri
-  resize_cluster_uri = format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=resize")
-  lb_url = trimsuffix(google_dns_record_set.record-a.name, ".")
-  terminate_cluster_uri = format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=terminate_cluster")
+  get_cluster_status_uri          = google_cloudfunctions2_function.status_function.service_config[0].uri
+  resize_cluster_uri              = format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=resize")
+  lb_url                          = trimsuffix(google_dns_record_set.record-a.name, ".")
+  terminate_cluster_uri           = format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=terminate_cluster")
   weka_cluster_password_secret_id = google_secret_manager_secret.secret_weka_password.secret_id
+  functions_url = {
+    progressing_status = { url = local.get_cluster_status_uri, body = {"type":"progress"}}
+    status             = { url = local.get_cluster_status_uri, body = {"type":"status"}}
+    resize             = { url = local.resize_cluster_uri,body = {"value":7} }
+    destroy            = { url = local.terminate_cluster_uri,body = {"name":"${var.cluster_name}"}}
+  }
+}
+
+output "functions_url" {
+  value       = local.functions_url
+  description = "Functions url and body for api request"
 }
 
 output "ssh_user" {

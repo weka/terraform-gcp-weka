@@ -1,3 +1,3 @@
-output "cluster_helpers_commands" {
-  value = module.deploy_weka
+output "weka_deployment_output" {
+  value = module.weka_deployment
 }

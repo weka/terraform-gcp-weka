@@ -21,9 +21,9 @@ resource "google_compute_region_backend_service" "backend_service" {
   load_balancing_scheme = "INTERNAL"
   health_checks         = [ google_compute_region_health_check.health_check.id]
   backend {
-    group               = google_compute_instance_group.instance_group.self_link
+    group               = google_compute_instance_group.this.self_link
   }
-  depends_on = [google_compute_instance_group.instance_group]
+  depends_on = [module.network, google_compute_instance_group.this]
 }
 
 # forwarding rule
@@ -33,16 +33,17 @@ resource "google_compute_forwarding_rule" "google_compute_forwarding_rule" {
   region                = var.region
   load_balancing_scheme = "INTERNAL"
   all_ports             = true
-  network               = data.google_compute_network.vpc_list_ids[0].self_link
-  subnetwork            = data.google_compute_subnetwork.subnets_list_ids[0].self_link
+  network               = data.google_compute_network.this[0].self_link
+  subnetwork            = data.google_compute_subnetwork.this[0].self_link
   lifecycle {
     ignore_changes = [network, subnetwork]
   }
+  depends_on = [module.network] #time_sleep.wait_30_seconds
 }
 
 resource "google_dns_record_set" "record-a" {
-  name         = "${var.cluster_name}.${var.private_dns_name}"
-  managed_zone = var.private_dns_zone
+  name         = "${var.cluster_name}.${local.private_dns_name}"
+  managed_zone = local.private_zone_name
   project      = var.project_id
   type         = "A"
   ttl          = 120
@@ -63,6 +64,7 @@ resource "google_compute_region_health_check" "ui_check" {
     port         = "14000"
     request_path = "/api/v2/ui/healthcheck"
   }
+  depends_on = [module.network]
 }
 
 
@@ -74,9 +76,9 @@ resource "google_compute_region_backend_service" "ui_backend_service" {
   load_balancing_scheme = "INTERNAL"
   health_checks         = [google_compute_region_health_check.ui_check.id]
   backend {
-    group               = google_compute_instance_group.instance_group.self_link
+    group               = google_compute_instance_group.this.self_link
   }
-  depends_on = [google_compute_instance_group.instance_group]
+  depends_on = [module.network, google_compute_instance_group.this]
 }
 
 # forwarding rule
@@ -86,16 +88,17 @@ resource "google_compute_forwarding_rule" "ui_forwarding_rule" {
   region                = var.region
   load_balancing_scheme = "INTERNAL"
   all_ports             = true
-  network               = data.google_compute_network.vpc_list_ids[0].self_link
-  subnetwork            = data.google_compute_subnetwork.subnets_list_ids[0].self_link
+  network               = data.google_compute_network.this[0].self_link
+  subnetwork            = data.google_compute_subnetwork.this[0].self_link
   lifecycle {
     ignore_changes = [network, subnetwork]
   }
+  depends_on = [module.network]
 }
 
 resource "google_dns_record_set" "ui-record-a" {
-  name         = "ui-${var.cluster_name}.${var.private_dns_name}"
-  managed_zone = var.private_dns_zone
+  name         = "ui-${var.cluster_name}.${local.private_dns_name}"
+  managed_zone = local.private_zone_name
   project      = var.project_id
   type         = "A"
   ttl          = 120

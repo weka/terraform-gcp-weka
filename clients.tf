@@ -14,9 +14,9 @@ module "clients" {
   prefix             = var.prefix
   project_id         = var.project_id
   region             = var.region
-  sa_email           = var.sa_email
-  source_image       = var.weka_image_id
-  subnets_list       = var.subnets_name
+  sa_email           = local.sa_email
+  source_image_id    = var.source_image_id
+  subnets_list       = local.subnets_name
   zone               = var.zone
   depends_on         = [google_compute_forwarding_rule.google_compute_forwarding_rule,google_workflows_workflow.scale_up, google_cloudfunctions2_function.cloud_internal_function]
 }

@@ -4,6 +4,11 @@ This example creates service account for weka deployment,
 <br>and weka cluster with no internet access.
 <br>In addition it creates worker pool for building all the cloud functions.
 
+In order to create worker pool, you must supply the following variable:
+```hcl
+create_worker_pool = true
+```
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

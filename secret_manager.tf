@@ -38,6 +38,7 @@ resource "google_secret_manager_secret_version" "user_secret_key" {
 }
 
 resource "google_secret_manager_secret" "secret_token" {
+  count     = var.get_weka_io_token != "" ? 1 : 0
   secret_id = "${var.prefix}-${var.cluster_name}-token"
   replication {
     automatic = true
@@ -46,7 +47,8 @@ resource "google_secret_manager_secret" "secret_token" {
 }
 
 resource "google_secret_manager_secret_version" "token_secret_key" {
-  secret      = google_secret_manager_secret.secret_token.id
+  count     = var.get_weka_io_token != "" ? 1 : 0
+  secret      = google_secret_manager_secret.secret_token[0].id
   secret_data = var.get_weka_io_token
 
   lifecycle {

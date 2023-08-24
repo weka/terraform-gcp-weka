@@ -58,7 +58,7 @@ resource "google_compute_network" "vpc_network" {
 resource "google_compute_subnetwork" "subnetwork" {
   count         = length(var.subnets) == 0 ? var.vpcs_number : 0
   name          = "${var.prefix}-subnet-${count.index}"
-  ip_cidr_range = var.subnets_cidr_range[count.index]
+  ip_cidr_range = var.subnets_range[count.index]
   region        = var.region
   network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[count.index].name : data.google_compute_network.vpc_list_ids[count.index].name
   private_ip_google_access = true
@@ -80,7 +80,7 @@ resource "google_compute_firewall" "sg_public_ssh" {
   count         = var.private_network ? 0 : local.vpc_length
   name          = "${var.prefix}-sg-ssh-${count.index}"
   network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[count.index].name : data.google_compute_network.vpc_list_ids[count.index].name
-  source_ranges = var.sg_public_ssh_cidr_range
+  source_ranges = var.allow_ssh_ranges
   allow {
     protocol = "tcp"
     ports    = ["22"]
@@ -112,7 +112,7 @@ resource "google_vpc_access_connector" "connector" {
   count         = var.vpc_connector_name == "" ? 1 : 0
   name          = "${var.prefix}-connector"
   ip_cidr_range = var.vpc_connector_range
-  region = lookup(var.vpc_connector_region_map, var.region, var.region)
+  region        = lookup(var.vpc_connector_region_map, var.region, var.region)
   network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[0].id :  data.google_compute_network.vpc_list_ids[count.index].id
 
   depends_on = [google_project_service.project-vpc]
@@ -136,7 +136,7 @@ resource "google_compute_firewall" "fw_ilb_to_backends" {
   name          = "${var.prefix}-fw-allow-ilb-to-backends"
   direction     = "INGRESS"
   network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[0].self_link :  data.google_compute_network.vpc_list_ids[0].self_link
-  source_ranges = length(var.vpcs) == 0 ? [var.subnets_cidr_range[0]] : [data.google_compute_subnetwork.subnets_list_ids[0].ip_cidr_range]
+  source_ranges = length(var.vpcs) == 0 ? [var.subnets_range[0]] : [data.google_compute_subnetwork.subnets_list_ids[0].ip_cidr_range]
   allow {
     protocol = "tcp"
   }
@@ -161,6 +161,7 @@ resource "google_project_service" "project-dns" {
 }
 
 resource "google_dns_managed_zone" "private-zone" {
+  count       = var.private_zone_name == null ? 1 : 0
   name        = "${var.prefix}-private-zone"
   dns_name    = "${var.prefix}.private.net."
   project     = var.project_id

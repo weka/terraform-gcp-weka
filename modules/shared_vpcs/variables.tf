@@ -19,7 +19,7 @@ variable "shared_vpcs" {
   description = "list of shared vpc name"
 }
 
-variable "vpcs" {
+variable "vpcs_name" {
   type = list(string)
   description = "list of vpcs name"
 }
