@@ -4,7 +4,6 @@ locals {
   lb_url = trimsuffix(google_dns_record_set.record-a.name, ".")
   terminate_cluster_uri = format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=terminate_cluster")
   weka_cluster_password_secret_id = google_secret_manager_secret.secret_weka_password.secret_id
-  client_ips = var.private_network ? "gcloud compute instances list --filter=\"name~'${var.prefix}-${var.cluster_name}-client'\" --format \"get(networkInterfaces[0].networkIP)\"" : "gcloud compute instances list --filter=\"name~'${var.prefix}-${var.cluster_name}-client'\" --format \"get(networkInterfaces[0].accessConfigs[0].natIP)\""
 }
 
 output "ssh_user" {
@@ -74,6 +73,6 @@ EOT
 }
 
 output "client_ips" {
-  value       = var.clients_number > 0 ? local.client_ips : ""
+  value       = var.clients_number > 0 ? module.clients[0].client_ips : []
   description = "If 'private_network' is set to false, it will output clients public ips, otherwise private ips."
 }

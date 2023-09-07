@@ -82,3 +82,7 @@ resource "google_compute_instance" "this" {
   }
   depends_on = [google_compute_disk.this]
 }
+
+output "client_ips" {
+  value = var.assign_public_ip ? google_compute_instance.this.*.network_interface.0.access_config.0.nat_ip :google_compute_instance.this.*.network_interface.0.network_ip
+}
