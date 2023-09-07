@@ -37,9 +37,6 @@ resource "google_compute_instance" "this" {
   machine_type = var.machine_type
   zone         = var.zone
   tags         = [var.clients_name]
-  labels         = {
-    weka_cluster_name = var.cluster_name
-  }
   boot_disk {
     initialize_params {
       image = var.source_image
