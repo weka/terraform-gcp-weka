@@ -49,7 +49,7 @@ resource "google_compute_network" "vpc_network" {
   count                   = length(var.vpcs) == 0 ? var.vpcs_number :0
   name                    = "${var.prefix}-vpc-${count.index}"
   auto_create_subnetworks = false
-  mtu                     = 1460
+  mtu                     = var.mtu_size
 
   depends_on = [google_project_service.project-compute, google_project_service.project-gcp-api]
 }
