@@ -85,3 +85,9 @@ variable "vpc_connector_region_map" {
     asia-south2 = "asia-south1",
   }
 }
+
+variable "mtu_size" {
+    type        = number
+    description = "mtu size"
+    default     = 1460
+}
