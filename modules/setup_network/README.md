@@ -57,6 +57,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_mtu_size"></a> [mtu\_size](#input\_mtu\_size) | mtu size | `number` | `1460` | no |
 | <a name="input_prefix"></a> [prefix](#input\_prefix) | prefix for all resources | `string` | `"weka"` | no |
 | <a name="input_private_network"></a> [private\_network](#input\_private\_network) | deploy weka in private network | `bool` | `false` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | project id | `string` | n/a | yes |
