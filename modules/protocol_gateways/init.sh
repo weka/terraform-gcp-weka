@@ -95,14 +95,16 @@ yum -y update
 yum -y install jq
 # get token for secret manager (get-weka-io-token)
 max_retries=12 # 12 * 10 = 2 minutes
-for ((i=0; i<max_retries; i++)); do
-  TOKEN=$(curl "https://secretmanager.googleapis.com/v1/${weka_token_id}/versions/1:access" --request "GET" --header "authorization: Bearer $(gcloud auth print-access-token)" --header "content-type: application/json" | jq -r ".payload.data" | base64 --decode)
-  if [ "$TOKEN" != "null" ]; then
-    break
-  fi
-  sleep 10
-  echo "$(date -u): waiting for token secret to be available"
-done
+if [[ ${weka_token_id} != "NONE" ]]; then
+  for ((i=0; i<max_retries; i++)); do
+    TOKEN=$(curl "https://secretmanager.googleapis.com/v1/${weka_token_id}/versions/1:access" --request "GET" --header "authorization: Bearer $(gcloud auth print-access-token)" --header "content-type: application/json" | jq -r ".payload.data" | base64 --decode)
+    if [ "$TOKEN" != "null" ]; then
+      break
+    fi
+    sleep 10
+    echo "$(date -u): waiting for token secret to be available"
+  done
+fi
 
 # install weka
 if [[ "${install_weka_url}" == *.tar ]]; then

@@ -96,6 +96,7 @@ if [[ ${mount_clients_dpdk} == true ]]; then
 fi
 
 retry 60 45 $mount_command
+echo "$(date -u): wekafs mount complete"
 
 rm -rf $INSTALLATION_PATH
-echo "$(date -u): wekafs mount complete"
+echo "$(date -u): client setup complete"

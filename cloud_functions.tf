@@ -8,6 +8,8 @@ locals {
   stripe_width            = local.stripe_width_calculated < 16 ? local.stripe_width_calculated : 16
   get_compute_memory      = var.add_frontend_containers ? var.container_number_map[var.machine_type].memory[1] : var.container_number_map[var.machine_type].memory[0]
   state_bucket            = var.state_bucket_name == "" ? google_storage_bucket.weka_deployment[0].name : var.state_bucket_name
+  install_weka_url        = var.install_weka_url != "" ? var.install_weka_url : "https://$TOKEN@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}"
+
   // common function for multiple actions
   cloud_internal_function_name = "${var.prefix}-${var.cluster_name}-weka-functions"
 }
@@ -64,7 +66,7 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       PASSWORD_ID : google_secret_manager_secret_version.password_secret_key.id
       TOKEN_ID : var.get_weka_io_token == "" ? "" : google_secret_manager_secret_version.token_secret_key[0].id
       BUCKET : local.state_bucket
-      INSTALL_URL : var.install_weka_url != "" ? var.install_weka_url : "https://$TOKEN@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}"
+      INSTALL_URL : local.install_weka_url
       # Configuration for google_cloudfunctions2_function.cloud_internal_function may not refer to itself.
       # REPORT_URL : format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=report")
       NICS_NUM : local.nics_number
@@ -90,6 +92,8 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       // for scale_up
       YUM_REPO_SERVER: var.yum_repo_server
       BACKEND_TEMPLATE: google_compute_instance_template.this.id
+      //SMBW
+      SMBW_ENABLED: var.smbw_enabled
     }
   }
   lifecycle {
