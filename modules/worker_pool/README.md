@@ -46,7 +46,7 @@ No modules.
 | [google_project_service.servicenetworking](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_service) | resource |
 | [google_service_networking_connection.worker_pool_conn](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_networking_connection) | resource |
 | [null_resource.wait-service-enable](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
-| [google_compute_network.vpc_list_ids](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_network) | data source |
+| [google_compute_network.this](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_network) | data source |
 | [google_compute_network.worker_pool_network](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_network) | data source |
 
 ## Inputs
@@ -58,8 +58,8 @@ No modules.
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | Project id | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | Region name | `string` | n/a | yes |
 | <a name="input_sa_email"></a> [sa\_email](#input\_sa\_email) | service account email | `string` | n/a | yes |
-| <a name="input_set_worker_pool_network_peering"></a> [set\_worker\_pool\_network\_peering](#input\_set\_worker\_pool\_network\_peering) | Create peering between worker pool network and vpcs networks | `bool` | `false` | no |
-| <a name="input_vpcs"></a> [vpcs](#input\_vpcs) | List of vpcs name | `list(string)` | `[]` | no |
+| <a name="input_set_worker_pool_network_peering"></a> [set\_worker\_pool\_network\_peering](#input\_set\_worker\_pool\_network\_peering) | Create peering between worker pool network and vpcs networks | `bool` | n/a | yes |
+| <a name="input_vpc_name"></a> [vpc\_name](#input\_vpc\_name) | Vpc name | `string` | `""` | no |
 | <a name="input_worker_disk_size"></a> [worker\_disk\_size](#input\_worker\_disk\_size) | Size of the disk attached to the worker, in GB | `number` | `100` | no |
 | <a name="input_worker_machine_type"></a> [worker\_machine\_type](#input\_worker\_machine\_type) | Machine type of a worker | `string` | `"e2-standard-4"` | no |
 | <a name="input_worker_pool_name"></a> [worker\_pool\_name](#input\_worker\_pool\_name) | Exiting worker pool name | `string` | `""` | no |
@@ -69,5 +69,5 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_worker_pool"></a> [worker\_pool](#output\_worker\_pool) | Worker pool name |
+| <a name="output_worker_pool_name"></a> [worker\_pool\_name](#output\_worker\_pool\_name) | Worker pool name |
 <!-- END_TF_DOCS -->
