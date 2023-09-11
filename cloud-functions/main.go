@@ -97,6 +97,7 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 	tieringSsdPercent := os.Getenv("OBS_TIERING_SSD_PERCENT")
 	addFrontendNum, _ := strconv.Atoi(os.Getenv("NUM_FRONTEND_CONTAINERS"))
 	functionRootUrl := fmt.Sprintf("https://%s", r.Host)
+	smbwEnabled, _ := strconv.ParseBool(os.Getenv("SMBW_ENABLED"))
 	addFrontend := false
 	if addFrontendNum > 0 {
 		addFrontend = true
@@ -131,6 +132,7 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 			Prefix:      prefix,
 			NvmesNum:    nvmesNum,
 			SetObs:      setObs,
+			SmbwEnabled: smbwEnabled,
 			DataProtection: clusterizeCommon.DataProtectionParams{
 				StripeWidth:     stripeWidth,
 				ProtectionLevel: protectionLevel,

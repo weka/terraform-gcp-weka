@@ -46,21 +46,16 @@ module "worker_pool" {
   depends_on          = [module.network, google_project_service.cloud-build-api, google_project_service.compute-api]
 }
 
-#resource "time_sleep" "wait_30_seconds" {
- # depends_on = [module.network, module.service_account, module.shared_vpc_peering, module.worker_pool]
-  #create_duration = "30s"
-#}
-
 data "google_compute_network" "this"{
   count      = length(var.vpcs_name) == 0 ? length(module.network[0].vpcs_names) : length(var.vpcs_name)
   name       = length(var.vpcs_name) == 0 ? module.network[0].vpcs_names[count.index] : var.vpcs_name[count.index]
-  depends_on = [module.network]#[module.network, time_sleep.wait_30_seconds]
+  depends_on = [module.network]
 }
 
 data "google_compute_subnetwork" "this" {
   count      = length(var.subnets_name) == 0 ? length(module.network[0].subnetwork_name) : length(var.subnets_name)
   name       = length(var.subnets_name) == 0 ? module.network[0].subnetwork_name[count.index] : var.subnets_name[count.index]
-  depends_on = [module.network]#[module.network, time_sleep.wait_30_seconds]
+  depends_on = [module.network]
 }
 
 provider "google" {

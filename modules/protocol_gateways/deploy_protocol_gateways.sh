@@ -1,5 +1,5 @@
 FAILURE_DOMAIN=$(printf $(hostname -I) | sha256sum | tr -d '-' | cut -c1-16)
-NUM_FRONTEND_CONTAINERS=${frontend_num}
+NUM_FRONTEND_CORES=${frontend_cores_num}
 NICS_NUM=${nics_num}
 SUBNET_PREFIXES=( "${subnet_prefixes}" )
 GATEWAYS=""
@@ -61,19 +61,61 @@ weka local stop
 weka local rm default --force
 
 # weka containers setup
-get_core_ids $NUM_FRONTEND_CONTAINERS frontend_core_ids
+get_core_ids $NUM_FRONTEND_CORES frontend_core_ids
 
 getNetStrForDpdk $(($NICS_NUM-1)) $(($NICS_NUM)) "$GATEWAYS" "$SUBNETS"
 
 echo "$(date -u): setting up weka frontend"
 
 sleep 90s
+function retry_command {
+  retry_max=60
+  retry_sleep=30
+  count=$retry_max
+  command=$1
+  msg=$2
+
+  while [ $count -gt 0 ]; do
+      $command && break
+      count=$(($count - 1))
+      echo "Retrying $msg in $retry_sleep seconds..."
+      sleep $retry_sleep
+  done
+  [ $count -eq 0 ] && {
+      echo "$msg failed after $retry_max attempts"
+      echo "$(date -u):$msg failed"
+      return 1
+  }
+  return 0
+}
 # changed standart frontend port to 14000 as it should be used locally for protocol setup:
 # weka@ev-test-NFS-0:~$ weka nfs interface-group add test NFS
 # error: Error: Failed connecting to http://127.0.0.1:14000/api/v1. Make sure weka is running on this host by running
 # 	 weka local status | start
-sudo weka local setup container --name frontend0 --base-port 14000 --cores $NUM_FRONTEND_CONTAINERS --frontend-dedicated-cores $NUM_FRONTEND_CONTAINERS --allow-protocols true --failure-domain $FAILURE_DOMAIN --core-ids $frontend_core_ids $net --dedicate --join-ips ${backend_lb_ip}
+function retry_run_container_cmd {
+  retry_max=60
+  retry_sleep=30
+  count=$retry_max
 
+  while [ $count -gt 0 ]; do
+      weka local setup container --name frontend0 --base-port 14000 --cores $NUM_FRONTEND_CORES --frontend-dedicated-cores $NUM_FRONTEND_CORES --allow-protocols true --failure-domain $FAILURE_DOMAIN --core-ids $frontend_core_ids $net --dedicate --join-ips ${backend_lb_ip} && break
+      count=$(($count - 1))
+      echo "Retrying run frontend container in $retry_sleep seconds..."
+      sleep $retry_sleep
+  done
+  [ $count -eq 0 ] && {
+      echo "failed to run frontend container after $retry_max attempts"
+      echo "$(date -u): run frontend container failed"
+      return 1
+  }
+  return 0
+}
+
+echo "$(date -u): Retrying to run frontend container..."
+
+retry_run_container_cmd
+
+echo "$(date -u): frontend container run successfully"
 
 # check that frontend container is up
 ready_containers=0
@@ -89,6 +131,10 @@ echo "$(date -u): frontend is up"
 # login to weka
 weka_password=$(curl "https://secretmanager.googleapis.com/v1/${weka_password_id}/versions/1:access" --request "GET" --header "authorization: Bearer $(gcloud auth print-access-token)" --header "content-type: application/json" | jq -r ".payload.data" | base64 --decode)
 
-weka user login admin $weka_password
+echo "$(date -u): try to run weka login command"
+
+retry_command "weka user login admin $weka_password" "login to weka cluster"
+
+echo "$(date -u): success to run weka login command"
 
 rm -rf $INSTALLATION_PATH

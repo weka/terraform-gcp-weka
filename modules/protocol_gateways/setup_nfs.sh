@@ -88,4 +88,4 @@ create_client_group || true
 
 weka nfs client-group
 
-echo "$(date -u): nfs setup complete"
+echo "$(date -u): NFS setup complete"

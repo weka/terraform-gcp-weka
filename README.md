@@ -66,12 +66,12 @@ In order to mount clients in udp mode you should pass the following param (in ad
 mount_clients_dpdk = false
 ```
 
-## Protocol Gateways
-We support creating protocol gateways that will be mounted automatically to the cluster.
+## NFS Protocol Gateways
+We support creating NFS protocol gateways that will be mounted automatically to the cluster.
 <br>In order to create you need to provide the number of protocol gateways instances you want (by default the number is 0),
 for example:
 ```hcl
-protocol_gateways_number = 2
+protocol_gateways_number = 1
 ```
 This will automatically create 2 instances.
 <br>In addition you can supply these optional variables:
@@ -82,6 +82,50 @@ protocol_gateway_instance_type         = "c2-standard-8"
 protocol_gateway_nics_num              = 2
 protocol_gateway_disk_size             = 375
 protocol_gateway_frontend_num          = 1
+nfs_setup_protocol                     = false
+```
+
+<br>In order to create stateless clients, need to set variable:
+```hcl
+nfs_setup_protocol = true
+```
+
+## SMB Protocol Gateways
+We support creating SMB protocol gateways that will be mounted automatically to the cluster.
+<br>In order to create you need to provide the number of protocol gateways instances you want (by default the number is 0),
+
+*The amount of SMB protocol gateways should be at least 3.*
+</br>
+for example:
+```hcl
+smb_protocol_gateways_number = 3
+```
+This will automatically create 2 instances.
+<br>In addition you can supply these optional variables:
+```hcl
+smb_protocol_gateway_secondary_ips_per_nic = 3
+smb_protocol_gateway_instance_type         = "Standard_D8_v5"
+smb_protocol_gateway_nics_num              = 2
+smb_protocol_gateway_disk_size             = 48
+smb_protocol_gateway_frontend_cores_num    = 1
+smb_setup_protocol                         = false
+smb_cluster_name                           = ""
+smb_domain_name                            = ""
+smb_domain_netbios_name                    = ""
+smb_domain_username                        = ""
+smb_domain_password                        = ""
+smb_dns_ip_address                         = ""
+smb_share_name                             = ""
+```
+
+<br>In order to create stateless clients, need to set variable:
+```hcl
+smb_setup_protocol = true
+```
+
+<br>In order to enable SMBW, need to set variable:
+```hcl
+smbw_enabled = true
 ```
 
 
@@ -109,18 +153,12 @@ host_shared_range  = [".."]
 | <a name="provider_google"></a> [google](#provider\_google) | ~>4.38.0 |
 | <a name="provider_null"></a> [null](#provider\_null) | n/a |
 | <a name="provider_random"></a> [random](#provider\_random) | n/a |
-| <a name="provider_time"></a> [time](#provider\_time) | n/a |
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
 | <a name="module_clients"></a> [clients](#module\_clients) | ./modules/clients | n/a |
-| <a name="module_network"></a> [network](#module\_network) | ./modules/network | n/a |
-| <a name="module_protocol_gateways"></a> [protocol\_gateways](#module\_protocol\_gateways) | ./modules/protocol_gateways | n/a |
-| <a name="module_service_account"></a> [service\_account](#module\_service\_account) | ./modules/service_account | n/a |
-| <a name="module_shared_vpc_peering"></a> [shared\_vpc\_peering](#module\_shared\_vpc\_peering) | ./modules/shared_vpcs | n/a |
-| <a name="module_worker_pool"></a> [worker\_pool](#module\_worker\_pool) | ./modules/worker_pool | n/a |
 
 ## Resources
 
@@ -136,8 +174,8 @@ host_shared_range  = [".."]
 | [google_cloudfunctions2_function_iam_member.weka_internal_invoker](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/cloudfunctions2_function_iam_member) | resource |
 | [google_compute_forwarding_rule.google_compute_forwarding_rule](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_forwarding_rule) | resource |
 | [google_compute_forwarding_rule.ui_forwarding_rule](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_forwarding_rule) | resource |
-| [google_compute_instance_group.this](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance_group) | resource |
-| [google_compute_instance_template.this](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance_template) | resource |
+| [google_compute_instance_group.instance_group](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance_group) | resource |
+| [google_compute_instance_template.backends_template](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance_template) | resource |
 | [google_compute_region_backend_service.backend_service](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_region_backend_service) | resource |
 | [google_compute_region_backend_service.ui_backend_service](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_region_backend_service) | resource |
 | [google_compute_region_health_check.health_check](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_region_health_check) | resource |
@@ -172,10 +210,9 @@ host_shared_range  = [".."]
 | [google_workflows_workflow.scale_up](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/workflows_workflow) | resource |
 | [null_resource.terminate-cluster](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
 | [random_password.password](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
-| [time_sleep.wait_120_seconds](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) | resource |
 | [archive_file.function_zip](https://registry.terraform.io/providers/hashicorp/archive/latest/docs/data-sources/file) | data source |
-| [google_compute_network.this](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_network) | data source |
-| [google_compute_subnetwork.this](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_subnetwork) | data source |
+| [google_compute_network.vpc_list_ids](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_network) | data source |
+| [google_compute_subnetwork.subnets_list_ids](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_subnetwork) | data source |
 | [google_project.project](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/project) | data source |
 
 ## Inputs
@@ -183,7 +220,6 @@ host_shared_range  = [".."]
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_add_frontend_containers"></a> [add\_frontend\_containers](#input\_add\_frontend\_containers) | Create cluster with FE containers | `bool` | `true` | no |
-| <a name="input_allow_ssh_ranges"></a> [allow\_ssh\_ranges](#input\_allow\_ssh\_ranges) | list of ranges to allow ssh on public deployment | `list(string)` | `[]` | no |
 | <a name="input_assign_public_ip"></a> [assign\_public\_ip](#input\_assign\_public\_ip) | Determines whether to assign public ip. | `bool` | `true` | no |
 | <a name="input_client_instance_type"></a> [client\_instance\_type](#input\_client\_instance\_type) | The client virtual machine type (sku) to deploy. | `string` | `"c2-standard-8"` | no |
 | <a name="input_client_nics_num"></a> [client\_nics\_num](#input\_client\_nics\_num) | The client NICs number. | `string` | `2` | no |
@@ -194,51 +230,35 @@ host_shared_range  = [".."]
 | <a name="input_cluster_size"></a> [cluster\_size](#input\_cluster\_size) | Weka cluster size | `number` | n/a | yes |
 | <a name="input_container_number_map"></a> [container\_number\_map](#input\_container\_number\_map) | Maps the number of objects and memory size per machine type. | <pre>map(object({<br>    compute  = number<br>    drive    = number<br>    frontend = number<br>    nics     = number<br>    memory   = list(string)<br>  }))</pre> | <pre>{<br>  "c2-standard-16": {<br>    "compute": 4,<br>    "drive": 1,<br>    "frontend": 1,<br>    "memory": [<br>      "24.2GB",<br>      "23.2GB"<br>    ],<br>    "nics": 7<br>  },<br>  "c2-standard-8": {<br>    "compute": 1,<br>    "drive": 1,<br>    "frontend": 1,<br>    "memory": [<br>      "4.2GB",<br>      "4GB"<br>    ],<br>    "nics": 4<br>  }<br>}</pre> | no |
 | <a name="input_create_cloudscheduler_sa"></a> [create\_cloudscheduler\_sa](#input\_create\_cloudscheduler\_sa) | Should or not crate gcp cloudscheduler sa | `bool` | `true` | no |
-| <a name="input_create_worker_pool"></a> [create\_worker\_pool](#input\_create\_worker\_pool) | Create worker pool | `bool` | `false` | no |
-| <a name="input_default_disk_size"></a> [default\_disk\_size](#input\_default\_disk\_size) | The default disk size. | `number` | `48` | no |
+| <a name="input_default_disk_size"></a> [default\_disk\_size](#input\_default\_disk\_size) | The client' default disk size. | `number` | `48` | no |
 | <a name="input_get_weka_io_token"></a> [get\_weka\_io\_token](#input\_get\_weka\_io\_token) | Get get.weka.io token for downloading weka | `string` | `""` | no |
-| <a name="input_host_project"></a> [host\_project](#input\_host\_project) | The ID of the project that will serve as a Shared VPC host project | `string` | `null` | no |
-| <a name="input_host_shared_range"></a> [host\_shared\_range](#input\_host\_shared\_range) | List of host range to allow sg | `list(string)` | `[]` | no |
 | <a name="input_hotspare"></a> [hotspare](#input\_hotspare) | Hot-spare value. | `number` | `1` | no |
-| <a name="input_install_weka_url"></a> [install\_weka\_url](#input\_install\_weka\_url) | Path to weka installation tar object | `string` | `""` | no |
+| <a name="input_install_url"></a> [install\_url](#input\_install\_url) | Path to weka installation tar object | `string` | `""` | no |
 | <a name="input_machine_type"></a> [machine\_type](#input\_machine\_type) | Weka cluster backends machines type | `string` | `"c2-standard-8"` | no |
 | <a name="input_mount_clients_dpdk"></a> [mount\_clients\_dpdk](#input\_mount\_clients\_dpdk) | Mount weka clients in DPDK mode | `bool` | `true` | no |
-| <a name="input_nics_numbers"></a> [nics\_numbers](#input\_nics\_numbers) | Number of nics per host | `number` | `-1` | no |
+| <a name="input_nics_number"></a> [nics\_number](#input\_nics\_number) | Number of nics per host | `number` | `-1` | no |
 | <a name="input_nvmes_number"></a> [nvmes\_number](#input\_nvmes\_number) | Number of local nvmes per host | `number` | n/a | yes |
 | <a name="input_obs_name"></a> [obs\_name](#input\_obs\_name) | Name of OBS cloud storage | `string` | `""` | no |
 | <a name="input_prefix"></a> [prefix](#input\_prefix) | Prefix for all resources | `string` | `"weka"` | no |
-| <a name="input_private_dns_name"></a> [private\_dns\_name](#input\_private\_dns\_name) | Private dns name | `string` | `null` | no |
+| <a name="input_private_dns_name"></a> [private\_dns\_name](#input\_private\_dns\_name) | Private dns name | `string` | n/a | yes |
+| <a name="input_private_dns_zone"></a> [private\_dns\_zone](#input\_private\_dns\_zone) | Name of private dns zone | `string` | n/a | yes |
 | <a name="input_private_network"></a> [private\_network](#input\_private\_network) | Deploy weka in private network | `bool` | `false` | no |
-| <a name="input_private_zone_name"></a> [private\_zone\_name](#input\_private\_zone\_name) | Private zone name | `string` | `null` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | Project id | `string` | n/a | yes |
 | <a name="input_protection_level"></a> [protection\_level](#input\_protection\_level) | Cluster data protection level. | `number` | `2` | no |
-| <a name="input_protocol"></a> [protocol](#input\_protocol) | Name of the protocol. | `string` | `"NFS"` | no |
-| <a name="input_protocol_gateway_disk_size"></a> [protocol\_gateway\_disk\_size](#input\_protocol\_gateway\_disk\_size) | The protocol gateways' default disk size. | `number` | `375` | no |
-| <a name="input_protocol_gateway_frontend_num"></a> [protocol\_gateway\_frontend\_num](#input\_protocol\_gateway\_frontend\_num) | The number of frontend cores on single protocol gateway machine. | `number` | `1` | no |
-| <a name="input_protocol_gateway_machine_type"></a> [protocol\_gateway\_machine\_type](#input\_protocol\_gateway\_machine\_type) | The protocol gateways' virtual machine type (sku) to deploy. | `string` | `"c2-standard-8"` | no |
-| <a name="input_protocol_gateway_nics_num"></a> [protocol\_gateway\_nics\_num](#input\_protocol\_gateway\_nics\_num) | The protocol gateways' NICs number. | `string` | `2` | no |
-| <a name="input_protocol_gateway_secondary_ips_per_nic"></a> [protocol\_gateway\_secondary\_ips\_per\_nic](#input\_protocol\_gateway\_secondary\_ips\_per\_nic) | Number of secondary IPs per single NIC per protocol gateway virtual machine. | `number` | `3` | no |
-| <a name="input_protocol_gateways_number"></a> [protocol\_gateways\_number](#input\_protocol\_gateways\_number) | The number of protocol gateway virtual machines to deploy. | `number` | `0` | no |
-| <a name="input_proxy_url"></a> [proxy\_url](#input\_proxy\_url) | Weka home proxy url | `string` | `""` | no |
 | <a name="input_region"></a> [region](#input\_region) | Region name | `string` | n/a | yes |
-| <a name="input_sa_email"></a> [sa\_email](#input\_sa\_email) | Service account email | `string` | `null` | no |
+| <a name="input_sa_email"></a> [sa\_email](#input\_sa\_email) | Service account email | `string` | n/a | yes |
 | <a name="input_set_obs_integration"></a> [set\_obs\_integration](#input\_set\_obs\_integration) | Determines whether to enable object stores integration with the Weka cluster. Set true to enable the integration. | `bool` | `false` | no |
-| <a name="input_set_worker_pool_network_peering"></a> [set\_worker\_pool\_network\_peering](#input\_set\_worker\_pool\_network\_peering) | Create peering between worker pool network and vpcs networks | `bool` | `false` | no |
-| <a name="input_shared_vpcs"></a> [shared\_vpcs](#input\_shared\_vpcs) | list of shared vpc name | `list(string)` | `[]` | no |
-| <a name="input_source_image_id"></a> [source\_image\_id](#input\_source\_image\_id) | Source image id | `string` | `"projects/centos-cloud/global/images/centos-7-v20220719"` | no |
 | <a name="input_state_bucket_name"></a> [state\_bucket\_name](#input\_state\_bucket\_name) | Name of bucket state, cloud storage | `string` | `""` | no |
 | <a name="input_stripe_width"></a> [stripe\_width](#input\_stripe\_width) | Stripe width = cluster\_size - protection\_level - 1 (by default). | `number` | `-1` | no |
-| <a name="input_subnets_name"></a> [subnets\_name](#input\_subnets\_name) | Subnets list name | `list(string)` | `[]` | no |
-| <a name="input_subnets_range"></a> [subnets\_range](#input\_subnets\_range) | List of subnets to use for creating the cluster, the number of subnets must be 'nics\_number' | `list(string)` | <pre>[<br>  "10.0.0.0/24",<br>  "10.1.0.0/24",<br>  "10.2.0.0/24",<br>  "10.3.0.0/24"<br>]</pre> | no |
+| <a name="input_subnets_name"></a> [subnets\_name](#input\_subnets\_name) | Subnets list name | `list(string)` | n/a | yes |
 | <a name="input_tiering_ssd_percent"></a> [tiering\_ssd\_percent](#input\_tiering\_ssd\_percent) | When OBS integration set to true , this parameter sets how much of the filesystem capacity should reside on SSD. For example, if this parameter is 20 and the total available SSD capacity is 20GB, the total capacity would be 100GB | `number` | `20` | no |
 | <a name="input_traces_per_ionode"></a> [traces\_per\_ionode](#input\_traces\_per\_ionode) | The number of traces per ionode. Traces are low-level events generated by Weka processes and are used as troubleshooting information for support purposes. | `number` | `10` | no |
-| <a name="input_vpc_connector_name"></a> [vpc\_connector\_name](#input\_vpc\_connector\_name) | exiting vpc connector name to use for cloud functions | `string` | `null` | no |
-| <a name="input_vpc_connector_range"></a> [vpc\_connector\_range](#input\_vpc\_connector\_range) | list of connector to use for serverless vpc access | `string` | `"10.8.0.0/28"` | no |
-| <a name="input_vpcs_name"></a> [vpcs\_name](#input\_vpcs\_name) | List of vpcs name | `list(string)` | `[]` | no |
+| <a name="input_vpc_connector"></a> [vpc\_connector](#input\_vpc\_connector) | Connector name to use for serverless vpc access | `string` | n/a | yes |
+| <a name="input_vpcs"></a> [vpcs](#input\_vpcs) | List of vpcs name | `list(string)` | n/a | yes |
+| <a name="input_weka_image_id"></a> [weka\_image\_id](#input\_weka\_image\_id) | Weka image id | `string` | `"projects/centos-cloud/global/images/centos-7-v20220719"` | no |
 | <a name="input_weka_username"></a> [weka\_username](#input\_weka\_username) | Weka cluster username | `string` | `"admin"` | no |
 | <a name="input_weka_version"></a> [weka\_version](#input\_weka\_version) | Weka version | `string` | `"4.2.1"` | no |
 | <a name="input_worker_pool_name"></a> [worker\_pool\_name](#input\_worker\_pool\_name) | Name of worker pool, Must be on the same project and region | `string` | `""` | no |
-| <a name="input_worker_pool_network"></a> [worker\_pool\_network](#input\_worker\_pool\_network) | Network name of worker pool, Must be on the same project and region | `string` | `""` | no |
 | <a name="input_workflow_map_region"></a> [workflow\_map\_region](#input\_workflow\_map\_region) | Map of region to use for workflow, as some regions do not have cloud workflow enabled | `map(string)` | <pre>{<br>  "southamerica-west1": "southamerica-east1"<br>}</pre> | no |
 | <a name="input_yum_repo_server"></a> [yum\_repo\_server](#input\_yum\_repo\_server) | Yum repo server address | `string` | `""` | no |
 | <a name="input_zone"></a> [zone](#input\_zone) | Zone name | `string` | n/a | yes |
@@ -250,11 +270,9 @@ host_shared_range  = [".."]
 | <a name="output_client_ips"></a> [client\_ips](#output\_client\_ips) | If 'private\_network' is set to false, it will output clients public ips, otherwise private ips. |
 | <a name="output_cluster_helper_commands"></a> [cluster\_helper\_commands](#output\_cluster\_helper\_commands) | Useful commands and script to interact with weka cluster |
 | <a name="output_cluster_name"></a> [cluster\_name](#output\_cluster\_name) | n/a |
-| <a name="output_functions_url"></a> [functions\_url](#output\_functions\_url) | Functions url and body for api request |
 | <a name="output_get_cluster_status_uri"></a> [get\_cluster\_status\_uri](#output\_get\_cluster\_status\_uri) | n/a |
 | <a name="output_lb_url"></a> [lb\_url](#output\_lb\_url) | n/a |
 | <a name="output_project_id"></a> [project\_id](#output\_project\_id) | n/a |
-| <a name="output_protocol_gateways_ips"></a> [protocol\_gateways\_ips](#output\_protocol\_gateways\_ips) | n/a |
 | <a name="output_resize_cluster_uri"></a> [resize\_cluster\_uri](#output\_resize\_cluster\_uri) | n/a |
 | <a name="output_ssh_user"></a> [ssh\_user](#output\_ssh\_user) | ssh user for weka cluster |
 | <a name="output_terminate_cluster_uri"></a> [terminate\_cluster\_uri](#output\_terminate\_cluster\_uri) | n/a |

@@ -93,13 +93,13 @@ variable "install_weka_url" {
 variable "weka_version" {
   type        = string
   description = "Weka version"
-  default     = "4.2.1"
+  default = "4.2.1"
 }
 
 variable "weka_username" {
   type        = string
   description = "Weka cluster username"
-  default     = "admin"
+  default = "admin"
 }
 
 variable "cluster_size" {
@@ -378,56 +378,147 @@ variable "mount_clients_dpdk" {
   description = "Mount weka clients in DPDK mode"
 }
 
-############################################### protocol gateways variables ###################################################
-variable "protocol_gateways_number" {
+variable "proxy_url" {
+  type        = string
+  description = "Weka home proxy url"
+  default     = ""
+}
+
+############################################### nfs protocol gateways variables ###################################################
+variable "nfs_protocol_gateways_number" {
   type        = number
   description = "The number of protocol gateway virtual machines to deploy."
   default     = 0
 }
 
-variable "protocol" {
-  type        = string
-  description = "Name of the protocol."
-  default     = "NFS"
-
-  validation {
-    condition     = contains(["NFS", "SMB"], var.protocol)
-    error_message = "Allowed values for protocol: NFS, SMB."
-  }
-}
-
-variable "protocol_gateway_secondary_ips_per_nic" {
+variable "nfs_protocol_gateway_secondary_ips_per_nic" {
   type        = number
   description = "Number of secondary IPs per single NIC per protocol gateway virtual machine."
   default     = 3
 }
 
-variable "protocol_gateway_machine_type" {
+variable "nfs_protocol_gateway_machine_type" {
   type        = string
   description = "The protocol gateways' virtual machine type (sku) to deploy."
   default     = "c2-standard-8"
 }
 
-variable "protocol_gateway_nics_num" {
+variable "nfs_protocol_gateway_nics_num" {
   type        = string
   description = "The protocol gateways' NICs number."
   default     = 2
 }
 
-variable "protocol_gateway_disk_size" {
+variable "nfs_protocol_gateway_disk_size" {
   type        = number
   default     = 375
   description = "The protocol gateways' default disk size."
 }
 
-variable "protocol_gateway_frontend_num" {
+variable "nfs_protocol_gateway_frontend_cores_num" {
   type        = number
   default     = 1
   description = "The number of frontend cores on single protocol gateway machine."
 }
 
-variable "proxy_url" {
+variable "nfs_setup_protocol" {
+  type        = bool
+  description = "Config protocol, default if false"
+  default     = false
+}
+
+############################################### smb protocol gateways variables ###################################################
+variable "smb_protocol_gateways_number" {
+  type        = number
+  description = "The number of protocol gateway virtual machines to deploy."
+  default     = 0
+}
+
+variable "smb_protocol_gateway_secondary_ips_per_nic" {
+  type        = number
+  description = "Number of secondary IPs per single NIC per protocol gateway virtual machine."
+  default     = 3
+}
+
+variable "smb_protocol_gateway_machine_type" {
   type        = string
-  description = "Weka home proxy url"
+  description = "The protocol gateways' virtual machine type (sku) to deploy."
+  default     = "c2-standard-8"
+}
+
+variable "smb_protocol_gateway_nics_num" {
+  type        = string
+  description = "The protocol gateways' NICs number."
+  default     = 2
+}
+
+variable "smb_protocol_gateway_disk_size" {
+  type        = number
+  default     = 375
+  description = "The protocol gateways' default disk size."
+}
+
+variable "smb_protocol_gateway_frontend_cores_num" {
+  type        = number
+  default     = 1
+  description = "The number of frontend cores on single protocol gateway machine."
+}
+
+variable "smb_setup_protocol" {
+  type        = bool
+  description = "Config protocol, default if false"
+  default     = false
+}
+
+variable "smbw_enabled" {
+  type        = bool
+  default     = false
+  description = "Enable SMBW protocol. This option should be provided before cluster is created to leave extra capacity for SMBW setup."
+}
+
+variable "smb_cluster_name" {
+  type        = string
+  description = "The name of the SMB setup."
+  default     = "Weka-SMB"
+
+  validation {
+    condition     = length(var.smb_cluster_name) > 0
+    error_message = "The SMB cluster name cannot be empty."
+  }
+}
+
+variable "smb_domain_name" {
+  type        = string
+  description = "The domain to join the SMB cluster to."
   default     = ""
+}
+
+variable "smb_domain_netbios_name" {
+  type        = string
+  description = "The domain NetBIOS name of the SMB cluster."
+  default     = ""
+}
+
+variable "smb_domain_username" {
+
+  description = "The SMB domain username."
+  default     = ""
+}
+
+variable "smb_domain_password" {
+  type        = string
+  description = "The SMB domain password."
+  default     = ""
+}
+
+variable "smb_dns_ip_address" {
+  type        = string
+  description = "DNS IP address"
+  default     = ""
+}
+
+variable "smb_share_name" {
+  type       = string
+  description = "The name of the SMB share"
+  default     = "default"
 }
