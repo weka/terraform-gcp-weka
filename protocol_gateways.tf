@@ -18,7 +18,7 @@ module "protocol_gateways" {
   nics_numbers          = var.protocol_gateway_nics_num
   secondary_ips_per_nic = var.protocol_gateway_secondary_ips_per_nic
   backend_lb_ip         = google_compute_forwarding_rule.google_compute_forwarding_rule.ip_address
-  install_weka_url      = var.install_url != "" ? var.install_url : "https://$TOKEN@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}"
+  install_weka_url      = var.install_weka_url != "" ? var.install_weka_url : "https://$TOKEN@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}"
   machine_type          = var.protocol_gateway_machine_type
   yum_repo_server       = var.yum_repo_server
   sa_email              = var.sa_email
@@ -26,7 +26,7 @@ module "protocol_gateways" {
   assign_public_ip      = var.assign_public_ip
   disk_size             = var.protocol_gateway_disk_size
   frontend_num          = var.protocol_gateway_frontend_num
-  weka_token_id         = google_secret_manager_secret.secret_token.id
+  weka_token_id         = google_secret_manager_secret.secret_token[0].id
   weka_password_id      = google_secret_manager_secret.secret_weka_password.id
   proxy_url             = var.proxy_url
   depends_on            = [time_sleep.wait_120_seconds, google_compute_forwarding_rule.google_compute_forwarding_rule, google_secret_manager_secret.secret_token,google_cloudfunctions2_function.cloud_internal_function]
