@@ -109,6 +109,8 @@ github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/weka/go-cloud-lib v0.0.0-20230724075221-78a3e47297c7 h1:aUGwetRwsSnMZjH6lOQimemgmoxAVBHZ0ft7Bezut2s=
 github.com/weka/go-cloud-lib v0.0.0-20230724075221-78a3e47297c7/go.mod h1:0+RJhfALuEA272jQqNvYoaqUVzCEwOub+H2MxyxSuzU=
+github.com/weka/go-cloud-lib v0.0.0-20230814155319-b351c2b1cee8 h1:D/h8wk3mxoXgocjHjc0lFktrB479utypoy+0x/58+eM=
+github.com/weka/go-cloud-lib v0.0.0-20230814155319-b351c2b1cee8/go.mod h1:lT0kVeV0d4HznnITUHbHN6JunpqyL4q9McAYr78YNm4=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 go.opencensus.io v0.24.0 h1:y73uSU6J157QMP2kn2r30vwW1A2W2WFwSCGnAVxeaD0=
 go.opencensus.io v0.24.0/go.mod h1:vNK8G9p7aAivkbmorf4v+7Hgx+Zs0yY+0fOtgBfjQKo=
