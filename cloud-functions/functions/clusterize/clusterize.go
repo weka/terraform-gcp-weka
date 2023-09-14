@@ -3,6 +3,7 @@ package clusterize
 import (
 	"context"
 	"fmt"
+	"github.com/weka/go-cloud-lib/functions_def"
 	"strings"
 
 	"github.com/lithammer/dedent"
@@ -30,15 +31,18 @@ type ClusterizationParams struct {
 }
 
 func Clusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript string) {
+	funcDef := gcp_functions_def.NewFuncDef(p.CloudFuncRootUrl)
+	reportFunction := funcDef.GetFunctionCmdDefinition(functions_def.Report)
+
 	instancesNames, err := common.AddInstanceToStateInstances(ctx, p.Bucket, p.VmName)
 	if err != nil {
-		clusterizeScript = cloudCommon.GetErrorScript(err)
+		clusterizeScript = cloudCommon.GetErrorScript(err, reportFunction)
 		return
 	}
 
 	err = common.SetDeletionProtection(ctx, p.Project, p.Zone, p.VmName)
 	if err != nil {
-		clusterizeScript = cloudCommon.GetErrorScript(err)
+		clusterizeScript = cloudCommon.GetErrorScript(err, reportFunction)
 		return
 	}
 
@@ -79,12 +83,10 @@ func Clusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript s
 	creds, err := common.GetUsernameAndPassword(ctx, p.UsernameId, p.PasswordId)
 	if err != nil {
 		log.Error().Msgf("%s", err)
-		clusterizeScript = cloudCommon.GetErrorScript(err)
+		clusterizeScript = cloudCommon.GetErrorScript(err, reportFunction)
 		return
 	}
 	log.Info().Msgf("Fetched weka cluster creds successfully")
-
-	funcDef := gcp_functions_def.NewFuncDef(p.CloudFuncRootUrl)
 
 	ips := common.GetBackendsIps(ctx, p.Project, p.Zone, instancesNames)
 
