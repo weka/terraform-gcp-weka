@@ -23,13 +23,11 @@ variable "prefix" {
 variable "worker_machine_type" {
   type        = string
   description = "Machine type of a worker"
-  default     = "e2-standard-4"
 }
 
 variable "worker_disk_size" {
   type        = number
   description = "Size of the disk attached to the worker, in GB"
-  default     = 100
 }
 
 variable "cluster_name" {

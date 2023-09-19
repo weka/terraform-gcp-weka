@@ -16,7 +16,7 @@ variable "zone" {
 variable "vpcs_number" {
   type        = number
   description = "number of vpcs"
-  default = 4
+  default     = 4
 }
 
 variable "vpcs" {
@@ -88,17 +88,17 @@ variable "vpc_connector_region_map" {
 variable "private_zone_name" {
   type        = string
   description = "Private zone name"
-  default     = null
+  default     = ""
 }
 
 variable "private_dns_name" {
   type        = string
   description = "Private dns name"
-  default     = null
+  default     = ""
 }
 
 variable "mtu_size" {
-    type        = number
-    description = "mtu size"
-    default     = 1460
+  type        = number
+  description = "mtu size"
+  default     = 1460
 }
