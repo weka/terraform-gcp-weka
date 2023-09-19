@@ -60,8 +60,8 @@ No modules.
 | <a name="input_sa_email"></a> [sa\_email](#input\_sa\_email) | service account email | `string` | n/a | yes |
 | <a name="input_set_worker_pool_network_peering"></a> [set\_worker\_pool\_network\_peering](#input\_set\_worker\_pool\_network\_peering) | Create peering between worker pool network and vpcs networks | `bool` | n/a | yes |
 | <a name="input_vpc_name"></a> [vpc\_name](#input\_vpc\_name) | Vpc name | `string` | `""` | no |
-| <a name="input_worker_disk_size"></a> [worker\_disk\_size](#input\_worker\_disk\_size) | Size of the disk attached to the worker, in GB | `number` | `100` | no |
-| <a name="input_worker_machine_type"></a> [worker\_machine\_type](#input\_worker\_machine\_type) | Machine type of a worker | `string` | `"e2-standard-4"` | no |
+| <a name="input_worker_disk_size"></a> [worker\_disk\_size](#input\_worker\_disk\_size) | Size of the disk attached to the worker, in GB | `number` | n/a | yes |
+| <a name="input_worker_machine_type"></a> [worker\_machine\_type](#input\_worker\_machine\_type) | Machine type of a worker | `string` | n/a | yes |
 | <a name="input_worker_pool_name"></a> [worker\_pool\_name](#input\_worker\_pool\_name) | Exiting worker pool name | `string` | `""` | no |
 | <a name="input_worker_pool_network"></a> [worker\_pool\_network](#input\_worker\_pool\_network) | Network name of worker pool, Must be on the same project and region | `string` | `""` | no |
 

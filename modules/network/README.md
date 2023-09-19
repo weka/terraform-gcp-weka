@@ -60,9 +60,9 @@ No modules.
 | <a name="input_allow_ssh_ranges"></a> [allow\_ssh\_ranges](#input\_allow\_ssh\_ranges) | list of ranges to allow ssh on public deployment | `list(string)` | n/a | yes |
 | <a name="input_mtu_size"></a> [mtu\_size](#input\_mtu\_size) | mtu size | `number` | `1460` | no |
 | <a name="input_prefix"></a> [prefix](#input\_prefix) | prefix for all resources | `string` | `"weka"` | no |
-| <a name="input_private_dns_name"></a> [private\_dns\_name](#input\_private\_dns\_name) | Private dns name | `string` | `null` | no |
+| <a name="input_private_dns_name"></a> [private\_dns\_name](#input\_private\_dns\_name) | Private dns name | `string` | `""` | no |
 | <a name="input_private_network"></a> [private\_network](#input\_private\_network) | deploy weka in private network | `bool` | `false` | no |
-| <a name="input_private_zone_name"></a> [private\_zone\_name](#input\_private\_zone\_name) | Private zone name | `string` | `null` | no |
+| <a name="input_private_zone_name"></a> [private\_zone\_name](#input\_private\_zone\_name) | Private zone name | `string` | `""` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | project id | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | region name | `string` | n/a | yes |
 | <a name="input_set_peering"></a> [set\_peering](#input\_set\_peering) | apply peering connection between subnets and subnets | `bool` | `true` | no |
