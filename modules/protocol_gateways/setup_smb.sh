@@ -153,11 +153,6 @@ retry_command "$create_smb_cmd" "create smb cluster"
 
 weka smb cluster wait
 
-# if domain_username and domain_password are not empty, join the domain
-if [ -n "${domain_username}" ] && [ -n "${domain_password}" ]; then
-    weka smb domain join ${domain_username} ${domain_password} $server_flag
-fi
-
 # add an SMB share if share_name is not empty
 # 'default' is the fs-name of weka file system created during clusterization
 if [ -n "${share_name}" ]; then

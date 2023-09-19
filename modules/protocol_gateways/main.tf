@@ -39,8 +39,6 @@ locals {
     domain_name         = var.smb_domain_name
     domain_netbios_name = var.smb_domain_netbios_name
     smbw_enabled        = var.smbw_enabled
-    domain_username     = var.smb_domain_username
-    domain_password     = var.smb_domain_password
     dns_ip              = var.smb_dns_ip_address
     gateways_number     = var.gateways_number
     gateways_name       = var.gateways_name
