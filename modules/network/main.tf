@@ -161,7 +161,7 @@ resource "google_project_service" "project-dns" {
 }
 
 resource "google_dns_managed_zone" "private-zone" {
-  count       = var.private_zone_name == null ? 1 : 0
+  count       = var.private_zone_name == "" ? 1 : 0
   name        = "${var.prefix}-private-zone"
   dns_name    = "${var.prefix}.private.net."
   project     = var.project_id

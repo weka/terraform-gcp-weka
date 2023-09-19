@@ -28,11 +28,11 @@ output "vpc_connector_name" {
 }
 
 output "private_zone_name" {
-  value       = var.private_zone_name == null ? google_dns_managed_zone.private-zone[0].name : var.private_zone_name
+  value       = var.private_zone_name == "" ? google_dns_managed_zone.private-zone[0].name : var.private_zone_name
   description = "Private zone name"
 }
 
 output "private_dns_name" {
-  value = var.private_zone_name == null ? google_dns_managed_zone.private-zone[0].dns_name : var.private_dns_name
+  value = var.private_zone_name == "" ? google_dns_managed_zone.private-zone[0].dns_name : var.private_dns_name
   description = "Private zone dns name"
 }

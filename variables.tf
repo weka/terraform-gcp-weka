@@ -23,6 +23,18 @@ variable "nics_numbers" {
   }
 }
 
+variable "vpcs_number" {
+  type        = number
+  description = "number of vpcs"
+  default     = 4
+}
+
+variable "mtu_size" {
+  type        = number
+  description = "mtu size"
+  default     = 1460
+}
+
 variable "vpcs_name" {
   type        = list(string)
   description = "List of vpcs name"
@@ -133,13 +145,13 @@ variable "vpc_connector_range" {
 variable "vpc_connector_name" {
   type        = string
   description = "exiting vpc connector name to use for cloud functions"
-  default     = null
+  default     = ""
 }
 
 variable "sa_email" {
   type        = string
   description = "Service account email"
-  default     = null
+  default     = ""
 }
 
 variable "create_cloudscheduler_sa" {
@@ -169,13 +181,13 @@ variable "source_image_id" {
 variable "private_zone_name" {
   type        = string
   description = "Private zone name"
-  default     = null
+  default     = ""
 }
 
 variable "private_dns_name" {
   type        = string
   description = "Private dns name"
-  default     = null
+  default     = ""
 }
 
 
@@ -215,6 +227,18 @@ variable "worker_pool_name" {
   type        = string
   description = "Name of worker pool, Must be on the same project and region"
   default     = ""
+}
+
+variable "worker_machine_type" {
+  type        = string
+  description = "Machine type of a worker"
+  default     = "e2-standard-4"
+}
+
+variable "worker_disk_size" {
+  type        = number
+  description = "Size of the disk attached to the worker, in GB"
+  default     = 100
 }
 
 variable "container_number_map" {
@@ -344,7 +368,7 @@ variable "set_worker_pool_network_peering" {
 variable "host_project" {
   type        = string
   description = "The ID of the project that will serve as a Shared VPC host project"
-  default     = null
+  default     = ""
 }
 
 variable "shared_vpcs" {
