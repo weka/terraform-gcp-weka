@@ -229,7 +229,7 @@ host_shared_range  = [".."]
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_add_frontend_containers"></a> [add\_frontend\_containers](#input\_add\_frontend\_containers) | Create cluster with FE containers | `bool` | `true` | no |
+| <a name="input_add_frontend_container"></a> [add\_frontend\_container](#input\_add\_frontend\_container) | Create cluster with FE containers | `bool` | `true` | no |
 | <a name="input_allow_ssh_ranges"></a> [allow\_ssh\_ranges](#input\_allow\_ssh\_ranges) | list of ranges to allow ssh on public deployment | `list(string)` | `[]` | no |
 | <a name="input_assign_public_ip"></a> [assign\_public\_ip](#input\_assign\_public\_ip) | Determines whether to assign public ip. | `bool` | `true` | no |
 | <a name="input_client_instance_type"></a> [client\_instance\_type](#input\_client\_instance\_type) | The client virtual machine type (sku) to deploy. | `string` | `"c2-standard-8"` | no |
