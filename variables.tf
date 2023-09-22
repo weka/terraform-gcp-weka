@@ -328,7 +328,7 @@ variable "tiering_ssd_percent" {
   description = "When OBS integration set to true , this parameter sets how much of the filesystem capacity should reside on SSD. For example, if this parameter is 20 and the total available SSD capacity is 20GB, the total capacity would be 100GB"
 }
 
-variable "add_frontend_containers" {
+variable "add_frontend_container" {
   type        = bool
   default     = true
   description = "Create cluster with FE containers"
