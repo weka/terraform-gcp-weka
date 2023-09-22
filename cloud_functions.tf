@@ -6,7 +6,7 @@ locals {
   worker_pool_id          = var.worker_pool_name != "" ? "projects/${var.project_id}/locations/${var.region}/workerPools/${local.worker_pool_name}" : ""
   stripe_width_calculated = var.cluster_size - var.protection_level - 1
   stripe_width            = local.stripe_width_calculated < 16 ? local.stripe_width_calculated : 16
-  get_compute_memory      = var.add_frontend_containers ? var.container_number_map[var.machine_type].memory[1] : var.container_number_map[var.machine_type].memory[0]
+  get_compute_memory      = var.add_frontend_container ? var.container_number_map[var.machine_type].memory[1] : var.container_number_map[var.machine_type].memory[0]
   state_bucket            = var.state_bucket_name == "" ? google_storage_bucket.weka_deployment[0].name : var.state_bucket_name
   install_weka_url        = var.install_weka_url != "" ? var.install_weka_url : "https://$TOKEN@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}"
 
@@ -72,8 +72,8 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       NICS_NUM : local.nics_number
       COMPUTE_MEMORY : local.get_compute_memory
       NUM_DRIVE_CONTAINERS : var.container_number_map[var.machine_type].drive
-      NUM_COMPUTE_CONTAINERS : var.add_frontend_containers ? var.container_number_map[var.machine_type].compute : var.container_number_map[var.machine_type].compute + 1
-      NUM_FRONTEND_CONTAINERS : var.add_frontend_containers ? var.container_number_map[var.machine_type].frontend : 0
+      NUM_COMPUTE_CONTAINERS : var.add_frontend_container ? var.container_number_map[var.machine_type].compute : var.container_number_map[var.machine_type].compute + 1
+      NUM_FRONTEND_CONTAINERS : var.add_frontend_container ? var.container_number_map[var.machine_type].frontend : 0
       NVMES_NUM : var.nvmes_number
       HOSTS_NUM: var.cluster_size
       NICS_NUM: local.nics_number
@@ -86,7 +86,7 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       SET_OBS: var.set_obs_integration
       OBS_NAME: var.obs_name == "" ? "" : var.obs_name
       OBS_TIERING_SSD_PERCENT: var.tiering_ssd_percent
-      NUM_FRONTEND_CONTAINERS : var.add_frontend_containers ? var.container_number_map[var.machine_type].frontend : 0
+      NUM_FRONTEND_CONTAINERS : var.add_frontend_container ? var.container_number_map[var.machine_type].frontend : 0
       // for terminate
       LOAD_BALANCER_NAME: google_compute_region_backend_service.backend_service.name
       // for scale_up
