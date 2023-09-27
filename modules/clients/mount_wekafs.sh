@@ -66,7 +66,7 @@ function getNetStrForDpdk {
   			IFS='/' read -ra netmask <<< "$bits"
 
   			gateway=$${gateways[$i]}
-  			net="$net$enp/$subnet_inet/$${netmask[1]}/$gateway"
+  			net="$net -o net=$enp/$subnet_inet/$${netmask[1]}/$gateway"
   	done
 }
 
@@ -91,8 +91,8 @@ function retry {
 
 mount_command="mount -t wekafs -o net=udp ${backend_lb_ip}/$FILESYSTEM_NAME $MOUNT_POINT"
 if [[ ${mount_clients_dpdk} == true ]]; then
-  getNetStrForDpdk $(($NICS_NUM-1)) $(($NICS_NUM)) "$gateways" "$subnets"
-  mount_command="mount -t wekafs -o net=$net -o num_cores=1 -o mgmt_ip=$eth0 ${backend_lb_ip}/$FILESYSTEM_NAME $MOUNT_POINT"
+  getNetStrForDpdk 1 $(($NICS_NUM)) "$gateways" "$subnets"
+  mount_command="mount -t wekafs $net -o num_cores=$(($NICS_NUM-1)) -o mgmt_ip=$eth0 ${backend_lb_ip}/$FILESYSTEM_NAME $MOUNT_POINT"
 fi
 
 retry 60 45 $mount_command
