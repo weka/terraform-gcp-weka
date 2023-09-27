@@ -534,3 +534,9 @@ variable "smb_share_name" {
   description = "The name of the SMB share"
   default     = "default"
 }
+
+variable "weka_home_url" {
+  type        = string
+  description = "Weka Home url"
+  default     = ""
+}

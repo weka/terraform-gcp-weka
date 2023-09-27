@@ -98,6 +98,7 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 	addFrontendNum, _ := strconv.Atoi(os.Getenv("NUM_FRONTEND_CONTAINERS"))
 	functionRootUrl := fmt.Sprintf("https://%s", r.Host)
 	smbwEnabled, _ := strconv.ParseBool(os.Getenv("SMBW_ENABLED"))
+	wekaHomeUrl := os.Getenv("WEKA_HOME_URL")
 	addFrontend := false
 	if addFrontendNum > 0 {
 		addFrontend = true
@@ -139,6 +140,7 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 				Hotspare:        hotspare,
 			},
 			AddFrontend: addFrontend,
+			WekaHomeUrl: wekaHomeUrl,
 		},
 		Obs: protocol.ObsParams{
 			Name:              obsName,
