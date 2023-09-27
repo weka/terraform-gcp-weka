@@ -75,6 +75,7 @@ variable "region" {
 variable "nvmes_number" {
   type        = number
   description = "Number of local nvmes per host"
+  default     = 2
 }
 
 variable "private_network" {
