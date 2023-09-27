@@ -96,6 +96,7 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       SMBW_ENABLED: var.smbw_enabled
       // Weka proxy url
       PROXY_URL: var.proxy_url
+      WEKA_HOME_URL: var.weka_home_url
     }
   }
   lifecycle {
