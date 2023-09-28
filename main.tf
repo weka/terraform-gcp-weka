@@ -103,12 +103,21 @@ resource "google_compute_instance_group" "this" {
   }
 }
 
+data "google_client_openid_userinfo" "current" {}
+
+locals {
+  user_email              = data.google_client_openid_userinfo.current.email
+  use_sa_token_for_destroy = endswith(local.user_email, "${var.project_id}.iam.gserviceaccount.com") ? "--impersonate-service-account=\"${local.user_email}\" " : ""
+}
+
 resource "null_resource" "terminate-cluster" {
   triggers = {
     command = <<EOT
       echo "Terminating cluster..."
+      XXX=$(gcloud auth print-identity-token --account=${var.project_id} ${local.use_sa_token_for_destroy})
+      echo "$XXX"
       curl -m 70 -X POST ${format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=terminate_cluster")} \
-      -H "Authorization:bearer $(gcloud auth print-identity-token)" \
+      -H "Authorization:bearer $(gcloud auth print-identity-token ${local.use_sa_token_for_destroy} )" \
       -H "Content-Type:application/json" \
       -d '{"name":"${var.cluster_name}"}'
       EOT
