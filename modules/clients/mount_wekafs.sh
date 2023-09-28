@@ -54,10 +54,11 @@ function getNetStrForDpdk {
 		for ((i; i<$j; i++)); do
   			eth=eth$i
   			subnet_inet=$(ifconfig $eth | grep 'inet ' | awk '{print $2}')
-  			if [ -z $subnet_inet ] || [ $${#gateways[@]} -eq 0 ];then
-  			        net="$net$eth"
-  			        continue
-  			fi
+  			while [ -z $subnet_inet ]; do
+  			  echo "waiting for $eth to get inet"
+  				sleep 10
+  				subnet_inet=$(ifconfig $eth | grep 'inet ' | awk '{print $2}')
+  			done
   			enp=$(ls -l /sys/class/net/$eth/ | grep lower | awk -F"_" '{print $2}' | awk '{print $1}') #for azure
   			if [ -z $enp ];then
   				enp=$(ethtool -i $eth | grep bus-info | awk '{print $2}') #pci for gcp
