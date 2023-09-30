@@ -19,8 +19,13 @@ output "functions_url" {
 }
 
 output "ssh_user" {
-  value = "weka"
+  value = var.ssh_user
   description = "ssh user for weka cluster"
+}
+
+output "private_ssh_key" {
+  value       = var.ssh_public_key == null ? local.ssh_private_key_path : null
+  description = "private_ssh_key:  If 'ssh_public_key' is set to null, it will output the private ssh key location."
 }
 
 output "get_cluster_status_uri" {
