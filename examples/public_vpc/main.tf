@@ -9,7 +9,7 @@ module "weka_deployment" {
   project_id          = var.project_id
   prefix              = "weka"
   region              = var.region
-  zone                = "europe-west1-b"
+  zone                = var.zone
   cluster_size        = 6
   nvmes_number        = 2
   get_weka_io_token   = var.get_weka_io_token
