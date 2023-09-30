@@ -76,8 +76,8 @@ resource "google_compute_network_peering" "peering" {
 }
 
 # ========================= sg =================================
-resource "google_compute_firewall" "sg_public_ssh" {
-  count         = var.private_network ? 0 : local.vpc_length
+resource "google_compute_firewall" "sg_ssh" {
+  count         = length(var.allow_ssh_ranges) == 0  ? 0 : local.vpc_length
   name          = "${var.prefix}-sg-ssh-${count.index}"
   network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[count.index].name : data.google_compute_network.vpc_list_ids[count.index].name
   source_ranges = var.allow_ssh_ranges
@@ -86,6 +86,18 @@ resource "google_compute_firewall" "sg_public_ssh" {
     ports    = ["22"]
   }
   source_tags = ["ssh"]
+}
+
+resource "google_compute_firewall" "sg_weka_api" {
+  count         = length(var.allow_weka_api_ranges) == 0 ? 0 : local.vpc_length
+  name          = "${var.prefix}-sg-weka-api-${count.index}"
+  network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[count.index].name : data.google_compute_network.vpc_list_ids[count.index].name
+  source_ranges = var.allow_weka_api_ranges
+  allow {
+    protocol = "tcp"
+    ports    = ["14000"]
+  }
+  source_tags = ["weka-api"]
 }
 
 resource "google_compute_firewall" "sg_private" {

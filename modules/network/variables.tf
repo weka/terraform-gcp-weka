@@ -70,7 +70,14 @@ variable "private_network" {
 
 variable "allow_ssh_ranges" {
   type        = list(string)
-  description = "list of ranges to allow ssh on public deployment"
+  description = "Allow port 22, if not provided, i.e leaving the default empty list, the rule will not be included in the SG"
+  default     = []
+}
+
+variable "allow_weka_api_ranges" {
+  type        = list(string)
+  description = "Allow port 14000, if not provided, i.e leaving the default empty list, the rule will not be included in the SG"
+  default     = []
 }
 
 variable "vpc_connector_region_map" {

@@ -1,5 +1,3 @@
-
-
 module "service_account" {
   count             = var.sa_email == "" ? 1 : 0
   source            = "./modules/service_account"
@@ -11,21 +9,22 @@ module "service_account" {
 }
 
 module "network" {
-  count               = length(var.subnets_name) == 0 ? 1 : 0
-  source              = "./modules/network"
-  project_id          = var.project_id
-  prefix              = var.prefix
-  region              = var.region
-  subnets_range       = var.subnets_range
-  zone                = var.zone
-  vpc_connector_range = var.vpc_connector_range
-  vpc_connector_name  = var.vpc_connector_name
-  allow_ssh_ranges    = var.allow_ssh_ranges
-  private_network     = var.private_network
-  vpcs_number         = var.vpcs_number
-  private_zone_name   = var.private_zone_name
-  mtu_size            = var.mtu_size
-  depends_on          = [module.service_account]
+  count                 = length(var.subnets_name) == 0 ? 1 : 0
+  source                = "./modules/network"
+  project_id            = var.project_id
+  prefix                = var.prefix
+  region                = var.region
+  subnets_range         = var.subnets_range
+  zone                  = var.zone
+  vpc_connector_range   = var.vpc_connector_range
+  vpc_connector_name    = var.vpc_connector_name
+  allow_ssh_ranges      = var.allow_ssh_ranges
+  allow_weka_api_ranges = var.allow_weka_api_ranges
+  private_network       = var.private_network
+  vpcs_number           = var.vpcs_number
+  private_zone_name     = var.private_zone_name
+  mtu_size              = var.mtu_size
+  depends_on            = [module.service_account]
 }
 
 locals {
@@ -38,23 +37,25 @@ locals {
 }
 
 module "worker_pool" {
-  count               = var.create_worker_pool ? 1 : 0
-  source              = "./modules/worker_pool"
-  project_id          = var.project_id
-  prefix              = var.prefix
-  worker_machine_type = var.worker_machine_type
-  worker_disk_size    = var.worker_disk_size
-  region              = var.region
-  vpc_name            = local.vpcs_name[0]
-  cluster_name        = var.cluster_name
-  sa_email            = local.sa_email
-  worker_pool_network = var.worker_pool_network
-  worker_pool_name    = var.worker_pool_name
+  count                           = var.create_worker_pool ? 1 : 0
+  source                          = "./modules/worker_pool"
+  project_id                      = var.project_id
+  prefix                          = var.prefix
+  worker_machine_type             = var.worker_machine_type
+  worker_disk_size                = var.worker_disk_size
+  region                          = var.region
+  vpc_name                        = local.vpcs_name[0]
+  cluster_name                    = var.cluster_name
+  sa_email                        = local.sa_email
+  worker_pool_network             = var.worker_pool_network
+  worker_pool_name                = var.worker_pool_name
   set_worker_pool_network_peering = var.set_worker_pool_network_peering
-  depends_on          = [module.network, google_project_service.cloud-build-api, google_project_service.compute-api]
+  depends_on                      = [
+    module.network, google_project_service.cloud-build-api, google_project_service.compute-api
+  ]
 }
 
-data "google_compute_network" "this"{
+data "google_compute_network" "this" {
   count      = length(var.vpcs_name) == 0 ? length(module.network[0].vpcs_names) : length(var.vpcs_name)
   name       = length(var.vpcs_name) == 0 ? module.network[0].vpcs_names[count.index] : var.vpcs_name[count.index]
   depends_on = [module.network]
@@ -73,16 +74,16 @@ provider "google" {
 }
 
 module "shared_vpc_peering" {
-  count               = var.host_project == "" ? 0 : 1
-  source              = "./modules/shared_vpcs"
-  project_id          = var.project_id
-  prefix              = var.prefix
-  host_project        = var.host_project
-  shared_vpcs         = var.shared_vpcs
-  vpcs_name           = local.vpcs_name
-  sa_email            = local.sa_email
-  host_shared_range   = var.host_shared_range
-  providers = {
+  count             = var.host_project == "" ? 0 : 1
+  source            = "./modules/shared_vpcs"
+  project_id        = var.project_id
+  prefix            = var.prefix
+  host_project      = var.host_project
+  shared_vpcs       = var.shared_vpcs
+  vpcs_name         = local.vpcs_name
+  sa_email          = local.sa_email
+  host_shared_range = var.host_shared_range
+  providers         = {
     google.shared-vpc = google.shared-vpc
   }
   depends_on = [module.network]
