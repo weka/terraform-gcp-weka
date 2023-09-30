@@ -71,6 +71,10 @@ resource "google_compute_instance_template" "this" {
    disk_size_gb = 375
   }
 
+  metadata = {
+    ssh-keys = "${var.ssh_user}:${local.ssh_public_key}"
+  }
+
   lifecycle {
     ignore_changes = [network_interface]
     create_before_destroy = false
