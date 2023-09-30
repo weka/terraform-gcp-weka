@@ -53,7 +53,7 @@ jobs:
           GET_WEKA_IO_TOKEN: ${{ secrets.GET_WEKA_IO_TOKEN }}
 
       - name: Wait for weka cluster
-        run: ../../ci/deployment/wait_for_cluster.sh 7 30
+        run: ../../ci/deployment/wait_for_cluster.sh 6 30
 
       - name: Scale up
         run: |
@@ -62,11 +62,11 @@ jobs:
             --region europe-west1  \
             --format='get(serviceConfig.uri)' \
             --gen2)
-          curl "$func_url?action=resize" --fail -H "Authorization:bearer $(gcloud auth print-identity-token)" -d '{"value": 8}'
+          curl "$func_url?action=resize" --fail -H "Authorization:bearer $(gcloud auth print-identity-token)" -d '{"value": 7}'
 
 
       - name: Wait for weka cluster
-        run: ../../ci/deployment/wait_for_cluster.sh 8 15
+        run: ../../ci/deployment/wait_for_cluster.sh 7 15
 
       - name: Scale down
         run: |
