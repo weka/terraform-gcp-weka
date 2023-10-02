@@ -43,11 +43,6 @@ resource "google_compute_instance" "this" {
     }
   }
 
-  // Local SSD disk
-  scratch_disk {
-    interface    = "NVME"
-  }
-
   attached_disk {
     device_name = google_compute_disk.this[count.index].name
     mode        = "READ_WRITE"
