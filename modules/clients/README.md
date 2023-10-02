@@ -39,6 +39,8 @@ No modules.
 | <a name="input_region"></a> [region](#input\_region) | region name | `string` | n/a | yes |
 | <a name="input_sa_email"></a> [sa\_email](#input\_sa\_email) | service account email | `string` | n/a | yes |
 | <a name="input_source_image_id"></a> [source\_image\_id](#input\_source\_image\_id) | os of image | `string` | n/a | yes |
+| <a name="input_ssh_public_key"></a> [ssh\_public\_key](#input\_ssh\_public\_key) | Ssh public key to pass to vms. | `string` | n/a | yes |
+| <a name="input_ssh_user"></a> [ssh\_user](#input\_ssh\_user) | The user name for logging in to the virtual machines. | `string` | `"weka"` | no |
 | <a name="input_subnets_list"></a> [subnets\_list](#input\_subnets\_list) | list of subnet names | `list(string)` | n/a | yes |
 | <a name="input_yum_repo_server"></a> [yum\_repo\_server](#input\_yum\_repo\_server) | yum repo server address | `string` | `""` | no |
 | <a name="input_zone"></a> [zone](#input\_zone) | zone name | `string` | n/a | yes |
