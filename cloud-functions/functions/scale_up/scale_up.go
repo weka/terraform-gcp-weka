@@ -3,6 +3,7 @@ package scale_up
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
@@ -10,6 +11,24 @@ import (
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
 )
+
+func getInstanceTemplate(project, template string) (*computepb.InstanceTemplate, error) {
+	ctx := context.Background()
+	instanceTemplatesClient, err := compute.NewInstanceTemplatesRESTClient(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("NewInstanceTemplatesRESTClient: %w", err)
+	}
+	defer instanceTemplatesClient.Close()
+
+	templateParts := strings.Split(template, "/")
+	templateName := templateParts[len(templateParts)-1]
+	req := &computepb.GetInstanceTemplateRequest{
+		Project:          project,
+		InstanceTemplate: templateName,
+	}
+
+	return instanceTemplatesClient.Get(ctx, req)
+}
 
 func CreateInstance(ctx context.Context, project, zone, template, instanceName, yumRepoServer, functionRootUrl string) (err error) {
 	instancesClient, err := compute.NewInstancesRESTClient(ctx)
@@ -56,18 +75,33 @@ func CreateInstance(ctx context.Context, project, zone, template, instanceName, 
 	startUpScript = fmt.Sprintf(startUpScript, instanceName, functionRootUrl, yumRepoServer)
 	startUpScript = dedent.Dedent(startUpScript)
 
+	instanceTemplate, err := getInstanceTemplate(project, template)
+	if err != nil {
+		log.Error().Msgf("Failed to get instance template (project=%s, template=%s): %s", project, template, err)
+		return
+	}
+
+	items := []*computepb.Items{
+		&computepb.Items{
+			Key:   proto.String("startup-script"),
+			Value: &startUpScript,
+		},
+	}
+
+	for _, item := range instanceTemplate.Properties.Metadata.Items {
+		items = append(items, &computepb.Items{
+			Key:   item.Key,
+			Value: item.Value,
+		})
+	}
+
 	req := &computepb.InsertInstanceRequest{
 		Project: project,
 		Zone:    zone,
 		InstanceResource: &computepb.Instance{
 			Name: proto.String(instanceName),
 			Metadata: &computepb.Metadata{
-				Items: []*computepb.Items{
-					{
-						Key:   proto.String("startup-script"),
-						Value: &startUpScript,
-					},
-				},
+				Items: items,
 			},
 		},
 		SourceInstanceTemplate: &template,
