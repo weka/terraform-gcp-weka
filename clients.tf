@@ -18,5 +18,7 @@ module "clients" {
   source_image_id    = var.source_image_id
   subnets_list       = local.subnets_name
   zone               = var.zone
+  ssh_user           = var.ssh_user
+  ssh_public_key     = local.ssh_public_key
   depends_on         = [google_compute_forwarding_rule.google_compute_forwarding_rule,google_workflows_workflow.scale_up, google_cloudfunctions2_function.cloud_internal_function]
 }

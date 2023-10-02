@@ -86,3 +86,14 @@ variable "clients_name" {
   type        = string
   description = "Prefix clients name."
 }
+
+variable "ssh_user" {
+  type        = string
+  description = "The user name for logging in to the virtual machines."
+  default     = "weka"
+}
+
+variable "ssh_public_key" {
+  type        = string
+  description = "Ssh public key to pass to vms."
+}
