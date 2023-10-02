@@ -73,6 +73,10 @@ resource "google_compute_instance" "this" {
 
   metadata_startup_script = local.vms_custom_data
 
+  metadata = {
+    ssh-keys = "${var.ssh_user}:${var.ssh_public_key}"
+  }
+
   service_account {
     email  = var.sa_email
     scopes = ["cloud-platform"]
