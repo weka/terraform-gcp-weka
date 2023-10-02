@@ -74,14 +74,6 @@ resource "google_compute_instance_template" "this" {
     boot         = true
   }
 
-  // Local SSD disk
-  disk {
-    interface    = "NVME"
-    disk_size_gb = var.disk_size
-    mode         = "READ_WRITE"
-    type         = "SCRATCH"
-    disk_type    = "local-ssd"
-  }
   disk {
     mode         = "READ_WRITE"
     disk_size_gb = local.disk_size
