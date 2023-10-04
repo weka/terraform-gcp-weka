@@ -12,11 +12,12 @@ locals {
   })
 
   mount_wekafs_script = templatefile("${path.module}/mount_wekafs.sh", {
-    all_subnets        = split("\n",replace(join("\n", data.google_compute_subnetwork.this.*.ip_cidr_range),"/\\S+//",""))[0]
-    all_gateways       = join(" ",data.google_compute_subnetwork.this.*.gateway_address)
-    nics_num           = var.nics_numbers
-    backend_lb_ip      = var.backend_lb_ip
-    mount_clients_dpdk = var.mount_clients_dpdk
+    all_subnets         = split("\n", replace(join("\n", data.google_compute_subnetwork.this.*.ip_cidr_range), "/\\S+//", ""))[0]
+    all_gateways        = join(" ", data.google_compute_subnetwork.this.*.gateway_address)
+    nics_num            = var.nics_numbers
+    backend_lb_ip       = var.backend_lb_ip
+    mount_clients_dpdk  = var.mount_clients_dpdk
+    dpdk_base_memory_mb = lookup(var.instance_config_overrides, var.machine_type, {dpdk_base_memory_mb = 0})["dpdk_base_memory_mb"]
   })
 
   custom_data_parts = [local.preparation_script, local.mount_wekafs_script]
@@ -83,5 +84,5 @@ resource "google_compute_instance" "this" {
 }
 
 output "client_ips" {
-  value = var.assign_public_ip ? google_compute_instance.this.*.network_interface.0.access_config.0.nat_ip :google_compute_instance.this.*.network_interface.0.network_ip
+  value = var.assign_public_ip ? google_compute_instance.this.*.network_interface.0.access_config.0.nat_ip : google_compute_instance.this.*.network_interface.0.network_ip
 }
