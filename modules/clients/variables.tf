@@ -42,7 +42,7 @@ variable "yum_repo_server" {
 
 variable "machine_type" {
   type        = string
-  description = "weka cluster backends machines type"
+  description = "weka cluster clients machines type"
 }
 
 variable "sa_email" {
@@ -56,7 +56,7 @@ variable "clients_number" {
 }
 
 variable "source_image_id" {
-  type = string
+  type        = string
   description = "os of image"
 }
 
@@ -97,3 +97,34 @@ variable "ssh_public_key" {
   type        = string
   description = "Ssh public key to pass to vms."
 }
+
+variable "instance_config_overrides" {
+  type = map(object({
+    dpdk_base_memory_mb = number
+  }))
+  description = "Maps the number of objects and memory size per machine type."
+  default     = {
+    n2-standard-32 = {
+      dpdk_base_memory_mb = 32
+    },
+    c2d-standard-32 = {
+      dpdk_base_memory_mb = 32
+    },
+    c2d-standard-112 = {
+      dpdk_base_memory_mb = 32
+    },
+    n2-standard-48 = {
+      dpdk_base_memory_mb = 32
+    },
+    c2d-standard-56 = {
+      dpdk_base_memory_mb = 32
+    },
+    n2-standard-128 = {
+      dpdk_base_memory_mb = 32
+    },
+    n2-standard-96 = {
+      dpdk_base_memory_mb = 32
+    }
+  }
+}
+

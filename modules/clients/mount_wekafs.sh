@@ -92,8 +92,12 @@ function retry {
 
 mount_command="mount -t wekafs -o net=udp ${backend_lb_ip}/$FILESYSTEM_NAME $MOUNT_POINT"
 if [[ ${mount_clients_dpdk} == true ]]; then
+  mount_dpdk_base_memory_mb=""
+  if [ ${dpdk_base_memory_mb} -gt 0 ]; then
+      mount_dpdk_base_memory_mb="-o dpdk_base_memory_mb=${dpdk_base_memory_mb}"
+  fi
   getNetStrForDpdk 1 $(($NICS_NUM)) "$gateways" "$subnets"
-  mount_command="mount -t wekafs $net -o num_cores=$(($NICS_NUM-1)) -o mgmt_ip=$eth0 ${backend_lb_ip}/$FILESYSTEM_NAME $MOUNT_POINT"
+  mount_command="mount -t wekafs $net -o num_cores=$(($NICS_NUM-1)) -o mgmt_ip=$eth0 ${backend_lb_ip}/$FILESYSTEM_NAME $MOUNT_POINT $mount_dpdk_base_memory_mb"
 fi
 
 retry 60 45 $mount_command
