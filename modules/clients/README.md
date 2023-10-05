@@ -31,7 +31,8 @@ No modules.
 | <a name="input_clients_number"></a> [clients\_number](#input\_clients\_number) | n/a | `string` | `"Number of clients"` | no |
 | <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | cluster prefix for all resources | `string` | n/a | yes |
 | <a name="input_disk_size"></a> [disk\_size](#input\_disk\_size) | size of disk | `number` | n/a | yes |
-| <a name="input_machine_type"></a> [machine\_type](#input\_machine\_type) | weka cluster backends machines type | `string` | n/a | yes |
+| <a name="input_instance_config_overrides"></a> [instance\_config\_overrides](#input\_instance\_config\_overrides) | Maps the number of objects and memory size per machine type. | <pre>map(object({<br>    dpdk_base_memory_mb = number<br>  }))</pre> | <pre>{<br>  "c2d-standard-112": {<br>    "dpdk_base_memory_mb": 32<br>  },<br>  "c2d-standard-32": {<br>    "dpdk_base_memory_mb": 32<br>  },<br>  "c2d-standard-56": {<br>    "dpdk_base_memory_mb": 32<br>  },<br>  "n2-standard-128": {<br>    "dpdk_base_memory_mb": 32<br>  },<br>  "n2-standard-32": {<br>    "dpdk_base_memory_mb": 32<br>  },<br>  "n2-standard-48": {<br>    "dpdk_base_memory_mb": 32<br>  },<br>  "n2-standard-96": {<br>    "dpdk_base_memory_mb": 32<br>  }<br>}</pre> | no |
+| <a name="input_machine_type"></a> [machine\_type](#input\_machine\_type) | weka cluster clients machines type | `string` | n/a | yes |
 | <a name="input_mount_clients_dpdk"></a> [mount\_clients\_dpdk](#input\_mount\_clients\_dpdk) | Mount weka clients in DPDK mode | `bool` | `true` | no |
 | <a name="input_nics_numbers"></a> [nics\_numbers](#input\_nics\_numbers) | Number of core per client | `number` | `1` | no |
 | <a name="input_prefix"></a> [prefix](#input\_prefix) | prefix for all resources | `string` | n/a | yes |
