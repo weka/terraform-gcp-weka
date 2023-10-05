@@ -3,7 +3,7 @@ resource "google_storage_bucket" "weka_deployment" {
   count    = var.state_bucket_name == "" ?  1 : 0
   name     = "${var.prefix}-${var.cluster_name}-${var.project_id}"
   location = var.region
-
+  uniform_bucket_level_access = true
   lifecycle {
     precondition {
       condition = length(var.prefix) + length(var.cluster_name) + length(var.project_id) <= 63
