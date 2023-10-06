@@ -34,6 +34,11 @@ obs_name = "..."
 tiering_ssd_percent = 20
 ```
 
+# TF Module upgrade
+Upgrade from versions 2.0.0 is not supported, contact customer success for assistance
+
+Upgrade from versions 3.0.x (`<3.0.4`) to 3.0.4 and higher requires additional step before changing module version:
+`terraform state rm module.deploy_weka.null_resource.terminate-cluster`
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
