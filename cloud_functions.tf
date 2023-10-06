@@ -92,11 +92,7 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       BACKEND_TEMPLATE: google_compute_instance_template.backends_template.id
     }
   }
-  lifecycle {
-    replace_triggered_by = [
-      google_storage_bucket_object.cloud_functions_zip.md5hash
-    ]
-  }
+
   depends_on = [google_project_service.project-function-api, google_project_service.run-api, google_project_service.artifactregistry-api]
 }
 
@@ -137,11 +133,7 @@ resource "google_cloudfunctions2_function" "scale_down_function" {
     all_traffic_on_latest_revision = true
     service_account_email          = local.sa_email
   }
-  lifecycle {
-    replace_triggered_by = [
-      google_storage_bucket_object.cloud_functions_zip.md5hash
-    ]
-  }
+
   depends_on = [google_project_service.project-function-api, google_project_service.run-api, google_project_service.artifactregistry-api]
 }
 
@@ -191,11 +183,7 @@ resource "google_cloudfunctions2_function" "status_function" {
       PASSWORD_ID : google_secret_manager_secret_version.password_secret_key.id
     }
   }
-  lifecycle {
-    replace_triggered_by = [
-      google_storage_bucket_object.cloud_functions_zip.md5hash
-    ]
-  }
+
   depends_on = [google_project_service.project-function-api, google_project_service.run-api, google_project_service.artifactregistry-api]
 }
 

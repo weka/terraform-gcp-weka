@@ -231,7 +231,7 @@ func ScaleDown(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "Failed decoding request body")
 		return
 	}
-	log.Debug().Msgf("input: %#v", info)
+	log.Debug().Msgf("protocol.HostGroupInfoResponse: %#v", info)
 
 	scaleResponse, err := scale_down.ScaleDown(ctx, info)
 	log.Debug().Msgf("result: %#v", scaleResponse)
