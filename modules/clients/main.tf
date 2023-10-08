@@ -17,7 +17,7 @@ locals {
     nics_num            = var.nics_numbers
     backend_lb_ip       = var.backend_lb_ip
     mount_clients_dpdk  = var.mount_clients_dpdk
-    dpdk_base_memory_mb = lookup(var.instance_config_overrides, var.machine_type, {dpdk_base_memory_mb = 0})["dpdk_base_memory_mb"]
+    dpdk_base_memory_mb = try(var.instance_config_overrides[var.machine_type].dpdk_base_memory_mb, 0)
   })
 
   custom_data_parts = [local.preparation_script, local.mount_wekafs_script]
@@ -76,6 +76,9 @@ resource "google_compute_instance" "this" {
   service_account {
     email  = var.sa_email
     scopes = ["cloud-platform"]
+  }
+  scheduling {
+    on_host_maintenance = try(var.instance_config_overrides[var.machine_type].host_maintenance, "MIGRATE")
   }
   lifecycle {
     ignore_changes = [network_interface]

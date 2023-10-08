@@ -100,7 +100,8 @@ variable "ssh_public_key" {
 
 variable "instance_config_overrides" {
   type = map(object({
-    dpdk_base_memory_mb = number
+    dpdk_base_memory_mb = optional(number, 0)
+    host_maintenance    = optional(string, "MIGRATE")
   }))
   description = "Maps the number of objects and memory size per machine type."
   default     = {
@@ -124,6 +125,21 @@ variable "instance_config_overrides" {
     },
     n2-standard-96 = {
       dpdk_base_memory_mb = 32
+    },
+    a2-highgpu-1g = {
+      host_maintenance = "TERMINATE"
+    },
+    a2-highgpu-2g = {
+      host_maintenance = "TERMINATE"
+    },
+    a2-highgpu-4g = {
+      host_maintenance = "TERMINATE"
+    },
+    a2-highgpu-8g = {
+      host_maintenance = "TERMINATE"
+    },
+    a2-megagpu-16g = {
+      host_maintenance = "TERMINATE"
     }
   }
 }
