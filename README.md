@@ -35,10 +35,24 @@ tiering_ssd_percent = 20
 ```
 
 # TF Module upgrade
-Upgrade from versions 2.0.0 is not supported, contact customer success for assistance
-
-Upgrade from versions 3.0.x (`<3.0.4`) to 3.0.4 and higher requires additional step before changing module version:
-`terraform state rm module.deploy_weka.null_resource.terminate-cluster`
+- Upgrade from 3.0.4 to 3.0.5 requires only change of version on module invocation level, however, changes in this release on top of 3.0.4 apply only to new deployments
+- Upgrade performed by changing module invocation, e.g by changing from 
+```
+module "weka" {
+  source  = "weka/weka/gcp"
+  version = "3.0.4"
+}
+```
+to 
+```
+module "weka" {
+  source  = "weka/weka/gcp"
+  version = "3.0.5"
+}
+```
+- If github/local/custom distribution is used and not hashicorp registry - update module invocation accordingly per used distribution method
+- Upgrade from WEKA Terraform module versions 3.0.0 through 3.0.3 to 3.0.5 requires an additional step listed below before changing the Terraform module version: `terraform state rm module.deploy_weka.null_resource.terminate-cluster`
+- Upgrade from WEKA Terraform module versions 2.0.x to 3.0.x  is not supported. Migration can be done via WEKA Snap-To-Object feature into new WEKA cluster deployed by Terraform module version 3.0.5 or higher
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
