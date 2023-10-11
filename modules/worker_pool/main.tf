@@ -1,5 +1,5 @@
-data "google_compute_network" "this"{
-  name  = var.vpc_name
+data "google_compute_network" "this" {
+  name = var.vpc_name
 }
 
 data "google_compute_network" "worker_pool_network" {
@@ -8,7 +8,7 @@ data "google_compute_network" "worker_pool_network" {
 }
 # ================ worker_pool ======================= #
 
-resource "google_project_iam_binding" "servicenetworking-binding" {
+resource "google_project_iam_binding" "servicenetworking_binding" {
   role    = "roles/compute.networkAdmin"
   members = ["serviceAccount:${var.sa_email}"]
   project = var.project_id
@@ -17,7 +17,7 @@ resource "google_project_iam_binding" "servicenetworking-binding" {
   }
 }
 
-resource "google_project_iam_binding" "servicenetworking-admin-binding" {
+resource "google_project_iam_binding" "servicenetworking_admin_binding" {
   role    = "roles/servicenetworking.networksAdmin"
   members = ["serviceAccount:${var.sa_email}"]
   project = var.project_id
@@ -26,7 +26,7 @@ resource "google_project_iam_binding" "servicenetworking-admin-binding" {
   }
 }
 
-resource "google_project_iam_binding" "worker-pool-binding" {
+resource "google_project_iam_binding" "worker_pool_binding" {
   role    = "roles/cloudbuild.workerPoolOwner"
   members = ["serviceAccount:${var.sa_email}"]
   project = var.project_id
@@ -36,16 +36,16 @@ resource "google_project_iam_binding" "worker-pool-binding" {
 }
 
 resource "google_project_service" "servicenetworking" {
-  service = "servicenetworking.googleapis.com"
+  service                    = "servicenetworking.googleapis.com"
   disable_dependent_services = false
-  disable_on_destroy = true
-  depends_on = [google_project_iam_binding.servicenetworking-binding, google_project_iam_binding.worker-pool-binding, google_project_iam_binding.servicenetworking-admin-binding]
+  disable_on_destroy         = true
+  depends_on                 = [google_project_iam_binding.servicenetworking_binding, google_project_iam_binding.worker_pool_binding, google_project_iam_binding.servicenetworking_admin_binding]
 }
 
-resource "null_resource" "wait-service-enable" {
+resource "null_resource" "wait_service_enable" {
   count = var.worker_pool_name == "" ? 1 : 0
   triggers = {
-   always_run = timestamp()
+    always_run = timestamp()
   }
   provisioner "local-exec" {
     command = <<EOT
@@ -66,7 +66,7 @@ resource "google_compute_global_address" "worker_range_ip" {
   lifecycle {
     ignore_changes = [network]
   }
-  depends_on    = [null_resource.wait-service-enable,google_project_service.servicenetworking,google_project_iam_binding.servicenetworking-binding, google_project_iam_binding.worker-pool-binding]
+  depends_on = [null_resource.wait_service_enable, google_project_service.servicenetworking, google_project_iam_binding.servicenetworking_binding, google_project_iam_binding.worker_pool_binding]
 }
 
 resource "google_service_networking_connection" "worker_pool_conn" {
@@ -77,7 +77,7 @@ resource "google_service_networking_connection" "worker_pool_conn" {
   lifecycle {
     ignore_changes = [network]
   }
-  depends_on = [null_resource.wait-service-enable, google_compute_global_address.worker_range_ip]
+  depends_on = [null_resource.wait_service_enable, google_compute_global_address.worker_range_ip]
 }
 
 resource "google_cloudbuild_worker_pool" "worker_pool" {
@@ -95,23 +95,23 @@ resource "google_cloudbuild_worker_pool" "worker_pool" {
   lifecycle {
     ignore_changes = [network_config]
   }
-  depends_on = [null_resource.wait-service-enable, google_service_networking_connection.worker_pool_conn]
+  depends_on = [null_resource.wait_service_enable, google_service_networking_connection.worker_pool_conn]
 }
 
 # ============ set peering ==================== #
-resource "google_compute_network_peering" "peering-vpc" {
+resource "google_compute_network_peering" "peering_vpc" {
   count        = var.set_worker_pool_network_peering ? 1 : 0
   name         = "${var.vpc_name}-peering-to-${var.worker_pool_name}"
   network      = data.google_compute_network.this.self_link
   peer_network = data.google_compute_network.worker_pool_network[0].self_link
-  depends_on   = [google_project_iam_binding.servicenetworking-binding, google_project_iam_binding.worker-pool-binding]
+  depends_on   = [google_project_iam_binding.servicenetworking_binding, google_project_iam_binding.worker_pool_binding]
 }
 
 # ============ set peering ==================== #
-resource "google_compute_network_peering" "peering-worker" {
+resource "google_compute_network_peering" "peering_worker" {
   count        = var.set_worker_pool_network_peering ? 1 : 0
   name         = "${var.worker_pool_name}-peering-to-${var.vpc_name}"
   network      = data.google_compute_network.worker_pool_network[0].self_link
   peer_network = data.google_compute_network.this.self_link
-  depends_on = [google_project_iam_binding.servicenetworking-binding, google_project_iam_binding.worker-pool-binding]
+  depends_on   = [google_project_iam_binding.servicenetworking_binding, google_project_iam_binding.worker_pool_binding]
 }

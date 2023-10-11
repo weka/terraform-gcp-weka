@@ -15,7 +15,6 @@ module "network" {
   prefix                = var.prefix
   region                = var.region
   subnets_range         = var.subnets_range
-  zone                  = var.zone
   vpc_connector_range   = var.vpc_connector_range
   vpc_connector_name    = var.vpc_connector_name
   allow_ssh_ranges      = var.allow_ssh_ranges
@@ -50,8 +49,8 @@ module "worker_pool" {
   worker_pool_network             = var.worker_pool_network
   worker_pool_name                = var.worker_pool_name
   set_worker_pool_network_peering = var.set_worker_pool_network_peering
-  depends_on                      = [
-    module.network, google_project_service.cloud-build-api, google_project_service.compute-api
+  depends_on = [
+    module.network, google_project_service.cloud_build_api, google_project_service.compute_api
   ]
 }
 

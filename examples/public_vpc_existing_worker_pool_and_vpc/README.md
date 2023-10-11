@@ -15,7 +15,7 @@ vpc_connector_name  = "existing-connector"
 worker_pool_name    = ".."
 ```
 
-If worker pool on different network, and you want to peering worker pool with exiting vpc, You must supply the following variable: 
+If worker pool on different network, and you want to peering worker pool with exiting vpc, You must supply the following variable:
 ```hcl
 worker_pool_network             = "..."
 set_worker_pool_network_peering = true

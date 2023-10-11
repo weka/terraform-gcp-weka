@@ -29,18 +29,18 @@ When an instance is added to the instance group the Terraform created, it indica
 of the cluster.
 
 In order to change the cluster size (up or down) you can use a special cloud function we made called `resize`.
-Example: 
+Example:
 ```
 curl -m 70 -X POST RESIZE_CLOUD_FUNCTION_URL -H "Authorization:bearer $(gcloud auth print-identity-token)" -H "Content-Type:application/json" -d '{"value":6}'
 ```
-Similar command   
+Similar command
 
 ### Weka cluster deployment:
 - **Authentication**: `gcloud auth application-default login`
 - **Deployment**:<br>
   This repository provides TF modules and examples,
   actual usage assumes use of modules in new or existing project,
-  similar way as shown in examples. Examples include examples for public and private networks  
+  similar way as shown in examples. Examples include examples for public and private networks
   **Important to note:**
   - Public deployment requires to pass `get_weka_io_token` in order to download release from public get.weka.io service
   - Private deployment requires to upload weka software tarfile into GSC bucket, so instances will be able to download software from it
@@ -53,7 +53,7 @@ Similar command
 
 ### Notes
 - You have 2 ways to know that your weka cluster is ready:
-  * all vms where added to the instance group 
+  * all vms where added to the instance group
   * run resize curl command with target size equal to initial size.  Until cluster is fully formed, it will return error indication that cluster is not ready yet
   * future versions will include status api with more information
 - In case you deployed a public cluster you can't change it to private and vise versa
@@ -91,4 +91,4 @@ the scheduler, go to `Configure the execution` and choose for log level `All cal
  - australia-southeast2
  - europe-southwest1
  - europe-west8
- - europe-west9 
+ - europe-west9

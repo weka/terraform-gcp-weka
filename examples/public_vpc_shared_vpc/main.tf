@@ -16,7 +16,7 @@ module "weka_deployment" {
   nvmes_number        = 2
   get_weka_io_token   = var.get_weka_io_token
   set_obs_integration = true
-  shared_vpcs         = ["..",".."]
+  shared_vpcs         = ["..", ".."]
   host_project        = var.host_project
   host_shared_range   = [".."]
 }

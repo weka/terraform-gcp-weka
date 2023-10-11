@@ -6,13 +6,13 @@ variable "project_id" {
 variable "prefix" {
   type        = string
   description = "prefix for all resources"
-  default = "weka"
+  default     = "weka"
 }
 
 variable "service_account_name" {
-  type = string
+  type        = string
   description = "service account name"
-  default = "deployment"
+  default     = "deployment"
 }
 
 variable "state_bucket_name" {

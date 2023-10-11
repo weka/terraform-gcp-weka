@@ -1,6 +1,6 @@
 # Public VPC
-This example creates service account for weka deployment, 
-<br>all the network resources needed for weka deployment, including vpcs, peering, etc. 
+This example creates service account for weka deployment,
+<br>all the network resources needed for weka deployment, including vpcs, peering, etc.
 <br>and weka cluster with internet access.
 
 ## Usage

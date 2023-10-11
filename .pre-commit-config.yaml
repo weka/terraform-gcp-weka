@@ -16,3 +16,4 @@ repos:
       files: \.tf$
       args:
         - --args=--config=__GIT_WORKING_DIR__/.tflint.hcl
+      exclude: ^ci\/deployment\/

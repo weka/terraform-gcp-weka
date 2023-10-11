@@ -4,8 +4,8 @@ locals {
   object_state_bucket_name = var.state_bucket_name == "" ? ["${var.prefix}-${var.cluster_name}-${var.project_id}"] : [var.state_bucket_name]
   object_obs_bucket_name   = var.obs_name == "" ? ["${var.project_id}-${var.prefix}-${var.cluster_name}-obs"] : [var.obs_name]
 
-  bucket_list_name          = concat(local.obs_bucket_name,local.state_bucket_name)
-  object_list_name          = concat(local.object_obs_bucket_name, local.object_state_bucket_name)
+  bucket_list_name = concat(local.obs_bucket_name, local.state_bucket_name)
+  object_list_name = concat(local.object_obs_bucket_name, local.object_state_bucket_name)
 }
 
 # ===================== service account ===================
@@ -15,7 +15,7 @@ resource "google_service_account" "sa" {
   project      = var.project_id
 }
 
-resource "google_project_iam_member" "sa-member-role" {
+resource "google_project_iam_member" "sa_member_role" {
   for_each = toset([
     "roles/secretmanager.secretAccessor",
     "roles/compute.serviceAgent",
@@ -24,8 +24,8 @@ resource "google_project_iam_member" "sa-member-role" {
     "roles/vpcaccess.serviceAgent",
     "roles/pubsub.subscriber"
   ])
-  role = each.key
-  member = "serviceAccount:${google_service_account.sa.email}"
+  role    = each.key
+  member  = "serviceAccount:${google_service_account.sa.email}"
   project = var.project_id
 }
 

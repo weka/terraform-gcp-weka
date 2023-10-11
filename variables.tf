@@ -15,7 +15,7 @@ variable "project_id" {
 variable "nics_numbers" {
   type        = number
   description = "Number of nics per host"
-  default = -1
+  default     = -1
 
   validation {
     condition     = var.nics_numbers == -1 || var.nics_numbers > 0
@@ -44,7 +44,7 @@ variable "vpcs_name" {
 variable "prefix" {
   type        = string
   description = "Prefix for all resources"
-  default = "weka"
+  default     = "weka"
 
   validation {
     condition     = length(var.prefix) <= 15
@@ -60,9 +60,9 @@ variable "zone" {
 variable "machine_type" {
   type        = string
   description = "Weka cluster backends machines type"
-  default = "c2-standard-8"
+  default     = "c2-standard-8"
   validation {
-    condition = contains(["c2-standard-8", "c2-standard-16"], var.machine_type)
+    condition     = contains(["c2-standard-8", "c2-standard-16"], var.machine_type)
     error_message = "Machine type isn't supported"
   }
 }
@@ -105,13 +105,13 @@ variable "install_weka_url" {
 variable "weka_version" {
   type        = string
   description = "Weka version"
-  default = "4.2.1"
+  default     = "4.2.1"
 }
 
 variable "weka_username" {
   type        = string
   description = "Weka cluster username"
-  default = "admin"
+  default     = "admin"
 }
 
 variable "cluster_size" {
@@ -119,7 +119,7 @@ variable "cluster_size" {
   description = "Weka cluster size"
 
   validation {
-    condition = var.cluster_size >= 6
+    condition     = var.cluster_size >= 6
     error_message = "Cluster size should be at least 6."
   }
 }
@@ -198,7 +198,7 @@ variable "private_dns_name" {
 
 
 variable "cloud_scheduler_region_map" {
-  type = map(string)
+  type        = map(string)
   description = "Map of region to use for workflows scheduler, as some regions do not have scheduler enabled"
   default = {
     europe-west4       = "europe-west1"
@@ -210,7 +210,7 @@ variable "cloud_scheduler_region_map" {
 }
 
 variable "cloud_functions_region_map" {
-  type = map(string)
+  type        = map(string)
   description = "Map of region to use for cloud functions, as some regions do not have cloud functions enabled"
   default = {
     europe-west4       = "europe-west1"
@@ -222,9 +222,9 @@ variable "cloud_functions_region_map" {
 }
 
 variable "workflow_map_region" {
-  type = map(string)
+  type        = map(string)
   description = "Map of region to use for workflow, as some regions do not have cloud workflow enabled"
-  default     = {
+  default = {
     southamerica-west1 = "southamerica-east1"
   }
 }
@@ -266,21 +266,21 @@ variable "container_number_map" {
       drive    = 1
       frontend = 1
       nics     = 4
-      memory   = ["4.2GB","4GB"]
+      memory   = ["4.2GB", "4GB"]
     },
     c2-standard-16 = {
       compute  = 4
       drive    = 1
       frontend = 1
       nics     = 7
-      memory   = ["24.2GB","23.2GB"]
+      memory   = ["24.2GB", "23.2GB"]
     }
   }
 }
 
 variable "protection_level" {
-  type = number
-  default = 2
+  type        = number
+  default     = 2
   description = "Cluster data protection level."
   validation {
     condition     = var.protection_level == 2 || var.protection_level == 4
@@ -289,8 +289,8 @@ variable "protection_level" {
 }
 
 variable "stripe_width" {
-  type = number
-  default = -1
+  type        = number
+  default     = -1
   description = "Stripe width = cluster_size - protection_level - 1 (by default)."
   validation {
     condition     = var.stripe_width == -1 || var.stripe_width >= 3 && var.stripe_width <= 16
@@ -299,8 +299,8 @@ variable "stripe_width" {
 }
 
 variable "hotspare" {
-  type = number
-  default = 1
+  type        = number
+  default     = 1
   description = "Hot-spare value."
 }
 
@@ -536,7 +536,7 @@ variable "smb_dns_ip_address" {
 }
 
 variable "smb_share_name" {
-  type       = string
+  type        = string
   description = "The name of the SMB share"
   default     = "default"
 }

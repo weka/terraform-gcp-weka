@@ -1,20 +1,20 @@
 locals {
   vpc_length = length(var.shared_vpcs)
   peering_list = flatten([
-  for from in range(length (var.vpcs_name)) : [
-  for to in range(local.vpc_length) : {
-    from = var.vpcs_name[from]
-    to   = var.shared_vpcs[to]
-  }
-  ]
+    for from in range(length(var.vpcs_name)) : [
+      for to in range(local.vpc_length) : {
+        from = var.vpcs_name[from]
+        to   = var.shared_vpcs[to]
+      }
+    ]
   ])
 }
 
 
-resource "google_project_iam_binding" "iam-binding" {
-  project  = var.project_id
-  role     = "roles/compute.networkAdmin"
-  members  = ["serviceAccount:${var.sa_email}",]
+resource "google_project_iam_binding" "iam_binding" {
+  project = var.project_id
+  role    = "roles/compute.networkAdmin"
+  members = ["serviceAccount:${var.sa_email}", ]
 }
 
 resource "google_compute_shared_vpc_service_project" "service" {
@@ -23,7 +23,7 @@ resource "google_compute_shared_vpc_service_project" "service" {
 }
 
 
-resource "google_compute_network_peering" "peering-service" {
+resource "google_compute_network_peering" "peering_service" {
   count                               = length(local.peering_list)
   name                                = "${local.peering_list[count.index]["from"]}-peering-${local.peering_list[count.index]["to"]}"
   network                             = "projects/${var.project_id}/global/networks/${local.peering_list[count.index]["from"]}"
@@ -31,10 +31,10 @@ resource "google_compute_network_peering" "peering-service" {
   export_custom_routes                = true
   import_custom_routes                = true
   import_subnet_routes_with_public_ip = true
-  depends_on                          = [google_compute_shared_vpc_service_project.service, google_project_iam_binding.iam-binding]
+  depends_on                          = [google_compute_shared_vpc_service_project.service, google_project_iam_binding.iam_binding]
 }
 
-resource "google_compute_network_peering" "host-peering" {
+resource "google_compute_network_peering" "host_peering" {
   count                               = length(local.peering_list)
   name                                = "${local.peering_list[count.index]["to"]}-peering-${local.peering_list[count.index]["from"]}"
   network                             = "projects/${var.host_project}/global/networks/${local.peering_list[count.index]["to"]}"
@@ -42,12 +42,12 @@ resource "google_compute_network_peering" "host-peering" {
   export_custom_routes                = true
   import_custom_routes                = true
   import_subnet_routes_with_public_ip = true
-  depends_on                          = [google_compute_shared_vpc_service_project.service, google_project_iam_binding.iam-binding, google_compute_network_peering.peering-service]
+  depends_on                          = [google_compute_shared_vpc_service_project.service, google_project_iam_binding.iam_binding, google_compute_network_peering.peering_service]
 }
 
 data "google_compute_network" "vpc_list_ids" {
-  count    = length(var.vpcs_name)
-  name     = var.vpcs_name[count.index]
+  count = length(var.vpcs_name)
+  name  = var.vpcs_name[count.index]
 }
 
 resource "google_compute_firewall" "sg_private" {
@@ -68,11 +68,11 @@ resource "google_compute_firewall" "sg_private" {
 
 
 resource "google_compute_firewall" "sg_private_egress" {
-  count               = length(var.vpcs_name)
-  name                = "${var.prefix}-shared-sg-egress-all-${count.index}"
-  direction           = "EGRESS"
-  network             = data.google_compute_network.vpc_list_ids[count.index].id
-  destination_ranges  = var.host_shared_range
+  count              = length(var.vpcs_name)
+  name               = "${var.prefix}-shared-sg-egress-all-${count.index}"
+  direction          = "EGRESS"
+  network            = data.google_compute_network.vpc_list_ids[count.index].id
+  destination_ranges = var.host_shared_range
   allow {
     protocol = "all"
   }

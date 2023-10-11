@@ -43,7 +43,7 @@ func CreateInstance(ctx context.Context, project, zone, template, instanceName, 
 	instance_name=%s
 	function_url=%s
 	yum_repo_server=%s
-	
+
 	if [ "$yum_repo_server" ] ; then
 		mkdir /tmp/yum.repos.d
 		mv /etc/yum.repos.d/*.repo /tmp/yum.repos.d/
@@ -57,7 +57,7 @@ func CreateInstance(ctx context.Context, project, zone, template, instanceName, 
 	EOL
 	fi
 
-	sudo yum install -y jq  
+	sudo yum install -y jq
 
 	gcloud config set functions/gen2 true
 

@@ -4,7 +4,7 @@ provider "google" {
 }
 
 module "weka_deployment" {
-  source            = "../.."
+  source              = "../.."
   cluster_name        = "poc"
   project_id          = var.project_id
   prefix              = "weka"
@@ -16,8 +16,4 @@ module "weka_deployment" {
   set_obs_integration = true
   create_worker_pool  = true
   allow_ssh_ranges    = ["0.0.0.0/0"]
-}
-
-output "weka_deployment_output" {
-  value = module.weka_deployment
 }

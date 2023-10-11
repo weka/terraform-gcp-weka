@@ -19,7 +19,3 @@ module "weka_deployment" {
   create_worker_pool  = true
   assign_public_ip    = false
 }
-
-output "weka_deployment_output" {
-  value = module.weka_deployment
-}
