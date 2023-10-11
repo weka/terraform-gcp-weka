@@ -16,7 +16,3 @@ module "weka_deployment" {
   set_obs_integration = true
   allow_ssh_ranges    = ["0.0.0.0/0"]
 }
-
-output "weka_deployment_output" {
-  value = module.weka_deployment
-}

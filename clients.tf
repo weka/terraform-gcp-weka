@@ -10,8 +10,6 @@ module "clients" {
   backend_lb_ip      = google_compute_forwarding_rule.google_compute_forwarding_rule.ip_address
   assign_public_ip   = var.assign_public_ip
   disk_size          = var.default_disk_size + var.tiering_ssd_percent * var.container_number_map[var.machine_type].frontend
-  cluster_name       = var.cluster_name
-  prefix             = var.prefix
   project_id         = var.project_id
   region             = var.region
   sa_email           = local.sa_email
@@ -20,7 +18,7 @@ module "clients" {
   zone               = var.zone
   ssh_user           = var.ssh_user
   ssh_public_key     = local.ssh_public_key
-  depends_on         = [
+  depends_on = [
     google_compute_forwarding_rule.google_compute_forwarding_rule, google_workflows_workflow.scale_up,
     google_cloudfunctions2_function.cloud_internal_function
   ]

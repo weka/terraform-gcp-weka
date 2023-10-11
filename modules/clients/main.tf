@@ -7,7 +7,7 @@ data "google_compute_subnetwork" "this" {
 
 locals {
   private_nic_first_index = var.assign_public_ip ? 1 : 0
-  preparation_script      = templatefile("${path.module}/init.sh", {
+  preparation_script = templatefile("${path.module}/init.sh", {
     yum_repo_server = var.yum_repo_server
   })
 
@@ -84,8 +84,4 @@ resource "google_compute_instance" "this" {
     ignore_changes = [network_interface]
   }
   depends_on = [google_compute_disk.this]
-}
-
-output "client_ips" {
-  value = var.assign_public_ip ? google_compute_instance.this.*.network_interface.0.access_config.0.nat_ip : google_compute_instance.this.*.network_interface.0.network_ip
 }

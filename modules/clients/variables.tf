@@ -8,16 +8,6 @@ variable "region" {
   description = "region name"
 }
 
-variable "prefix" {
-  type        = string
-  description = "prefix for all resources"
-}
-
-variable "cluster_name" {
-  type        = string
-  description = "cluster prefix for all resources"
-}
-
 variable "zone" {
   type        = string
   description = "zone name"
@@ -104,7 +94,7 @@ variable "instance_config_overrides" {
     host_maintenance    = optional(string, "MIGRATE")
   }))
   description = "Maps the number of objects and memory size per machine type."
-  default     = {
+  default = {
     n2-standard-32 = {
       dpdk_base_memory_mb = 32
     },
@@ -143,4 +133,3 @@ variable "instance_config_overrides" {
     }
   }
 }
-

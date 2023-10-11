@@ -1,5 +1,5 @@
 # GCP network setup Terraform module
-Terraform module which sets up all network resources needed for weka deployment: vpcs, subnets, peering, 
+Terraform module which sets up all network resources needed for weka deployment: vpcs, subnets, peering,
 security groups, vpc connector, health checks and dns.
 
 ## Usage
@@ -44,12 +44,12 @@ No modules.
 | [google_compute_network.vpc_network](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_network) | resource |
 | [google_compute_network_peering.peering](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_network_peering) | resource |
 | [google_compute_subnetwork.subnetwork](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_subnetwork) | resource |
-| [google_dns_managed_zone.private-zone](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dns_managed_zone) | resource |
-| [google_project_service.project-compute](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_service) | resource |
-| [google_project_service.project-dns](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_service) | resource |
-| [google_project_service.project-gcp-api](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_service) | resource |
-| [google_project_service.project-vpc](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_service) | resource |
-| [google_project_service.service-cloud-api](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_service) | resource |
+| [google_dns_managed_zone.private_zone](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dns_managed_zone) | resource |
+| [google_project_service.project_compute](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_service) | resource |
+| [google_project_service.project_dns](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_service) | resource |
+| [google_project_service.project_gcp_api](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_service) | resource |
+| [google_project_service.project_vpc](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_service) | resource |
+| [google_project_service.service_cloud_api](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_service) | resource |
 | [google_vpc_access_connector.connector](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/vpc_access_connector) | resource |
 | [google_compute_network.vpc_list_ids](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_network) | data source |
 | [google_compute_subnetwork.subnets_list_ids](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_subnetwork) | data source |
@@ -75,7 +75,6 @@ No modules.
 | <a name="input_vpc_connector_region_map"></a> [vpc\_connector\_region\_map](#input\_vpc\_connector\_region\_map) | Map of region to use for vpc connector, as some regions do not have cloud functions enabled, and vpc connector needs to be in the same region | `map(string)` | <pre>{<br>  "asia-south2": "asia-south1",<br>  "europe-north1": "europe-west1",<br>  "europe-west4": "europe-west1",<br>  "southamerica-west1": "northamerica-northeast1",<br>  "us-east5": "us-east1"<br>}</pre> | no |
 | <a name="input_vpcs"></a> [vpcs](#input\_vpcs) | List of vpcs name | `list(string)` | `[]` | no |
 | <a name="input_vpcs_number"></a> [vpcs\_number](#input\_vpcs\_number) | number of vpcs | `number` | `4` | no |
-| <a name="input_zone"></a> [zone](#input\_zone) | zone name | `string` | n/a | yes |
 
 ## Outputs
 

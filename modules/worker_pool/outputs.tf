@@ -1,4 +1,4 @@
 output "worker_pool_name" {
- value = var.worker_pool_name == "" ? google_cloudbuild_worker_pool.worker_pool[0].name : var.worker_pool_name
- description = "Worker pool name"
+  value       = var.worker_pool_name == "" ? google_cloudbuild_worker_pool.worker_pool[0].name : var.worker_pool_name
+  description = "Worker pool name"
 }

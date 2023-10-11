@@ -19,9 +19,9 @@ resource "google_compute_region_backend_service" "backend_service" {
   region                = var.region
   protocol              = "TCP"
   load_balancing_scheme = "INTERNAL"
-  health_checks         = [ google_compute_region_health_check.health_check.id]
+  health_checks         = [google_compute_region_health_check.health_check.id]
   backend {
-    group               = google_compute_instance_group.this.self_link
+    group = google_compute_instance_group.this.self_link
   }
   depends_on = [module.network, google_compute_instance_group.this]
 }
@@ -41,14 +41,14 @@ resource "google_compute_forwarding_rule" "google_compute_forwarding_rule" {
   depends_on = [module.network] #time_sleep.wait_30_seconds
 }
 
-resource "google_dns_record_set" "record-a" {
+resource "google_dns_record_set" "record_a" {
   name         = "${var.cluster_name}.${local.private_dns_name}"
   managed_zone = local.private_zone_name
   project      = var.project_id
   type         = "A"
   ttl          = 120
   rrdatas      = [google_compute_forwarding_rule.google_compute_forwarding_rule.ip_address]
-  depends_on   = [google_compute_region_backend_service.backend_service,google_compute_forwarding_rule.google_compute_forwarding_rule]
+  depends_on   = [google_compute_region_backend_service.backend_service, google_compute_forwarding_rule.google_compute_forwarding_rule]
 }
 
 # =================== ui lb ===============================
@@ -76,7 +76,7 @@ resource "google_compute_region_backend_service" "ui_backend_service" {
   load_balancing_scheme = "INTERNAL"
   health_checks         = [google_compute_region_health_check.ui_check.id]
   backend {
-    group               = google_compute_instance_group.this.self_link
+    group = google_compute_instance_group.this.self_link
   }
   depends_on = [module.network, google_compute_instance_group.this]
 }
@@ -96,12 +96,12 @@ resource "google_compute_forwarding_rule" "ui_forwarding_rule" {
   depends_on = [module.network]
 }
 
-resource "google_dns_record_set" "ui-record-a" {
+resource "google_dns_record_set" "ui_record_a" {
   name         = "ui-${var.cluster_name}.${local.private_dns_name}"
   managed_zone = local.private_zone_name
   project      = var.project_id
   type         = "A"
   ttl          = 120
   rrdatas      = [google_compute_forwarding_rule.ui_forwarding_rule.ip_address]
-  depends_on   = [google_compute_region_backend_service.ui_backend_service,google_compute_forwarding_rule.ui_forwarding_rule]
+  depends_on   = [google_compute_region_backend_service.ui_backend_service, google_compute_forwarding_rule.ui_forwarding_rule]
 }

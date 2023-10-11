@@ -1,13 +1,16 @@
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
-No requirements.
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >=1.3.1 |
+| <a name="requirement_google"></a> [google](#requirement\_google) | ~>4.38.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_google"></a> [google](#provider\_google) | n/a |
+| <a name="provider_google"></a> [google](#provider\_google) | ~>4.38.0 |
 
 ## Modules
 
@@ -29,13 +32,11 @@ No modules.
 | <a name="input_backend_lb_ip"></a> [backend\_lb\_ip](#input\_backend\_lb\_ip) | The backend load balancer ip address. | `string` | n/a | yes |
 | <a name="input_clients_name"></a> [clients\_name](#input\_clients\_name) | Prefix clients name. | `string` | n/a | yes |
 | <a name="input_clients_number"></a> [clients\_number](#input\_clients\_number) | n/a | `string` | `"Number of clients"` | no |
-| <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | cluster prefix for all resources | `string` | n/a | yes |
 | <a name="input_disk_size"></a> [disk\_size](#input\_disk\_size) | size of disk | `number` | n/a | yes |
 | <a name="input_instance_config_overrides"></a> [instance\_config\_overrides](#input\_instance\_config\_overrides) | Maps the number of objects and memory size per machine type. | <pre>map(object({<br>    dpdk_base_memory_mb = optional(number, 0)<br>    host_maintenance    = optional(string, "MIGRATE")<br>  }))</pre> | <pre>{<br>  "a2-highgpu-1g": {<br>    "host_maintenance": "TERMINATE"<br>  },<br>  "a2-highgpu-2g": {<br>    "host_maintenance": "TERMINATE"<br>  },<br>  "a2-highgpu-4g": {<br>    "host_maintenance": "TERMINATE"<br>  },<br>  "a2-highgpu-8g": {<br>    "host_maintenance": "TERMINATE"<br>  },<br>  "a2-megagpu-16g": {<br>    "host_maintenance": "TERMINATE"<br>  },<br>  "c2d-standard-112": {<br>    "dpdk_base_memory_mb": 32<br>  },<br>  "c2d-standard-32": {<br>    "dpdk_base_memory_mb": 32<br>  },<br>  "c2d-standard-56": {<br>    "dpdk_base_memory_mb": 32<br>  },<br>  "n2-standard-128": {<br>    "dpdk_base_memory_mb": 32<br>  },<br>  "n2-standard-32": {<br>    "dpdk_base_memory_mb": 32<br>  },<br>  "n2-standard-48": {<br>    "dpdk_base_memory_mb": 32<br>  },<br>  "n2-standard-96": {<br>    "dpdk_base_memory_mb": 32<br>  }<br>}</pre> | no |
 | <a name="input_machine_type"></a> [machine\_type](#input\_machine\_type) | weka cluster clients machines type | `string` | n/a | yes |
 | <a name="input_mount_clients_dpdk"></a> [mount\_clients\_dpdk](#input\_mount\_clients\_dpdk) | Mount weka clients in DPDK mode | `bool` | `true` | no |
 | <a name="input_nics_numbers"></a> [nics\_numbers](#input\_nics\_numbers) | Number of core per client | `number` | `1` | no |
-| <a name="input_prefix"></a> [prefix](#input\_prefix) | prefix for all resources | `string` | n/a | yes |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | project name | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | region name | `string` | n/a | yes |
 | <a name="input_sa_email"></a> [sa\_email](#input\_sa\_email) | service account email | `string` | n/a | yes |

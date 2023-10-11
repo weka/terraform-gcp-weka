@@ -8,11 +8,6 @@ variable "region" {
   description = "region name"
 }
 
-variable "zone" {
-  type        = string
-  description = "zone name"
-}
-
 variable "vpcs_number" {
   type        = number
   description = "number of vpcs"
@@ -83,7 +78,7 @@ variable "allow_weka_api_ranges" {
 variable "vpc_connector_region_map" {
   type        = map(string)
   description = "Map of region to use for vpc connector, as some regions do not have cloud functions enabled, and vpc connector needs to be in the same region"
-  default     = {
+  default = {
     europe-west4       = "europe-west1"
     europe-north1      = "europe-west1",
     us-east5           = "us-east1",

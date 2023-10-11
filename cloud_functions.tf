@@ -10,23 +10,23 @@ locals {
   state_bucket            = var.state_bucket_name == "" ? google_storage_bucket.weka_deployment[0].name : var.state_bucket_name
   install_weka_url        = var.install_weka_url != "" ? var.install_weka_url : "https://$TOKEN@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}"
 
-  // common function for multiple actions
+  # common function for multiple actions
   cloud_internal_function_name = "${var.prefix}-${var.cluster_name}-weka-functions"
 }
 
 data "archive_file" "function_zip" {
   type        = "zip"
   output_path = local.function_zip_path
-  excludes    = [ "${path.module}/cloud-functions/cloud_functions_test.go" ]
+  excludes    = ["${path.module}/cloud-functions/cloud_functions_test.go"]
   source_dir  = "${path.module}/cloud-functions/"
 }
 
 # ================== function zip =======================
 resource "google_storage_bucket_object" "cloud_functions_zip" {
-  name   = "${var.prefix}-${var.cluster_name}-cloud-functions.zip"
-  bucket = local.state_bucket
-  source = local.function_zip_path
-  depends_on = [data.archive_file.function_zip, google_project_service.run-api, google_project_service.artifactregistry-api]
+  name       = "${var.prefix}-${var.cluster_name}-cloud-functions.zip"
+  bucket     = local.state_bucket
+  source     = local.function_zip_path
+  depends_on = [data.archive_file.function_zip, google_project_service.run_api, google_project_service.artifactregistry_api]
 }
 
 
@@ -36,9 +36,9 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
   description = "deploy, fetch, resize, clusterize, clusterize finalization, join, join_finalization, terminate, transient, terminate_cluster, scale_up functions"
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
   build_config {
-    runtime               = "go120"
-    entry_point           = "CloudInternal"
-    worker_pool           = local.worker_pool_id
+    runtime     = "go120"
+    entry_point = "CloudInternal"
+    worker_pool = local.worker_pool_id
     source {
       storage_source {
         bucket = local.state_bucket
@@ -51,7 +51,7 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
     min_instance_count             = 1
     available_memory               = "256Mi"
     timeout_seconds                = 540
-    ingress_settings               = "ALLOW_ALL" // default value
+    ingress_settings               = "ALLOW_ALL" # default value
     all_traffic_on_latest_revision = true
     service_account_email          = local.sa_email
     environment_variables = {
@@ -60,8 +60,8 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       REGION : var.region
       CLOUD_FUNCTION_NAME : local.cloud_internal_function_name
       INSTANCE_GROUP : google_compute_instance_group.this.name
-      GATEWAYS : join(",", [for s in data.google_compute_subnetwork.this : s.gateway_address] )
-      SUBNETS : format("(%s)", join(" ", [for s in data.google_compute_subnetwork.this : s.ip_cidr_range] ))
+      GATEWAYS : join(",", [for s in data.google_compute_subnetwork.this : s.gateway_address])
+      SUBNETS : format("(%s)", join(" ", [for s in data.google_compute_subnetwork.this : s.ip_cidr_range]))
       USER_NAME_ID : google_secret_manager_secret_version.user_secret_key.id
       PASSWORD_ID : google_secret_manager_secret_version.password_secret_key.id
       TOKEN_ID : var.get_weka_io_token == "" ? "" : google_secret_manager_secret_version.token_secret_key[0].id
@@ -75,28 +75,28 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       NUM_COMPUTE_CONTAINERS : var.add_frontend_container ? var.container_number_map[var.machine_type].compute : var.container_number_map[var.machine_type].compute + 1
       NUM_FRONTEND_CONTAINERS : var.add_frontend_container ? var.container_number_map[var.machine_type].frontend : 0
       NVMES_NUM : var.nvmes_number
-      HOSTS_NUM: var.cluster_size
-      NICS_NUM: local.nics_number
-      GWS: format("(%s)", join(" ", [for s in data.google_compute_subnetwork.this: s.gateway_address] ))
-      CLUSTER_NAME: var.cluster_name
-      PREFIX: var.prefix
+      HOSTS_NUM : var.cluster_size
+      NICS_NUM : local.nics_number
+      GWS : format("(%s)", join(" ", [for s in data.google_compute_subnetwork.this : s.gateway_address]))
+      CLUSTER_NAME : var.cluster_name
+      PREFIX : var.prefix
       PROTECTION_LEVEL : var.protection_level
       STRIPE_WIDTH : var.stripe_width != -1 ? var.stripe_width : local.stripe_width
       HOTSPARE : var.hotspare
-      SET_OBS: var.set_obs_integration
-      OBS_NAME: var.obs_name == "" ? "" : var.obs_name
-      OBS_TIERING_SSD_PERCENT: var.tiering_ssd_percent
+      SET_OBS : var.set_obs_integration
+      OBS_NAME : var.obs_name == "" ? "" : var.obs_name
+      OBS_TIERING_SSD_PERCENT : var.tiering_ssd_percent
       NUM_FRONTEND_CONTAINERS : var.add_frontend_container ? var.container_number_map[var.machine_type].frontend : 0
-      // for terminate
-      LOAD_BALANCER_NAME: google_compute_region_backend_service.backend_service.name
-      // for scale_up
-      YUM_REPO_SERVER: var.yum_repo_server
-      BACKEND_TEMPLATE: google_compute_instance_template.this.id
-      //SMBW
-      SMBW_ENABLED: var.smbw_enabled
-      // Weka proxy url
-      PROXY_URL: var.proxy_url
-      WEKA_HOME_URL: var.weka_home_url
+      # for terminate
+      LOAD_BALANCER_NAME : google_compute_region_backend_service.backend_service.name
+      # for scale_up
+      YUM_REPO_SERVER : var.yum_repo_server
+      BACKEND_TEMPLATE : google_compute_instance_template.this.id
+      # SMBW
+      SMBW_ENABLED : var.smbw_enabled
+      # Weka proxy url
+      PROXY_URL : var.proxy_url
+      WEKA_HOME_URL : var.weka_home_url
     }
   }
   lifecycle {
@@ -104,7 +104,7 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       google_storage_bucket_object.cloud_functions_zip.md5hash
     ]
   }
-  depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, google_project_service.project-function-api, google_project_service.run-api, google_project_service.artifactregistry-api]
+  depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, google_project_service.project_function_api, google_project_service.run_api, google_project_service.artifactregistry_api]
 }
 
 # IAM entry for all users to invoke the function
@@ -123,7 +123,7 @@ resource "google_cloudfunctions2_function" "scale_down_function" {
   description = "scale cluster down"
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
   build_config {
-    runtime = "go120"
+    runtime     = "go120"
     entry_point = "ScaleDown"
     worker_pool = local.worker_pool_id
     source {
@@ -149,7 +149,7 @@ resource "google_cloudfunctions2_function" "scale_down_function" {
       google_storage_bucket_object.cloud_functions_zip.md5hash
     ]
   }
-  depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, google_project_service.project-function-api, google_project_service.run-api, google_project_service.artifactregistry-api]
+  depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, google_project_service.project_function_api, google_project_service.run_api, google_project_service.artifactregistry_api]
 }
 
 # IAM entry for all users to invoke the function
@@ -168,7 +168,7 @@ resource "google_cloudfunctions2_function" "status_function" {
   description = "get cluster status"
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
   build_config {
-    runtime = "go120"
+    runtime     = "go120"
     entry_point = "Status"
     worker_pool = local.worker_pool_id
     source {
@@ -190,8 +190,8 @@ resource "google_cloudfunctions2_function" "status_function" {
     all_traffic_on_latest_revision = true
     service_account_email          = local.sa_email
     environment_variables = {
-      PROJECT: var.project_id
-      ZONE: var.zone
+      PROJECT : var.project_id
+      ZONE : var.zone
       BUCKET : local.state_bucket
       INSTANCE_GROUP : google_compute_instance_group.this.name
       USER_NAME_ID : google_secret_manager_secret_version.user_secret_key.id
@@ -203,7 +203,7 @@ resource "google_cloudfunctions2_function" "status_function" {
       google_storage_bucket_object.cloud_functions_zip.md5hash
     ]
   }
-  depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, google_project_service.project-function-api, google_project_service.run-api, google_project_service.artifactregistry-api]
+  depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, google_project_service.project_function_api, google_project_service.run_api, google_project_service.artifactregistry_api]
 }
 
 # IAM entry for all users to invoke the function

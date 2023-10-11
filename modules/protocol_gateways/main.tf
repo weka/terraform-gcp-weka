@@ -10,22 +10,22 @@ locals {
   private_nic_first_index = var.assign_public_ip ? 1 : 0
 
   init_script = templatefile("${path.module}/init.sh", {
-    yum_repo_server     = var.yum_repo_server
+    yum_repo_server  = var.yum_repo_server
     nics_num         = var.nics_numbers
-    subnet_range     = join(" " ,data.google_compute_subnetwork.this.*.ip_cidr_range)
+    subnet_range     = join(" ", data.google_compute_subnetwork.this.*.ip_cidr_range)
     disk_size        = local.disk_size
     install_weka_url = var.install_weka_url
-    weka_token_id    = var.weka_token_id == "" ? "NONE" :  var.weka_token_id
+    weka_token_id    = var.weka_token_id == "" ? "NONE" : var.weka_token_id
     proxy_url        = var.proxy_url
   })
 
   deploy_script = templatefile("${path.module}/deploy_protocol_gateways.sh", {
     frontend_cores_num = var.frontend_cores_num
-    subnet_prefixes    = join(" ",data.google_compute_subnetwork.this.*.ip_cidr_range)
+    subnet_prefixes    = join(" ", data.google_compute_subnetwork.this.*.ip_cidr_range)
     backend_lb_ip      = var.backend_lb_ip
     nics_num           = var.nics_numbers
-    weka_token_id = var.weka_token_id
-    weka_password_id = var.weka_password_id
+    weka_token_id      = var.weka_token_id
+    weka_password_id   = var.weka_password_id
   })
 
   setup_nfs_protocol_script = templatefile("${path.module}/setup_nfs.sh", {
@@ -58,10 +58,10 @@ locals {
 
 # ======================== instance ============================
 resource "google_compute_instance_template" "this" {
-  name           = var.gateways_name
-  machine_type   = var.machine_type
-  project        = var.project_id
-  tags           = [var.gateways_name]
+  name                    = var.gateways_name
+  machine_type            = var.machine_type
+  project                 = var.project_id
+  tags                    = [var.gateways_name]
   metadata_startup_script = local.custom_data
   metadata = {
     apply-alias-ip-ranges = true
@@ -115,7 +115,7 @@ resource "google_compute_instance_template" "this" {
   }
 
   dynamic "network_interface" {
-    for_each = range(1,var.nics_numbers)
+    for_each = range(1, var.nics_numbers)
     content {
       subnetwork         = data.google_compute_subnetwork.this[network_interface.value].id
       subnetwork_project = var.project_id
@@ -150,4 +150,3 @@ resource "google_compute_instance_from_template" "this" {
     ignore_changes = all
   }
 }
-

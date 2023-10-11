@@ -3,15 +3,6 @@ variable "project_id" {
   description = "Project id"
 }
 
-variable "cluster_name" {
-  type        = string
-  description = "Cluster prefix for all resources"
-  validation {
-    condition     = length(var.cluster_name) <= 37
-    error_message = "The cluster name maximum allowed length is 37."
-  }
-}
-
 variable "nics_numbers" {
   type        = number
   description = "Number of nics per host"
@@ -31,9 +22,9 @@ variable "zone" {
 variable "machine_type" {
   type        = string
   description = "Weka cluster backends machines type"
-  default = "c2-standard-8"
+  default     = "c2-standard-8"
   validation {
-    condition = contains(["c2-standard-8", "c2-standard-16"], var.machine_type)
+    condition     = contains(["c2-standard-8", "c2-standard-16"], var.machine_type)
     error_message = "Machine type isn't supported"
   }
 }
@@ -98,12 +89,6 @@ variable "client_group_name" {
   default     = "weka-cg"
 }
 
-variable "vm_username" {
-  type        = string
-  description = "The user name for logging in to the virtual machines."
-  default     = "weka"
-}
-
 variable "assign_public_ip" {
   type        = bool
   description = "Determines whether to assign public ip."
@@ -152,12 +137,12 @@ variable "source_image_id" {
 }
 
 variable "weka_token_id" {
-  type       = string
+  type        = string
   description = "Id of weka token"
 }
 
 variable "weka_password_id" {
-  type       = string
+  type        = string
   description = "Id of weka password"
 }
 
@@ -208,7 +193,7 @@ variable "smb_dns_ip_address" {
 }
 
 variable "smb_share_name" {
-  type       = string
+  type        = string
   description = "The name of the SMB share"
   default     = ""
 }

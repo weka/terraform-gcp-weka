@@ -1,7 +1,7 @@
 terraform {
   backend "gcs" {
-    bucket  = "weka-infra-backend"
-    prefix  = "ci/service-account"
+    bucket = "weka-infra-backend"
+    prefix = "ci/service-account"
   }
   required_version = ">=1.2.4"
 }
@@ -10,11 +10,11 @@ terraform {
 resource "google_service_account" "sa" {
   account_id   = "${var.prefix}-${var.service_account_name}"
   display_name = "A service account for weka ci"
-  project = var.project_id
+  project      = var.project_id
 }
 
 
-resource "google_project_iam_member" "sa-member-role" {
+resource "google_project_iam_member" "sa_member_role" {
   for_each = toset([
     "roles/secretmanager.admin",
     "roles/secretmanager.secretAccessor",
@@ -35,7 +35,7 @@ resource "google_project_iam_member" "sa-member-role" {
     "roles/dns.admin",
     "roles/pubsub.editor"
   ])
-  role = each.key
-  member = "serviceAccount:${google_service_account.sa.email}"
+  role    = each.key
+  member  = "serviceAccount:${google_service_account.sa.email}"
   project = var.project_id
 }

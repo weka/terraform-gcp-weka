@@ -1,15 +1,15 @@
 locals {
   get_cluster_status_uri          = google_cloudfunctions2_function.status_function.service_config[0].uri
   resize_cluster_uri              = format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=resize")
-  lb_url                          = trimsuffix(google_dns_record_set.record-a.name, ".")
+  lb_url                          = trimsuffix(google_dns_record_set.record_a.name, ".")
   terminate_cluster_uri           = format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=terminate_cluster")
   weka_cluster_password_secret_id = google_secret_manager_secret.secret_weka_password.secret_id
-  protocol_gateways_ips_type      = var.assign_public_ip  ? "accessConfigs[0].natIP" :  "networkIP"
+  protocol_gateways_ips_type      = var.assign_public_ip ? "accessConfigs[0].natIP" : "networkIP"
   functions_url = {
-    progressing_status = { url = local.get_cluster_status_uri, body = {"type":"progress"}}
-    status             = { url = local.get_cluster_status_uri, body = {"type":"status"}}
-    resize             = { url = local.resize_cluster_uri,body = {"value":7} }
-    destroy            = { url = local.terminate_cluster_uri,body = {"name":"${var.cluster_name}"}}
+    progressing_status = { url = local.get_cluster_status_uri, body = { "type" : "progress" } }
+    status             = { url = local.get_cluster_status_uri, body = { "type" : "status" } }
+    resize             = { url = local.resize_cluster_uri, body = { "value" : 7 } }
+    destroy            = { url = local.terminate_cluster_uri, body = { "name" : var.cluster_name } }
   }
 }
 
@@ -19,7 +19,7 @@ output "functions_url" {
 }
 
 output "ssh_user" {
-  value = var.ssh_user
+  value       = var.ssh_user
   description = "ssh user for weka cluster"
 }
 
@@ -69,7 +69,7 @@ EOT
 }
 
 output "cluster_helper_commands" {
-  value = <<EOT
+  value       = <<EOT
 ########################################## get cluster status ##########################################
 curl -m 70 -X POST "${local.get_cluster_status_uri}" \
 -H "Authorization:bearer $(gcloud auth print-identity-token)" \
