@@ -67,11 +67,6 @@ data "google_compute_subnetwork" "this" {
   depends_on = [module.network]
 }
 
-provider "google" {
-  alias   = "shared-vpc"
-  project = var.host_project
-  region  = var.region
-}
 
 module "shared_vpc_peering" {
   count             = var.host_project == "" ? 0 : 1
@@ -83,8 +78,5 @@ module "shared_vpc_peering" {
   vpcs_name         = local.vpcs_name
   sa_email          = local.sa_email
   host_shared_range = var.host_shared_range
-  providers         = {
-    google.shared-vpc = google.shared-vpc
-  }
-  depends_on = [module.network]
+  depends_on        = [module.network]
 }

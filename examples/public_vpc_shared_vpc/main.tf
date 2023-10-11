@@ -3,11 +3,6 @@ provider "google" {
   region  = var.region
 }
 
-provider "google" {
-  alias   = "shared-vpc"
-  project = var.host_project
-  region  = var.region
-}
 
 module "weka_deployment" {
   source              = "../.."
