@@ -14,7 +14,6 @@ module "weka_deployment" {
   install_weka_url    = "gs://weka-installation/weka-4.2.1.tar"
   nvmes_number        = 2
   yum_repo_server     = "http://10.26.2.2/base/Packages/"
-  private_network     = true
   set_obs_integration = true
   create_worker_pool  = true
   assign_public_ip    = false

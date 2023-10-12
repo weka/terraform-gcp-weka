@@ -44,8 +44,6 @@ Similar command
   **Important to note:**
   - Public deployment requires to pass `get_weka_io_token` in order to download release from public get.weka.io service
   - Private deployment requires to upload weka software tarfile into GSC bucket, so instances will be able to download software from it
-  - Private network deployment/examples must come with:
-    - `private_network = true` on `setup_network` and `deploy_weka` modules level, this adapts various configuration for private networks
   - In addition, following params are optional for private networking, depending on how network topology looks like:
     - `install_weka_url` on `deploy_weka` module level, this allows to download weka from local bucket and not public get.weka.io service
     - `yum_repo_server` - Centos7 only, instructions to auto-configure yum to use alternative repository. Distributive repository required in order to download kernel headers and additional build software
