@@ -57,12 +57,6 @@ variable "vpc_connector_name" {
   default     = ""
 }
 
-variable "private_network" {
-  type        = bool
-  description = "deploy weka in private network"
-  default     = false
-}
-
 variable "allow_ssh_ranges" {
   type        = list(string)
   description = "Allow port 22, if not provided, i.e leaving the default empty list, the rule will not be included in the SG"

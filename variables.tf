@@ -77,12 +77,6 @@ variable "nvmes_number" {
   description = "Number of local nvmes per host"
 }
 
-variable "private_network" {
-  type        = bool
-  description = "Deploy weka in private network"
-  default     = false
-}
-
 variable "assign_public_ip" {
   type        = bool
   default     = true

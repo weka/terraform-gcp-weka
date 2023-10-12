@@ -19,7 +19,6 @@ module "network" {
   vpc_connector_name    = var.vpc_connector_name
   allow_ssh_ranges      = var.allow_ssh_ranges
   allow_weka_api_ranges = var.allow_weka_api_ranges
-  private_network       = var.private_network
   vpcs_number           = var.vpcs_number
   private_zone_name     = var.private_zone_name
   mtu_size              = var.mtu_size
