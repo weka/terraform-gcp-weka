@@ -52,3 +52,9 @@ variable "private_network" {
   type        = bool
   description = "Deploy weka in private network"
 }
+
+variable "prefix" {
+  type        = string
+  description = "Prefix for all resources"
+  default     = "weka"
+}

@@ -13,6 +13,11 @@ variable "zone" {
   description = "Zone name"
 }
 
+variable "prefix" {
+  type        = string
+  description = "Prefix for all resources"
+  default     = "weka"
+}
 
 variable "vpcs" {
   type        = list(string)

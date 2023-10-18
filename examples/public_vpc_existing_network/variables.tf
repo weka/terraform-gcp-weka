@@ -51,3 +51,9 @@ variable "get_weka_io_token" {
   description = "Get get.weka.io token for downloading weka"
   sensitive   = true
 }
+
+variable "prefix" {
+  type        = string
+  description = "Prefix for all resources"
+  default     = "weka"
+}

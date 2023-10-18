@@ -57,3 +57,9 @@ variable "worker_pool_network" {
   type = string
   description = "Network name of worker pool"
 }
+
+variable "prefix" {
+  type        = string
+  description = "Prefix for all resources"
+  default     = "weka"
+}

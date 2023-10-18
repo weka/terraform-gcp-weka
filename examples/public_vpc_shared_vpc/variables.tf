@@ -59,3 +59,9 @@ variable "host_shared_range" {
   description = "List of host range to allow sg"
   default = []
 }
+
+variable "prefix" {
+  type        = string
+  description = "Prefix for all resources"
+  default     = "weka"
+}
