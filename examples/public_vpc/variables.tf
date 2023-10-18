@@ -49,9 +49,3 @@ variable "get_weka_io_token" {
   description = "Get get.weka.io token for downloading weka"
   sensitive   = true
 }
-
-variable "weka_version" {
-  type        = string
-  description = "Weka version"
-  default     = "4.2.1"
-}

@@ -46,7 +46,6 @@ module "deploy_weka" {
   get_weka_io_token   = var.get_weka_io_token
   private_dns_zone    = module.setup_network.private_zone_name
   private_dns_name    = module.setup_network.private_dns_name
-  weka_version        = var.weka_version
   set_obs_integration = true
   depends_on          = [module.setup_network]
 }
