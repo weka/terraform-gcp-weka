@@ -13,8 +13,10 @@ provider "google" {
       Create Service Account
 ***********************************/
 module "create_service_account" {
-  source     = "../../modules/service_account"
-  project_id = var.project_id
+  source       = "../../modules/service_account"
+  project_id   = var.project_id
+  prefix       = var.prefix
+  cluster_name = var.cluster_name
 }
 
 /***********************************

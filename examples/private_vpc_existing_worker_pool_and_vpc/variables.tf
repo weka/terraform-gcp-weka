@@ -23,6 +23,11 @@ variable "nvmes_number" {
   description = "Number of local nvmes per host"
 }
 
+variable "prefix" {
+  type        = string
+  description = "Prefix for all resources"
+  default     = "weka"
+}
 
 variable "vpc_connector_range" {
   type        = string
