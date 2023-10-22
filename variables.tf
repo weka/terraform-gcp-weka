@@ -270,6 +270,10 @@ variable "container_number_map" {
       memory   = ["24.2GB", "23.2GB"]
     }
   }
+  validation {
+    condition     = alltrue([for m in flatten([for i in values(var.container_number_map) : (flatten(i.memory))]) : tonumber(trimsuffix(m, "GB")) <= 384])
+    error_message = "Compute memory can not be more then 384GB"
+  }
 }
 
 variable "protection_level" {
