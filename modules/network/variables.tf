@@ -32,6 +32,12 @@ variable "subnets" {
   default     = []
 }
 
+variable "psc_subnet_cidr" {
+  type        = string
+  default     = "10.9.0.0/28"
+  description = "Cidr range for private service connection subnet"
+}
+
 variable "prefix" {
   type        = string
   description = "prefix for all resources"
@@ -98,4 +104,34 @@ variable "mtu_size" {
   type        = number
   description = "mtu size"
   default     = 1460
+}
+
+variable "subnet_autocreate_as_private" {
+  type        = bool
+  default     = false
+  description = "Create private subnet using nat gateway to route traffic. The default is public network. Relevant only when subnet_ids is empty."
+}
+
+variable "endpoint_vpcsc_internal_ip_address" {
+  type        = string
+  default     = "10.0.1.6"
+  description = "Private ip for vpc service connection endpoint"
+}
+
+variable "endpoint_apis_internal_ip_address" {
+  type        = string
+  default     = "10.0.1.5"
+  description = "Private ip for all-apis endpoint"
+}
+
+variable "cloud_run_dns_zone_name" {
+  type        = string
+  default     = ""
+  description = "Name of existing Private dns zone for domain run.app."
+}
+
+variable "googleapis_dns_zone_name" {
+  type        = string
+  default     = ""
+  description = "Name of existing Private dns zone for domain googleapis.com."
 }

@@ -5,11 +5,19 @@ set -ex
 echo "$(date -u): cloud-init beginning"
 
 # set apt private repo
-if [[ "${yum_repo_server}" != "" ]]; then
-  mv /etc/apt/sources.list /etc/apt/sources.list.bak
-  echo "deb ${yum_repo_server} focal main restricted universe" > /etc/yum/sources.list
-  echo "deb ${yum_repo_server} focal-updates main restricted" >> /etc/yum/sources.list
+if [ "${yum_repo_server}" ] ; then
+    mkdir /tmp/yum.repos.d
+    mv /etc/yum.repos.d/*.repo /tmp/yum.repos.d/
+
+    cat >/etc/yum.repos.d/local.repo <<EOL
+[local]
+name=Centos Base
+baseurl=${yum_repo_server}
+enabled=1
+gpgcheck=0
+EOL
 fi
+yum -y update
 
 
 # getNetStrForDpdk bash function definitiion
@@ -108,7 +116,7 @@ fi
 
 # install weka
 if [[ "${install_weka_url}" == *.tar ]]; then
-    wget -P $INSTALLATION_PATH "${install_weka_url}"
+    gsutil cp "${install_weka_url}" $INSTALLATION_PATH
     IFS='/' read -ra tar_str <<< "\"${install_weka_url}\""
     pkg_name=$(cut -d'/' -f"$${#tar_str[@]}" <<< "${install_weka_url}")
     cd $INSTALLATION_PATH

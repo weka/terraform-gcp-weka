@@ -1,4 +1,4 @@
-variable "vpcs_peering_list" {
+variable "vnets_to_peer_to_deployment_vnet" {
   type        = list(string)
   description = "list of vpcs name to peering"
 }

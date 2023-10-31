@@ -23,11 +23,11 @@ module "nfs_protocol_gateways" {
   assign_public_ip             = var.assign_public_ip
   disk_size                    = var.nfs_protocol_gateway_disk_size
   frontend_container_cores_num = var.nfs_protocol_gateway_fe_cores_num
-  weka_token_id                = google_secret_manager_secret.secret_token[0].id
+  weka_token_id                = var.get_weka_io_token != "" ? google_secret_manager_secret.secret_token[0].id : var.get_weka_io_token
   weka_password_id             = google_secret_manager_secret.secret_weka_password.id
   proxy_url                    = var.proxy_url
   setup_protocol               = var.nfs_setup_protocol
-  depends_on                   = [module.network, time_sleep.wait_120_seconds, google_compute_forwarding_rule.google_compute_forwarding_rule, google_secret_manager_secret.secret_token, google_cloudfunctions2_function.cloud_internal_function]
+  depends_on                   = [module.network, module.peering, module.shared_vpc_peering, time_sleep.wait_120_seconds, google_compute_forwarding_rule.google_compute_forwarding_rule, google_secret_manager_secret.secret_token, google_cloudfunctions2_function.cloud_internal_function]
 }
 
 
@@ -52,7 +52,7 @@ module "smb_protocol_gateways" {
   assign_public_ip             = var.assign_public_ip
   disk_size                    = var.smb_protocol_gateway_disk_size
   frontend_container_cores_num = var.smb_protocol_gateway_fe_cores_num
-  weka_token_id                = google_secret_manager_secret.secret_token[0].id
+  weka_token_id                = var.get_weka_io_token != "" ? google_secret_manager_secret.secret_token[0].id : var.get_weka_io_token
   weka_password_id             = google_secret_manager_secret.secret_weka_password.id
   proxy_url                    = var.proxy_url
   smb_cluster_name             = var.smb_cluster_name != "" ? var.smb_cluster_name : "${var.prefix}-${var.cluster_name}"
@@ -61,5 +61,5 @@ module "smb_protocol_gateways" {
   smb_dns_ip_address           = var.smb_dns_ip_address
   smb_share_name               = var.smb_share_name
   smbw_enabled                 = var.smbw_enabled
-  depends_on                   = [module.network, time_sleep.wait_120_seconds, google_compute_forwarding_rule.google_compute_forwarding_rule, google_secret_manager_secret.secret_token, google_cloudfunctions2_function.cloud_internal_function]
+  depends_on                   = [module.network, module.peering, module.shared_vpc_peering, time_sleep.wait_120_seconds, google_compute_forwarding_rule.google_compute_forwarding_rule, google_secret_manager_secret.secret_token, google_cloudfunctions2_function.cloud_internal_function]
 }
