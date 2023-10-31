@@ -557,3 +557,21 @@ variable "ssh_public_key" {
   description = "Ssh public key to pass to vms."
   default     = null
 }
+
+variable "vpcs_peering_list" {
+  type        = list(string)
+  description = "list of vpcs name to peer"
+  default     = []
+}
+
+variable "weka_tar_bucket_name" {
+  type        = string
+  default     = ""
+  description = "Name of weka tar bucket"
+}
+
+variable "weka_tar_project_id" {
+  type        = string
+  default     = ""
+  description = "Project id of weka tar"
+}

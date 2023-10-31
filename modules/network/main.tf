@@ -50,8 +50,8 @@ resource "google_compute_network" "vpc_network" {
   name                    = "${var.prefix}-vpc-${count.index}"
   auto_create_subnetworks = false
   mtu                     = var.mtu_size
-
-  depends_on = [google_project_service.project_compute, google_project_service.project_gcp_api]
+  routing_mode            = "REGIONAL"
+  depends_on              = [google_project_service.project_compute, google_project_service.project_gcp_api]
 }
 
 # ======================= subnet ==========================
@@ -62,9 +62,7 @@ resource "google_compute_subnetwork" "subnetwork" {
   region                   = var.region
   network                  = length(var.vpcs) == 0 ? google_compute_network.vpc_network[count.index].name : data.google_compute_network.vpc_list_ids[count.index].name
   private_ip_google_access = true
-
 }
-
 
 resource "google_compute_network_peering" "peering" {
   count        = var.set_peering ? length(local.peering_list) : 0

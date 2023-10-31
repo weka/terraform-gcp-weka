@@ -40,6 +40,7 @@ func CreateInstance(ctx context.Context, project, zone, template, instanceName, 
 
 	startUpScript := `
 	#!/bin/bash
+	set -ex
 	instance_name=%s
 	function_url=%s
 	yum_repo_server=%s
@@ -56,6 +57,7 @@ func CreateInstance(ctx context.Context, project, zone, template, instanceName, 
 	gpgcheck=0
 	EOL
 	fi
+	sudo yum -y update
 
 	sudo yum install -y jq
 

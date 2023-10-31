@@ -57,3 +57,17 @@ resource "google_project_iam_member" "object_iam_member" {
   }
   depends_on = [google_service_account.sa]
 }
+
+resource "google_project_iam_member" "weka_tar_object_iam_member" {
+  count   = var.weka_tar_bucket_name != "" ? 1 : 0
+  project = var.weka_tar_project_id != "" ? var.weka_tar_project_id : var.project_id
+  role    = "roles/storage.objectViewer"
+  member  = "serviceAccount:${google_service_account.sa.email}"
+
+  condition {
+    title       = "Add object viewer storage permission to ${var.weka_tar_bucket_name}"
+    description = "Add object viewer storage permission"
+    expression  = "resource.name.startsWith(\"projects/_/buckets/${var.weka_tar_bucket_name}\")"
+  }
+  depends_on = [google_service_account.sa]
+}
