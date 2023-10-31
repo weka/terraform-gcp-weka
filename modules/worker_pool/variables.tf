@@ -51,8 +51,8 @@ variable "sa_email" {
   description = "service account email"
 }
 
-variable "worker_pool_name" {
+variable "worker_pool_id" {
   type        = string
   default     = ""
-  description = "Exiting worker pool name "
+  description = "Exiting worker pool id"
 }

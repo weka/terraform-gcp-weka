@@ -2,8 +2,7 @@
 
 locals {
   function_zip_path       = "/tmp/${var.project_id}-${var.cluster_name}-cloud-functions.zip"
-  worker_pool_name        = var.create_worker_pool && var.worker_pool_name == "" ? module.worker_pool[0].worker_pool_name : var.worker_pool_name
-  worker_pool_id          = var.worker_pool_name != "" ? "projects/${var.project_id}/locations/${var.region}/workerPools/${local.worker_pool_name}" : ""
+  worker_pool_id          = var.create_worker_pool ? module.worker_pool[0].worker_pool_id : var.worker_pool_id
   stripe_width_calculated = var.cluster_size - var.protection_level - 1
   stripe_width            = local.stripe_width_calculated < 16 ? local.stripe_width_calculated : 16
   get_compute_memory      = var.set_dedicated_fe_container ? var.containers_config_map[var.machine_type].memory[1] : var.containers_config_map[var.machine_type].memory[0]
@@ -12,6 +11,7 @@ locals {
 
   # common function for multiple actions
   cloud_internal_function_name = "${var.prefix}-${var.cluster_name}-weka-functions"
+  function_ingress_settings    = var.subnet_autocreate_as_private ? "ALLOW_INTERNAL_ONLY" : "ALLOW_ALL"
 }
 
 data "archive_file" "function_zip" {
@@ -51,7 +51,9 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
     min_instance_count             = 1
     available_memory               = "256Mi"
     timeout_seconds                = 540
-    ingress_settings               = "ALLOW_ALL" # default value
+    vpc_connector                  = local.vpc_connector
+    ingress_settings               = local.function_ingress_settings
+    vpc_connector_egress_settings  = "ALL_TRAFFIC"
     all_traffic_on_latest_revision = true
     service_account_email          = local.sa_email
     environment_variables = {
@@ -104,7 +106,7 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       google_storage_bucket_object.cloud_functions_zip.md5hash
     ]
   }
-  depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, google_project_service.project_function_api, google_project_service.run_api, google_project_service.artifactregistry_api]
+  depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, module.peering, google_project_service.project_function_api, google_project_service.run_api, google_project_service.artifactregistry_api]
 }
 
 # IAM entry for all users to invoke the function
@@ -139,7 +141,7 @@ resource "google_cloudfunctions2_function" "scale_down_function" {
     available_memory               = "256Mi"
     timeout_seconds                = 540
     vpc_connector                  = local.vpc_connector
-    ingress_settings               = "ALLOW_ALL"
+    ingress_settings               = local.function_ingress_settings
     vpc_connector_egress_settings  = "PRIVATE_RANGES_ONLY"
     all_traffic_on_latest_revision = true
     service_account_email          = local.sa_email
@@ -185,7 +187,7 @@ resource "google_cloudfunctions2_function" "status_function" {
     available_memory               = "256Mi"
     timeout_seconds                = 540
     vpc_connector                  = local.vpc_connector
-    ingress_settings               = "ALLOW_ALL"
+    ingress_settings               = local.function_ingress_settings
     vpc_connector_egress_settings  = "PRIVATE_RANGES_ONLY"
     all_traffic_on_latest_revision = true
     service_account_email          = local.sa_email

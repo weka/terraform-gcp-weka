@@ -224,9 +224,9 @@ variable "workflow_map_region" {
   }
 }
 
-variable "worker_pool_name" {
+variable "worker_pool_id" {
   type        = string
-  description = "Name of worker pool, Must be on the same project and region"
+  description = "Id of worker pool, Must be on the same project and region"
   default     = ""
 }
 
@@ -558,7 +558,7 @@ variable "ssh_public_key" {
   default     = null
 }
 
-variable "vpcs_peering_list" {
+variable "vnets_to_peer_to_deployment_vnet" {
   type        = list(string)
   description = "list of vpcs name to peer"
   default     = []
@@ -574,4 +574,40 @@ variable "weka_tar_project_id" {
   type        = string
   default     = ""
   description = "Project id of weka tar"
+}
+
+variable "subnet_autocreate_as_private" {
+  type        = bool
+  default     = false
+  description = "Create private subnet using nat gateway to route traffic. The default is public network. Relevant only when subnet_ids is empty."
+}
+
+variable "endpoint_vpcsc_internal_ip_address" {
+  type        = string
+  default     = "10.0.1.6"
+  description = "Private ip for vpc service connection endpoint"
+}
+
+variable "endpoint_apis_internal_ip_address" {
+  type        = string
+  default     = "10.0.1.5"
+  description = "Private ip for all-apis endpoint"
+}
+
+variable "cloud_run_dns_zone_name" {
+  type        = string
+  default     = ""
+  description = "Name of existing Private dns zone for domain run.app."
+}
+
+variable "googleapis_dns_zone_name" {
+  type        = string
+  default     = ""
+  description = "Name of existing Private dns zone for domain googleapis.com."
+}
+
+variable "psc_subnet_cidr" {
+  type        = string
+  default     = "10.9.0.0/28"
+  description = "Cidr range for private service connection subnet"
 }

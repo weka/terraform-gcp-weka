@@ -24,7 +24,7 @@ resource "google_compute_instance_template" "this" {
   machine_type   = var.machine_type
   can_ip_forward = false
 
-  tags = ["${var.prefix}-${var.cluster_name}-backends", "allow-health-check"]
+  tags = ["${var.prefix}-${var.cluster_name}-backends", "allow-health-check", "backends", "all-apis"]
   labels = {
     weka_cluster_name = var.cluster_name
   }

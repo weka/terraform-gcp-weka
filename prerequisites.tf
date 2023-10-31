@@ -11,20 +11,26 @@ module "service_account" {
 }
 
 module "network" {
-  count                = length(var.subnets_name) == 0 ? 1 : 0
-  source               = "./modules/network"
-  project_id           = var.project_id
-  prefix               = var.prefix
-  region               = var.region
-  subnets_range        = var.subnets_range
-  vpc_connector_range  = var.vpc_connector_range
-  vpc_connector_name   = var.vpc_connector_name
-  allow_ssh_cidrs      = var.allow_ssh_cidrs
-  allow_weka_api_cidrs = var.allow_weka_api_cidrs
-  vpcs_number          = var.vpcs_number
-  private_zone_name    = var.private_zone_name
-  mtu_size             = var.mtu_size
-  depends_on           = [module.service_account]
+  count                              = length(var.subnets_name) == 0 ? 1 : 0
+  source                             = "./modules/network"
+  project_id                         = var.project_id
+  prefix                             = var.prefix
+  region                             = var.region
+  subnets_range                      = var.subnets_range
+  vpc_connector_range                = var.vpc_connector_range
+  vpc_connector_name                 = var.vpc_connector_name
+  allow_ssh_cidrs                    = var.allow_ssh_cidrs
+  allow_weka_api_cidrs               = var.allow_weka_api_cidrs
+  vpcs_number                        = var.vpcs_number
+  private_zone_name                  = var.private_zone_name
+  mtu_size                           = var.mtu_size
+  subnet_autocreate_as_private       = var.subnet_autocreate_as_private
+  endpoint_apis_internal_ip_address  = var.endpoint_apis_internal_ip_address
+  endpoint_vpcsc_internal_ip_address = var.endpoint_vpcsc_internal_ip_address
+  cloud_run_dns_zone_name            = var.cloud_run_dns_zone_name
+  googleapis_dns_zone_name           = var.googleapis_dns_zone_name
+  psc_subnet_cidr                    = var.psc_subnet_cidr
+  depends_on                         = [module.service_account]
 }
 
 locals {
@@ -48,7 +54,7 @@ module "worker_pool" {
   cluster_name                    = var.cluster_name
   sa_email                        = local.sa_email
   worker_pool_network             = var.worker_pool_network
-  worker_pool_name                = var.worker_pool_name
+  worker_pool_id                  = var.worker_pool_id
   set_worker_pool_network_peering = var.set_worker_pool_network_peering
   depends_on = [
     module.network, google_project_service.cloud_build_api, google_project_service.compute_api
@@ -68,11 +74,11 @@ data "google_compute_subnetwork" "this" {
 }
 
 module "peering" {
-  count             = length(var.vpcs_peering_list) > 0 ? 1 : 0
-  source            = "./modules/vpc_peering"
-  vpcs_name         = local.vpcs_name
-  vpcs_peering_list = var.vpcs_peering_list
-  depends_on        = [module.network]
+  count                            = length(var.vnets_to_peer_to_deployment_vnet) > 0 ? 1 : 0
+  source                           = "./modules/vpc_peering"
+  vpcs_name                        = local.vpcs_name
+  vnets_to_peer_to_deployment_vnet = var.vnets_to_peer_to_deployment_vnet
+  depends_on                       = [module.network]
 }
 
 module "shared_vpc_peering" {

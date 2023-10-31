@@ -21,8 +21,8 @@ locals {
 }
 
 data "google_compute_network" "vpc_peering" {
-  count = length(var.vpcs_peering_list)
-  name  = var.vpcs_peering_list[count.index]
+  count = length(var.vnets_to_peer_to_deployment_vnet)
+  name  = var.vnets_to_peer_to_deployment_vnet[count.index]
 }
 
 data "google_compute_network" "vpcs" {
