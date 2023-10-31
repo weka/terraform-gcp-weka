@@ -13,3 +13,4 @@ if [ "${yum_repo_server}" ] ; then
   gpgcheck=0
 EOL
 fi
+yum -y update

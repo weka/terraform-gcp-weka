@@ -35,3 +35,15 @@ variable "cluster_name" {
     error_message = "The cluster name maximum allowed length is 37."
   }
 }
+
+variable "weka_tar_bucket_name" {
+  type        = string
+  default     = ""
+  description = "Name of weka tar bucket"
+}
+
+variable "weka_tar_project_id" {
+  type        = string
+  default     = ""
+  description = "Project id of weka tar"
+}

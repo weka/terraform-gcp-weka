@@ -1,11 +1,13 @@
 module "service_account" {
-  count             = var.sa_email == "" ? 1 : 0
-  source            = "./modules/service_account"
-  project_id        = var.project_id
-  prefix            = var.prefix
-  cluster_name      = var.cluster_name
-  tiering_obs_name  = var.tiering_obs_name
-  state_bucket_name = var.state_bucket_name
+  count                = var.sa_email == "" ? 1 : 0
+  source               = "./modules/service_account"
+  project_id           = var.project_id
+  prefix               = var.prefix
+  cluster_name         = var.cluster_name
+  tiering_obs_name     = var.tiering_obs_name
+  state_bucket_name    = var.state_bucket_name
+  weka_tar_bucket_name = var.weka_tar_bucket_name
+  weka_tar_project_id  = var.weka_tar_project_id
 }
 
 module "network" {
@@ -65,6 +67,13 @@ data "google_compute_subnetwork" "this" {
   depends_on = [module.network]
 }
 
+module "peering" {
+  count             = length(var.vpcs_peering_list) > 0 ? 1 : 0
+  source            = "./modules/vpc_peering"
+  vpcs_name         = local.vpcs_name
+  vpcs_peering_list = var.vpcs_peering_list
+  depends_on        = [module.network]
+}
 
 module "shared_vpc_peering" {
   count             = var.host_project == "" ? 0 : 1
