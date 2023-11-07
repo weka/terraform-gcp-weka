@@ -116,20 +116,42 @@ variable "instance_config_overrides" {
     n2-standard-96 = {
       dpdk_base_memory_mb = 32
     },
+    n2d-standard-32 = {
+      dpdk_base_memory_mb = 32
+    },
+    n2d-standard-64 = {
+      dpdk_base_memory_mb = 32
+    },
+    n2d-highmem-32 = {
+      dpdk_base_memory_mb = 32
+    },
+    n2d-highmem-64 = {
+      dpdk_base_memory_mb = 32
+    },
+    n2-highmem-32 = {
+      dpdk_base_memory_mb = 32
+    },
+    c2d-highmem-56 = {
+      dpdk_base_memory_mb = 32
+    },
     a2-highgpu-1g = {
       host_maintenance = "TERMINATE"
     },
     a2-highgpu-2g = {
       host_maintenance = "TERMINATE"
+      dpdk_base_memory_mb = 32
     },
     a2-highgpu-4g = {
       host_maintenance = "TERMINATE"
+      dpdk_base_memory_mb = 32
     },
     a2-highgpu-8g = {
       host_maintenance = "TERMINATE"
+      dpdk_base_memory_mb = 32
     },
     a2-megagpu-16g = {
       host_maintenance = "TERMINATE"
+      dpdk_base_memory_mb = 32
     }
   }
 }
