@@ -95,7 +95,7 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 	setObs, _ := strconv.ParseBool(os.Getenv("SET_OBS"))
 	obsName := os.Getenv("OBS_NAME")
 	tieringSsdPercent := os.Getenv("OBS_TIERING_SSD_PERCENT")
-	addFrontendNum, _ := strconv.Atoi(os.Getenv("NUM_FRONTEND_CONTAINERS"))
+	addFrontendNum, _ := strconv.Atoi(os.Getenv("FRONTEND_CONTAINER_CORES_NUM"))
 	functionRootUrl := fmt.Sprintf("https://%s", r.Host)
 	smbwEnabled, _ := strconv.ParseBool(os.Getenv("SMBW_ENABLED"))
 	wekaHomeUrl := os.Getenv("WEKA_HOME_URL")
@@ -182,9 +182,9 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 	gateways := strings.Split(os.Getenv("GATEWAYS"), ",")
 
 	computeMemory := os.Getenv("COMPUTE_MEMORY")
-	computeContainerNum, _ := strconv.Atoi(os.Getenv("NUM_COMPUTE_CONTAINERS"))
-	frontendContainerNum, _ := strconv.Atoi(os.Getenv("NUM_FRONTEND_CONTAINERS"))
-	driveContainerNum, _ := strconv.Atoi(os.Getenv("NUM_DRIVE_CONTAINERS"))
+	computeContainerNum, _ := strconv.Atoi(os.Getenv("COMPUTE_CONTAINER_CORES_NUM"))
+	frontendContainerNum, _ := strconv.Atoi(os.Getenv("FRONTEND_CONTAINER_CORES_NUM"))
+	driveContainerNum, _ := strconv.Atoi(os.Getenv("DRIVE_CONTAINER_CORES_NUM"))
 
 	installUrl := os.Getenv("INSTALL_URL")
 	proxyUrl := os.Getenv("PROXY_URL")

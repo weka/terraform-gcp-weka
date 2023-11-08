@@ -109,6 +109,11 @@ variable "frontend_cores_num" {
   type        = number
   default     = 1
   description = "The number of frontend ionodes per instance."
+
+  validation {
+    condition     = var.frontend_cores_num >= 1
+    error_message = "The number of frontend ionodes per GW instance must be at least 1."
+  }
 }
 
 variable "install_weka_url" {
