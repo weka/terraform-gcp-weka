@@ -241,7 +241,7 @@ variable "worker_disk_size" {
   default     = 100
 }
 
-variable "container_number_map" {
+variable "containers_config_map" {
   # NOTE: compute = nics-drive-frontend-1
   # To calculate memory, weka resource generator was used:
   # https://github.com/weka/tools/blob/master/install/resources_generator.py
@@ -271,7 +271,7 @@ variable "container_number_map" {
     }
   }
   validation {
-    condition     = alltrue([for m in flatten([for i in values(var.container_number_map) : (flatten(i.memory))]) : tonumber(trimsuffix(m, "GB")) <= 384])
+    condition     = alltrue([for m in flatten([for i in values(var.containers_config_map) : (flatten(i.memory))]) : tonumber(trimsuffix(m, "GB")) <= 384])
     error_message = "Compute memory can not be more then 384GB"
   }
 }

@@ -23,7 +23,6 @@ locals {
     frontend_cores_num = var.frontend_cores_num
     subnet_prefixes    = join(" ", data.google_compute_subnetwork.this.*.ip_cidr_range)
     backend_lb_ip      = var.backend_lb_ip
-    nics_num           = var.nics_numbers
     weka_token_id      = var.weka_token_id
     weka_password_id   = var.weka_password_id
   })
@@ -134,6 +133,10 @@ resource "google_compute_instance_template" "this" {
     precondition {
       condition     = var.protocol == "SMB" ? var.secondary_ips_per_nic <= 3 : true
       error_message = "The number of secondary IPs per single NIC per protocol gateway virtual machine must be at most 3 for SMB."
+    }
+    precondition {
+      condition     = var.nics_numbers != -1 ? var.frontend_cores_num < var.nics_numbers : true
+      error_message = "The number of frontends must be less than the number of NICs."
     }
   }
 }
