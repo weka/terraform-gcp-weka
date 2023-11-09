@@ -106,20 +106,3 @@ resource "google_compute_instance_group" "this" {
     ignore_changes = [network]
   }
 }
-
-resource "null_resource" "terminate_cluster" {
-  triggers = {
-    command = <<EOT
-      echo "Terminating cluster..."
-      curl -m 70 -X POST ${format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=terminate_cluster")} \
-      -H "Authorization:bearer $(gcloud auth print-identity-token)" \
-      -H "Content-Type:application/json" \
-      -d '{"name":"${var.cluster_name}"}'
-      EOT
-  }
-  provisioner "local-exec" {
-    command = self.triggers.command
-    when    = destroy
-  }
-  depends_on = [google_storage_bucket_object.state, google_cloudfunctions2_function.cloud_internal_function]
-}
