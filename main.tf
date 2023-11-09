@@ -38,6 +38,13 @@ resource "google_compute_instance_template" "this" {
     boot         = true
   }
 
+  disk {
+    device_name  = var.default_disk_name
+    mode         = "READ_WRITE"
+    disk_size_gb = local.disk_size
+    disk_type    = "pd-ssd" # https://cloud.google.com/compute/docs/disks#disk-types
+  }
+
   dynamic "disk" {
     for_each = range(var.nvmes_number)
     content {
@@ -65,10 +72,6 @@ resource "google_compute_instance_template" "this" {
     content {
       subnetwork = data.google_compute_subnetwork.this[network_interface.value].self_link
     }
-  }
-  disk {
-    mode         = "READ_WRITE"
-    disk_size_gb = 375
   }
 
   metadata = {

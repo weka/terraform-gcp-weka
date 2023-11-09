@@ -188,7 +188,8 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 
 	installUrl := os.Getenv("INSTALL_URL")
 	proxyUrl := os.Getenv("PROXY_URL")
-	nics_num_str := os.Getenv("NICS_NUM")
+	nicsNumStr := os.Getenv("NICS_NUM")
+	diskName := os.Getenv("DISK_NAME")
 
 	functionRootUrl := fmt.Sprintf("https://%s", r.Host)
 
@@ -212,11 +213,12 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 		tokenId,
 		bucket,
 		d.Vm,
-		nics_num_str,
+		nicsNumStr,
 		computeMemory,
 		installUrl,
 		proxyUrl,
 		functionRootUrl,
+		diskName,
 		computeContainerNum,
 		frontendContainerNum,
 		driveContainerNum,

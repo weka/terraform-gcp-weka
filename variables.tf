@@ -308,6 +308,12 @@ variable "default_disk_size" {
   description = "The default disk size."
 }
 
+variable "default_disk_name" {
+  type        = string
+  default     = "wekaio-volume"
+  description = "The default disk name."
+}
+
 variable "traces_per_ionode" {
   default     = 10
   type        = number

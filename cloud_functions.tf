@@ -87,6 +87,7 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       OBS_NAME : var.obs_name == "" ? "" : var.obs_name
       OBS_TIERING_SSD_PERCENT : var.tiering_ssd_percent
       FRONTEND_CONTAINER_CORES_NUM : var.add_frontend_container ? var.containers_config_map[var.machine_type].frontend : 0
+      DISK_NAME : var.default_disk_name
       # for terminate
       LOAD_BALANCER_NAME : google_compute_region_backend_service.backend_service.name
       # for scale_up

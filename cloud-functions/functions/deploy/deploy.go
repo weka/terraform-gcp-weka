@@ -49,7 +49,8 @@ func GetDeployScript(
 	computeMemory,
 	installUrl,
 	proxyUrl,
-	functionRootUrl string,
+	functionRootUrl,
+	diskName string,
 	computeContainerNum,
 	frontendContainerNum,
 	driveContainerNum int,
@@ -85,6 +86,7 @@ func GetDeployScript(
 			FuncDef:          funcDef,
 			Params:           deploymentParams,
 			FailureDomainCmd: getHashedIpCommand,
+			DeviceNameCmd:    GetDeviceName(diskName),
 		}
 		bashScript = deployScriptGenerator.GetDeployScript()
 	} else {
@@ -136,9 +138,15 @@ func GetDeployScript(
 			ScriptBase:         dedent.Dedent(scriptBase),
 			Params:             joinParams,
 			FuncDef:            funcDef,
+			DeviceNameCmd:      GetDeviceName(diskName),
 		}
 		bashScript = joinScriptGenerator.GetJoinScript(ctx)
 	}
 	bashScript = dedent.Dedent(bashScript)
 	return
+}
+
+func GetDeviceName(diskName string) string {
+	template := "$(lsblk --output NAME,SERIAL --path --list --noheadings | grep %s | cut --delimiter ' ' --field 1)"
+	return fmt.Sprintf(dedent.Dedent(template), diskName)
 }

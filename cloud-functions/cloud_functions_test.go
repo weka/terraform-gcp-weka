@@ -118,11 +118,29 @@ func Test_deploy(t *testing.T) {
 	installUrl := fmt.Sprintf("https://%s@get.weka.io/dist/v1/install/%s/%s", token, version, version)
 
 	bucket := "weka-poc-state"
+	diskName := "weka-poc-disk"
 
 	ctx := context.TODO()
 	bashScript, err := deploy.GetDeployScript(
-		ctx, project, zone, instanceGroup, usernameId, passwordId, tokenId, bucket, instanceName,
-		nicNum, computeMemory, installUrl, functionRootUrl, computeContainerNum, frontendContainerNum, driveContainerNum, gws,
+		ctx,
+		project,
+		zone,
+		instanceGroup,
+		usernameId,
+		passwordId,
+		tokenId,
+		bucket,
+		instanceName,
+		nicNum,
+		computeMemory,
+		installUrl,
+		"",
+		functionRootUrl,
+		diskName,
+		computeContainerNum,
+		frontendContainerNum,
+		driveContainerNum,
+		gws,
 	)
 	if err != nil {
 		t.Logf("Generating deploy scripts failed: %s", err)

@@ -138,19 +138,19 @@ variable "instance_config_overrides" {
       host_maintenance = "TERMINATE"
     },
     a2-highgpu-2g = {
-      host_maintenance = "TERMINATE"
+      host_maintenance    = "TERMINATE"
       dpdk_base_memory_mb = 32
     },
     a2-highgpu-4g = {
-      host_maintenance = "TERMINATE"
+      host_maintenance    = "TERMINATE"
       dpdk_base_memory_mb = 32
     },
     a2-highgpu-8g = {
-      host_maintenance = "TERMINATE"
+      host_maintenance    = "TERMINATE"
       dpdk_base_memory_mb = 32
     },
     a2-megagpu-16g = {
-      host_maintenance = "TERMINATE"
+      host_maintenance    = "TERMINATE"
       dpdk_base_memory_mb = 32
     }
   }
