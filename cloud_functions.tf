@@ -77,7 +77,6 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       NVMES_NUM : var.nvmes_number
       HOSTS_NUM : var.cluster_size
       NICS_NUM : local.nics_number
-      GWS : format("(%s)", join(" ", [for s in data.google_compute_subnetwork.this : s.gateway_address]))
       CLUSTER_NAME : var.cluster_name
       PREFIX : var.prefix
       PROTECTION_LEVEL : var.protection_level
