@@ -34,7 +34,6 @@ resource "google_compute_instance_template" "this" {
   }
   disk {
     source_image = var.source_image_id
-    disk_size_gb = 50
     boot         = true
   }
 
