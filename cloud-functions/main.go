@@ -29,6 +29,23 @@ import (
 	"github.com/weka/go-cloud-lib/scale_down"
 )
 
+func respondWithErr(w http.ResponseWriter, err error, status int) {
+	msg := map[string]string{
+		"error": err.Error(),
+	}
+	responseJson, _ := json.Marshal(msg)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	w.Write(responseJson)
+}
+
+func failedDecodingReqBody(w http.ResponseWriter, err error) {
+	err = fmt.Errorf("failed decoding request body: %w", err)
+	log.Error().Err(err).Send()
+	respondWithErr(w, err, http.StatusBadRequest)
+}
+
 func ClusterizeFinalization(w http.ResponseWriter, r *http.Request) {
 	project := os.Getenv("PROJECT")
 	zone := os.Getenv("ZONE")
@@ -39,7 +56,8 @@ func ClusterizeFinalization(w http.ResponseWriter, r *http.Request) {
 	err := clusterize_finalization.ClusterizeFinalization(ctx, project, zone, instanceGroup, bucket)
 
 	if err != nil {
-		fmt.Fprintf(w, "%s", err)
+		log.Error().Err(err).Send()
+		respondWithErr(w, err, http.StatusBadRequest)
 	} else {
 		fmt.Fprintf(w, "ClusterizeFinalization completed successfully")
 	}
@@ -105,7 +123,9 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if stripeWidth == 0 || protectionLevel == 0 || hotspare == 0 {
-		fmt.Fprint(w, "Failed getting data protection params")
+		err := errors.New("data protection params are not set")
+		log.Error().Err(err).Send()
+		respondWithErr(w, err, http.StatusBadRequest)
 		return
 	}
 
@@ -113,7 +133,7 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 		Vm string `json:"vm"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
-		fmt.Fprint(w, "Failed decoding request")
+		failedDecodingReqBody(w, err)
 		return
 	}
 
@@ -164,7 +184,9 @@ func Fetch(w http.ResponseWriter, r *http.Request) {
 	hostGroupInfoResponse, err := fetch.GetFetchDataParams(ctx, project, zone, instanceGroup, bucket, usernameId, passwordId)
 	log.Debug().Msgf("result: %#v", hostGroupInfoResponse)
 	if err != nil {
-		panic(fmt.Sprintf("An error occurred: %s", err))
+		log.Error().Err(err).Send()
+		respondWithErr(w, err, http.StatusBadRequest)
+		return
 	}
 	fmt.Println("Writing fetch result")
 	w.Header().Set("Content-Type", "application/json")
@@ -197,7 +219,7 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 		Vm string `json:"vm"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
-		fmt.Fprint(w, "Failed decoding request")
+		failedDecodingReqBody(w, err)
 		return
 	}
 
@@ -225,7 +247,8 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 		gateways,
 	)
 	if err != nil {
-		_, _ = fmt.Fprintf(w, "%s", err)
+		log.Error().Err(err).Send()
+		respondWithErr(w, err, http.StatusBadRequest)
 		return
 	}
 	w.Write([]byte(bashScript))
@@ -245,7 +268,8 @@ func ScaleDown(w http.ResponseWriter, r *http.Request) {
 	log.Debug().Msgf("result: %#v", scaleResponse)
 
 	if err != nil {
-		_, _ = fmt.Fprintf(w, "%s", err)
+		log.Error().Err(err).Send()
+		respondWithErr(w, err, http.StatusBadRequest)
 		return
 	}
 	fmt.Println("Writing scale result")
@@ -267,6 +291,9 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msgf("Number of backends is: %d", backendsNumber)
 	state, err := common.GetClusterState(ctx, bucket)
 	if err != nil {
+		err = fmt.Errorf("failed getting cluster state: %w", err)
+		log.Error().Err(err).Send()
+		respondWithErr(w, err, http.StatusBadRequest)
 		return
 	}
 	log.Info().Msgf("Desired size is: %d", state.DesiredSize)
@@ -277,7 +304,9 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 			instanceName := fmt.Sprintf("%s-%s%03d", clusterName, currentTime, i)
 			log.Info().Msgf("creating new backend instance: %s", instanceName)
 			if err := scale_up.CreateInstance(ctx, project, zone, backendTemplate, instanceName, yumRepoServer, functionRootUrl); err != nil {
-				fmt.Fprintf(w, "Instance %s creation failed %s.", instanceName, err)
+				err = fmt.Errorf("instance %s creation failed %s.", instanceName, err)
+				log.Error().Err(err).Send()
+				respondWithErr(w, err, http.StatusBadRequest)
 			} else {
 				log.Info().Msgf("Instance %s creation completed successfully", instanceName)
 				fmt.Fprintf(w, "Instance %s creation has started.", instanceName)
@@ -299,7 +328,7 @@ func Terminate(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	if err := json.NewDecoder(r.Body).Decode(&scaleResponse); err != nil {
-		fmt.Fprint(w, "Failed decoding request body")
+		failedDecodingReqBody(w, err)
 		return
 	}
 
@@ -307,30 +336,37 @@ func Terminate(w http.ResponseWriter, r *http.Request) {
 	terminateResponse, err := terminate.Terminate(ctx, scaleResponse, project, zone, instanceGroup, loadBalancerName)
 	log.Debug().Msgf("result: %#v", terminateResponse)
 	if err != nil {
-		panic(fmt.Sprintf("An error occurred: %s", err))
+		log.Error().Err(err).Send()
+		respondWithErr(w, err, http.StatusBadRequest)
+		return
 	}
 	fmt.Println("Writing terminate result")
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(terminateResponse)
-
 }
 
 func Transient(w http.ResponseWriter, r *http.Request) {
 	var terminateResponse protocol.TerminatedInstancesResponse
 
 	if err := json.NewDecoder(r.Body).Decode(&terminateResponse); err != nil {
-		fmt.Fprint(w, "Failed decoding request body")
+		failedDecodingReqBody(w, err)
 		return
 	}
 	log.Debug().Msgf("input: %#v", terminateResponse)
 	errs := terminateResponse.TransientErrors
-	output := ""
+
+	terminatedInstanceIds := []string{}
+	for _, instance := range terminateResponse.Instances {
+		terminatedInstanceIds = append(terminatedInstanceIds, instance.InstanceId)
+	}
+	output := fmt.Sprintf("terminated instances (%d): [%s]", len(terminatedInstanceIds), strings.Join(terminatedInstanceIds, ","))
+
 	if len(errs) > 0 {
 		output = fmt.Sprintf("the following errors were found:\n%s", strings.Join(errs, "\n"))
 	}
 	log.Debug().Msgf("result: %s", output)
 	fmt.Println("Writing Transient result")
-	fmt.Fprintf(w, output)
+	fmt.Fprint(w, output)
 }
 
 func Resize(w http.ResponseWriter, r *http.Request) {
@@ -341,14 +377,16 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
-		fmt.Fprint(w, "Failed decoding request body")
+		failedDecodingReqBody(w, err)
 		return
 	}
 
 	ctx := r.Context()
 	err := resize.UpdateValue(ctx, bucket, d.Value)
 	if err != nil {
-		fmt.Fprintf(w, "Update failed: %s", err)
+		err = fmt.Errorf("failed updating cluster size: %w", err)
+		log.Error().Err(err).Send()
+		respondWithErr(w, err, http.StatusBadRequest)
 	} else {
 		fmt.Fprintf(w, "Update completed successfully")
 	}
@@ -363,7 +401,7 @@ func JoinFinalization(w http.ResponseWriter, r *http.Request) {
 		Name string `json:"name"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
-		fmt.Fprint(w, "Failed decoding request")
+		failedDecodingReqBody(w, err)
 		return
 	}
 
@@ -371,7 +409,8 @@ func JoinFinalization(w http.ResponseWriter, r *http.Request) {
 	err := join_finalization.JoinFinalization(ctx, project, zone, instanceGroup, d.Name)
 
 	if err != nil {
-		fmt.Fprintf(w, "%s", err)
+		log.Error().Err(err).Send()
+		respondWithErr(w, err, http.StatusBadRequest)
 	} else {
 		fmt.Fprintf(w, "JoinFinalization completed successfully")
 	}
@@ -390,12 +429,14 @@ func TerminateCluster(w http.ResponseWriter, r *http.Request) {
 		Name string `json:"name"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
-		fmt.Fprint(w, "Failed decoding request")
+		failedDecodingReqBody(w, err)
 		return
 	}
 
 	if clusterName != d.Name {
-		fmt.Fprintf(w, fmt.Sprintf("Wrong cluster name :%s", d.Name))
+		err := fmt.Errorf("wrong cluster name :%s", d.Name)
+		log.Error().Err(err).Send()
+		respondWithErr(w, err, http.StatusBadRequest)
 		return
 	}
 
@@ -437,7 +478,7 @@ func Status(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
-		fmt.Fprint(w, "Failed decoding request")
+		failedDecodingReqBody(w, err)
 		return
 	}
 
@@ -453,14 +494,19 @@ func Status(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		fmt.Fprintf(w, "Failed retrieving status: %s", err)
+		err = fmt.Errorf("failed retrieving status: %s", err)
+		log.Error().Err(err).Send()
+		respondWithErr(w, err, http.StatusBadRequest)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(clusterStatus)
 	if err != nil {
-		fmt.Fprintf(w, "Failed decoding status: %s", err)
+		err = fmt.Errorf("failed decoding status: %s", err)
+		log.Error().Err(err).Send()
+		respondWithErr(w, err, http.StatusBadRequest)
+		return
 	}
 }
 
@@ -469,14 +515,16 @@ func Report(w http.ResponseWriter, r *http.Request) {
 	var report protocol.Report
 
 	if err := json.NewDecoder(r.Body).Decode(&report); err != nil {
-		fmt.Fprint(w, "Failed decoding request")
+		failedDecodingReqBody(w, err)
 		return
 	}
 
 	ctx := r.Context()
 	err := reportPackage.Report(ctx, report, bucket)
 	if err != nil {
-		fmt.Fprintf(w, "Failed reporting: %s", err)
+		err = fmt.Errorf("failed reporting: %s", err)
+		log.Error().Err(err).Send()
+		respondWithErr(w, err, http.StatusBadRequest)
 		return
 	}
 

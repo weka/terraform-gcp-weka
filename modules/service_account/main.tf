@@ -19,6 +19,7 @@ resource "google_project_iam_member" "sa_member_role" {
   for_each = toset([
     "roles/secretmanager.secretAccessor",
     "roles/compute.serviceAgent",
+    "roles/compute.loadBalancerServiceUser", # needed for GetHealthRegionBackendServiceRequest
     "roles/cloudfunctions.developer",
     "roles/workflows.invoker",
     "roles/vpcaccess.serviceAgent",

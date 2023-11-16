@@ -155,6 +155,7 @@ func TerminateUnhealthyInstances(ctx context.Context, project, zone, instanceGro
 		InstanceGroup: instanceGroup,
 	})
 	if err != nil {
+		err = fmt.Errorf("error getting instance group: %w", err)
 		log.Fatal().Err(err)
 		errs = append(errs, err)
 		return
@@ -171,14 +172,16 @@ func TerminateUnhealthyInstances(ctx context.Context, project, zone, instanceGro
 
 	resp, err := c.GetHealth(ctx, req)
 	if err != nil {
-		log.Error().Msgf("%s", err)
+		err = fmt.Errorf("error getting health status: %s", err)
+		log.Error().Err(err).Send()
 		errs = append(errs, err)
 		return
 	}
 
 	instancesClient, err := compute.NewInstancesRESTClient(ctx)
 	if err != nil {
-		log.Error().Msgf("%s", err)
+		err = fmt.Errorf("error getting instances client: %s", err)
+		log.Error().Err(err).Send()
 		return
 	}
 	defer instancesClient.Close()
@@ -243,6 +246,7 @@ func Terminate(
 
 	errs := TerminateUnhealthyInstances(ctx, project, zone, instanceGroup, loadBalancerName)
 	if len(errs) != 0 {
+		log.Warn().Msgf("errors while terminating unhealthy instances: %s", errs)
 		response.AddTransientErrors(errs)
 	}
 
@@ -264,7 +268,10 @@ func Terminate(
 	}
 
 	terminatedInstances, errs := terminateUnneededInstances(ctx, project, zone, candidatesToTerminate, scaleResponse.ToTerminate)
-	response.AddTransientErrors(errs)
+	if len(errs) != 0 {
+		log.Warn().Msgf("errors while terminating unneeded instances: %s", errs)
+		response.AddTransientErrors(errs)
+	}
 
 	//detachTerminated(asgName)
 
