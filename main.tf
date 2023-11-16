@@ -74,7 +74,7 @@ resource "google_compute_instance_template" "this" {
   }
 
   metadata = {
-    ssh-keys = "${var.ssh_user}:${local.ssh_public_key}"
+    ssh-keys = "${var.vm_username}:${local.ssh_public_key}"
   }
 
   lifecycle {

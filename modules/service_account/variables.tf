@@ -21,7 +21,7 @@ variable "state_bucket_name" {
   description = "Name of existing state bucket"
 }
 
-variable "obs_name" {
+variable "tiering_obs_name" {
   type        = string
   default     = ""
   description = "Name of existing OBS bucket"

@@ -3,17 +3,6 @@ variable "project_id" {
   description = "Project id"
 }
 
-variable "nics_numbers" {
-  type        = number
-  description = "Number of nics per host"
-  default     = -1
-
-  validation {
-    condition     = var.nics_numbers == -1 || var.nics_numbers > 0
-    error_message = "The nics_number value can take values > 0 or -1 (for using defaults)."
-  }
-}
-
 variable "zone" {
   type        = string
   description = "Zone name"

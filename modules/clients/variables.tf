@@ -50,9 +50,9 @@ variable "source_image_id" {
   description = "os of image"
 }
 
-variable "nics_numbers" {
+variable "client_frontend_cores" {
   type        = number
-  description = "Number of core per client"
+  description = "Number of frontend cores to use on client instances, this number will reflect on number of NICs attached to instance, as each weka core requires dedicated NIC"
   default     = 1
 }
 
@@ -61,7 +61,7 @@ variable "disk_size" {
   description = "size of disk"
 }
 
-variable "mount_clients_dpdk" {
+variable "clients_use_dpdk" {
   type        = bool
   default     = true
   description = "Mount weka clients in DPDK mode"
@@ -77,7 +77,7 @@ variable "clients_name" {
   description = "Prefix clients name."
 }
 
-variable "ssh_user" {
+variable "vm_username" {
   type        = string
   description = "The user name for logging in to the virtual machines."
   default     = "weka"

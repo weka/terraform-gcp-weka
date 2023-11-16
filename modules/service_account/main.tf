@@ -1,8 +1,8 @@
 locals {
   state_bucket_name        = var.state_bucket_name == "" ? ["${var.prefix}-${var.cluster_name}-${var.project_id}"] : []
-  obs_bucket_name          = var.obs_name == "" ? ["${var.project_id}-${var.prefix}-${var.cluster_name}-obs"] : []
+  obs_bucket_name          = var.tiering_obs_name == "" ? ["${var.project_id}-${var.prefix}-${var.cluster_name}-obs"] : []
   object_state_bucket_name = var.state_bucket_name == "" ? ["${var.prefix}-${var.cluster_name}-${var.project_id}"] : [var.state_bucket_name]
-  object_obs_bucket_name   = var.obs_name == "" ? ["${var.project_id}-${var.prefix}-${var.cluster_name}-obs"] : [var.obs_name]
+  object_obs_bucket_name   = var.tiering_obs_name == "" ? ["${var.project_id}-${var.prefix}-${var.cluster_name}-obs"] : [var.tiering_obs_name]
 
   bucket_list_name = concat(local.obs_bucket_name, local.state_bucket_name)
   object_list_name = concat(local.object_obs_bucket_name, local.object_state_bucket_name)

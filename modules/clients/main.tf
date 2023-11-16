@@ -14,9 +14,9 @@ locals {
   mount_wekafs_script = templatefile("${path.module}/mount_wekafs.sh", {
     all_subnets         = split("\n", replace(join("\n", data.google_compute_subnetwork.this.*.ip_cidr_range), "/\\S+//", ""))[0]
     all_gateways        = join(" ", data.google_compute_subnetwork.this.*.gateway_address)
-    nics_num            = var.nics_numbers
+    nics_num            = var.client_frontend_cores
     backend_lb_ip       = var.backend_lb_ip
-    mount_clients_dpdk  = var.mount_clients_dpdk
+    mount_clients_dpdk  = var.clients_use_dpdk
     dpdk_base_memory_mb = try(var.instance_config_overrides[var.machine_type].dpdk_base_memory_mb, 0)
   })
 
@@ -61,7 +61,7 @@ resource "google_compute_instance" "this" {
 
   # nics with private ip
   dynamic "network_interface" {
-    for_each = range(local.private_nic_first_index, var.nics_numbers)
+    for_each = range(local.private_nic_first_index, var.client_frontend_cores)
     content {
       subnetwork = data.google_compute_subnetwork.this[network_interface.value].id
     }
@@ -70,7 +70,7 @@ resource "google_compute_instance" "this" {
   metadata_startup_script = local.vms_custom_data
 
   metadata = {
-    ssh-keys = "${var.ssh_user}:${var.ssh_public_key}"
+    ssh-keys = "${var.vm_username}:${var.ssh_public_key}"
   }
 
   service_account {

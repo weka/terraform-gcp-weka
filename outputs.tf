@@ -18,8 +18,8 @@ output "functions_url" {
   description = "Functions url and body for api request"
 }
 
-output "ssh_user" {
-  value       = var.ssh_user
+output "vm_username" {
+  value       = var.vm_username
   description = "ssh user for weka cluster"
 }
 
@@ -29,43 +29,52 @@ output "private_ssh_key" {
 }
 
 output "get_cluster_status_uri" {
-  value = local.get_cluster_status_uri
+  value       = local.get_cluster_status_uri
+  description = "URL of status function"
 }
 
 output "resize_cluster_uri" {
-  value = local.resize_cluster_uri
+  value       = local.resize_cluster_uri
+  description = "URL of resize function"
 }
 
 output "terminate_cluster_uri" {
-  value = local.terminate_cluster_uri
+  value       = local.terminate_cluster_uri
+  description = "URL of terminate function"
 }
 
 output "lb_url" {
-  value = local.lb_url
+  value       = local.lb_url
+  description = "URL of LB"
 }
 
 output "cluster_name" {
-  value = var.cluster_name
+  value       = var.cluster_name
+  description = "The cluster name"
 }
 
 output "project_id" {
-  value = var.project_id
+  value       = var.project_id
+  description = "Project ID"
 }
 
 output "weka_cluster_password_secret_id" {
-  value = local.weka_cluster_password_secret_id
+  value       = local.weka_cluster_password_secret_id
+  description = "Secret id of weka_password"
 }
 
 output "nfs_protocol_gateways_ips" {
-  value = var.nfs_protocol_gateways_number == 0 ? null : <<EOT
+  value       = var.nfs_protocol_gateways_number == 0 ? null : <<EOT
 gcloud compute instances list --filter="name~'${module.nfs_protocol_gateways[0].gateways_name}'" --format "get(networkInterfaces[0].${local.protocol_gateways_ips_type})"
 EOT
+  description = "Ips of NFS protocol gateways"
 }
 
 output "smb_protocol_gateways_ips" {
-  value = var.smb_protocol_gateways_number == 0 ? null : <<EOT
+  value       = var.smb_protocol_gateways_number == 0 ? null : <<EOT
 gcloud compute instances list --filter="name~'${module.smb_protocol_gateways[0].gateways_name}'" --format "get(networkInterfaces[0].${local.protocol_gateways_ips_type})"
 EOT
+  description = "Ips of SMB protocol gateways"
 }
 
 output "cluster_helper_commands" {
