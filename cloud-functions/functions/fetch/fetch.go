@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
-	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
 )
 
 type HgInstance struct {
