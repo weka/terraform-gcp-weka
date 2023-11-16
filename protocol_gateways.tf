@@ -14,7 +14,6 @@ module "nfs_protocol_gateways" {
   gateways_number       = var.nfs_protocol_gateways_number
   gateways_name         = "${var.prefix}-${var.cluster_name}-nfs-protocol-gateway"
   protocol              = "NFS"
-  nics_numbers          = var.nfs_protocol_gateway_nics_num
   secondary_ips_per_nic = var.nfs_protocol_gateway_secondary_ips_per_nic
   backend_lb_ip         = google_compute_forwarding_rule.google_compute_forwarding_rule.ip_address
   install_weka_url      = local.install_weka_url
@@ -44,7 +43,6 @@ module "smb_protocol_gateways" {
   gateways_name           = "${var.prefix}-${var.cluster_name}-smb-protocol-gateway"
   protocol                = "SMB"
   setup_protocol          = var.smb_setup_protocol
-  nics_numbers            = var.smb_protocol_gateway_nics_num
   secondary_ips_per_nic   = var.smb_protocol_gateway_secondary_ips_per_nic
   backend_lb_ip           = google_compute_forwarding_rule.google_compute_forwarding_rule.ip_address
   install_weka_url        = local.install_weka_url

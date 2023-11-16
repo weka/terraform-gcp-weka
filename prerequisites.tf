@@ -4,25 +4,25 @@ module "service_account" {
   project_id        = var.project_id
   prefix            = var.prefix
   cluster_name      = var.cluster_name
-  obs_name          = var.obs_name
+  tiering_obs_name  = var.tiering_obs_name
   state_bucket_name = var.state_bucket_name
 }
 
 module "network" {
-  count                 = length(var.subnets_name) == 0 ? 1 : 0
-  source                = "./modules/network"
-  project_id            = var.project_id
-  prefix                = var.prefix
-  region                = var.region
-  subnets_range         = var.subnets_range
-  vpc_connector_range   = var.vpc_connector_range
-  vpc_connector_name    = var.vpc_connector_name
-  allow_ssh_ranges      = var.allow_ssh_ranges
-  allow_weka_api_ranges = var.allow_weka_api_ranges
-  vpcs_number           = var.vpcs_number
-  private_zone_name     = var.private_zone_name
-  mtu_size              = var.mtu_size
-  depends_on            = [module.service_account]
+  count                = length(var.subnets_name) == 0 ? 1 : 0
+  source               = "./modules/network"
+  project_id           = var.project_id
+  prefix               = var.prefix
+  region               = var.region
+  subnets_range        = var.subnets_range
+  vpc_connector_range  = var.vpc_connector_range
+  vpc_connector_name   = var.vpc_connector_name
+  allow_ssh_cidrs      = var.allow_ssh_cidrs
+  allow_weka_api_cidrs = var.allow_weka_api_cidrs
+  vpcs_number          = var.vpcs_number
+  private_zone_name    = var.private_zone_name
+  mtu_size             = var.mtu_size
+  depends_on           = [module.service_account]
 }
 
 locals {

@@ -8,10 +8,10 @@ data "google_compute_subnetwork" "this" {
 locals {
   disk_size               = var.disk_size + var.traces_per_frontend * var.frontend_cores_num
   private_nic_first_index = var.assign_public_ip ? 1 : 0
-
+  nics_numbers            = var.frontend_cores_num + 1
   init_script = templatefile("${path.module}/init.sh", {
     yum_repo_server  = var.yum_repo_server
-    nics_num         = var.nics_numbers
+    nics_num         = local.nics_numbers
     subnet_range     = join(" ", data.google_compute_subnetwork.this.*.ip_cidr_range)
     disk_size        = local.disk_size
     install_weka_url = var.install_weka_url
@@ -114,7 +114,7 @@ resource "google_compute_instance_template" "this" {
   }
 
   dynamic "network_interface" {
-    for_each = range(1, var.nics_numbers)
+    for_each = range(1, local.nics_numbers)
     content {
       subnetwork         = data.google_compute_subnetwork.this[network_interface.value].id
       subnetwork_project = var.project_id
@@ -135,7 +135,7 @@ resource "google_compute_instance_template" "this" {
       error_message = "The number of secondary IPs per single NIC per protocol gateway virtual machine must be at most 3 for SMB."
     }
     precondition {
-      condition     = var.nics_numbers != -1 ? var.frontend_cores_num < var.nics_numbers : true
+      condition     = local.nics_numbers != -1 ? var.frontend_cores_num < local.nics_numbers : true
       error_message = "The number of frontends must be less than the number of NICs."
     }
   }
