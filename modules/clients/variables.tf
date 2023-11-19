@@ -50,7 +50,7 @@ variable "source_image_id" {
   description = "os of image"
 }
 
-variable "client_frontend_cores" {
+variable "frontend_container_cores_num" {
   type        = number
   description = "Number of frontend cores to use on client instances, this number will reflect on number of NICs attached to instance, as each weka core requires dedicated NIC"
   default     = 1
