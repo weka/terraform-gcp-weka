@@ -6,12 +6,11 @@ data "google_compute_subnetwork" "this" {
 }
 
 locals {
-  disk_size               = var.disk_size + var.traces_per_frontend * var.frontend_cores_num
+  disk_size               = var.disk_size + var.traces_per_frontend * var.frontend_container_cores_num
   private_nic_first_index = var.assign_public_ip ? 1 : 0
-  nics_numbers            = var.frontend_cores_num + 1
+  nics_numbers            = var.frontend_container_cores_num + 1
   init_script = templatefile("${path.module}/init.sh", {
     yum_repo_server  = var.yum_repo_server
-    nics_num         = local.nics_numbers
     subnet_range     = join(" ", data.google_compute_subnetwork.this.*.ip_cidr_range)
     disk_size        = local.disk_size
     install_weka_url = var.install_weka_url
@@ -20,11 +19,11 @@ locals {
   })
 
   deploy_script = templatefile("${path.module}/deploy_protocol_gateways.sh", {
-    frontend_cores_num = var.frontend_cores_num
-    subnet_prefixes    = join(" ", data.google_compute_subnetwork.this.*.ip_cidr_range)
-    backend_lb_ip      = var.backend_lb_ip
-    weka_token_id      = var.weka_token_id
-    weka_password_id   = var.weka_password_id
+    frontend_container_cores_num = var.frontend_container_cores_num
+    subnet_prefixes              = join(" ", data.google_compute_subnetwork.this.*.ip_cidr_range)
+    backend_lb_ip                = var.backend_lb_ip
+    weka_token_id                = var.weka_token_id
+    weka_password_id             = var.weka_password_id
   })
 
   setup_nfs_protocol_script = templatefile("${path.module}/setup_nfs.sh", {
@@ -41,7 +40,7 @@ locals {
     dns_ip              = var.smb_dns_ip_address
     gateways_number     = var.gateways_number
     gateways_name       = var.gateways_name
-    frontend_cores_num  = var.frontend_cores_num
+    frontend_cores_num  = var.frontend_container_cores_num
     share_name          = var.smb_share_name
   })
 
@@ -135,7 +134,7 @@ resource "google_compute_instance_template" "this" {
       error_message = "The number of secondary IPs per single NIC per protocol gateway virtual machine must be at most 3 for SMB."
     }
     precondition {
-      condition     = local.nics_numbers != -1 ? var.frontend_cores_num < local.nics_numbers : true
+      condition     = local.nics_numbers != -1 ? var.frontend_container_cores_num < local.nics_numbers : true
       error_message = "The number of frontends must be less than the number of NICs."
     }
   }

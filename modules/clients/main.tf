@@ -10,14 +10,14 @@ locals {
   preparation_script = templatefile("${path.module}/init.sh", {
     yum_repo_server = var.yum_repo_server
   })
-
+  nics_num = var.frontend_container_cores_num + 1
   mount_wekafs_script = templatefile("${path.module}/mount_wekafs.sh", {
-    all_subnets         = split("\n", replace(join("\n", data.google_compute_subnetwork.this.*.ip_cidr_range), "/\\S+//", ""))[0]
-    all_gateways        = join(" ", data.google_compute_subnetwork.this.*.gateway_address)
-    nics_num            = var.client_frontend_cores
-    backend_lb_ip       = var.backend_lb_ip
-    mount_clients_dpdk  = var.clients_use_dpdk
-    dpdk_base_memory_mb = try(var.instance_config_overrides[var.machine_type].dpdk_base_memory_mb, 0)
+    all_subnets                  = split("\n", replace(join("\n", data.google_compute_subnetwork.this.*.ip_cidr_range), "/\\S+//", ""))[0]
+    all_gateways                 = join(" ", data.google_compute_subnetwork.this.*.gateway_address)
+    frontend_container_cores_num = var.frontend_container_cores_num
+    backend_lb_ip                = var.backend_lb_ip
+    mount_clients_dpdk           = var.clients_use_dpdk
+    dpdk_base_memory_mb          = try(var.instance_config_overrides[var.machine_type].dpdk_base_memory_mb, 0)
   })
 
   custom_data_parts = [local.preparation_script, local.mount_wekafs_script]
@@ -61,7 +61,7 @@ resource "google_compute_instance" "this" {
 
   # nics with private ip
   dynamic "network_interface" {
-    for_each = range(local.private_nic_first_index, var.client_frontend_cores)
+    for_each = range(local.private_nic_first_index, local.nics_num)
     content {
       subnetwork = data.google_compute_subnetwork.this[network_interface.value].id
     }
