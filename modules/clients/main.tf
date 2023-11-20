@@ -81,7 +81,7 @@ resource "google_compute_instance" "this" {
     on_host_maintenance = try(var.instance_config_overrides[var.machine_type].host_maintenance, "MIGRATE")
   }
   lifecycle {
-    ignore_changes = [network_interface]
+    ignore_changes = [network_interface, metadata_startup_script]
   }
   depends_on = [google_compute_disk.this]
 }
