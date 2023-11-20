@@ -20,7 +20,7 @@ output "functions_url" {
 
 output "vm_username" {
   value       = var.vm_username
-  description = "ssh user for weka cluster"
+  description = "Provided as part of output for automated use of terraform, ssh user to weka cluster vm"
 }
 
 output "private_ssh_key" {
