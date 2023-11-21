@@ -67,9 +67,12 @@ func GetDeployScript(
 
 	if !state.Clusterized {
 		var token string
-		token, err = getWekaIoToken(ctx, tokenId)
-		if err != nil {
-			return
+		// we allow empty token id for private network installation
+		if tokenId != "" {
+			token, err = getWekaIoToken(ctx, tokenId)
+			if err != nil {
+				return
+			}
 		}
 
 		deploymentParams := deploy.DeploymentParams{
