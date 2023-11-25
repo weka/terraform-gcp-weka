@@ -126,7 +126,7 @@ resource "google_compute_instance_template" "this" {
       error_message = "The amount of protocol gateways should be at least 1 for NFS and at least 3 and at most 8 for SMB."
     }
     precondition {
-      condition     = var.protocol == "SMB" ? var.smb_domain_name != "" : true
+      condition     = var.protocol == "SMB" && var.setup_protocol ? var.smb_domain_name != "" : true
       error_message = "The SMB domain name should be set when deploying SMB protocol gateways."
     }
     precondition {
