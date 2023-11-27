@@ -37,6 +37,7 @@ No resources.
 |------|-------------|------|---------|:--------:|
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | Project id | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | Region name | `string` | `"europe-west1"` | no |
+| <a name="input_zone"></a> [zone](#input\_zone) | Zone name | `string` | `"europe-west1-b"` | no |
 
 ## Outputs
 
