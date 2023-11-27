@@ -38,6 +38,7 @@ No modules.
 | Name | Type |
 |------|------|
 | [google_cloudbuild_worker_pool.worker_pool](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/cloudbuild_worker_pool) | resource |
+| [google_compute_firewall.worker_pool_fw](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_firewall) | resource |
 | [google_compute_global_address.worker_range_ip](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_global_address) | resource |
 | [google_compute_network_peering.peering_vpc](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_network_peering) | resource |
 | [google_compute_network_peering.peering_worker](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_network_peering) | resource |
@@ -63,12 +64,12 @@ No modules.
 | <a name="input_vpc_name"></a> [vpc\_name](#input\_vpc\_name) | Vpc name | `string` | `""` | no |
 | <a name="input_worker_disk_size"></a> [worker\_disk\_size](#input\_worker\_disk\_size) | Size of the disk attached to the worker, in GB | `number` | n/a | yes |
 | <a name="input_worker_machine_type"></a> [worker\_machine\_type](#input\_worker\_machine\_type) | Machine type of a worker | `string` | n/a | yes |
-| <a name="input_worker_pool_name"></a> [worker\_pool\_name](#input\_worker\_pool\_name) | Exiting worker pool name | `string` | `""` | no |
+| <a name="input_worker_pool_id"></a> [worker\_pool\_id](#input\_worker\_pool\_id) | Exiting worker pool id | `string` | `""` | no |
 | <a name="input_worker_pool_network"></a> [worker\_pool\_network](#input\_worker\_pool\_network) | Network name of worker pool, Must be on the same project and region | `string` | `""` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_worker_pool_name"></a> [worker\_pool\_name](#output\_worker\_pool\_name) | Worker pool name |
+| <a name="output_worker_pool_id"></a> [worker\_pool\_id](#output\_worker\_pool\_id) | Worker pool id |
 <!-- END_TF_DOCS -->
