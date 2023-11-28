@@ -112,7 +112,6 @@ smb_setup_protocol                         = false
 smb_cluster_name                           = ""
 smb_domain_name                            = ""
 smb_domain_netbios_name                    = ""
-smb_dns_ip_address                         = ""
 smb_share_name                             = ""
 ```
 

@@ -73,26 +73,6 @@ if (( retry > max_retries )); then
     exit 1
 fi
 
-if [ -n "${domain_name}" ] || [ -n "${dns_ip}" ]; then
-    resolv_conf=$(cat /etc/resolv.conf)
-    # Extract the existing domain name and DNS IP
-    existing_domain_name=$(grep -oP '^search\s+\K\S+' <<< "$resolv_conf")
-    existing_dns_ip=$(grep -oP '^nameserver\s+\K\S+' <<< "$resolv_conf")
-
-    # Set the new domain name and DNS IP
-    new_domain_name="${domain_name}"
-    new_dns_ip="${dns_ip}"
-
-    # get updated contents of /etc/resolv.conf
-    updated_resolv_conf=$(sed -e "s|search\s*$existing_domain_name|search $new_domain_name $existing_domain_name|" -e "s|nameserver\s*$existing_dns_ip|nameserver $new_dns_ip $existing_dns_ip|" <<< "$resolv_conf")
-
-    # save updated contents to /etc/resolv.conf
-    echo "$updated_resolv_conf" | sudo tee /etc/resolv.conf > /dev/null
-
-    echo "Updated /etc/resolv.conf:"
-    cat /etc/resolv.conf
-fi
-
 # wait for weka smb cluster to be ready in case it was created by another host
 weka smb cluster wait
 
