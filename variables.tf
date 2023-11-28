@@ -558,7 +558,7 @@ variable "ssh_public_key" {
   default     = null
 }
 
-variable "vnets_to_peer_to_deployment_vnet" {
+variable "vpcs_to_peer_to_deployment_vpc" {
   type        = list(string)
   description = "list of vpcs name to peer"
   default     = []

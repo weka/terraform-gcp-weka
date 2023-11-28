@@ -14,7 +14,7 @@ module "weka_deployment" {
   install_weka_url                   = "gs://weka-installation/weka-4.2.5.tar"
   weka_tar_bucket_name               = "weka-installation"
   yum_repo_server                    = "http://10.26.2.2"
-  vnets_to_peer_to_deployment_vnet   = ["repo-global-test-tf-vars-vpc"]
+  vpcs_to_peer_to_deployment_vpc     = ["repo-global-test-tf-vars-vpc"]
   weka_tar_project_id                = "wekaio-rnd"
   tiering_enable_obs_integration     = true
   create_worker_pool                 = true

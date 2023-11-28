@@ -74,11 +74,11 @@ data "google_compute_subnetwork" "this" {
 }
 
 module "peering" {
-  count                            = length(var.vnets_to_peer_to_deployment_vnet) > 0 ? 1 : 0
-  source                           = "./modules/vpc_peering"
-  vpcs_name                        = local.vpcs_name
-  vnets_to_peer_to_deployment_vnet = var.vnets_to_peer_to_deployment_vnet
-  depends_on                       = [module.network]
+  count                          = length(var.vpcs_to_peer_to_deployment_vpc) > 0 ? 1 : 0
+  source                         = "./modules/vpc_peering"
+  vpcs_name                      = local.vpcs_name
+  vpcs_to_peer_to_deployment_vpc = var.vpcs_to_peer_to_deployment_vpc
+  depends_on                     = [module.network]
 }
 
 module "shared_vpc_peering" {
