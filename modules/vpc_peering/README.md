@@ -28,8 +28,8 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_vnets_to_peer_to_deployment_vnet"></a> [vnets\_to\_peer\_to\_deployment\_vnet](#input\_vnets\_to\_peer\_to\_deployment\_vnet) | list of vpcs name to peering | `list(string)` | n/a | yes |
 | <a name="input_vpcs_name"></a> [vpcs\_name](#input\_vpcs\_name) | list of backend vpcs name | `list(string)` | n/a | yes |
+| <a name="input_vpcs_to_peer_to_deployment_vpc"></a> [vpcs\_to\_peer\_to\_deployment\_vpc](#input\_vpcs\_to\_peer\_to\_deployment\_vpc) | list of vpcs name to peering | `list(string)` | n/a | yes |
 
 ## Outputs
 
