@@ -58,7 +58,6 @@ module "smb_protocol_gateways" {
   smb_cluster_name             = var.smb_cluster_name != "" ? var.smb_cluster_name : "${var.prefix}-${var.cluster_name}"
   smb_domain_name              = var.smb_domain_name
   smb_domain_netbios_name      = var.smb_domain_netbios_name
-  smb_dns_ip_address           = var.smb_dns_ip_address
   smb_share_name               = var.smb_share_name
   smbw_enabled                 = var.smbw_enabled
   depends_on                   = [module.network, module.peering, module.shared_vpc_peering, time_sleep.wait_120_seconds, google_compute_forwarding_rule.google_compute_forwarding_rule, google_secret_manager_secret.secret_token, google_cloudfunctions2_function.cloud_internal_function]
