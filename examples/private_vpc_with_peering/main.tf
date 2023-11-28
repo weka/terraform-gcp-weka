@@ -17,6 +17,6 @@ module "weka_deployment" {
   tiering_enable_obs_integration = true
   assign_public_ip               = false
   create_worker_pool             = true
-  vpcs_peering_list              = ["repo-global-vpc"]
+  vpcs_to_peer_to_deployment_vpc = ["repo-global-vpc"]
   weka_tar_project_id            = "wekaio-rnd"
 }
