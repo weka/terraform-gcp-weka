@@ -65,14 +65,14 @@ output "weka_cluster_password_secret_id" {
 
 output "nfs_protocol_gateways_ips" {
   value       = var.nfs_protocol_gateways_number == 0 ? null : <<EOT
-gcloud compute instances list --filter="name~'${module.nfs_protocol_gateways[0].gateways_name}'" --format "get(networkInterfaces[0].${local.protocol_gateways_ips_type})"
+gcloud compute instances list --filter="name~'${module.nfs_protocol_gateways[0].gateways_name}'" --format "get(networkInterfaces[0].${local.protocol_gateways_ips_type})" --project ${var.project_id}
 EOT
   description = "Ips of NFS protocol gateways"
 }
 
 output "smb_protocol_gateways_ips" {
   value       = var.smb_protocol_gateways_number == 0 ? null : <<EOT
-gcloud compute instances list --filter="name~'${module.smb_protocol_gateways[0].gateways_name}'" --format "get(networkInterfaces[0].${local.protocol_gateways_ips_type})"
+gcloud compute instances list --filter="name~'${module.smb_protocol_gateways[0].gateways_name}'" --format "get(networkInterfaces[0].${local.protocol_gateways_ips_type})" --project ${var.project_id}
 EOT
   description = "Ips of SMB protocol gateways"
 }
