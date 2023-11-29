@@ -147,6 +147,10 @@ resource "google_compute_instance_from_template" "this" {
   can_ip_forward           = false
   depends_on               = [google_compute_instance_template.this]
 
+  metadata = {
+    ssh-keys = "${var.vm_username}:${var.ssh_public_key}"
+  }
+
   lifecycle {
     ignore_changes = all
   }
