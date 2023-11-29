@@ -77,7 +77,6 @@ This will automatically create 2 instances.
 <br>In addition you can supply these optional variables:
 ```hcl
 protocol                               = VALUE
-protocol_gateway_secondary_ips_per_nic = 3
 protocol_gateway_instance_type         = "c2-standard-8"
 protocol_gateway_nics_num              = 2
 protocol_gateway_disk_size             = 375
@@ -103,7 +102,6 @@ smb_protocol_gateways_number = 3
 This will automatically create 2 instances.
 <br>In addition you can supply these optional variables:
 ```hcl
-smb_protocol_gateway_secondary_ips_per_nic = 3
 smb_protocol_gateway_instance_type         = "Standard_D8_v5"
 smb_protocol_gateway_nics_num              = 2
 smb_protocol_gateway_disk_size             = 48

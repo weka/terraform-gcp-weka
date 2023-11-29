@@ -61,7 +61,7 @@ resource "google_compute_instance_template" "this" {
   metadata_startup_script = local.custom_data
 
   metadata = {
-    apply-alias-ip-ranges = true
+    #apply-alias-ip-ranges = true
     ssh-keys = "${var.vm_username}:${var.ssh_public_key}"
   }
 
@@ -89,12 +89,12 @@ resource "google_compute_instance_template" "this" {
       subnetwork         = data.google_compute_subnetwork.this[network_interface.value].id
       subnetwork_project = var.project_id
       access_config {}
-      dynamic "alias_ip_range" {
-        for_each = range(var.secondary_ips_per_nic)
-        content {
-          ip_cidr_range = "/32"
-        }
-      }
+#      dynamic "alias_ip_range" {
+#        for_each = range(var.secondary_ips_per_nic)
+#        content {
+#          ip_cidr_range = "/32"
+#        }
+#      }
     }
   }
   # nic with private ip
@@ -103,12 +103,12 @@ resource "google_compute_instance_template" "this" {
     content {
       subnetwork         = data.google_compute_subnetwork.this[network_interface.value].id
       subnetwork_project = var.project_id
-      dynamic "alias_ip_range" {
-        for_each = range(var.secondary_ips_per_nic)
-        content {
-          ip_cidr_range = "/32"
-        }
-      }
+#      dynamic "alias_ip_range" {
+#        for_each = range(var.secondary_ips_per_nic)
+#        content {
+#          ip_cidr_range = "/32"
+#        }
+#      }
     }
   }
 
@@ -129,10 +129,10 @@ resource "google_compute_instance_template" "this" {
       condition     = var.protocol == "SMB" && var.setup_protocol ? var.smb_domain_name != "" : true
       error_message = "The SMB domain name should be set when deploying SMB protocol gateways."
     }
-    precondition {
-      condition     = var.protocol == "SMB" ? var.secondary_ips_per_nic <= 3 : true
-      error_message = "The number of secondary IPs per single NIC per protocol gateway virtual machine must be at most 3 for SMB."
-    }
+#    precondition {
+#      condition     = var.protocol == "SMB" ? var.secondary_ips_per_nic <= 3 : true
+#      error_message = "The number of secondary IPs per single NIC per protocol gateway virtual machine must be at most 3 for SMB."
+#    }
     precondition {
       condition     = local.nics_numbers != -1 ? var.frontend_container_cores_num < local.nics_numbers : true
       error_message = "The number of frontends must be less than the number of NICs."
