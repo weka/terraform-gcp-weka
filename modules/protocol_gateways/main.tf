@@ -60,8 +60,10 @@ resource "google_compute_instance_template" "this" {
   project                 = var.project_id
   tags                    = [var.gateways_name]
   metadata_startup_script = local.custom_data
+
   metadata = {
     apply-alias-ip-ranges = true
+    ssh-keys = "${var.vm_username}:${var.ssh_public_key}"
   }
 
   disk {
@@ -146,10 +148,6 @@ resource "google_compute_instance_from_template" "this" {
   source_instance_template = google_compute_instance_template.this.self_link
   can_ip_forward           = false
   depends_on               = [google_compute_instance_template.this]
-
-  metadata = {
-    ssh-keys = "${var.vm_username}:${var.ssh_public_key}"
-  }
 
   lifecycle {
     ignore_changes = all
