@@ -302,7 +302,7 @@ host_shared_range  = [".."]
 | <a name="input_stripe_width"></a> [stripe\_width](#input\_stripe\_width) | Stripe width = cluster\_size - protection\_level - 1 (by default). | `number` | `-1` | no |
 | <a name="input_subnet_autocreate_as_private"></a> [subnet\_autocreate\_as\_private](#input\_subnet\_autocreate\_as\_private) | Create private subnet using nat gateway to route traffic. The default is public network. Relevant only when subnet\_ids is empty. | `bool` | `false` | no |
 | <a name="input_subnets_name"></a> [subnets\_name](#input\_subnets\_name) | Subnets list name | `list(string)` | `[]` | no |
-| <a name="input_subnets_range"></a> [subnets\_range](#input\_subnets\_range) | List of subnets to use for creating the cluster, the number of subnets must be 'nics\_number' | `list(string)` | <pre>[<br>  "10.0.0.0/24",<br>  "10.1.0.0/24",<br>  "10.2.0.0/24",<br>  "10.3.0.0/24"<br>]</pre> | no |
+| <a name="input_subnets_range"></a> [subnets\_range](#input\_subnets\_range) | List of subnets to use for creating the cluster | `list(string)` | <pre>[<br>  "10.0.0.0/24",<br>  "10.1.0.0/24",<br>  "10.2.0.0/24",<br>  "10.3.0.0/24"<br>]</pre> | no |
 | <a name="input_tiering_enable_obs_integration"></a> [tiering\_enable\_obs\_integration](#input\_tiering\_enable\_obs\_integration) | Determines whether to enable object stores integration with the Weka cluster. Set true to enable the integration. | `bool` | `false` | no |
 | <a name="input_tiering_obs_name"></a> [tiering\_obs\_name](#input\_tiering\_obs\_name) | Name of OBS cloud storage | `string` | `""` | no |
 | <a name="input_tiering_ssd_percent"></a> [tiering\_ssd\_percent](#input\_tiering\_ssd\_percent) | When OBS integration set to true , this parameter sets how much of the filesystem capacity should reside on SSD. For example, if this parameter is 20 and the total available SSD capacity is 20GB, the total capacity would be 100GB | `number` | `20` | no |
@@ -311,7 +311,6 @@ host_shared_range  = [".."]
 | <a name="input_vpc_connector_name"></a> [vpc\_connector\_name](#input\_vpc\_connector\_name) | exiting vpc connector name to use for cloud functions | `string` | `""` | no |
 | <a name="input_vpc_connector_range"></a> [vpc\_connector\_range](#input\_vpc\_connector\_range) | list of connector to use for serverless vpc access | `string` | `"10.8.0.0/28"` | no |
 | <a name="input_vpcs_name"></a> [vpcs\_name](#input\_vpcs\_name) | List of vpcs name | `list(string)` | `[]` | no |
-| <a name="input_vpcs_number"></a> [vpcs\_number](#input\_vpcs\_number) | number of vpcs | `number` | `4` | no |
 | <a name="input_vpcs_to_peer_to_deployment_vpc"></a> [vpcs\_to\_peer\_to\_deployment\_vpc](#input\_vpcs\_to\_peer\_to\_deployment\_vpc) | list of vpcs name to peer | `list(string)` | `[]` | no |
 | <a name="input_weka_home_url"></a> [weka\_home\_url](#input\_weka\_home\_url) | Weka Home url | `string` | `""` | no |
 | <a name="input_weka_tar_bucket_name"></a> [weka\_tar\_bucket\_name](#input\_weka\_tar\_bucket\_name) | Name of weka tar bucket | `string` | `""` | no |
