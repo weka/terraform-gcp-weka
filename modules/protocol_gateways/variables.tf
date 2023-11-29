@@ -78,6 +78,17 @@ variable "client_group_name" {
   default     = "weka-cg"
 }
 
+variable "vm_username" {
+  type        = string
+  description = "The user name for logging in to the virtual machines."
+  default     = "weka"
+}
+
+variable "ssh_public_key" {
+  type        = string
+  description = "Ssh public key to pass to vms."
+}
+
 variable "assign_public_ip" {
   type        = bool
   description = "Determines whether to assign public ip."
