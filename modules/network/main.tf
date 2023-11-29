@@ -1,8 +1,8 @@
 locals {
-  vpc_length = length(var.vpcs) == 0 ? var.vpcs_number : length(var.vpcs)
+  vpcs_number = length(var.subnets) > 0 ? length(var.subnets) : length(var.subnets_range)
   temp = flatten([
-    for from in range(local.vpc_length) : [
-      for to in range(local.vpc_length) : {
+    for from in range(local.vpcs_number) : [
+      for to in range(local.vpcs_number) : {
         from = from
         to   = to
       }
@@ -46,7 +46,7 @@ data "google_compute_subnetwork" "subnets_list_ids" {
 
 
 resource "google_compute_network" "vpc_network" {
-  count                           = length(var.vpcs) == 0 ? var.vpcs_number : 0
+  count                           = length(var.vpcs) == 0 ? local.vpcs_number : 0
   name                            = "${var.prefix}-vpc-${count.index}"
   auto_create_subnetworks         = false
   mtu                             = var.mtu_size
@@ -57,7 +57,7 @@ resource "google_compute_network" "vpc_network" {
 
 # ======================= subnet ==========================
 resource "google_compute_subnetwork" "subnetwork" {
-  count                    = length(var.subnets) == 0 ? var.vpcs_number : 0
+  count                    = length(var.subnets) == 0 ? local.vpcs_number : 0
   name                     = "${var.prefix}-subnet-${count.index}"
   ip_cidr_range            = var.subnets_range[count.index]
   region                   = var.region
@@ -86,7 +86,7 @@ resource "google_compute_network_peering" "peering" {
 
 # ========================= sg =================================
 resource "google_compute_firewall" "sg_ssh" {
-  count         = length(var.allow_ssh_cidrs) == 0 ? 0 : local.vpc_length
+  count         = length(var.allow_ssh_cidrs) == 0 ? 0 : local.vpcs_number
   name          = "${var.prefix}-sg-ssh-${count.index}"
   network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[count.index].name : data.google_compute_network.vpc_list_ids[count.index].name
   source_ranges = var.allow_ssh_cidrs
@@ -98,7 +98,7 @@ resource "google_compute_firewall" "sg_ssh" {
 }
 
 resource "google_compute_firewall" "sg_weka_api" {
-  count         = length(var.allow_weka_api_cidrs) == 0 ? 0 : local.vpc_length
+  count         = length(var.allow_weka_api_cidrs) == 0 ? 0 : local.vpcs_number
   name          = "${var.prefix}-sg-weka-api-${count.index}"
   network       = length(var.vpcs) == 0 ? google_compute_network.vpc_network[count.index].name : data.google_compute_network.vpc_list_ids[count.index].name
   source_ranges = var.allow_weka_api_cidrs

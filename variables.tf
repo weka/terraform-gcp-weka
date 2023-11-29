@@ -23,12 +23,6 @@ variable "nics_numbers" {
   }
 }
 
-variable "vpcs_number" {
-  type        = number
-  description = "number of vpcs"
-  default     = 4
-}
-
 variable "mtu_size" {
   type        = number
   description = "mtu size"
@@ -39,6 +33,10 @@ variable "vpcs_name" {
   type        = list(string)
   description = "List of vpcs name"
   default     = []
+  validation {
+    condition     = length(var.vpcs_name) == 0 || length(var.vpcs_name) == 4 || length(var.vpcs_name) == 7
+    error_message = "The allowed amount of vpcs names are 0, 4 and 7"
+  }
 }
 
 variable "prefix" {
@@ -121,14 +119,22 @@ variable "cluster_size" {
 
 variable "subnets_range" {
   type        = list(string)
-  description = "List of subnets to use for creating the cluster, the number of subnets must be 'nics_number'"
+  description = "List of subnets to use for creating the cluster"
   default     = ["10.0.0.0/24", "10.1.0.0/24", "10.2.0.0/24", "10.3.0.0/24"]
+  validation {
+    condition     = length(var.subnets_range) == 0 || length(var.subnets_range) == 4 || length(var.subnets_range) == 7
+    error_message = "The allowed amount of subnet ranges are 0, 4 and 7"
+  }
 }
 
 variable "subnets_name" {
   type        = list(string)
   description = "Subnets list name "
   default     = []
+  validation {
+    condition     = length(var.subnets_name) == 0 || length(var.subnets_name) == 4 || length(var.subnets_name) == 7
+    error_message = "The allowed amount of subnets are 0, 4 and 7"
+  }
 }
 
 variable "vpc_connector_range" {
