@@ -8,28 +8,34 @@ variable "region" {
   description = "region name"
 }
 
-variable "vpcs_number" {
-  type        = number
-  description = "number of vpcs"
-  default     = 4
-}
-
 variable "vpcs" {
   type        = list(string)
   description = "List of vpcs name"
   default     = []
+  validation {
+    condition     = length(var.vpcs) == 0 || length(var.vpcs) == 4 || length(var.vpcs) == 7
+    error_message = "The allowed amount of vpcs are 0, 4 and 7"
+  }
 }
 
 variable "subnets_range" {
   type        = list(string)
   description = "list of subnets to use for creating the cluster, the number of subnets must be 'vpcs_number'"
   default     = []
+  validation {
+    condition     = length(var.subnets_range) == 0 || length(var.subnets_range) == 4 || length(var.subnets_range) == 7
+    error_message = "The allowed amount of subnet ranges are 0, 4 and 7"
+  }
 }
 
 variable "subnets" {
   type        = list(string)
   description = "List of subnets name"
   default     = []
+  validation {
+    condition     = length(var.subnets) == 0 || length(var.subnets) == 4 || length(var.subnets) == 7
+    error_message = "The allowed amount of subnets are 0, 4 and 7"
+  }
 }
 
 variable "psc_subnet_cidr" {
