@@ -33,13 +33,13 @@ locals {
   })
 
   setup_smb_protocol_script = templatefile("${path.module}/setup_smb.sh", {
-    cluster_name        = var.smb_cluster_name
-    domain_name         = var.smb_domain_name
-    smbw_enabled        = var.smbw_enabled
-    gateways_number     = var.gateways_number
-    gateways_name       = var.gateways_name
-    frontend_cores_num  = var.frontend_container_cores_num
-    share_name          = var.smb_share_name
+    cluster_name       = var.smb_cluster_name
+    domain_name        = var.smb_domain_name
+    smbw_enabled       = var.smbw_enabled
+    gateways_number    = var.gateways_number
+    gateways_name      = var.gateways_name
+    frontend_cores_num = var.frontend_container_cores_num
+    share_name         = var.smb_share_name
   })
 
   protocol_script = var.protocol == "NFS" ? local.setup_nfs_protocol_script : local.setup_smb_protocol_script
@@ -62,7 +62,7 @@ resource "google_compute_instance_template" "this" {
 
   metadata = {
     apply-alias-ip-ranges = true
-    ssh-keys = "${var.vm_username}:${var.ssh_public_key}"
+    ssh-keys              = "${var.vm_username}:${var.ssh_public_key}"
   }
 
   disk {
