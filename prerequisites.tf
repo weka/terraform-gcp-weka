@@ -29,6 +29,7 @@ module "network" {
   cloud_run_dns_zone_name            = var.cloud_run_dns_zone_name
   googleapis_dns_zone_name           = var.googleapis_dns_zone_name
   psc_subnet_cidr                    = var.psc_subnet_cidr
+  vpcs                               = var.vpcs_name
   depends_on                         = [module.service_account]
 }
 
