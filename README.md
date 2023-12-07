@@ -40,7 +40,7 @@ module "weka_deployment" {
 
 ## OBS
 We support tiering to bucket.
-In order to setup tiering, you must supply the following variables:
+In order to setup tiering, you must provide the following variables:
 ```hcl
 set_obs_integration = true
 obs_name            = "..."
@@ -55,10 +55,10 @@ for example:
 clients_number = 2
 ```
 This will automatically create 2 clients.
-<br>In addition you can supply these optional variables:
+<br>In addition you can provide these optional variables:
 ```hcl
 client_instance_type = "c2-standard-8"
-client_nics_num = DESIRED_NUM
+client_frontend_cores = DESIRED_NUM
 ```
 ### Mounting clients in udp mode
 In order to mount clients in udp mode you should pass the following param (in addition to the above):
@@ -74,7 +74,7 @@ for example:
 protocol_gateways_number = 1
 ```
 This will automatically create 2 instances.
-<br>In addition you can supply these optional variables:
+<br>In addition you can provide these optional variables:
 ```hcl
 protocol                               = VALUE
 protocol_gateway_secondary_ips_per_nic = 3
@@ -101,7 +101,7 @@ for example:
 smb_protocol_gateways_number = 3
 ```
 This will automatically create 2 instances.
-<br>In addition you can supply these optional variables:
+<br>In addition you can provide these optional variables:
 ```hcl
 smb_protocol_gateway_secondary_ips_per_nic = 3
 smb_protocol_gateway_instance_type         = "Standard_D8_v5"
