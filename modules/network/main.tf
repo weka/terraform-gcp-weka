@@ -99,7 +99,7 @@ resource "google_compute_network_peering" "peering" {
 # ========================= nat ===============================
 resource "google_compute_router" "router" {
   count      = var.create_nat_gateway ? 1 : 0
-  project    = var.project_id
+  project    = local.network_project_id
   name       = "${var.prefix}-nat-router"
   network    = google_compute_network.vpc_network[0].name
   region     = var.region
@@ -110,7 +110,7 @@ resource "google_compute_router" "router" {
 resource "google_compute_router_nat" "nat" {
   count                              = var.create_nat_gateway ? 1 : 0
   name                               = "${var.prefix}-router-nat"
-  project                            = var.project_id
+  project                            = local.network_project_id
   router                             = google_compute_router.router[0].name
   region                             = var.region
   nat_ip_allocate_option             = "AUTO_ONLY"
