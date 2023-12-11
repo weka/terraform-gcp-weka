@@ -18,4 +18,6 @@ module "weka_deployment" {
   shared_vpcs                    = ["..", ".."]
   host_project                   = var.host_project
   host_shared_range              = [".."]
+  enable_shared_vpc_host_project = true
+  set_shared_vpc_peering         = true
 }

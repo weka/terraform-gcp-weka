@@ -190,3 +190,9 @@ variable "smb_share_name" {
   description = "The name of the SMB share"
   default     = ""
 }
+
+variable "network_project_id" {
+  type        = string
+  default     = ""
+  description = "Network project id"
+}

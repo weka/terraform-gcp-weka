@@ -27,6 +27,7 @@ module "nfs_protocol_gateways" {
   weka_password_id             = google_secret_manager_secret.secret_weka_password.id
   proxy_url                    = var.proxy_url
   setup_protocol               = var.nfs_setup_protocol
+  network_project_id           = var.network_project_id
   vm_username                  = var.vm_username
   ssh_public_key               = local.ssh_public_key
   depends_on                   = [module.network, module.peering, module.shared_vpc_peering, time_sleep.wait_120_seconds, google_compute_forwarding_rule.google_compute_forwarding_rule, google_secret_manager_secret.secret_token, google_cloudfunctions2_function.cloud_internal_function]
@@ -61,6 +62,7 @@ module "smb_protocol_gateways" {
   smb_domain_name              = var.smb_domain_name
   smb_share_name               = var.smb_share_name
   smbw_enabled                 = var.smbw_enabled
+  network_project_id           = var.network_project_id
   vm_username                  = var.vm_username
   ssh_public_key               = local.ssh_public_key
   depends_on                   = [module.network, module.peering, module.shared_vpc_peering, time_sleep.wait_120_seconds, google_compute_forwarding_rule.google_compute_forwarding_rule, google_secret_manager_secret.secret_token, google_cloudfunctions2_function.cloud_internal_function]

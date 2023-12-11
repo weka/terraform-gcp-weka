@@ -37,6 +37,12 @@ module "weka_deployment" {
   private_dns_name         = "weka.private.net."
 }
 ```
+## Deploy weka network on host project
+We support creating network on host project and deployment cluster on service project
+In order to setup, you must provide the following variable:
+```hcl
+network_project_id = NETWORK_PROJECT_ID
+```
 
 ## OBS
 We support tiering to bucket.
@@ -130,11 +136,22 @@ To join an SMB cluster in Active Directory, you need to manually run this comman
 
 
 ## Shared project
-
+To enable using Shared VPC.
+In order to setup, you must provide the following variables:
 ```hcl
-shared_vpcs        = [".."]
-host_project       = HOST_PROJECT_ID
-host_shared_range  = [".."]
+shared_vpcs                    = [".."]
+host_project                   = HOST_PROJECT_ID
+host_shared_range              = [".."]
+```
+
+To enable project as host project, you must provide the following variable:
+```hcl
+enable_shared_vpc_host_project = true
+```
+
+To enable vpc network peering between host project and service project, you must provide the following variable:
+```hcl
+set_shared_vpc_peering = true
 ```
 
 <!-- BEGIN_TF_DOCS -->
