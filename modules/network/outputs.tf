@@ -18,13 +18,9 @@ output "subnets_range" {
   description = "List of vpcs subnets ranges"
 }
 
-locals {
-  vpc_connector_name = var.vpc_connector_name == "" ? google_vpc_access_connector.connector[0].name : var.vpc_connector_name
-}
-
-output "vpc_connector_name" {
-  value       = "projects/${var.project_id}/locations/${lookup(var.vpc_connector_region_map, var.region, var.region)}/connectors/${local.vpc_connector_name}"
-  description = "Vpc connector name"
+output "vpc_connector_id" {
+  value       = var.vpc_connector_id == "" ? google_vpc_access_connector.connector[0].id : ""
+  description = "Vpc connector id"
 }
 
 output "private_zone_name" {

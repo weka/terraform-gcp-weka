@@ -1,11 +1,12 @@
 data "google_compute_subnetwork" "this" {
   count   = length(var.subnets_list)
   name    = var.subnets_list[count.index]
-  project = var.project_id
+  project = local.network_project_id
   region  = var.region
 }
 
 locals {
+  network_project_id      = var.network_project_id != "" ? var.network_project_id : var.project_id
   private_nic_first_index = var.assign_public_ip ? 1 : 0
   preparation_script = templatefile("${path.module}/init.sh", {
     yum_repo_server = var.yum_repo_server
@@ -54,7 +55,8 @@ resource "google_compute_instance" "this" {
   dynamic "network_interface" {
     for_each = range(local.private_nic_first_index)
     content {
-      subnetwork = data.google_compute_subnetwork.this[network_interface.value].id
+      subnetwork_project = local.network_project_id
+      subnetwork         = data.google_compute_subnetwork.this[network_interface.value].name
       access_config {}
     }
   }
@@ -63,7 +65,8 @@ resource "google_compute_instance" "this" {
   dynamic "network_interface" {
     for_each = range(local.private_nic_first_index, local.nics_num)
     content {
-      subnetwork = data.google_compute_subnetwork.this[network_interface.value].id
+      subnetwork_project = local.network_project_id
+      subnetwork         = data.google_compute_subnetwork.this[network_interface.value].name
     }
   }
 

@@ -35,24 +35,26 @@ variable "cluster_name" {
   description = "Cluster prefix for all resources"
 }
 
-variable "set_worker_pool_network_peering" {
-  type        = bool
-  description = "Create peering between worker pool network and vpcs networks"
-}
-
-variable "worker_pool_network" {
-  type        = string
-  default     = ""
-  description = "Network name of worker pool, Must be on the same project and region"
-}
-
-variable "sa_email" {
-  type        = string
-  description = "service account email"
-}
-
 variable "worker_pool_id" {
   type        = string
   default     = ""
   description = "Exiting worker pool id"
+}
+
+variable "network_project_id" {
+  type        = string
+  default     = ""
+  description = "Network project id"
+}
+
+variable "worker_address" {
+  type        = string
+  description = "Choose an address range for the Cloud Build Private Pool workers. example: 10.37.0.0. Do not include a prefix length."
+  default     = "10.37.0.0"
+}
+
+variable "worker_address_prefix_length" {
+  type        = string
+  description = "Prefix length, such as 24 for /24 or 16 for /16. Must be 24 or lower."
+  default     = "16"
 }

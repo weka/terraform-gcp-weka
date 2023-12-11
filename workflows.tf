@@ -12,16 +12,13 @@ resource "google_project_iam_binding" "cloudscheduler_binding" {
   project = var.project_id
   role    = "roles/cloudscheduler.jobRunner"
   members = [
-    "serviceAccount:service-${data.google_project.project.number}@gcp-sa-cloudscheduler.iam.gserviceaccount.com"
+    "serviceAccount:service-${local.deployment_project_number}@gcp-sa-cloudscheduler.iam.gserviceaccount.com"
   ]
-
-  lifecycle {
-    ignore_changes = [members]
-  }
 }
 
 resource "google_workflows_workflow" "scale_down" {
   name            = "${var.prefix}-${var.cluster_name}-scale-down-workflow"
+  project         = var.project_id
   region          = lookup(var.workflow_map_region, var.region, var.region)
   description     = "scale down workflow"
   service_account = local.sa_email

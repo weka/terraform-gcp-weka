@@ -59,7 +59,9 @@ resource "google_compute_instance_template" "this" {
   dynamic "network_interface" {
     for_each = range(local.private_nic_first_index)
     content {
-      subnetwork = data.google_compute_subnetwork.this[network_interface.value].self_link
+
+      subnetwork         = data.google_compute_subnetwork.this[network_interface.value].name
+      subnetwork_project = local.network_project_id
       access_config {}
     }
   }
@@ -69,7 +71,8 @@ resource "google_compute_instance_template" "this" {
   dynamic "network_interface" {
     for_each = range(local.private_nic_first_index, local.nics_number)
     content {
-      subnetwork = data.google_compute_subnetwork.this[network_interface.value].self_link
+      subnetwork_project = local.network_project_id
+      subnetwork         = data.google_compute_subnetwork.this[network_interface.value].name
     }
   }
 
@@ -81,7 +84,7 @@ resource "google_compute_instance_template" "this" {
     ignore_changes        = [network_interface]
     create_before_destroy = false
   }
-  depends_on = [module.network] #time_sleep.wait_30_seconds
+  depends_on = [module.network, module.shared_vpc_peering]
 }
 
 resource "random_password" "password" {
@@ -102,7 +105,7 @@ resource "google_compute_instance_group" "this" {
   zone       = var.zone
   network    = data.google_compute_network.this[0].self_link
   project    = var.project_id
-  depends_on = [google_compute_region_health_check.health_check, module.network]
+  depends_on = [google_compute_region_health_check.health_check, module.network, module.shared_vpc_peering]
 
   lifecycle {
     ignore_changes = [network]

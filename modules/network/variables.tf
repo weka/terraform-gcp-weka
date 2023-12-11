@@ -63,9 +63,9 @@ variable "vpc_connector_range" {
   default     = ""
 }
 
-variable "vpc_connector_name" {
+variable "vpc_connector_id" {
   type        = string
-  description = "exiting vpc connector name to use for cloud functions"
+  description = "exiting vpc connector id to use for cloud functions"
   default     = ""
 }
 
@@ -79,19 +79,6 @@ variable "allow_weka_api_cidrs" {
   type        = list(string)
   description = "allow connection to port 14000 on weka backends and LB(if exists and not provided with dedicated SG)  from specified CIDRs, by default no CIDRs are allowed. All ports (including 14000) are allowed within VPC"
   default     = []
-}
-
-
-variable "vpc_connector_region_map" {
-  type        = map(string)
-  description = "Map of region to use for vpc connector, as some regions do not have cloud functions enabled, and vpc connector needs to be in the same region"
-  default = {
-    europe-west4       = "europe-west1"
-    europe-north1      = "europe-west1",
-    us-east5           = "us-east1",
-    southamerica-west1 = "northamerica-northeast1",
-    asia-south2        = "asia-south1",
-  }
 }
 
 variable "private_zone_name" {
@@ -140,4 +127,22 @@ variable "googleapis_dns_zone_name" {
   type        = string
   default     = ""
   description = "Name of existing Private dns zone for domain googleapis.com."
+}
+
+variable "network_project_id" {
+  type        = string
+  default     = ""
+  description = "Network project id"
+}
+
+variable "vpc_connector_region_map" {
+  type        = map(string)
+  description = "Map of region to use for vpc connector, as some regions do not have cloud functions enabled, and vpc connector needs to be in the same region"
+  default = {
+    europe-west4       = "europe-west1"
+    europe-north1      = "europe-west1",
+    us-east5           = "us-east1",
+    southamerica-west1 = "northamerica-northeast1",
+    asia-south2        = "asia-south1",
+  }
 }
