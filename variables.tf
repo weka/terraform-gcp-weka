@@ -143,9 +143,9 @@ variable "vpc_connector_range" {
   default     = "10.8.0.0/28"
 }
 
-variable "vpc_connector_name" {
+variable "vpc_connector_id" {
   type        = string
-  description = "exiting vpc connector name to use for cloud functions"
+  description = "exiting vpc connector id to use for cloud functions, projects/<project-id>/locations/<region>/connectors/<connector-name>"
   default     = ""
 }
 
@@ -228,6 +228,18 @@ variable "workflow_map_region" {
   default = {
     southamerica-west1 = "southamerica-east1"
   }
+}
+
+variable "worker_pool_address_cidr" {
+  type        = string
+  description = "Choose an address range for the Cloud Build Private Pool workers. example: 10.37.0.0. Do not include a prefix length."
+  default     = "10.37.0.0"
+}
+
+variable "worker_address_prefix_length" {
+  type        = string
+  description = "Prefix length, such as 24 for /24 or 16 for /16. Must be 24 or lower."
+  default     = "16"
 }
 
 variable "worker_pool_id" {
@@ -363,22 +375,10 @@ variable "proxy_url" {
   default     = ""
 }
 
-variable "worker_pool_network" {
-  type        = string
-  default     = ""
-  description = "Network name of worker pool, Must be on the same project and region"
-}
-
 variable "create_worker_pool" {
   type        = bool
   default     = false
   description = "Create worker pool"
-}
-
-variable "set_worker_pool_network_peering" {
-  type        = bool
-  description = "Create peering between worker pool network and vpcs networks"
-  default     = false
 }
 
 ######################## shared vpcs variables ##########################
@@ -558,6 +558,12 @@ variable "vpcs_to_peer_to_deployment_vpc" {
   default     = []
 }
 
+variable "vpcs_range_to_peer_to_deployment_vpc" {
+  type        = list(string)
+  description = "list of vpcs range to peer"
+  default     = []
+}
+
 variable "weka_tar_bucket_name" {
   type        = string
   default     = ""
@@ -604,4 +610,28 @@ variable "psc_subnet_cidr" {
   type        = string
   default     = "10.9.0.0/28"
   description = "Cidr range for private service connection subnet"
+}
+
+variable "network_project_id" {
+  type        = string
+  default     = ""
+  description = "Network project id"
+}
+
+variable "set_shared_vpc_peering" {
+  type        = bool
+  description = "Enable peering for shared vpc"
+  default     = true
+}
+
+variable "enable_shared_vpc_host_project" {
+  description = "If this project is a shared VPC host project. If true, you must *not* set shared_vpc variable. Default is false."
+  type        = bool
+  default     = true
+}
+
+variable "set_peering" {
+  type        = bool
+  description = "apply peering connection between subnets and subnets "
+  default     = true
 }

@@ -6,6 +6,12 @@ locals {
 
   bucket_list_name = concat(local.obs_bucket_name, local.state_bucket_name)
   object_list_name = concat(local.object_obs_bucket_name, local.object_state_bucket_name)
+
+  network_project_roles = var.network_project_id != "" ? toset([
+    "roles/compute.networkUser",
+    "roles/compute.serviceAgent",
+    "roles/vpcaccess.serviceAgent",
+  ]) : []
 }
 
 # ===================== service account ===================
@@ -28,6 +34,14 @@ resource "google_project_iam_member" "sa_member_role" {
   role    = each.key
   member  = "serviceAccount:${google_service_account.sa.email}"
   project = var.project_id
+}
+
+
+resource "google_project_iam_member" "network_project_sa_member_role" {
+  for_each = local.network_project_roles
+  role     = each.key
+  member   = "serviceAccount:${google_service_account.sa.email}"
+  project  = var.network_project_id
 }
 
 resource "google_project_iam_member" "storage_admin" {

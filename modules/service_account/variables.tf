@@ -47,3 +47,9 @@ variable "weka_tar_project_id" {
   default     = ""
   description = "Project id of weka tar"
 }
+
+variable "network_project_id" {
+  type        = string
+  default     = ""
+  description = "Network project id"
+}

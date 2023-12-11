@@ -15,6 +15,7 @@ module "clients" {
   sa_email                     = local.sa_email
   source_image_id              = var.client_source_image_id
   subnets_list                 = local.subnets_name
+  network_project_id           = var.network_project_id
   zone                         = var.zone
   vm_username                  = var.vm_username
   ssh_public_key               = local.ssh_public_key

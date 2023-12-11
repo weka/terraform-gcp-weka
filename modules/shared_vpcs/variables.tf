@@ -24,14 +24,19 @@ variable "vpcs_name" {
   description = "list of vpcs name"
 }
 
-variable "sa_email" {
-  type        = string
-  description = "service account email"
-  default     = ""
-}
-
 variable "host_shared_range" {
   type        = list(string)
   description = "list of host range to allow sg"
   default     = []
+}
+
+variable "set_shared_vpc_peering" {
+  type    = bool
+  default = false
+}
+
+variable "enable_shared_vpc_host_project" {
+  description = "If this project is a shared VPC host project. If true, you must *not* set shared_vpc variable. Default is false."
+  type        = bool
+  default     = false
 }

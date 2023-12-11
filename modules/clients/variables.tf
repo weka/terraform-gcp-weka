@@ -155,3 +155,9 @@ variable "instance_config_overrides" {
     }
   }
 }
+
+variable "network_project_id" {
+  type        = string
+  default     = ""
+  description = "Network project id"
+}
