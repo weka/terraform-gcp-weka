@@ -96,6 +96,33 @@ resource "google_compute_network_peering" "peering" {
   depends_on   = [google_compute_subnetwork.subnetwork]
 }
 
+# ========================= nat ===============================
+resource "google_compute_router" "router" {
+  count      = var.create_nat_gateway ? 1 : 0
+  project    = var.project_id
+  name       = "${var.prefix}-nat-router"
+  network    = google_compute_network.vpc_network[0].name
+  region     = var.region
+  depends_on = [google_compute_network.vpc_network]
+}
+
+## Create Nat Gateway
+resource "google_compute_router_nat" "nat" {
+  count                              = var.create_nat_gateway ? 1 : 0
+  name                               = "${var.prefix}-router-nat"
+  project                            = var.project_id
+  router                             = google_compute_router.router[0].name
+  region                             = var.region
+  nat_ip_allocate_option             = "AUTO_ONLY"
+  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
+
+  log_config {
+    enable = true
+    filter = "ERRORS_ONLY"
+  }
+  depends_on = [google_compute_router.router]
+}
+
 # ========================= sg =================================
 resource "google_compute_firewall" "sg_ssh" {
   count         = length(var.allow_ssh_cidrs) == 0 ? 0 : local.vpcs_number

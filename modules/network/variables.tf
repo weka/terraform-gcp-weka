@@ -129,6 +129,12 @@ variable "googleapis_dns_zone_name" {
   description = "Name of existing Private dns zone for domain googleapis.com."
 }
 
+variable "create_nat_gateway" {
+  type        = bool
+  default     = false
+  description = "NAT needs to be created when no public ip is assigned to the backend, to allow internet access"
+}
+
 variable "network_project_id" {
   type        = string
   default     = ""
