@@ -33,6 +33,7 @@ module "network" {
   network_project_id                 = var.network_project_id
   set_peering                        = var.set_peering
   vpcs                               = var.vpcs_name
+  create_nat_gateway                 = var.create_nat_gateway
   depends_on                         = [module.service_account]
 }
 
