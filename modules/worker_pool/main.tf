@@ -1,88 +1,101 @@
-data "google_compute_network" "this" {
-  name = var.vpc_name
+data "google_compute_network" "vnet" {
+  name    = var.vpc_name
+  project = var.network_project_id
 }
 
-data "google_compute_network" "worker_pool_network" {
-  count = var.set_worker_pool_network_peering ? 1 : 0
-  name  = var.worker_pool_network
+data "google_project" "project" {
+  project_id = var.project_id
 }
 
-# ================ worker_pool ======================= #
-resource "google_project_iam_binding" "servicenetworking_binding" {
-  role    = "roles/compute.networkAdmin"
-  members = ["serviceAccount:${var.sa_email}"]
-  project = var.project_id
-  lifecycle {
-    ignore_changes = [members]
-  }
-}
-
-resource "google_project_iam_binding" "servicenetworking_admin_binding" {
-  role    = "roles/servicenetworking.networksAdmin"
-  members = ["serviceAccount:${var.sa_email}"]
-  project = var.project_id
-  lifecycle {
-    ignore_changes = [members]
-  }
-}
-
-resource "google_project_iam_binding" "worker_pool_binding" {
-  role    = "roles/cloudbuild.workerPoolOwner"
-  members = ["serviceAccount:${var.sa_email}"]
-  project = var.project_id
-  lifecycle {
-    ignore_changes = [members]
-  }
+data "google_project" "network_project" {
+  project_id = var.network_project_id
 }
 
 resource "google_project_service" "servicenetworking" {
+  project                    = var.network_project_id
   service                    = "servicenetworking.googleapis.com"
+  disable_on_destroy         = false
   disable_dependent_services = false
-  disable_on_destroy         = true
-  depends_on                 = [google_project_iam_binding.servicenetworking_binding, google_project_iam_binding.worker_pool_binding, google_project_iam_binding.servicenetworking_admin_binding]
 }
 
-resource "null_resource" "wait_service_enable" {
-  count = var.worker_pool_id == "" ? 1 : 0
-  triggers = {
-    always_run = timestamp()
-  }
-  provisioner "local-exec" {
-    command = <<EOT
-    echo "Waiting for service to enable..."
-    sleep 120
-    EOT
+resource "google_project_service_identity" "servicenetworking_agent" {
+  provider   = google-beta
+  project    = var.network_project_id
+  service    = "servicenetworking.googleapis.com"
+  depends_on = [google_project_service.servicenetworking]
+}
+
+resource "google_project_iam_member" "servicenetworking_agent" {
+  project    = var.network_project_id
+  role       = "roles/servicenetworking.serviceAgent"
+  member     = "serviceAccount:${google_project_service_identity.servicenetworking_agent.email}"
+  depends_on = [google_project_service_identity.servicenetworking_agent]
+}
+
+resource "google_project_iam_binding" "service_binding_network_project" {
+  role    = "roles/servicenetworking.serviceAgent"
+  project = var.network_project_id
+  members = [
+    "serviceAccount:service-${data.google_project.network_project.number}@service-networking.iam.gserviceaccount.com"
+  ]
+  lifecycle {
+    ignore_changes = [members]
   }
   depends_on = [google_project_service.servicenetworking]
 }
 
-resource "google_compute_global_address" "worker_range_ip" {
-  count         = var.worker_pool_id == "" ? 1 : 0
-  name          = "${var.prefix}-${var.cluster_name}-worker-pool-range"
+resource "google_project_iam_binding" "service_binding_project" {
+  role    = "roles/servicenetworking.serviceAgent"
+  project = var.project_id
+  members = [
+    "serviceAccount:service-${data.google_project.project.number}@service-networking.iam.gserviceaccount.com"
+  ]
+  lifecycle {
+    ignore_changes = [members]
+  }
+  depends_on = [google_project_service.servicenetworking]
+}
+
+resource "google_compute_global_address" "worker_range" {
+  name          = "${var.prefix}-${var.cluster_name}-worker-range"
+  project       = var.network_project_id
   purpose       = "VPC_PEERING"
   address_type  = "INTERNAL"
-  prefix_length = 24
-  network       = data.google_compute_network.this.id
+  address       = var.worker_address
+  prefix_length = var.worker_address_prefix_length
+  network       = data.google_compute_network.vnet.id
   lifecycle {
     ignore_changes = [network]
   }
-  depends_on = [google_project_service.servicenetworking, google_project_iam_binding.servicenetworking_binding, google_project_iam_binding.worker_pool_binding]
 }
 
-resource "google_service_networking_connection" "worker_pool_conn" {
-  count                   = var.worker_pool_id == "" ? 1 : 0
-  network                 = data.google_compute_network.this.id
+resource "google_service_networking_connection" "worker_pool_connection" {
+  network                 = data.google_compute_network.vnet.id
   service                 = "servicenetworking.googleapis.com"
-  reserved_peering_ranges = [google_compute_global_address.worker_range_ip[0].name]
+  reserved_peering_ranges = [google_compute_global_address.worker_range.name]
   lifecycle {
     ignore_changes = [network]
   }
-  depends_on = [google_compute_global_address.worker_range_ip]
+  depends_on = [google_project_service_identity.servicenetworking_agent, google_project_iam_member.servicenetworking_agent, google_service_networking_connection.worker_pool_connection, google_project_iam_binding.service_binding_network_project]
 }
 
-resource "google_cloudbuild_worker_pool" "worker_pool" {
-  count    = var.worker_pool_id == "" ? 1 : 0
+resource "google_compute_network_peering_routes_config" "service_networking_peering_config" {
+  project = var.network_project_id
+  peering = google_service_networking_connection.worker_pool_connection.peering
+  network = var.vpc_name
+
+  export_custom_routes = true
+  import_custom_routes = true
+
+  depends_on = [
+    google_service_networking_connection.worker_pool_connection, google_project_service_identity.servicenetworking_agent, google_project_iam_member.servicenetworking_agent, google_project_iam_binding.service_binding_network_project
+  ]
+}
+
+# Cloud Build Worker Pool
+resource "google_cloudbuild_worker_pool" "pool" {
   name     = "${var.prefix}-${var.cluster_name}-worker-pool"
+  project  = var.project_id
   location = var.region
   worker_config {
     disk_size_gb   = var.worker_disk_size
@@ -90,39 +103,10 @@ resource "google_cloudbuild_worker_pool" "worker_pool" {
     no_external_ip = true
   }
   network_config {
-    peered_network = data.google_compute_network.this.id
+    peered_network = data.google_compute_network.vnet.id
   }
   lifecycle {
     ignore_changes = [network_config]
   }
-  depends_on = [google_service_networking_connection.worker_pool_conn]
-}
-
-# ============ set peering ==================== #
-resource "google_compute_network_peering" "peering_vpc" {
-  count        = var.set_worker_pool_network_peering ? 1 : 0
-  name         = "${var.vpc_name}-peering-to-${var.worker_pool_id}"
-  network      = data.google_compute_network.this.self_link
-  peer_network = data.google_compute_network.worker_pool_network[0].self_link
-  depends_on   = [google_project_iam_binding.servicenetworking_binding, google_project_iam_binding.worker_pool_binding]
-}
-
-# ============ set peering ==================== #
-resource "google_compute_network_peering" "peering_worker" {
-  count        = var.set_worker_pool_network_peering ? 1 : 0
-  name         = "${var.worker_pool_id}-peering-to-${var.vpc_name}"
-  network      = data.google_compute_network.worker_pool_network[0].self_link
-  peer_network = data.google_compute_network.this.self_link
-  depends_on   = [google_project_iam_binding.servicenetworking_binding, google_project_iam_binding.worker_pool_binding]
-}
-
-resource "google_compute_firewall" "worker_pool_fw" {
-  name      = "${var.prefix}-allow-worker-pool"
-  direction = "INGRESS"
-  network   = data.google_compute_network.this.self_link
-  allow {
-    protocol = "all"
-  }
-  source_ranges = ["${google_compute_global_address.worker_range_ip[0].address}/${google_compute_global_address.worker_range_ip[0].prefix_length}"]
-  target_tags   = ["all-apis", "vpc-connector", "backends"]
+  depends_on = [google_service_networking_connection.worker_pool_connection, google_project_service_identity.servicenetworking_agent, google_project_iam_binding.service_binding_project]
 }

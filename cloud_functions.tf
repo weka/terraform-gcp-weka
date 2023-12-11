@@ -1,5 +1,4 @@
 # ======================== cloud function ============================
-
 locals {
   function_zip_path       = "/tmp/${var.project_id}-${var.cluster_name}-cloud-functions.zip"
   worker_pool_id          = var.create_worker_pool ? module.worker_pool[0].worker_pool_id : var.worker_pool_id
@@ -12,6 +11,7 @@ locals {
   # common function for multiple actions
   cloud_internal_function_name = "${var.prefix}-${var.cluster_name}-weka-functions"
   function_ingress_settings    = var.subnet_autocreate_as_private ? "ALLOW_INTERNAL_ONLY" : "ALLOW_ALL"
+  deployment_project_number    = data.google_project.project.number
 }
 
 data "archive_file" "function_zip" {
@@ -35,6 +35,7 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
   name        = local.cloud_internal_function_name
   description = "deploy, fetch, resize, clusterize, clusterize finalization, join, join_finalization, terminate, transient, terminate_cluster, scale_up functions"
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
+  project     = var.project_id
   build_config {
     runtime     = "go120"
     entry_point = "CloudInternal"
@@ -51,9 +52,9 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
     min_instance_count             = 1
     available_memory               = "256Mi"
     timeout_seconds                = 540
-    vpc_connector                  = local.vpc_connector
+    vpc_connector                  = local.vpc_connector_id
     ingress_settings               = local.function_ingress_settings
-    vpc_connector_egress_settings  = "ALL_TRAFFIC"
+    vpc_connector_egress_settings  = "PRIVATE_RANGES_ONLY"
     all_traffic_on_latest_revision = true
     service_account_email          = local.sa_email
     environment_variables = {
@@ -101,7 +102,6 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       WEKA_HOME_URL : var.weka_home_url
     }
   }
-
   depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, module.peering, google_project_service.project_function_api, google_project_service.run_api, google_project_service.artifactregistry_api]
 }
 
@@ -136,13 +136,12 @@ resource "google_cloudfunctions2_function" "scale_down_function" {
     min_instance_count             = 1
     available_memory               = "256Mi"
     timeout_seconds                = 540
-    vpc_connector                  = local.vpc_connector
+    vpc_connector                  = local.vpc_connector_id
     ingress_settings               = local.function_ingress_settings
     vpc_connector_egress_settings  = "PRIVATE_RANGES_ONLY"
     all_traffic_on_latest_revision = true
     service_account_email          = local.sa_email
   }
-
   depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, google_project_service.project_function_api, google_project_service.run_api, google_project_service.artifactregistry_api]
 }
 
@@ -178,7 +177,7 @@ resource "google_cloudfunctions2_function" "status_function" {
     min_instance_count             = 1
     available_memory               = "256Mi"
     timeout_seconds                = 540
-    vpc_connector                  = local.vpc_connector
+    vpc_connector                  = local.vpc_connector_id
     ingress_settings               = local.function_ingress_settings
     vpc_connector_egress_settings  = "PRIVATE_RANGES_ONLY"
     all_traffic_on_latest_revision = true
@@ -192,7 +191,6 @@ resource "google_cloudfunctions2_function" "status_function" {
       PASSWORD_ID : google_secret_manager_secret_version.password_secret_key.id
     }
   }
-
   depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, google_project_service.project_function_api, google_project_service.run_api, google_project_service.artifactregistry_api]
 }
 

@@ -1,11 +1,12 @@
 data "google_compute_subnetwork" "this" {
   count   = length(var.subnets_list)
   name    = var.subnets_list[count.index]
-  project = var.project_id
+  project = local.network_project_id
   region  = var.region
 }
 
 locals {
+  network_project_id      = var.network_project_id != "" ? var.network_project_id : var.project_id
   disk_size               = var.disk_size + var.traces_per_frontend * var.frontend_container_cores_num
   private_nic_first_index = var.assign_public_ip ? 1 : 0
   nics_numbers            = var.frontend_container_cores_num + 1
@@ -87,7 +88,7 @@ resource "google_compute_instance_template" "this" {
     for_each = range(local.private_nic_first_index)
     content {
       subnetwork         = data.google_compute_subnetwork.this[network_interface.value].id
-      subnetwork_project = var.project_id
+      subnetwork_project = local.network_project_id
       access_config {}
       dynamic "alias_ip_range" {
         for_each = range(var.secondary_ips_per_nic)
@@ -102,7 +103,7 @@ resource "google_compute_instance_template" "this" {
     for_each = range(local.private_nic_first_index, 1)
     content {
       subnetwork         = data.google_compute_subnetwork.this[network_interface.value].id
-      subnetwork_project = var.project_id
+      subnetwork_project = local.network_project_id
       dynamic "alias_ip_range" {
         for_each = range(var.secondary_ips_per_nic)
         content {
@@ -116,7 +117,7 @@ resource "google_compute_instance_template" "this" {
     for_each = range(1, local.nics_numbers)
     content {
       subnetwork         = data.google_compute_subnetwork.this[network_interface.value].id
-      subnetwork_project = var.project_id
+      subnetwork_project = local.network_project_id
     }
   }
   lifecycle {

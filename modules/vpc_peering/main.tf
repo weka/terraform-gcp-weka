@@ -21,13 +21,15 @@ locals {
 }
 
 data "google_compute_network" "vpc_peering" {
-  count = length(var.vpcs_to_peer_to_deployment_vpc)
-  name  = var.vpcs_to_peer_to_deployment_vpc[count.index]
+  count   = length(var.vpcs_to_peer_to_deployment_vpc)
+  project = var.network_project_id
+  name    = var.vpcs_to_peer_to_deployment_vpc[count.index]
 }
 
 data "google_compute_network" "vpcs" {
-  count = length(var.vpcs_name)
-  name  = var.vpcs_name[count.index]
+  count   = length(var.vpcs_name)
+  project = var.network_project_id
+  name    = var.vpcs_name[count.index]
 }
 
 resource "google_compute_network_peering" "peering" {
@@ -35,5 +37,21 @@ resource "google_compute_network_peering" "peering" {
   name         = local.tmp_vpcs_list[count.index]["name"]
   network      = local.tmp_vpcs_list[count.index]["to"]
   peer_network = local.tmp_vpcs_list[count.index]["from"]
-  depends_on   = [data.google_compute_network.vpc_peering, data.google_compute_network.vpcs]
+  lifecycle {
+    ignore_changes = [network, peer_network]
+  }
+  depends_on = [data.google_compute_network.vpc_peering, data.google_compute_network.vpcs]
+}
+
+
+resource "google_compute_firewall" "fw" {
+  name          = "allow-all-to-backends"
+  provider      = google
+  project       = var.network_project_id
+  direction     = "INGRESS"
+  network       = var.vpcs_name[0]
+  source_ranges = var.vpcs_range_to_peer_to_deployment_vpc
+  allow {
+    protocol = "all"
+  }
 }
