@@ -44,6 +44,16 @@ In order to setup, you must provide the following variable:
 network_project_id = NETWORK_PROJECT_ID
 ```
 
+### To avoid public ip assignment:
+```hcl
+assign_public_ip   = false
+```
+
+### Create Cloud NAT
+```hcl
+create_nat_gateway = true
+```
+
 ## OBS
 We support tiering to bucket.
 In order to setup tiering, you must provide the following variables:
