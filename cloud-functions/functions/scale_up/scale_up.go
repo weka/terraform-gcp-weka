@@ -30,7 +30,7 @@ func getInstanceTemplate(project, template string) (*computepb.InstanceTemplate,
 	return instanceTemplatesClient.Get(ctx, req)
 }
 
-func CreateInstance(ctx context.Context, project, zone, template, instanceName, yumRepoServer, functionRootUrl string) (err error) {
+func CreateInstance(ctx context.Context, project, zone, template, instanceName, yumRepoServer, proxyUrl, functionRootUrl string) (err error) {
 	instancesClient, err := compute.NewInstancesRESTClient(ctx)
 	if err != nil {
 		log.Error().Msgf("%s", err)
@@ -44,6 +44,11 @@ func CreateInstance(ctx context.Context, project, zone, template, instanceName, 
 	instance_name=%s
 	function_url=%s
 	yum_repo_server=%s
+	proxy_url=%s
+
+	if [ "$proxy_url" ] ; then
+		sudo sed -i "/distroverpkg=centos-release/a proxy=$proxy_url" /etc/yum.conf
+	fi
 
 	if [ "$yum_repo_server" ] ; then
 		mkdir /tmp/yum.repos.d
@@ -74,7 +79,7 @@ func CreateInstance(ctx context.Context, project, zone, template, instanceName, 
 	chmod +x /tmp/deploy.sh
 	(/tmp/deploy.sh 2>&1 | tee /tmp/weka_deploy.log) || self_deleting || shutdown -P
 	`
-	startUpScript = fmt.Sprintf(startUpScript, instanceName, functionRootUrl, yumRepoServer)
+	startUpScript = fmt.Sprintf(startUpScript, instanceName, functionRootUrl, yumRepoServer, proxyUrl)
 	startUpScript = dedent.Dedent(startUpScript)
 
 	instanceTemplate, err := getInstanceTemplate(project, template)
