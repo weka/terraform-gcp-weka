@@ -284,6 +284,7 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 	backendTemplate := os.Getenv("BACKEND_TEMPLATE")
 	bucket := os.Getenv("BUCKET")
 	yumRepoServer := os.Getenv("YUM_REPO_SERVER")
+	proxyUrl := os.Getenv("PROXY_URL")
 	functionRootUrl := fmt.Sprintf("https://%s", r.Host)
 
 	ctx := r.Context()
@@ -303,7 +304,7 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 		for i := backendsNumber; i < state.DesiredSize; i++ {
 			instanceName := fmt.Sprintf("%s-%s%03d", clusterName, currentTime, i)
 			log.Info().Msgf("creating new backend instance: %s", instanceName)
-			if err := scale_up.CreateInstance(ctx, project, zone, backendTemplate, instanceName, yumRepoServer, functionRootUrl); err != nil {
+			if err := scale_up.CreateInstance(ctx, project, zone, backendTemplate, instanceName, yumRepoServer, proxyUrl, functionRootUrl); err != nil {
 				err = fmt.Errorf("instance %s creation failed %s.", instanceName, err)
 				log.Error().Err(err).Send()
 				respondWithErr(w, err, http.StatusBadRequest)

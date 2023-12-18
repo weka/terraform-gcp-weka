@@ -8,9 +8,8 @@ require (
 	cloud.google.com/go/storage v1.30.1
 	github.com/lithammer/dedent v1.1.0
 	github.com/rs/zerolog v1.29.1
-	github.com/weka/go-cloud-lib v0.0.0-20231115081329-03cf27317ed2
+	github.com/weka/go-cloud-lib v0.0.0-20231219091840-33a5814e7013
 	google.golang.org/api v0.121.0
-	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1
 	google.golang.org/protobuf v1.30.0
 )
 
@@ -37,5 +36,6 @@ require (
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
+	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
 	google.golang.org/grpc v1.54.0 // indirect
 )
