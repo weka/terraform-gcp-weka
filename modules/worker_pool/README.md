@@ -20,14 +20,14 @@ module "create_worker_pool" {
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >=1.3.1 |
 | <a name="requirement_google"></a> [google](#requirement\_google) | ~>4.38.0 |
-| <a name="requirement_null"></a> [null](#requirement\_null) | ~>3.2.1 |
+| <a name="requirement_google-beta"></a> [google-beta](#requirement\_google-beta) | ~> 3.83.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
 | <a name="provider_google"></a> [google](#provider\_google) | ~>4.38.0 |
-| <a name="provider_null"></a> [null](#provider\_null) | ~>3.2.1 |
+| <a name="provider_google-beta"></a> [google-beta](#provider\_google-beta) | ~> 3.83.0 |
 
 ## Modules
 
@@ -37,35 +37,34 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [google_cloudbuild_worker_pool.worker_pool](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/cloudbuild_worker_pool) | resource |
-| [google_compute_firewall.worker_pool_fw](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_firewall) | resource |
-| [google_compute_global_address.worker_range_ip](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_global_address) | resource |
-| [google_compute_network_peering.peering_vpc](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_network_peering) | resource |
-| [google_compute_network_peering.peering_worker](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_network_peering) | resource |
-| [google_project_iam_binding.servicenetworking_admin_binding](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_binding) | resource |
-| [google_project_iam_binding.servicenetworking_binding](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_binding) | resource |
-| [google_project_iam_binding.worker_pool_binding](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_binding) | resource |
+| [google-beta_google_project_service_identity.servicenetworking_agent](https://registry.terraform.io/providers/hashicorp/google-beta/latest/docs/resources/google_project_service_identity) | resource |
+| [google_cloudbuild_worker_pool.pool](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/cloudbuild_worker_pool) | resource |
+| [google_compute_global_address.worker_range](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_global_address) | resource |
+| [google_compute_network_peering_routes_config.service_networking_peering_config](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_network_peering_routes_config) | resource |
+| [google_project_iam_binding.service_binding_network_project](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_binding) | resource |
+| [google_project_iam_binding.service_binding_project](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_binding) | resource |
+| [google_project_iam_member.servicenetworking_agent](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_member) | resource |
 | [google_project_service.servicenetworking](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_service) | resource |
-| [google_service_networking_connection.worker_pool_conn](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_networking_connection) | resource |
-| [null_resource.wait_service_enable](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
-| [google_compute_network.this](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_network) | data source |
-| [google_compute_network.worker_pool_network](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_network) | data source |
+| [google_service_networking_connection.worker_pool_connection](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_networking_connection) | resource |
+| [google_compute_network.vnet](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_network) | data source |
+| [google_project.network_project](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/project) | data source |
+| [google_project.project](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/project) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | Cluster prefix for all resources | `string` | n/a | yes |
+| <a name="input_network_project_id"></a> [network\_project\_id](#input\_network\_project\_id) | Network project id | `string` | `""` | no |
 | <a name="input_prefix"></a> [prefix](#input\_prefix) | Prefix for all resources | `string` | `"weka"` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | Project id | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | Region name | `string` | n/a | yes |
-| <a name="input_sa_email"></a> [sa\_email](#input\_sa\_email) | service account email | `string` | n/a | yes |
-| <a name="input_set_worker_pool_network_peering"></a> [set\_worker\_pool\_network\_peering](#input\_set\_worker\_pool\_network\_peering) | Create peering between worker pool network and vpcs networks | `bool` | n/a | yes |
 | <a name="input_vpc_name"></a> [vpc\_name](#input\_vpc\_name) | Vpc name | `string` | `""` | no |
+| <a name="input_worker_address"></a> [worker\_address](#input\_worker\_address) | Choose an address range for the Cloud Build Private Pool workers. example: 10.37.0.0. Do not include a prefix length. | `string` | `"10.37.0.0"` | no |
+| <a name="input_worker_address_prefix_length"></a> [worker\_address\_prefix\_length](#input\_worker\_address\_prefix\_length) | Prefix length, such as 24 for /24 or 16 for /16. Must be 24 or lower. | `string` | `"16"` | no |
 | <a name="input_worker_disk_size"></a> [worker\_disk\_size](#input\_worker\_disk\_size) | Size of the disk attached to the worker, in GB | `number` | n/a | yes |
 | <a name="input_worker_machine_type"></a> [worker\_machine\_type](#input\_worker\_machine\_type) | Machine type of a worker | `string` | n/a | yes |
 | <a name="input_worker_pool_id"></a> [worker\_pool\_id](#input\_worker\_pool\_id) | Exiting worker pool id | `string` | `""` | no |
-| <a name="input_worker_pool_network"></a> [worker\_pool\_network](#input\_worker\_pool\_network) | Network name of worker pool, Must be on the same project and region | `string` | `""` | no |
 
 ## Outputs
 
