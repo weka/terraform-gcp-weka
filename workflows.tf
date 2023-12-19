@@ -18,7 +18,6 @@ resource "google_project_iam_binding" "cloudscheduler_binding" {
 
 resource "google_workflows_workflow" "scale_down" {
   name            = "${var.prefix}-${var.cluster_name}-scale-down-workflow"
-  project         = var.project_id
   region          = lookup(var.workflow_map_region, var.region, var.region)
   description     = "scale down workflow"
   service_account = local.sa_email

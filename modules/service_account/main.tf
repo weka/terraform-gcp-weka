@@ -18,7 +18,6 @@ locals {
 resource "google_service_account" "sa" {
   account_id   = "${var.prefix}-${var.service_account_name}"
   display_name = "A service account for deploy weka"
-  project      = var.project_id
 }
 
 resource "google_project_iam_member" "sa_member_role" {

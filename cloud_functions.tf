@@ -35,7 +35,6 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
   name        = local.cloud_internal_function_name
   description = "deploy, fetch, resize, clusterize, clusterize finalization, join, join_finalization, terminate, transient, terminate_cluster, scale_up functions"
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
-  project     = var.project_id
   build_config {
     runtime     = "go120"
     entry_point = "CloudInternal"
@@ -107,7 +106,6 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
 
 # IAM entry for all users to invoke the function
 resource "google_cloudfunctions2_function_iam_member" "cloud_internal_invoker" {
-  project        = google_cloudfunctions2_function.cloud_internal_function.project
   location       = google_cloudfunctions2_function.cloud_internal_function.location
   cloud_function = google_cloudfunctions2_function.cloud_internal_function.name
 
@@ -147,7 +145,6 @@ resource "google_cloudfunctions2_function" "scale_down_function" {
 
 # IAM entry for all users to invoke the function
 resource "google_cloudfunctions2_function_iam_member" "weka_internal_invoker" {
-  project        = google_cloudfunctions2_function.scale_down_function.project
   location       = google_cloudfunctions2_function.scale_down_function.location
   cloud_function = google_cloudfunctions2_function.scale_down_function.name
 
@@ -196,7 +193,6 @@ resource "google_cloudfunctions2_function" "status_function" {
 
 # IAM entry for all users to invoke the function
 resource "google_cloudfunctions2_function_iam_member" "status_invoker" {
-  project        = google_cloudfunctions2_function.status_function.project
   location       = google_cloudfunctions2_function.status_function.location
   cloud_function = google_cloudfunctions2_function.status_function.name
 
