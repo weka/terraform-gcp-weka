@@ -157,7 +157,7 @@ variable "sa_email" {
 
 variable "create_cloudscheduler_sa" {
   type        = bool
-  description = "Should or not crate gcp cloudscheduler sa"
+  description = "Create GCP cloudscheduler sa"
   default     = true
 }
 
@@ -181,7 +181,7 @@ variable "allow_weka_api_cidrs" {
 
 variable "source_image_id" {
   type        = string
-  description = "Source image ID to use, by default centos-7 is used, other distributive might work, but only centos-7 is tested by Weka with this TF module"
+  description = "Source image ID to use, by default centos-7 is used, other distributions might work, but only centos-7 is tested by Weka with this TF module"
   default     = "projects/centos-cloud/global/images/centos-7-v20220719"
 }
 
