@@ -1,13 +1,14 @@
 package report
 
 import (
-	"cloud.google.com/go/storage"
 	"context"
+	"time"
+
+	"cloud.google.com/go/storage"
 	"github.com/rs/zerolog/log"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
 	"github.com/weka/go-cloud-lib/protocol"
 	reportLib "github.com/weka/go-cloud-lib/report"
-	"time"
 )
 
 func Report(ctx context.Context, report protocol.Report, bucket string) (err error) {
@@ -24,6 +25,7 @@ func Report(ctx context.Context, report protocol.Report, bucket string) (err err
 		time.Sleep(1 * time.Second)
 		id, err = common.Lock(client, ctx, bucket)
 	}
+	defer common.Unlock(client, ctx, bucket, id)
 
 	stateHandler := client.Bucket(bucket).Object("state")
 
@@ -38,7 +40,5 @@ func Report(ctx context.Context, report protocol.Report, bucket string) (err err
 	}
 
 	err = common.WriteState(stateHandler, ctx, state)
-
-	err = common.Unlock(client, ctx, bucket, id)
 	return
 }
