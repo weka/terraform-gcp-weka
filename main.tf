@@ -104,7 +104,6 @@ resource "google_compute_instance_group" "this" {
   name       = "${var.prefix}-${var.cluster_name}-instance-group"
   zone       = var.zone
   network    = data.google_compute_network.this[0].self_link
-  project    = var.project_id
   depends_on = [google_compute_region_health_check.health_check, module.network, module.shared_vpc_peering]
 
   lifecycle {
