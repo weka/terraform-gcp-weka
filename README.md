@@ -1,7 +1,7 @@
 # GCP weka deployment Terraform module
 Terraform module that creates weka deployments.
 This module creates many resources as launch template, cloud functions, workflows, cloud scheduler etc.
-<br>**Note**: when applying this module it will create workflow that will automatically start instances according to the
+<br>**Note**: when applying this module it will create a workflow that will automatically starts instances according to the
 given cluster size.
 
 ## Network deployment options
@@ -42,9 +42,9 @@ module "weka_deployment" {
 We support tiering to bucket.
 In order to setup tiering, you must provide the following variables:
 ```hcl
-set_obs_integration = true
-obs_name            = "..."
-tiering_ssd_percent = 20
+tiering_enable_obs_integration = true
+tiering_obs_name               = "..."
+tiering_ssd_percent            = 20
 ```
 
 ## Clients
@@ -61,7 +61,7 @@ client_instance_type = "c2-standard-8"
 client_frontend_cores = DESIRED_NUM
 ```
 ### Mounting clients in udp mode
-In order to mount clients in udp mode you should pass the following param (in addition to the above):
+In order to mount clients in UDP mode you should pass the following param (in addition to the above):
 ```hcl
 mount_clients_dpdk = false
 ```
@@ -71,7 +71,7 @@ We support creating NFS protocol gateways that will be mounted automatically to 
 <br>In order to create you need to provide the number of protocol gateways instances you want (by default the number is 0),
 for example:
 ```hcl
-protocol_gateways_number = 1
+protocol_gateways_number = 2
 ```
 This will automatically create 2 instances.
 <br>In addition you can provide these optional variables:
@@ -85,7 +85,7 @@ protocol_gateway_frontend_num          = 1
 nfs_setup_protocol                     = false
 ```
 
-<br>In order to create stateless clients, need to set variable:
+<br>In order to create stateless clients, you need to set this variable:
 ```hcl
 nfs_setup_protocol = true
 ```
@@ -100,11 +100,11 @@ for example:
 ```hcl
 smb_protocol_gateways_number = 3
 ```
-This will automatically create 2 instances.
+This will automatically create 3 instances.
 <br>In addition you can provide these optional variables:
 ```hcl
 smb_protocol_gateway_secondary_ips_per_nic = 3
-smb_protocol_gateway_instance_type         = "Standard_D8_v5"
+smb_protocol_gateway_instance_type         = "c2-standard-8"
 smb_protocol_gateway_nics_num              = 2
 smb_protocol_gateway_disk_size             = 48
 smb_protocol_gateway_frontend_cores_num    = 1
@@ -114,17 +114,17 @@ smb_domain_name                            = ""
 smb_share_name                             = ""
 ```
 
-<br>In order to create stateless clients, need to set variable:
+<br>In order to create stateless clients, you need to set this variable:
 ```hcl
 smb_setup_protocol = true
 ```
 
-<br>In order to enable SMBW, need to set variable:
+<br>In order to enable SMBW, you need to set this variable:
 ```hcl
 smbw_enabled = true
 ```
 
-To join an SMB cluster in Active Directory, need to run manually command:
+To join an SMB cluster in Active Directory, you need to manually run this command:
 
 `weka smb domain join <smb_domain_username> <smb_domain_password> [--server smb_server_name]`.
 
@@ -241,7 +241,7 @@ host_shared_range  = [".."]
 | <a name="input_assign_public_ip"></a> [assign\_public\_ip](#input\_assign\_public\_ip) | Determines whether to assign public IP to all instances deployed by TF module. Includes backends, clients and protocol gateways. | `bool` | `true` | no |
 | <a name="input_client_frontend_cores"></a> [client\_frontend\_cores](#input\_client\_frontend\_cores) | Number of frontend cores to use on client instances, this number will reflect on number of NICs attached to instance, as each weka core requires dedicated NIC | `number` | `1` | no |
 | <a name="input_client_instance_type"></a> [client\_instance\_type](#input\_client\_instance\_type) | The client virtual machine type (sku) to deploy. | `string` | `"c2-standard-8"` | no |
-| <a name="input_client_source_image_id"></a> [client\_source\_image\_id](#input\_client\_source\_image\_id) | Client Source image ID to use, by default centos-7 is used, other distributive might work, but only centos-7 is tested by Weka with this TF module | `string` | `"projects/centos-cloud/global/images/centos-7-v20220719"` | no |
+| <a name="input_client_source_image_id"></a> [client\_source\_image\_id](#input\_client\_source\_image\_id) | Client Source image ID to use, by default centos-7 is used, other distributions might work, but only centos-7 is tested by Weka with this TF module | `string` | `"projects/centos-cloud/global/images/centos-7-v20220719"` | no |
 | <a name="input_clients_number"></a> [clients\_number](#input\_clients\_number) | The number of client virtual machines to deploy. | `number` | `0` | no |
 | <a name="input_clients_use_dpdk"></a> [clients\_use\_dpdk](#input\_clients\_use\_dpdk) | Mount weka clients in DPDK mode | `bool` | `true` | no |
 | <a name="input_cloud_functions_region_map"></a> [cloud\_functions\_region\_map](#input\_cloud\_functions\_region\_map) | Map of region to use for cloud functions, as some regions do not have cloud functions enabled | `map(string)` | <pre>{<br>  "asia-south2": "asia-south1",<br>  "europe-north1": "europe-west1",<br>  "europe-west4": "europe-west1",<br>  "southamerica-west1": "northamerica-northeast1",<br>  "us-east5": "us-east1"<br>}</pre> | no |
@@ -250,7 +250,7 @@ host_shared_range  = [".."]
 | <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | Cluster prefix for all resources | `string` | n/a | yes |
 | <a name="input_cluster_size"></a> [cluster\_size](#input\_cluster\_size) | Weka cluster size | `number` | n/a | yes |
 | <a name="input_containers_config_map"></a> [containers\_config\_map](#input\_containers\_config\_map) | Maps the number of objects and memory size per machine type. | <pre>map(object({<br>    compute  = number<br>    drive    = number<br>    frontend = number<br>    nics     = number<br>    memory   = list(string)<br>  }))</pre> | <pre>{<br>  "c2-standard-16": {<br>    "compute": 4,<br>    "drive": 1,<br>    "frontend": 1,<br>    "memory": [<br>      "24.2GB",<br>      "23.2GB"<br>    ],<br>    "nics": 7<br>  },<br>  "c2-standard-8": {<br>    "compute": 1,<br>    "drive": 1,<br>    "frontend": 1,<br>    "memory": [<br>      "4.2GB",<br>      "4GB"<br>    ],<br>    "nics": 4<br>  }<br>}</pre> | no |
-| <a name="input_create_cloudscheduler_sa"></a> [create\_cloudscheduler\_sa](#input\_create\_cloudscheduler\_sa) | Should or not crate gcp cloudscheduler sa | `bool` | `true` | no |
+| <a name="input_create_cloudscheduler_sa"></a> [create\_cloudscheduler\_sa](#input\_create\_cloudscheduler\_sa) | Create GCP cloudscheduler sa | `bool` | `true` | no |
 | <a name="input_create_worker_pool"></a> [create\_worker\_pool](#input\_create\_worker\_pool) | Create worker pool | `bool` | `false` | no |
 | <a name="input_default_disk_name"></a> [default\_disk\_name](#input\_default\_disk\_name) | The default disk name. | `string` | `"wekaio-volume"` | no |
 | <a name="input_default_disk_size"></a> [default\_disk\_size](#input\_default\_disk\_size) | The default disk size. | `number` | `48` | no |
