@@ -1,7 +1,6 @@
 # health check
 resource "google_compute_region_health_check" "health_check" {
   name                = "${var.prefix}-${var.cluster_name}-health-check"
-  project             = var.project_id
   region              = var.region
   timeout_sec         = 1
   check_interval_sec  = 1
@@ -16,7 +15,6 @@ resource "google_compute_region_health_check" "health_check" {
 # backend service
 resource "google_compute_region_backend_service" "backend_service" {
   name                  = "${var.prefix}-${var.cluster_name}-lb-backend"
-  project               = var.project_id
   region                = var.region
   protocol              = "TCP"
   load_balancing_scheme = "INTERNAL"
@@ -31,7 +29,6 @@ resource "google_compute_region_backend_service" "backend_service" {
 # forwarding rule
 resource "google_compute_forwarding_rule" "google_compute_forwarding_rule" {
   name                  = "${var.prefix}-${var.cluster_name}-forwarding-rule"
-  project               = var.project_id
   backend_service       = google_compute_region_backend_service.backend_service.id
   region                = var.region
   load_balancing_scheme = "INTERNAL"
@@ -47,7 +44,6 @@ resource "google_compute_forwarding_rule" "google_compute_forwarding_rule" {
 resource "google_dns_record_set" "record_a" {
   name         = "${var.cluster_name}.${local.private_dns_name}"
   managed_zone = local.private_zone_name
-  project      = var.project_id
   type         = "A"
   ttl          = 120
   rrdatas      = [google_compute_forwarding_rule.google_compute_forwarding_rule.ip_address]
@@ -58,7 +54,6 @@ resource "google_dns_record_set" "record_a" {
 # health check
 resource "google_compute_region_health_check" "ui_check" {
   name                = "${var.prefix}-${var.cluster_name}-ui-check"
-  project             = var.project_id
   region              = var.region
   timeout_sec         = 1
   check_interval_sec  = 1
@@ -75,7 +70,6 @@ resource "google_compute_region_health_check" "ui_check" {
 # backend service
 resource "google_compute_region_backend_service" "ui_backend_service" {
   name                  = "${var.prefix}-${var.cluster_name}-ui-lb-backend"
-  project               = var.project_id
   region                = var.region
   protocol              = "TCP"
   load_balancing_scheme = "INTERNAL"
@@ -90,7 +84,6 @@ resource "google_compute_region_backend_service" "ui_backend_service" {
 # forwarding rule
 resource "google_compute_forwarding_rule" "ui_forwarding_rule" {
   name                  = "${var.prefix}-${var.cluster_name}-ui-forwarding-rule"
-  project               = var.project_id
   backend_service       = google_compute_region_backend_service.ui_backend_service.id
   region                = var.region
   load_balancing_scheme = "INTERNAL"
@@ -106,7 +99,6 @@ resource "google_compute_forwarding_rule" "ui_forwarding_rule" {
 resource "google_dns_record_set" "ui_record_a" {
   name         = "ui-${var.cluster_name}.${local.private_dns_name}"
   managed_zone = local.private_zone_name
-  project      = var.project_id
   type         = "A"
   ttl          = 120
   rrdatas      = [google_compute_forwarding_rule.ui_forwarding_rule.ip_address]
