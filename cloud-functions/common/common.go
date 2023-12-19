@@ -211,18 +211,10 @@ func GetClusterState(ctx context.Context, bucket string) (state protocol.Cluster
 		time.Sleep(1 * time.Second)
 		id, err = Lock(client, ctx, bucket)
 	}
+	defer Unlock(client, ctx, bucket, id)
 
 	stateHandler := client.Bucket(bucket).Object("state")
-
 	state, err = ReadState(stateHandler, ctx)
-	unlockErr := Unlock(client, ctx, bucket, id)
-	if unlockErr != nil {
-		log.Error().Msgf("State unlock failed: %s", unlockErr)
-		if err == nil {
-			err = unlockErr
-		}
-	}
-
 	return
 }
 
@@ -239,12 +231,11 @@ func UpdateClusterState(ctx context.Context, bucket string, state protocol.Clust
 		time.Sleep(1 * time.Second)
 		id, err = Lock(client, ctx, bucket)
 	}
+	defer Unlock(client, ctx, bucket, id)
 
 	stateHandler := client.Bucket(bucket).Object("state")
 
 	err = WriteState(stateHandler, ctx, state)
-	err = Unlock(client, ctx, bucket, id) // we always unlock
-
 	return
 }
 
@@ -314,10 +305,9 @@ func AddInstanceToStateInstances(ctx context.Context, bucket, newInstance string
 		time.Sleep(1 * time.Second)
 		id, err = Lock(client, ctx, bucket)
 	}
+	defer Unlock(client, ctx, bucket, id)
 
 	instancesNames, err = addInstanceToStateInstances(client, ctx, bucket, newInstance)
-	Unlock(client, ctx, bucket, id) // we always want to unlock
-
 	return
 }
 

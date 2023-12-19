@@ -23,10 +23,9 @@ func UpdateValue(ctx context.Context, bucket string, newDesiredSize int) (err er
 		time.Sleep(1 * time.Second)
 		id, err = common.Lock(client, ctx, bucket)
 	}
+	defer common.Unlock(client, ctx, bucket, id)
 
 	err = updateDesiredSize(client, ctx, bucket, newDesiredSize)
-	common.Unlock(client, ctx, bucket, id) // we always want to unlock
-
 	return
 }
 
