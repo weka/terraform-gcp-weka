@@ -29,6 +29,8 @@ get_core_ids() {
 	eval "$2=$res"
 }
 
+weka local stop
+weka local rm default --force
 
 getNetStrForDpdk() {
 	i=$1
@@ -55,9 +57,6 @@ getNetStrForDpdk() {
 			net="$net --net $enp/$subnet_inet/$${netmask[1]}/$gateway"
  done
 }
-
-weka local stop
-weka local rm default --force
 
 # weka containers setup
 get_core_ids $FRONTEND_CONTAINER_CORES_NUM frontend_core_ids
