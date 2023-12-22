@@ -12,7 +12,7 @@ module "weka_deployment" {
   weka_tar_bucket_name           = "weka-installation"
   zone                           = var.zone
   cluster_size                   = 6
-  install_weka_url               = "gs://weka-installation/weka-4.2.6.tar"
+  install_weka_url               = "gs://weka-installation/weka-4.2.6.90.tar"
   yum_repo_server                = "http://10.26.2.2"
   tiering_enable_obs_integration = true
   assign_public_ip               = false
