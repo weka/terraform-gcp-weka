@@ -507,7 +507,7 @@ variable "smb_setup_protocol" {
 
 variable "smbw_enabled" {
   type        = bool
-  default     = false
+  default     = true
   description = "Enable SMBW protocol. This option should be provided before cluster is created to leave extra capacity for SMBW setup."
 }
 
