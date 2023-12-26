@@ -105,6 +105,12 @@ if [[ ${smbw_enabled} == true ]]; then
     smbw_cmd_extention="--smbw --config-fs-name .config_fs"
 fi
 
+# new smbw config, where smbw is the default
+smb_cmd_extention=""
+if [[ ${smbw_enabled} == false ]]; then
+    smb_cmd_extention="--smb"
+fi
+
 # run command with retry
 function retry_command {
   retry_max=60
@@ -115,7 +121,7 @@ function retry_command {
 
 
   while [ $count -gt 0 ]; do
-      $command && break
+      eval "$command" && break
       count=$(($count - 1))
       echo "Retrying $msg in $retry_sleep seconds..."
       sleep $retry_sleep
@@ -128,7 +134,8 @@ function retry_command {
   return 0
 }
 
-create_smb_cmd="weka smb cluster create ${cluster_name} ${domain_name} $smbw_cmd_extention --container-ids $all_container_ids_str"
+create_smb_cmd="weka smb cluster create ${cluster_name} ${domain_name} $smbw_cmd_extention --container-ids $all_container_ids_str || weka smb cluster create ${cluster_name} ${domain_name} .config_fs --container-ids $all_container_ids_str $smb_cmd_extention"
+echo "running: $create_smb_cmd"
 retry_command "$create_smb_cmd" "create smb cluster"
 
 weka smb cluster wait
