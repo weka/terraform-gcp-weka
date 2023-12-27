@@ -134,6 +134,7 @@ function retry_command {
   return 0
 }
 
+sed -i "/$HOSTNAME/d" /etc/hosts
 create_smb_cmd="weka smb cluster create ${cluster_name} ${domain_name} $smbw_cmd_extention --container-ids $all_container_ids_str || weka smb cluster create ${cluster_name} ${domain_name} .config_fs --container-ids $all_container_ids_str $smb_cmd_extention"
 echo "running: $create_smb_cmd"
 retry_command "$create_smb_cmd" "create smb cluster"
