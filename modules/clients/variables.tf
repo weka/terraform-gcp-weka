@@ -56,11 +56,6 @@ variable "frontend_container_cores_num" {
   default     = 1
 }
 
-variable "disk_size" {
-  type        = number
-  description = "size of disk"
-}
-
 variable "clients_use_dpdk" {
   type        = bool
   default     = true
