@@ -25,14 +25,6 @@ locals {
   vms_custom_data   = join("\n", local.custom_data_parts)
 }
 
-resource "google_compute_disk" "this" {
-  count = var.clients_number
-  name  = "${var.clients_name}-disk-${count.index}"
-  type  = "pd-standard"
-  zone  = var.zone
-  size  = var.disk_size
-}
-
 resource "google_compute_instance" "this" {
   count        = var.clients_number
   name         = "${var.clients_name}-${count.index}"
@@ -43,12 +35,6 @@ resource "google_compute_instance" "this" {
     initialize_params {
       image = var.source_image_id
     }
-  }
-
-  attached_disk {
-    device_name = google_compute_disk.this[count.index].name
-    mode        = "READ_WRITE"
-    source      = google_compute_disk.this[count.index].self_link
   }
 
   # nic with public ip
@@ -86,5 +72,4 @@ resource "google_compute_instance" "this" {
   lifecycle {
     ignore_changes = [network_interface, metadata_startup_script]
   }
-  depends_on = [google_compute_disk.this]
 }

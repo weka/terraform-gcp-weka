@@ -9,7 +9,6 @@ module "clients" {
   machine_type                 = var.client_instance_type
   backend_lb_ip                = google_compute_forwarding_rule.google_compute_forwarding_rule.ip_address
   assign_public_ip             = var.assign_public_ip
-  disk_size                    = var.default_disk_size + var.tiering_ssd_percent * var.containers_config_map[var.machine_type].frontend
   project_id                   = var.project_id
   region                       = var.region
   sa_email                     = local.sa_email
