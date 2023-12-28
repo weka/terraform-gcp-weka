@@ -151,7 +151,7 @@ resource "google_compute_subnetwork" "connector_subnet" {
   name                     = "${var.prefix}-subnet-connector"
   project                  = local.network_project_id
   ip_cidr_range            = var.vpc_connector_range
-  region                   = var.region
+  region                   = lookup(var.vpc_connector_region_map, var.region, var.region)
   private_ip_google_access = true
   network                  = local.vpcs_name[count.index]
   depends_on               = [google_compute_network.vpc_network]
