@@ -156,3 +156,9 @@ variable "network_project_id" {
   default     = ""
   description = "Network project id"
 }
+
+variable "nic_type" {
+  type        = string
+  default     = null
+  description = "The type of vNIC. Possible values: GVNIC, VIRTIO_NET."
+}
