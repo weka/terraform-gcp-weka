@@ -431,6 +431,12 @@ variable "clients_use_dpdk" {
   description = "Mount weka clients in DPDK mode"
 }
 
+variable "client_nic_type" {
+  type        = string
+  default     = null
+  description = "The type of vNIC. Possible values: GVNIC, VIRTIO_NET."
+}
+
 ############################################### nfs protocol gateways variables ###################################################
 variable "nfs_protocol_gateways_number" {
   type        = number
