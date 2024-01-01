@@ -59,7 +59,6 @@ resource "google_compute_instance_template" "this" {
   dynamic "network_interface" {
     for_each = range(local.private_nic_first_index)
     content {
-
       subnetwork         = data.google_compute_subnetwork.this[network_interface.value].name
       subnetwork_project = local.network_project_id
       access_config {}

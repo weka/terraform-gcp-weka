@@ -41,6 +41,7 @@ resource "google_compute_instance" "this" {
   dynamic "network_interface" {
     for_each = range(local.private_nic_first_index)
     content {
+      nic_type           = var.nic_type
       subnetwork_project = local.network_project_id
       subnetwork         = data.google_compute_subnetwork.this[network_interface.value].name
       access_config {}
@@ -51,6 +52,7 @@ resource "google_compute_instance" "this" {
   dynamic "network_interface" {
     for_each = range(local.private_nic_first_index, local.nics_num)
     content {
+      nic_type           = var.nic_type
       subnetwork_project = local.network_project_id
       subnetwork         = data.google_compute_subnetwork.this[network_interface.value].name
     }
