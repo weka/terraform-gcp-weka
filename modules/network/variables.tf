@@ -96,7 +96,6 @@ variable "private_dns_name" {
 variable "mtu_size" {
   type        = number
   description = "mtu size"
-  default     = 1460
 }
 
 variable "subnet_autocreate_as_private" {
