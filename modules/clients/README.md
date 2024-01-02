@@ -20,7 +20,6 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [google_compute_disk.this](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_disk) | resource |
 | [google_compute_instance.this](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance) | resource |
 | [google_compute_subnetwork.this](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_subnetwork) | data source |
 
@@ -33,7 +32,6 @@ No modules.
 | <a name="input_clients_name"></a> [clients\_name](#input\_clients\_name) | Prefix clients name. | `string` | n/a | yes |
 | <a name="input_clients_number"></a> [clients\_number](#input\_clients\_number) | n/a | `string` | `"Number of clients"` | no |
 | <a name="input_clients_use_dpdk"></a> [clients\_use\_dpdk](#input\_clients\_use\_dpdk) | Mount weka clients in DPDK mode | `bool` | `true` | no |
-| <a name="input_disk_size"></a> [disk\_size](#input\_disk\_size) | size of disk | `number` | n/a | yes |
 | <a name="input_frontend_container_cores_num"></a> [frontend\_container\_cores\_num](#input\_frontend\_container\_cores\_num) | Number of frontend cores to use on client instances, this number will reflect on number of NICs attached to instance, as each weka core requires dedicated NIC | `number` | `1` | no |
 | <a name="input_instance_config_overrides"></a> [instance\_config\_overrides](#input\_instance\_config\_overrides) | Maps the number of objects and memory size per machine type. | <pre>map(object({<br>    dpdk_base_memory_mb = optional(number, 0)<br>    host_maintenance    = optional(string, "MIGRATE")<br>  }))</pre> | <pre>{<br>  "a2-highgpu-1g": {<br>    "host_maintenance": "TERMINATE"<br>  },<br>  "a2-highgpu-2g": {<br>    "dpdk_base_memory_mb": 32,<br>    "host_maintenance": "TERMINATE"<br>  },<br>  "a2-highgpu-4g": {<br>    "dpdk_base_memory_mb": 32,<br>    "host_maintenance": "TERMINATE"<br>  },<br>  "a2-highgpu-8g": {<br>    "dpdk_base_memory_mb": 32,<br>    "host_maintenance": "TERMINATE"<br>  },<br>  "a2-megagpu-16g": {<br>    "dpdk_base_memory_mb": 32,<br>    "host_maintenance": "TERMINATE"<br>  },<br>  "c2d-highmem-56": {<br>    "dpdk_base_memory_mb": 32<br>  },<br>  "c2d-standard-112": {<br>    "dpdk_base_memory_mb": 32<br>  },<br>  "c2d-standard-32": {<br>    "dpdk_base_memory_mb": 32<br>  },<br>  "c2d-standard-56": {<br>    "dpdk_base_memory_mb": 32<br>  },<br>  "n2-highmem-32": {<br>    "dpdk_base_memory_mb": 32<br>  },<br>  "n2-standard-128": {<br>    "dpdk_base_memory_mb": 32<br>  },<br>  "n2-standard-32": {<br>    "dpdk_base_memory_mb": 32<br>  },<br>  "n2-standard-48": {<br>    "dpdk_base_memory_mb": 32<br>  },<br>  "n2-standard-96": {<br>    "dpdk_base_memory_mb": 32<br>  },<br>  "n2d-highmem-32": {<br>    "dpdk_base_memory_mb": 32<br>  },<br>  "n2d-highmem-64": {<br>    "dpdk_base_memory_mb": 32<br>  },<br>  "n2d-standard-32": {<br>    "dpdk_base_memory_mb": 32<br>  },<br>  "n2d-standard-64": {<br>    "dpdk_base_memory_mb": 32<br>  }<br>}</pre> | no |
 | <a name="input_machine_type"></a> [machine\_type](#input\_machine\_type) | weka cluster clients machines type | `string` | n/a | yes |
