@@ -26,7 +26,7 @@ variable "nics_numbers" {
 variable "mtu_size" {
   type        = number
   description = "mtu size"
-  default     = 1460
+  default     = 8896
 }
 
 variable "vpcs_name" {
