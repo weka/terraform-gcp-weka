@@ -4,7 +4,7 @@ locals {
   lb_url                          = trimsuffix(google_dns_record_set.record_a.name, ".")
   terminate_cluster_uri           = format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=terminate_cluster")
   weka_cluster_password_secret_id = google_secret_manager_secret.secret_weka_password.secret_id
-  protocol_gateways_ips_type      = var.assign_public_ip ? "accessConfigs[0].natIP" : "networkIP"
+  ips_type                        = var.assign_public_ip ? "accessConfigs[0].natIP" : "networkIP"
   functions_url = {
     progressing_status = { url = local.get_cluster_status_uri, body = { "type" : "progress" } }
     status             = { url = local.get_cluster_status_uri, body = { "type" : "status" } }
@@ -65,14 +65,14 @@ output "weka_cluster_password_secret_id" {
 
 output "nfs_protocol_gateways_ips" {
   value       = var.nfs_protocol_gateways_number == 0 ? null : <<EOT
-gcloud compute instances list --filter="name~'${module.nfs_protocol_gateways[0].gateways_name}'" --format "get(networkInterfaces[0].${local.protocol_gateways_ips_type})" --project ${var.project_id}
+gcloud compute instances list --filter="name~'${module.nfs_protocol_gateways[0].gateways_name}'" --format "get(networkInterfaces[0].${local.ips_type})" --project ${var.project_id}
 EOT
   description = "Ips of NFS protocol gateways"
 }
 
 output "smb_protocol_gateways_ips" {
   value       = var.smb_protocol_gateways_number == 0 ? null : <<EOT
-gcloud compute instances list --filter="name~'${module.smb_protocol_gateways[0].gateways_name}'" --format "get(networkInterfaces[0].${local.protocol_gateways_ips_type})" --project ${var.project_id}
+gcloud compute instances list --filter="name~'${module.smb_protocol_gateways[0].gateways_name}'" --format "get(networkInterfaces[0].${local.ips_type})" --project ${var.project_id}
 EOT
   description = "Ips of SMB protocol gateways"
 }
@@ -105,6 +105,10 @@ curl -m 70 -X POST "${local.terminate_cluster_uri}" \
 ################################# get weka password secret login ############################################
 
 gcloud secrets versions access 1 --secret=${local.weka_cluster_password_secret_id}  --project ${var.project_id} --format='get(payload.data)' | base64 -d
+
+############################################## get backend ips ##############################################
+
+gcloud compute instances list --filter="labels.weka_cluster_name=${var.cluster_name}" --format "get(networkInterfaces[0].${local.ips_type})" --project ${var.project_id}
 
 EOT
   description = "Useful commands and script to interact with weka cluster"
