@@ -268,6 +268,7 @@ set_shared_vpc_peering = true
 | <a name="input_assign_public_ip"></a> [assign\_public\_ip](#input\_assign\_public\_ip) | Determines whether to assign public IP to all instances deployed by TF module. Includes backends, clients and protocol gateways. | `bool` | `true` | no |
 | <a name="input_client_frontend_cores"></a> [client\_frontend\_cores](#input\_client\_frontend\_cores) | Number of frontend cores to use on client instances, this number will reflect on number of NICs attached to instance, as each weka core requires dedicated NIC | `number` | `1` | no |
 | <a name="input_client_instance_type"></a> [client\_instance\_type](#input\_client\_instance\_type) | The client virtual machine type (sku) to deploy. | `string` | `"c2-standard-8"` | no |
+| <a name="input_client_nic_type"></a> [client\_nic\_type](#input\_client\_nic\_type) | The type of vNIC. Possible values: GVNIC, VIRTIO\_NET. | `string` | `null` | no |
 | <a name="input_client_source_image_id"></a> [client\_source\_image\_id](#input\_client\_source\_image\_id) | Client Source image ID to use, by default centos-7 is used, other distributive might work, but only centos-7 is tested by Weka with this TF module | `string` | `"projects/centos-cloud/global/images/centos-7-v20220719"` | no |
 | <a name="input_clients_number"></a> [clients\_number](#input\_clients\_number) | The number of client virtual machines to deploy. | `number` | `0` | no |
 | <a name="input_clients_use_dpdk"></a> [clients\_use\_dpdk](#input\_clients\_use\_dpdk) | Mount weka clients in DPDK mode | `bool` | `true` | no |
