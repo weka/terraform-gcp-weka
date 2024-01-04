@@ -45,7 +45,7 @@ resource "google_compute_network_peering" "peering" {
 
 
 resource "google_compute_firewall" "fw" {
-  name          = "allow-all-to-backends"
+  name          = "${var.vpcs_name[0]}-allow-peering-to-all-backends"
   provider      = google
   project       = var.network_project_id
   direction     = "INGRESS"
