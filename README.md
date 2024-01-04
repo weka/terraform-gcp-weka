@@ -152,6 +152,7 @@ In order to setup, you must provide the following variables:
 shared_vpcs                    = [".."]
 host_project                   = HOST_PROJECT_ID
 host_shared_range              = [".."]
+shared_vpc_project_id          = SHARED_VPC_PROJECT_ID
 ```
 
 To enable project as host project, you must provide the following variable:

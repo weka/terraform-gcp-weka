@@ -647,3 +647,9 @@ variable "set_peering" {
   description = "apply peering connection between subnets and subnets "
   default     = true
 }
+
+variable "shared_vpc_project_id" {
+  description = "Shared vpc project id"
+  type        = string
+  default     = ""
+}

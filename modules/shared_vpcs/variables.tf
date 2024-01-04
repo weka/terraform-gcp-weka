@@ -40,3 +40,8 @@ variable "enable_shared_vpc_host_project" {
   type        = bool
   default     = false
 }
+
+variable "shared_vpc_project_id" {
+  description = "Shared vpc project id"
+  type        = string
+}
