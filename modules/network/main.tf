@@ -18,13 +18,15 @@ locals {
 data "google_project" "project" {}
 
 data "google_compute_network" "vpc_list_ids" {
-  count = length(var.vpcs)
-  name  = var.vpcs[count.index]
+  count   = length(var.vpcs)
+  name    = var.vpcs[count.index]
+  project = local.network_project_id
 }
 
 data "google_compute_subnetwork" "subnets_list_ids" {
-  count = length(var.subnets)
-  name  = var.subnets[count.index]
+  count   = length(var.subnets)
+  name    = var.subnets[count.index]
+  project = local.network_project_id
 }
 
 # ====================== vpc ==============================
