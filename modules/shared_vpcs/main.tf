@@ -26,7 +26,7 @@ resource "google_compute_network_peering" "peering_service" {
   count                               = var.set_shared_vpc_peering ? length(local.peering_list) : 0
   name                                = "${local.peering_list[count.index]["from"]}-peering-${local.peering_list[count.index]["to"]}"
   network                             = "projects/${var.project_id}/global/networks/${local.peering_list[count.index]["from"]}"
-  peer_network                        = "projects/${var.host_project}/global/networks/${local.peering_list[count.index]["to"]}"
+  peer_network                        = "projects/${var.shared_vpc_project_id}/global/networks/${local.peering_list[count.index]["to"]}"
   export_custom_routes                = true
   import_custom_routes                = true
   import_subnet_routes_with_public_ip = true
@@ -36,7 +36,7 @@ resource "google_compute_network_peering" "peering_service" {
 resource "google_compute_network_peering" "host_peering" {
   count                               = var.set_shared_vpc_peering ? length(local.peering_list) : 0
   name                                = "${local.peering_list[count.index]["to"]}-peering-${local.peering_list[count.index]["from"]}"
-  network                             = "projects/${var.host_project}/global/networks/${local.peering_list[count.index]["to"]}"
+  network                             = "projects/${var.shared_vpc_project_id}/global/networks/${local.peering_list[count.index]["to"]}"
   peer_network                        = "projects/${var.project_id}/global/networks/${local.peering_list[count.index]["from"]}"
   export_custom_routes                = true
   import_custom_routes                = true

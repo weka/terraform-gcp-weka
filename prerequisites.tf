@@ -95,6 +95,7 @@ module "shared_vpc_peering" {
   source                         = "./modules/shared_vpcs"
   project_id                     = local.network_project_id
   prefix                         = var.prefix
+  shared_vpc_project_id          = var.shared_vpc_project_id
   host_project                   = var.host_project
   shared_vpcs                    = var.shared_vpcs
   vpcs_name                      = local.vpcs_name
