@@ -57,6 +57,7 @@ No modules.
 | <a name="input_prefix"></a> [prefix](#input\_prefix) | prefix for all resources | `string` | `"weka"` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | project id | `string` | n/a | yes |
 | <a name="input_set_shared_vpc_peering"></a> [set\_shared\_vpc\_peering](#input\_set\_shared\_vpc\_peering) | n/a | `bool` | `false` | no |
+| <a name="input_shared_vpc_project_id"></a> [shared\_vpc\_project\_id](#input\_shared\_vpc\_project\_id) | Shared vpc project id | `string` | n/a | yes |
 | <a name="input_shared_vpcs"></a> [shared\_vpcs](#input\_shared\_vpcs) | list of shared vpc name | `list(string)` | n/a | yes |
 | <a name="input_vpcs_name"></a> [vpcs\_name](#input\_vpcs\_name) | list of vpcs name | `list(string)` | n/a | yes |
 
