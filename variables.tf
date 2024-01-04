@@ -400,6 +400,12 @@ variable "host_shared_range" {
   default     = []
 }
 
+variable "shared_vpcs_project_id" {
+  type        = string
+  description = "shared vpcs project id"
+  default     = ""
+}
+
 ############################### clients ############################
 variable "clients_number" {
   type        = number

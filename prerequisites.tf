@@ -93,7 +93,7 @@ module "peering" {
 module "shared_vpc_peering" {
   count                          = var.host_project == "" ? 0 : 1
   source                         = "./modules/shared_vpcs"
-  project_id                     = local.network_project_id
+  project_id                     = var.shared_vpcs_project_id
   prefix                         = var.prefix
   host_project                   = var.host_project
   shared_vpcs                    = var.shared_vpcs
