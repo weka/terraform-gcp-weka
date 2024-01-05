@@ -186,14 +186,19 @@ resource "google_compute_subnetwork" "connector_subnet" {
   depends_on               = [google_compute_network.vpc_network]
 }
 
-resource "google_project_iam_binding" "service_binding" {
-  count   = var.network_project_id != "" ? 1 : 0
-  role    = "roles/compute.networkUser"
-  project = local.network_project_id
-  members = [
-    "serviceAccount:${local.deployment_project_number}@cloudservices.gserviceaccount.com",
-    "serviceAccount:service-${local.deployment_project_number}@gcp-sa-vpcaccess.iam.gserviceaccount.com"
-  ]
+resource "google_project_iam_member" "cloudservices_network_user" {
+  count      = var.network_project_id != "" ? 1 : 0
+  role       = "roles/compute.networkUser"
+  project    = local.network_project_id
+  member     = "serviceAccount:${local.deployment_project_number}@cloudservices.gserviceaccount.com"
+  depends_on = [google_project_service.project_vpc]
+}
+
+resource "google_project_iam_member" "vpcaccess_network_user" {
+  count      = var.network_project_id != "" ? 1 : 0
+  role       = "roles/compute.networkUser"
+  project    = local.network_project_id
+  member     = "serviceAccount:service-${local.deployment_project_number}@gcp-sa-vpcaccess.iam.gserviceaccount.com"
   depends_on = [google_project_service.project_vpc]
 }
 
@@ -210,7 +215,7 @@ resource "google_vpc_access_connector" "connector" {
   lifecycle {
     ignore_changes = [network]
   }
-  depends_on = [google_project_iam_binding.service_binding]
+  depends_on = [google_project_iam_member.cloudservices_network_user, google_project_iam_member.vpcaccess_network_user]
 }
 
 #============== Health check ============================
