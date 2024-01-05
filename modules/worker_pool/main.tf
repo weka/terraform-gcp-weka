@@ -32,27 +32,17 @@ resource "google_project_iam_member" "servicenetworking_agent" {
   depends_on = [google_project_service_identity.servicenetworking_agent]
 }
 
-resource "google_project_iam_binding" "service_binding_network_project" {
-  role    = "roles/servicenetworking.serviceAgent"
-  project = var.network_project_id
-  members = [
-    "serviceAccount:service-${data.google_project.network_project.number}@service-networking.iam.gserviceaccount.com"
-  ]
-  lifecycle {
-    ignore_changes = [members]
-  }
+resource "google_project_iam_member" "service_networking_network_proj" {
+  role       = "roles/servicenetworking.serviceAgent"
+  project    = var.network_project_id
+  member     = "serviceAccount:service-${data.google_project.network_project.number}@service-networking.iam.gserviceaccount.com"
   depends_on = [google_project_service.servicenetworking]
 }
 
-resource "google_project_iam_binding" "service_binding_project" {
-  role    = "roles/servicenetworking.serviceAgent"
-  project = var.project_id
-  members = [
-    "serviceAccount:service-${data.google_project.project.number}@service-networking.iam.gserviceaccount.com"
-  ]
-  lifecycle {
-    ignore_changes = [members]
-  }
+resource "google_project_iam_member" "service_networking_main_proj" {
+  role       = "roles/servicenetworking.serviceAgent"
+  project    = var.project_id
+  member     = "serviceAccount:service-${data.google_project.project.number}@service-networking.iam.gserviceaccount.com"
   depends_on = [google_project_service.servicenetworking]
 }
 
@@ -76,7 +66,7 @@ resource "google_service_networking_connection" "worker_pool_connection" {
   lifecycle {
     ignore_changes = [network]
   }
-  depends_on = [google_project_service_identity.servicenetworking_agent, google_project_iam_member.servicenetworking_agent, google_service_networking_connection.worker_pool_connection, google_project_iam_binding.service_binding_network_project]
+  depends_on = [google_project_service_identity.servicenetworking_agent, google_project_iam_member.servicenetworking_agent, google_service_networking_connection.worker_pool_connection, google_project_iam_member.service_networking_network_proj]
 }
 
 resource "google_compute_network_peering_routes_config" "service_networking_peering_config" {
@@ -88,7 +78,7 @@ resource "google_compute_network_peering_routes_config" "service_networking_peer
   import_custom_routes = true
 
   depends_on = [
-    google_service_networking_connection.worker_pool_connection, google_project_service_identity.servicenetworking_agent, google_project_iam_member.servicenetworking_agent, google_project_iam_binding.service_binding_network_project
+    google_service_networking_connection.worker_pool_connection, google_project_service_identity.servicenetworking_agent, google_project_iam_member.servicenetworking_agent, google_project_iam_member.service_networking_network_proj
   ]
 }
 
@@ -108,5 +98,5 @@ resource "google_cloudbuild_worker_pool" "pool" {
   lifecycle {
     ignore_changes = [network_config]
   }
-  depends_on = [google_service_networking_connection.worker_pool_connection, google_project_service_identity.servicenetworking_agent, google_project_iam_binding.service_binding_project]
+  depends_on = [google_service_networking_connection.worker_pool_connection, google_project_service_identity.servicenetworking_agent, google_project_iam_member.service_networking_main_proj]
 }
