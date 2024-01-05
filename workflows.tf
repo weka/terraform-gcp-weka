@@ -7,13 +7,11 @@ resource "google_project_service" "workflows" {
 data "google_project" "project" {
 }
 
-resource "google_project_iam_binding" "cloudscheduler_binding" {
+resource "google_project_iam_member" "cloudscheduler" {
   count   = var.create_cloudscheduler_sa ? 1 : 0
   project = var.project_id
   role    = "roles/cloudscheduler.jobRunner"
-  members = [
-    "serviceAccount:service-${local.deployment_project_number}@gcp-sa-cloudscheduler.iam.gserviceaccount.com"
-  ]
+  member  = "serviceAccount:service-${local.deployment_project_number}@gcp-sa-cloudscheduler.iam.gserviceaccount.com"
 }
 
 resource "google_workflows_workflow" "scale_down" {
