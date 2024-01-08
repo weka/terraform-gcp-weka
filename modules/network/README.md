@@ -68,7 +68,8 @@ No modules.
 | [google_dns_managed_zone.private_zone](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dns_managed_zone) | resource |
 | [google_dns_record_set.apis_endpoint_record](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dns_record_set) | resource |
 | [google_dns_record_set.cloud_run_endpoint_record](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dns_record_set) | resource |
-| [google_project_iam_binding.service_binding](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_binding) | resource |
+| [google_project_iam_member.cloudservices_network_user](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_member) | resource |
+| [google_project_iam_member.vpcaccess_network_user](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_member) | resource |
 | [google_project_service.project_compute](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_service) | resource |
 | [google_project_service.project_dns](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_service) | resource |
 | [google_project_service.project_gcp_api](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_service) | resource |
