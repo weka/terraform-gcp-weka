@@ -80,27 +80,26 @@ data "google_compute_subnetwork" "this" {
   depends_on = [module.network]
 }
 
-module "peering" {
-  count                                = length(var.vpcs_to_peer_to_deployment_vpc) > 0 ? 1 : 0
-  source                               = "./modules/vpc_peering"
-  vpcs_name                            = local.vpcs_name
-  vpcs_to_peer_to_deployment_vpc       = var.vpcs_to_peer_to_deployment_vpc
-  vpcs_range_to_peer_to_deployment_vpc = var.vpcs_range_to_peer_to_deployment_vpc
-  network_project_id                   = local.network_project_id
-  depends_on                           = [module.network]
+resource "google_compute_shared_vpc_host_project" "shared_vpc_host" {
+  count   = var.enable_shared_vpc_host_project ? 1 : 0
+  project = var.host_project
 }
 
-module "shared_vpc_peering" {
-  count                          = var.host_project == "" ? 0 : 1
-  source                         = "./modules/shared_vpcs"
-  project_id                     = local.network_project_id
-  prefix                         = var.prefix
-  shared_vpc_project_id          = var.shared_vpc_project_id
-  host_project                   = var.host_project
-  shared_vpcs                    = var.shared_vpcs
-  vpcs_name                      = local.vpcs_name
-  set_shared_vpc_peering         = var.set_shared_vpc_peering
-  host_shared_range              = var.host_shared_range
-  enable_shared_vpc_host_project = var.enable_shared_vpc_host_project
-  depends_on                     = [module.network]
+resource "google_compute_shared_vpc_service_project" "shared_vpc_service" {
+  count           = var.enable_shared_vpc_host_project ? 1 : 0
+  host_project    = var.host_project
+  service_project = var.project_id
+  depends_on      = [google_compute_shared_vpc_host_project.shared_vpc_host]
+}
+
+module "vpc_peering" {
+  count                                = length(var.vpcs_to_peer_to_deployment_vpc) > 0 ? 1 : 0
+  source                               = "./modules/vpc_peering"
+  project_id                           = local.network_project_id
+  prefix                               = var.prefix
+  vpc_to_peer_project_id               = var.vpc_to_peer_project_id
+  vpcs_to_peer_to_deployment_vpc       = var.vpcs_to_peer_to_deployment_vpc
+  vpcs_name                            = local.vpcs_name
+  vpcs_range_to_peer_to_deployment_vpc = var.vpcs_range_to_peer_to_deployment_vpc
+  depends_on                           = [module.network]
 }

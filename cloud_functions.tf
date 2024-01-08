@@ -101,7 +101,7 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       WEKA_HOME_URL : var.weka_home_url
     }
   }
-  depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, module.peering, google_project_service.project_function_api, google_project_service.run_api, google_project_service.artifactregistry_api]
+  depends_on = [module.network, module.worker_pool, module.vpc_peering, google_project_service.project_function_api, google_project_service.run_api, google_project_service.artifactregistry_api]
 }
 
 # IAM entry for all users to invoke the function
@@ -140,7 +140,7 @@ resource "google_cloudfunctions2_function" "scale_down_function" {
     all_traffic_on_latest_revision = true
     service_account_email          = local.sa_email
   }
-  depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, google_project_service.project_function_api, google_project_service.run_api, google_project_service.artifactregistry_api]
+  depends_on = [module.network, module.worker_pool, module.vpc_peering, google_project_service.project_function_api, google_project_service.run_api, google_project_service.artifactregistry_api]
 }
 
 # IAM entry for all users to invoke the function
@@ -188,7 +188,7 @@ resource "google_cloudfunctions2_function" "status_function" {
       PASSWORD_ID : google_secret_manager_secret_version.password_secret_key.id
     }
   }
-  depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, google_project_service.project_function_api, google_project_service.run_api, google_project_service.artifactregistry_api]
+  depends_on = [module.network, module.worker_pool, module.vpc_peering, google_project_service.project_function_api, google_project_service.run_api, google_project_service.artifactregistry_api]
 }
 
 # IAM entry for all users to invoke the function

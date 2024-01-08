@@ -30,7 +30,7 @@ module "nfs_protocol_gateways" {
   network_project_id           = var.network_project_id
   vm_username                  = var.vm_username
   ssh_public_key               = local.ssh_public_key
-  depends_on                   = [module.network, module.peering, module.shared_vpc_peering, time_sleep.wait_120_seconds, google_compute_forwarding_rule.google_compute_forwarding_rule, google_secret_manager_secret.secret_token, google_cloudfunctions2_function.cloud_internal_function]
+  depends_on                   = [module.network, module.vpc_peering, time_sleep.wait_120_seconds, google_compute_forwarding_rule.google_compute_forwarding_rule, google_secret_manager_secret.secret_token, google_cloudfunctions2_function.cloud_internal_function]
 }
 
 
@@ -65,5 +65,5 @@ module "smb_protocol_gateways" {
   network_project_id           = var.network_project_id
   vm_username                  = var.vm_username
   ssh_public_key               = local.ssh_public_key
-  depends_on                   = [module.network, module.peering, module.shared_vpc_peering, time_sleep.wait_120_seconds, google_compute_forwarding_rule.google_compute_forwarding_rule, google_secret_manager_secret.secret_token, google_cloudfunctions2_function.cloud_internal_function]
+  depends_on                   = [module.network, module.vpc_peering, time_sleep.wait_120_seconds, google_compute_forwarding_rule.google_compute_forwarding_rule, google_secret_manager_secret.secret_token, google_cloudfunctions2_function.cloud_internal_function]
 }

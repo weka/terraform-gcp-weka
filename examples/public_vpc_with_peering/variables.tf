@@ -15,12 +15,7 @@ variable "get_weka_io_token" {
   sensitive   = true
 }
 
-variable "host_project" {
-  type        = string
-  description = "The ID of the project that will serve as a Shared VPC host project"
-}
-
-variable "shared_vpc_project_id" {
+variable "vpc_to_peer_project_id" {
   description = "Shared vpc project id"
   type        = string
 }

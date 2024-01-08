@@ -388,16 +388,29 @@ variable "host_project" {
   default     = ""
 }
 
-variable "shared_vpcs" {
+variable "enable_shared_vpc_host_project" {
+  description = "If this project is a shared VPC host project. If true, you must *not* set shared_vpc variable. Default is false."
+  type        = bool
+  default     = false
+}
+
+######################## vpc peering vpcs variables ##########################
+variable "vpcs_to_peer_to_deployment_vpc" {
   type        = list(string)
-  description = "list of shared vpc name"
+  description = "list of vpcs name to peer"
   default     = []
 }
 
-variable "host_shared_range" {
+variable "vpcs_range_to_peer_to_deployment_vpc" {
   type        = list(string)
-  description = "List of host range to allow sg"
+  description = "list of vpcs range to peer"
   default     = []
+}
+
+variable "vpc_to_peer_project_id" {
+  description = "Shared vpc project id"
+  type        = string
+  default     = ""
 }
 
 ############################### clients ############################
@@ -558,18 +571,6 @@ variable "ssh_public_key" {
   default     = null
 }
 
-variable "vpcs_to_peer_to_deployment_vpc" {
-  type        = list(string)
-  description = "list of vpcs name to peer"
-  default     = []
-}
-
-variable "vpcs_range_to_peer_to_deployment_vpc" {
-  type        = list(string)
-  description = "list of vpcs range to peer"
-  default     = []
-}
-
 variable "weka_tar_bucket_name" {
   type        = string
   default     = ""
@@ -630,26 +631,8 @@ variable "network_project_id" {
   description = "Network project id"
 }
 
-variable "set_shared_vpc_peering" {
-  type        = bool
-  description = "Enable peering for shared vpc"
-  default     = true
-}
-
-variable "enable_shared_vpc_host_project" {
-  description = "If this project is a shared VPC host project. If true, you must *not* set shared_vpc variable. Default is false."
-  type        = bool
-  default     = true
-}
-
 variable "set_peering" {
   type        = bool
   description = "apply peering connection between subnets and subnets "
   default     = true
-}
-
-variable "shared_vpc_project_id" {
-  description = "Shared vpc project id"
-  type        = string
-  default     = ""
 }
