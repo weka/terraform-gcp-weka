@@ -196,10 +196,9 @@ set_shared_vpc_peering = true
 | <a name="module_clients"></a> [clients](#module\_clients) | ./modules/clients | n/a |
 | <a name="module_network"></a> [network](#module\_network) | ./modules/network | n/a |
 | <a name="module_nfs_protocol_gateways"></a> [nfs\_protocol\_gateways](#module\_nfs\_protocol\_gateways) | ./modules/protocol_gateways | n/a |
-| <a name="module_peering"></a> [peering](#module\_peering) | ./modules/vpc_peering | n/a |
 | <a name="module_service_account"></a> [service\_account](#module\_service\_account) | ./modules/service_account | n/a |
-| <a name="module_shared_vpc_peering"></a> [shared\_vpc\_peering](#module\_shared\_vpc\_peering) | ./modules/shared_vpcs | n/a |
 | <a name="module_smb_protocol_gateways"></a> [smb\_protocol\_gateways](#module\_smb\_protocol\_gateways) | ./modules/protocol_gateways | n/a |
+| <a name="module_vpc_peering"></a> [vpc\_peering](#module\_vpc\_peering) | ./modules/vpc_peering | n/a |
 | <a name="module_worker_pool"></a> [worker\_pool](#module\_worker\_pool) | ./modules/worker_pool | n/a |
 
 ## Resources
@@ -222,6 +221,8 @@ set_shared_vpc_peering = true
 | [google_compute_region_backend_service.ui_backend_service](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_region_backend_service) | resource |
 | [google_compute_region_health_check.health_check](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_region_health_check) | resource |
 | [google_compute_region_health_check.ui_check](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_region_health_check) | resource |
+| [google_compute_shared_vpc_host_project.shared_vpc_host](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_shared_vpc_host_project) | resource |
+| [google_compute_shared_vpc_service_project.shared_vpc_service](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_shared_vpc_service_project) | resource |
 | [google_dns_record_set.record_a](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dns_record_set) | resource |
 | [google_dns_record_set.ui_record_a](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dns_record_set) | resource |
 | [google_eventarc_trigger.scale_down_trigger](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/eventarc_trigger) | resource |
@@ -284,13 +285,12 @@ set_shared_vpc_peering = true
 | <a name="input_create_worker_pool"></a> [create\_worker\_pool](#input\_create\_worker\_pool) | Create worker pool | `bool` | `false` | no |
 | <a name="input_default_disk_name"></a> [default\_disk\_name](#input\_default\_disk\_name) | The default disk name. | `string` | `"wekaio-volume"` | no |
 | <a name="input_default_disk_size"></a> [default\_disk\_size](#input\_default\_disk\_size) | The default disk size. | `number` | `48` | no |
-| <a name="input_enable_shared_vpc_host_project"></a> [enable\_shared\_vpc\_host\_project](#input\_enable\_shared\_vpc\_host\_project) | If this project is a shared VPC host project. If true, you must *not* set shared\_vpc variable. Default is false. | `bool` | `true` | no |
+| <a name="input_enable_shared_vpc_host_project"></a> [enable\_shared\_vpc\_host\_project](#input\_enable\_shared\_vpc\_host\_project) | If this project is a shared VPC host project. If true, you must *not* set shared\_vpc variable. Default is false. | `bool` | `false` | no |
 | <a name="input_endpoint_apis_internal_ip_address"></a> [endpoint\_apis\_internal\_ip\_address](#input\_endpoint\_apis\_internal\_ip\_address) | Private ip for all-apis endpoint | `string` | `"10.0.1.5"` | no |
 | <a name="input_endpoint_vpcsc_internal_ip_address"></a> [endpoint\_vpcsc\_internal\_ip\_address](#input\_endpoint\_vpcsc\_internal\_ip\_address) | Private ip for vpc service connection endpoint | `string` | `"10.0.1.6"` | no |
 | <a name="input_get_weka_io_token"></a> [get\_weka\_io\_token](#input\_get\_weka\_io\_token) | Get get.weka.io token for downloading weka | `string` | `""` | no |
 | <a name="input_googleapis_dns_zone_name"></a> [googleapis\_dns\_zone\_name](#input\_googleapis\_dns\_zone\_name) | Name of existing Private dns zone for domain googleapis.com. | `string` | `""` | no |
 | <a name="input_host_project"></a> [host\_project](#input\_host\_project) | The ID of the project that will serve as a Shared VPC host project | `string` | `""` | no |
-| <a name="input_host_shared_range"></a> [host\_shared\_range](#input\_host\_shared\_range) | List of host range to allow sg | `list(string)` | `[]` | no |
 | <a name="input_hotspare"></a> [hotspare](#input\_hotspare) | Hot-spare value. | `number` | `1` | no |
 | <a name="input_install_weka_url"></a> [install\_weka\_url](#input\_install\_weka\_url) | Path to weka installation tar object | `string` | `""` | no |
 | <a name="input_machine_type"></a> [machine\_type](#input\_machine\_type) | Weka cluster backends machines type | `string` | `"c2-standard-8"` | no |
@@ -315,9 +315,6 @@ set_shared_vpc_peering = true
 | <a name="input_sa_email"></a> [sa\_email](#input\_sa\_email) | Service account email | `string` | `""` | no |
 | <a name="input_set_dedicated_fe_container"></a> [set\_dedicated\_fe\_container](#input\_set\_dedicated\_fe\_container) | Create cluster with FE containers | `bool` | `true` | no |
 | <a name="input_set_peering"></a> [set\_peering](#input\_set\_peering) | apply peering connection between subnets and subnets | `bool` | `true` | no |
-| <a name="input_set_shared_vpc_peering"></a> [set\_shared\_vpc\_peering](#input\_set\_shared\_vpc\_peering) | Enable peering for shared vpc | `bool` | `true` | no |
-| <a name="input_shared_vpc_project_id"></a> [shared\_vpc\_project\_id](#input\_shared\_vpc\_project\_id) | Shared vpc project id | `string` | `""` | no |
-| <a name="input_shared_vpcs"></a> [shared\_vpcs](#input\_shared\_vpcs) | list of shared vpc name | `list(string)` | `[]` | no |
 | <a name="input_smb_cluster_name"></a> [smb\_cluster\_name](#input\_smb\_cluster\_name) | The name of the SMB setup. | `string` | `"Weka-SMB"` | no |
 | <a name="input_smb_domain_name"></a> [smb\_domain\_name](#input\_smb\_domain\_name) | The domain to join the SMB cluster to. | `string` | `""` | no |
 | <a name="input_smb_protocol_gateway_disk_size"></a> [smb\_protocol\_gateway\_disk\_size](#input\_smb\_protocol\_gateway\_disk\_size) | The protocol gateways' default disk size. | `number` | `375` | no |
@@ -342,6 +339,7 @@ set_shared_vpc_peering = true
 | <a name="input_vm_username"></a> [vm\_username](#input\_vm\_username) | Provided as part of output for automated use of terraform, in case of custom image and automated use of outputs replace this with user that should be used for ssh connection | `string` | `"weka"` | no |
 | <a name="input_vpc_connector_id"></a> [vpc\_connector\_id](#input\_vpc\_connector\_id) | exiting vpc connector id to use for cloud functions, projects/<project-id>/locations/<region>/connectors/<connector-name> | `string` | `""` | no |
 | <a name="input_vpc_connector_range"></a> [vpc\_connector\_range](#input\_vpc\_connector\_range) | list of connector to use for serverless vpc access | `string` | `"10.8.0.0/28"` | no |
+| <a name="input_vpc_to_peer_project_id"></a> [vpc\_to\_peer\_project\_id](#input\_vpc\_to\_peer\_project\_id) | Shared vpc project id | `string` | `""` | no |
 | <a name="input_vpcs_name"></a> [vpcs\_name](#input\_vpcs\_name) | List of vpcs name | `list(string)` | `[]` | no |
 | <a name="input_vpcs_range_to_peer_to_deployment_vpc"></a> [vpcs\_range\_to\_peer\_to\_deployment\_vpc](#input\_vpcs\_range\_to\_peer\_to\_deployment\_vpc) | list of vpcs range to peer | `list(string)` | `[]` | no |
 | <a name="input_vpcs_to_peer_to_deployment_vpc"></a> [vpcs\_to\_peer\_to\_deployment\_vpc](#input\_vpcs\_to\_peer\_to\_deployment\_vpc) | list of vpcs name to peer | `list(string)` | `[]` | no |
