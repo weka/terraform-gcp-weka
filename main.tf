@@ -83,7 +83,7 @@ resource "google_compute_instance_template" "this" {
     ignore_changes        = [network_interface]
     create_before_destroy = false
   }
-  depends_on = [module.network, module.shared_vpc_peering]
+  depends_on = [module.network, module.vpc_peering]
 }
 
 resource "random_password" "password" {
@@ -103,7 +103,7 @@ resource "google_compute_instance_group" "this" {
   name       = "${var.prefix}-${var.cluster_name}-instance-group"
   zone       = var.zone
   network    = data.google_compute_network.this[0].self_link
-  depends_on = [google_compute_region_health_check.health_check, module.network, module.shared_vpc_peering]
+  depends_on = [google_compute_region_health_check.health_check, module.network, module.vpc_peering]
 
   lifecycle {
     ignore_changes = [network]

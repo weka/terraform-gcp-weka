@@ -5,9 +5,9 @@ This example creates service account for weka deployment,
 
 ## Usage
 ```hcl
-shared_vpcs        = [".."]
-host_project       = HOST_PROJECT_ID
-host_shared_range  = [".."]
+vpcs_range_to_peer_to_deployment_vpc = [".."]
+vpc_to_peer_project_id               = VPC_PEER_PROJECT_ID
+vpcs_to_peer_to_deployment_vpc       = [".."]
 ```
 
 <!-- BEGIN_TF_DOCS -->

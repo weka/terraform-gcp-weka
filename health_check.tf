@@ -23,7 +23,7 @@ resource "google_compute_region_backend_service" "backend_service" {
   backend {
     group = google_compute_instance_group.this.self_link
   }
-  depends_on = [module.network, module.shared_vpc_peering, google_compute_instance_group.this]
+  depends_on = [module.network, module.vpc_peering, google_compute_instance_group.this]
 }
 
 # forwarding rule
@@ -38,7 +38,7 @@ resource "google_compute_forwarding_rule" "google_compute_forwarding_rule" {
   lifecycle {
     ignore_changes = [network, subnetwork]
   }
-  depends_on = [module.network, module.shared_vpc_peering, data.google_compute_network.this]
+  depends_on = [module.network, module.vpc_peering, data.google_compute_network.this]
 }
 
 resource "google_dns_record_set" "record_a" {
@@ -78,7 +78,7 @@ resource "google_compute_region_backend_service" "ui_backend_service" {
   backend {
     group = google_compute_instance_group.this.self_link
   }
-  depends_on = [module.network, module.shared_vpc_peering, google_compute_instance_group.this]
+  depends_on = [module.network, module.vpc_peering, google_compute_instance_group.this]
 }
 
 # forwarding rule
@@ -93,7 +93,7 @@ resource "google_compute_forwarding_rule" "ui_forwarding_rule" {
   lifecycle {
     ignore_changes = [network, subnetwork]
   }
-  depends_on = [module.network, module.shared_vpc_peering]
+  depends_on = [module.network, module.vpc_peering]
 }
 
 resource "google_dns_record_set" "ui_record_a" {
