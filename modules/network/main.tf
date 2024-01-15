@@ -1,5 +1,5 @@
 locals {
-  vpcs_number = length(var.subnets) > 0 ? length(var.subnets) : length(var.subnets_range)
+  vpcs_number = var.vpc_number > 0 ? var.vpc_number : length(var.subnets) > 0 ? length(var.subnets) : length(var.subnets_range)
   temp = flatten([
     for from in range(local.vpcs_number) : [
       for to in range(local.vpcs_number) : {
@@ -68,7 +68,7 @@ resource "google_compute_network" "vpc_network" {
 
 # ======================= subnet ==========================
 resource "google_compute_subnetwork" "subnetwork" {
-  count                    = length(var.subnets) == 0 ? local.vpcs_number : 0
+  count                    = length(var.subnets) == 0 && length(var.subnets_range) > 0 ? local.vpcs_number : 0
   project                  = local.network_project_id
   name                     = "${var.prefix}-subnet-${count.index}"
   ip_cidr_range            = var.subnets_range[count.index]
@@ -176,7 +176,7 @@ resource "google_project_service" "project_vpc" {
 }
 
 resource "google_compute_subnetwork" "connector_subnet" {
-  count                    = var.vpc_connector_id == "" ? 1 : 0
+  count                    = var.vpc_connector_id == "" && var.vpc_connector_range != "" ? 1 : 0
   name                     = "${var.prefix}-subnet-connector"
   project                  = local.network_project_id
   ip_cidr_range            = var.vpc_connector_range
@@ -203,7 +203,7 @@ resource "google_project_iam_member" "vpcaccess_network_user" {
 }
 
 resource "google_vpc_access_connector" "connector" {
-  count    = var.vpc_connector_id == "" ? 1 : 0
+  count    = var.vpc_connector_id == "" && var.vpc_connector_range != "" ? 1 : 0
   provider = google-beta
   project  = var.project_id
   name     = "${var.prefix}-connector"
@@ -327,6 +327,7 @@ resource "google_compute_firewall" "fw_vpc_connector_requests" {
 
 # allow communication within the subnet
 resource "google_compute_firewall" "fw_ilb_to_backends" {
+  count         = length(var.subnets_range) > 0 || length(var.subnets) > 0 ? 1 : 0
   name          = "${var.prefix}-fw-allow-ilb-to-backends"
   project       = local.network_project_id
   direction     = "INGRESS"
