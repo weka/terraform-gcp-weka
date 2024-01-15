@@ -151,3 +151,9 @@ variable "vpc_connector_region_map" {
     asia-south2        = "asia-south1",
   }
 }
+
+variable "vpc_number" {
+  type        = number
+  default     = 0
+  description = "Number of vpcs, should be passed only when not creating subnets."
+}
