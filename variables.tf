@@ -534,12 +534,6 @@ variable "smb_domain_name" {
   default     = ""
 }
 
-variable "smb_share_name" {
-  type        = string
-  description = "The name of the SMB share"
-  default     = "default"
-}
-
 variable "weka_home_url" {
   type        = string
   description = "Weka Home url"
