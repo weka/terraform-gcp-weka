@@ -60,7 +60,6 @@ module "smb_protocol_gateways" {
   proxy_url                    = var.proxy_url
   smb_cluster_name             = var.smb_cluster_name != "" ? var.smb_cluster_name : "${var.prefix}-${var.cluster_name}"
   smb_domain_name              = var.smb_domain_name
-  smb_share_name               = var.smb_share_name
   smbw_enabled                 = var.smbw_enabled
   network_project_id           = var.network_project_id
   vm_username                  = var.vm_username

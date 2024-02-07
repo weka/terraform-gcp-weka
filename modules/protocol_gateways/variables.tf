@@ -185,12 +185,6 @@ variable "smb_domain_name" {
   default     = ""
 }
 
-variable "smb_share_name" {
-  type        = string
-  description = "The name of the SMB share"
-  default     = ""
-}
-
 variable "network_project_id" {
   type        = string
   default     = ""

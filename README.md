@@ -127,7 +127,6 @@ smb_protocol_gateway_frontend_cores_num    = 1
 smb_setup_protocol                         = false
 smb_cluster_name                           = ""
 smb_domain_name                            = ""
-smb_share_name                             = ""
 ```
 
 <br>In order to create stateless clients, you need to set this variable:
