@@ -48,7 +48,6 @@ No modules.
 | <a name="input_setup_protocol"></a> [setup\_protocol](#input\_setup\_protocol) | Configure protocol, default value is False | `bool` | n/a | yes |
 | <a name="input_smb_cluster_name"></a> [smb\_cluster\_name](#input\_smb\_cluster\_name) | The name of the SMB setup. | `string` | `"Weka-SMB"` | no |
 | <a name="input_smb_domain_name"></a> [smb\_domain\_name](#input\_smb\_domain\_name) | The domain to join the SMB cluster to. | `string` | `""` | no |
-| <a name="input_smb_share_name"></a> [smb\_share\_name](#input\_smb\_share\_name) | The name of the SMB share | `string` | `""` | no |
 | <a name="input_smbw_enabled"></a> [smbw\_enabled](#input\_smbw\_enabled) | Enable SMBW protocol. | `bool` | `true` | no |
 | <a name="input_source_image_id"></a> [source\_image\_id](#input\_source\_image\_id) | Source image id | `string` | n/a | yes |
 | <a name="input_ssh_public_key"></a> [ssh\_public\_key](#input\_ssh\_public\_key) | Ssh public key to pass to vms. | `string` | n/a | yes |
