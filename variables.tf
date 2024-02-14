@@ -185,8 +185,8 @@ variable "allow_weka_api_cidrs" {
 
 variable "source_image_id" {
   type        = string
-  description = "Source image ID to use, by default centos-7 is used, other distributions might work, but only centos-7 is tested by Weka with this TF module"
-  default     = "projects/centos-cloud/global/images/centos-7-v20220719"
+  description = "Source image ID to use, by default Rocky linux 8  is used, other distributions might work, but only Rocky linux 8 is tested by Weka with this TF module"
+  default     = "rocky-linux-8-v20240515"
 }
 
 variable "private_zone_name" {
@@ -444,8 +444,8 @@ variable "client_frontend_cores" {
 
 variable "client_source_image_id" {
   type        = string
-  description = "Client Source image ID to use, by default centos-7 is used, other distributive might work, but only centos-7 is tested by Weka with this TF module"
-  default     = "projects/centos-cloud/global/images/centos-7-v20220719"
+  description = "Client Source image ID to use, by default rocky 8 is used, other distributive might work, but only rocky 8 is tested by Weka with this TF module"
+  default     = "rocky-linux-8-v20240515"
 }
 
 variable "clients_use_dpdk" {
