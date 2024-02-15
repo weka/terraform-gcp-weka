@@ -11,7 +11,7 @@ module "weka_deployment" {
   prefix                             = "weka"
   zone                               = var.zone
   cluster_size                       = 6
-  install_weka_url                   = "gs://weka-installation/weka-4.2.7.64.tar"
+  install_weka_url                   = "gs://weka-installation/weka-4.2.8.66.tar"
   weka_tar_bucket_name               = "weka-installation"
   yum_repo_server                    = "http://10.26.2.2"
   vpcs_to_peer_to_deployment_vpc     = ["repo-global-test-tf-vars-vpc"]
