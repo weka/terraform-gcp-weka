@@ -46,6 +46,7 @@ locals {
   network_project_id  = var.network_project_id != "" ? var.network_project_id : var.project_id
   vpc_connector_id    = var.vpc_connector_id == "" ? module.network[0].vpc_connector_id : var.vpc_connector_id
   dns_zone_project_id = var.dns_zone_project_id != "" ? var.dns_zone_project_id : local.network_project_id
+  assign_public_ip    = var.assign_public_ip != "auto" ? var.assign_public_ip : length(var.subnets_name) == 0
 }
 
 module "worker_pool" {
