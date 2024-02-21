@@ -44,9 +44,9 @@ In order to setup, you must provide the following variable:
 network_project_id = NETWORK_PROJECT_ID
 ```
 
-### To avoid public ip assignment:
+### To enable public ip assignment:
 ```hcl
-assign_public_ip   = false
+assign_public_ip   = true
 ```
 
 ### Create Cloud NAT

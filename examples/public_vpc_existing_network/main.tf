@@ -19,4 +19,5 @@ module "weka_deployment" {
   vpc_connector_name             = "weka-connector"
   tiering_enable_obs_integration = true
   create_worker_pool             = false
+  assign_public_ip               = true
 }

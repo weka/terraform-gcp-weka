@@ -21,4 +21,5 @@ module "weka_deployment" {
   shared_vpc_project_id          = var.shared_vpc_project_id
   enable_shared_vpc_host_project = true
   set_shared_vpc_peering         = true
+  assign_public_ip               = true
 }
