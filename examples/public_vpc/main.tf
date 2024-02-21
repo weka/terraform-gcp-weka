@@ -14,4 +14,5 @@ module "weka_deployment" {
   get_weka_io_token              = var.get_weka_io_token
   tiering_enable_obs_integration = true
   allow_ssh_cidrs                = ["0.0.0.0/0"]
+  assign_public_ip               = true
 }
