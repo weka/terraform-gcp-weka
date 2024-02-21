@@ -19,4 +19,5 @@ module "weka_deployment" {
   create_worker_pool             = true
   vpcs_to_peer_to_deployment_vpc = ["repo-global-vpc"]
   weka_tar_project_id            = "wekaio-rnd"
+  create_nat_gateway             = true
 }

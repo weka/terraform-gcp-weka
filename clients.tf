@@ -8,7 +8,7 @@ module "clients" {
   frontend_container_cores_num = var.clients_use_dpdk ? var.client_frontend_cores : 1
   machine_type                 = var.client_instance_type
   backend_lb_ip                = google_compute_forwarding_rule.google_compute_forwarding_rule.ip_address
-  assign_public_ip             = var.assign_public_ip
+  assign_public_ip             = local.assign_public_ip
   project_id                   = var.project_id
   region                       = var.region
   sa_email                     = local.sa_email

@@ -4,7 +4,7 @@ locals {
   lb_url                          = trimsuffix(google_dns_record_set.record_a.name, ".")
   terminate_cluster_uri           = format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=terminate_cluster")
   weka_cluster_password_secret_id = google_secret_manager_secret.secret_weka_password.secret_id
-  ips_type                        = var.assign_public_ip ? "accessConfigs[0].natIP" : "networkIP"
+  ips_type                        = local.assign_public_ip ? "accessConfigs[0].natIP" : "networkIP"
   functions_url = {
     progressing_status = { url = local.get_cluster_status_uri, body = { "type" : "progress" } }
     status             = { url = local.get_cluster_status_uri, body = { "type" : "status" } }
