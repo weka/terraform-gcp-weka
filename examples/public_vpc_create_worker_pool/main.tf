@@ -15,4 +15,5 @@ module "weka_deployment" {
   tiering_enable_obs_integration = true
   create_worker_pool             = true
   allow_ssh_cidrs                = ["0.0.0.0/0"]
+  assign_public_ip               = true
 }
