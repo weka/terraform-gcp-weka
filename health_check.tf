@@ -43,6 +43,7 @@ resource "google_compute_forwarding_rule" "google_compute_forwarding_rule" {
 
 resource "google_dns_record_set" "record_a" {
   name         = "${var.cluster_name}.${local.private_dns_name}"
+  project      = local.dns_zone_project_id
   managed_zone = local.private_zone_name
   type         = "A"
   ttl          = 120
@@ -98,6 +99,7 @@ resource "google_compute_forwarding_rule" "ui_forwarding_rule" {
 
 resource "google_dns_record_set" "ui_record_a" {
   name         = "ui-${var.cluster_name}.${local.private_dns_name}"
+  project      = local.dns_zone_project_id
   managed_zone = local.private_zone_name
   type         = "A"
   ttl          = 120
