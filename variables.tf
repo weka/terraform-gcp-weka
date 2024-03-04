@@ -197,6 +197,11 @@ variable "private_dns_name" {
   default     = ""
 }
 
+variable "dns_zone_project_id" {
+  type        = string
+  default     = ""
+  description = "DNS zone project id. If not provided, will use the network project id. If network project id is also not provided will use the project id."
+}
 
 variable "cloud_scheduler_region_map" {
   type        = map(string)
