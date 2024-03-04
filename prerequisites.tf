@@ -38,13 +38,14 @@ module "network" {
 }
 
 locals {
-  sa_email           = var.sa_email == "" ? module.service_account[0].service_account_email : var.sa_email
-  subnets_name       = length(var.subnets_name) == 0 ? module.network[0].subnetwork_name : var.subnets_name
-  private_zone_name  = var.private_zone_name == "" ? module.network[0].private_zone_name : var.private_zone_name
-  private_dns_name   = var.private_dns_name == "" ? module.network[0].private_dns_name : var.private_dns_name
-  vpcs_name          = length(var.vpcs_name) == 0 ? module.network[0].vpcs_names : var.vpcs_name
-  network_project_id = var.network_project_id != "" ? var.network_project_id : var.project_id
-  vpc_connector_id   = var.vpc_connector_id == "" ? module.network[0].vpc_connector_id : var.vpc_connector_id
+  sa_email            = var.sa_email == "" ? module.service_account[0].service_account_email : var.sa_email
+  subnets_name        = length(var.subnets_name) == 0 ? module.network[0].subnetwork_name : var.subnets_name
+  private_zone_name   = var.private_zone_name == "" ? module.network[0].private_zone_name : var.private_zone_name
+  private_dns_name    = var.private_dns_name == "" ? module.network[0].private_dns_name : var.private_dns_name
+  vpcs_name           = length(var.vpcs_name) == 0 ? module.network[0].vpcs_names : var.vpcs_name
+  network_project_id  = var.network_project_id != "" ? var.network_project_id : var.project_id
+  vpc_connector_id    = var.vpc_connector_id == "" ? module.network[0].vpc_connector_id : var.vpc_connector_id
+  dns_zone_project_id = var.dns_zone_project_id != "" ? var.dns_zone_project_id : local.network_project_id
 }
 
 module "worker_pool" {
