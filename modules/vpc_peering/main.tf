@@ -4,7 +4,7 @@ locals {
       for to in range(length(data.google_compute_network.vpc_peering.*.id)) : {
         from = data.google_compute_network.vpcs[from].self_link
         to   = data.google_compute_network.vpc_peering[to].self_link
-        name = "${data.google_compute_network.vpcs[from].name}-peering-${data.google_compute_network.vpc_peering[to].name}"
+        name = "${data.google_compute_network.vpcs[from].name}-${var.peering_name}-${data.google_compute_network.vpc_peering[to].name}"
       }
     ]
   ])
@@ -13,7 +13,7 @@ locals {
       for to in range(length(data.google_compute_network.vpcs.*.id)) : {
         from = data.google_compute_network.vpc_peering[from].self_link
         to   = data.google_compute_network.vpcs[to].self_link
-        name = "${data.google_compute_network.vpc_peering[from].name}-peering-${data.google_compute_network.vpcs[to].name}"
+        name = "${data.google_compute_network.vpc_peering[from].name}-${var.peering_name}-${data.google_compute_network.vpcs[to].name}"
       }
     ]
   ])
