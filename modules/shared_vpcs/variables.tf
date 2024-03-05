@@ -45,3 +45,9 @@ variable "shared_vpc_project_id" {
   description = "Shared vpc project id"
   type        = string
 }
+
+variable "peering_name" {
+  type        = string
+  description = "Peering name. The name format will be <vpc1>-<peering_name>-<vpc2>"
+  default = "peering"
+}
