@@ -30,6 +30,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_network_project_id"></a> [network\_project\_id](#input\_network\_project\_id) | Network project id | `string` | `""` | no |
+| <a name="input_peering_name"></a> [peering\_name](#input\_peering\_name) | Peering name. The name format will be <vpc1>-<peering\_name>-<vpc2> | `string` | `"peering"` | no |
 | <a name="input_vpcs_name"></a> [vpcs\_name](#input\_vpcs\_name) | list of backend vpcs name | `list(string)` | n/a | yes |
 | <a name="input_vpcs_range_to_peer_to_deployment_vpc"></a> [vpcs\_range\_to\_peer\_to\_deployment\_vpc](#input\_vpcs\_range\_to\_peer\_to\_deployment\_vpc) | list of vpcs range to peer | `list(string)` | `[]` | no |
 | <a name="input_vpcs_to_peer_to_deployment_vpc"></a> [vpcs\_to\_peer\_to\_deployment\_vpc](#input\_vpcs\_to\_peer\_to\_deployment\_vpc) | list of vpcs name to peering | `list(string)` | n/a | yes |
