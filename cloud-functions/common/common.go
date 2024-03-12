@@ -118,27 +118,36 @@ func GetInstanceGroupInstanceNames(ctx context.Context, project, zone, instanceG
 }
 
 func Lock(client *storage.Client, ctx context.Context, bucket string) (id string, err error) {
-	LockHandler := client.Bucket(bucket).Object("lock")
+	lockHandler := client.Bucket(bucket).Object("lock")
 
-	w := LockHandler.If(storage.Conditions{DoesNotExist: true}).NewWriter(ctx)
+	w := lockHandler.If(storage.Conditions{DoesNotExist: true}).NewWriter(ctx)
+
 	err = func() error {
 		if _, err := w.Write([]byte("locked")); err != nil {
-			attrs, err := LockHandler.Attrs(ctx)
-			if err != nil {
-				return err
-			}
-
-			if time.Now().Sub(attrs.Created) > time.Minute*10 {
-				log.Error().Msgf("Deleting lock, we have indication that unlock failed at some point")
-				err = LockHandler.Delete(ctx)
-			}
-			return err
+			log.Error().Msgf("write failed: %s", err)
 		}
 		return w.Close()
 	}()
 
 	if err != nil {
-		log.Debug().Msgf("lock failed: %s", err)
+		log.Debug().Err(err).Msg("lock failed")
+
+		attrs, attrsErr := lockHandler.Attrs(ctx)
+		if attrsErr != nil {
+			log.Error().Err(attrsErr).Msg("Failed to get lock attributes")
+			err = fmt.Errorf("%w; %w", err, attrsErr)
+			return
+		}
+
+		if time.Since(attrs.Created) > time.Minute*10 {
+			log.Error().Msgf("Deleting lock, we have indication that unlock failed at some point")
+			deleteLockErr := lockHandler.Delete(ctx)
+			if deleteLockErr != nil {
+				log.Error().Err(deleteLockErr).Msg("Failed to delete lock")
+				err = fmt.Errorf("%w; %w", err, deleteLockErr)
+				return
+			}
+		}
 		return
 	}
 
