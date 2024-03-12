@@ -23,5 +23,5 @@ variable "vpcs_range_to_peer_to_deployment_vpc" {
 variable "peering_name" {
   type        = string
   description = "Peering name. The name format will be <vpc1>-<peering_name>-<vpc2>"
-  default = "peering"
+  default     = "peering"
 }
