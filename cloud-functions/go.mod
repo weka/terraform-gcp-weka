@@ -10,7 +10,7 @@ require (
 	github.com/rs/zerolog v1.29.1
 	github.com/weka/go-cloud-lib v0.0.0-20231219091840-33a5814e7013
 	google.golang.org/api v0.121.0
-	google.golang.org/protobuf v1.30.0
+	google.golang.org/protobuf v1.33.0
 )
 
 require (
