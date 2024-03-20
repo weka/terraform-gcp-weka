@@ -50,6 +50,14 @@ func CreateInstance(ctx context.Context, project, zone, template, instanceName, 
 		sudo sed -i "/distroverpkg=centos-release/a proxy=$proxy_url" /etc/yum.conf
 	fi
 
+	os=$(awk -F= '/^NAME/{print $2}' /etc/os-release)
+	if [[ "$os" = *"Rocky"* ]]; then
+		sed -i '/mirrorlist/d' /etc/yum.repos.d/*.repo
+		sed -i 's|#baseurl=http://dl.rockylinux.org/$contentdir/$releasever|baseurl=http://dl.rockylinux.org/vault/rocky/9.2|g' /etc/yum.repos.d/*.repo
+		yum update --releasever=9.2
+		yum downgrade rocky-release -y
+	fi
+
 	if [ "$yum_repo_server" ] ; then
 		mkdir /tmp/yum.repos.d
 		mv /etc/yum.repos.d/*.repo /tmp/yum.repos.d/
