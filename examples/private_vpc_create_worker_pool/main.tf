@@ -20,6 +20,7 @@ module "weka_deployment" {
   create_worker_pool                 = true
   assign_public_ip                   = false
   subnet_autocreate_as_private       = true
+  create_nat_gateway                 = true
   endpoint_apis_internal_ip_address  = "10.0.1.2"
   endpoint_vpcsc_internal_ip_address = "10.0.1.3"
   psc_subnet_cidr                    = "10.9.0.0/28"

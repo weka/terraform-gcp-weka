@@ -14,7 +14,7 @@ resource "google_storage_bucket" "weka_deployment" {
 
 # ======================== instances ============================
 locals {
-  private_nic_first_index = var.assign_public_ip ? 1 : 0
+  private_nic_first_index = local.assign_public_ip ? 1 : 0
   nics_number             = var.nics_numbers != -1 ? var.nics_numbers : var.containers_config_map[var.machine_type].nics
   disk_size               = var.default_disk_size + var.traces_per_ionode * (var.containers_config_map[var.machine_type].compute + var.containers_config_map[var.machine_type].drive + var.containers_config_map[var.machine_type].frontend)
 }

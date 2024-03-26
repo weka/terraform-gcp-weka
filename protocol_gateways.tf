@@ -20,7 +20,7 @@ module "nfs_protocol_gateways" {
   machine_type                 = var.nfs_protocol_gateway_machine_type
   yum_repo_server              = var.yum_repo_server
   sa_email                     = local.sa_email
-  assign_public_ip             = var.assign_public_ip
+  assign_public_ip             = local.assign_public_ip
   disk_size                    = var.nfs_protocol_gateway_disk_size
   frontend_container_cores_num = var.nfs_protocol_gateway_fe_cores_num
   weka_token_id                = var.get_weka_io_token != "" ? google_secret_manager_secret.secret_token[0].id : var.get_weka_io_token
@@ -52,7 +52,7 @@ module "smb_protocol_gateways" {
   machine_type                 = var.smb_protocol_gateway_machine_type
   yum_repo_server              = var.yum_repo_server
   sa_email                     = local.sa_email
-  assign_public_ip             = var.assign_public_ip
+  assign_public_ip             = local.assign_public_ip
   disk_size                    = var.smb_protocol_gateway_disk_size
   frontend_container_cores_num = var.smb_protocol_gateway_fe_cores_num
   weka_token_id                = var.get_weka_io_token != "" ? google_secret_manager_secret.secret_token[0].id : var.get_weka_io_token

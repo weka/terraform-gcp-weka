@@ -21,4 +21,5 @@ module "weka_deployment" {
   tiering_enable_obs_integration = true
   worker_pool_name               = "weka-worker-pool"
   worker_pool_network            = ""
+  assign_public_ip               = true
 }
