@@ -5,6 +5,7 @@ resource "google_project_service" "secret_manager" {
 
 resource "google_secret_manager_secret" "secret_weka_password" {
   secret_id = "${var.prefix}-${var.cluster_name}-password"
+  project   = var.project_id
   replication {
     user_managed {
       replicas {
@@ -26,6 +27,7 @@ resource "google_secret_manager_secret_version" "password_secret_key" {
 
 resource "google_secret_manager_secret" "secret_weka_username" {
   secret_id = "${var.prefix}-${var.cluster_name}-username"
+  project   = var.project_id
   replication {
     user_managed {
       replicas {
@@ -47,6 +49,7 @@ resource "google_secret_manager_secret_version" "user_secret_key" {
 
 resource "google_secret_manager_secret" "secret_token" {
   count     = var.get_weka_io_token != "" ? 1 : 0
+  project   = var.project_id
   secret_id = "${var.prefix}-${var.cluster_name}-token"
   replication {
     user_managed {
