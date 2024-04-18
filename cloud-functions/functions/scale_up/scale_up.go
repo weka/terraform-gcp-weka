@@ -62,7 +62,6 @@ func CreateInstance(ctx context.Context, project, zone, template, instanceName, 
 	gpgcheck=0
 	EOL
 	fi
-	sudo yum -y update
 
 	sudo yum install -y jq
 
