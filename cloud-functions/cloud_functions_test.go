@@ -190,7 +190,7 @@ func Test_scaleUp(t *testing.T) {
 	backendTemplate := "projects/wekaio-rnd/global/instanceTemplates/weka-poc-backends"
 	functionRootUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net"
 	yumRepoServer := ""
-	proxyUrl = ""
+	proxyUrl := ""
 	ctx := context.TODO()
 	scale_up.CreateInstance(ctx, project, zone, backendTemplate, instanceName, yumRepoServer, proxyUrl, functionRootUrl)
 	instances := common.GetInstancesByClusterLabel(ctx, project, zone, clusterName)

@@ -1,6 +1,6 @@
 module github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions
 
-go 1.20
+go 1.22
 
 require (
 	cloud.google.com/go/compute v1.19.1
