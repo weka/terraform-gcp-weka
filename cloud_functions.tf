@@ -36,7 +36,7 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
   description = "deploy, fetch, resize, clusterize, clusterize finalization, join, join_finalization, terminate, transient, terminate_cluster, scale_up functions"
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
   build_config {
-    runtime     = "go120"
+    runtime     = "go122"
     entry_point = "CloudInternal"
     worker_pool = local.worker_pool_id
     source {
@@ -119,7 +119,7 @@ resource "google_cloudfunctions2_function" "scale_down_function" {
   description = "scale cluster down"
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
   build_config {
-    runtime     = "go120"
+    runtime     = "go122"
     entry_point = "ScaleDown"
     worker_pool = local.worker_pool_id
     source {
@@ -158,7 +158,7 @@ resource "google_cloudfunctions2_function" "status_function" {
   description = "get cluster status"
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
   build_config {
-    runtime     = "go120"
+    runtime     = "go122"
     entry_point = "Status"
     worker_pool = local.worker_pool_id
     source {
