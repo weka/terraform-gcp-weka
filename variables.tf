@@ -102,7 +102,7 @@ variable "install_weka_url" {
 variable "weka_version" {
   type        = string
   description = "Weka version"
-  default     = "4.2.9.28"
+  default     = "4.2.10"
 }
 
 variable "weka_username" {
