@@ -292,6 +292,7 @@ set_shared_vpc_peering = true
 | <a name="input_host_project"></a> [host\_project](#input\_host\_project) | The ID of the project that will serve as a Shared VPC host project | `string` | `""` | no |
 | <a name="input_host_shared_range"></a> [host\_shared\_range](#input\_host\_shared\_range) | List of host range to allow sg | `list(string)` | `[]` | no |
 | <a name="input_hotspare"></a> [hotspare](#input\_hotspare) | Hot-spare value. | `number` | `1` | no |
+| <a name="input_install_cluster_dpdk"></a> [install\_cluster\_dpdk](#input\_install\_cluster\_dpdk) | Install weka cluster with DPDK | `bool` | `true` | no |
 | <a name="input_install_weka_url"></a> [install\_weka\_url](#input\_install\_weka\_url) | Path to weka installation tar object | `string` | `""` | no |
 | <a name="input_machine_type"></a> [machine\_type](#input\_machine\_type) | Weka cluster backends machines type | `string` | `"c2-standard-8"` | no |
 | <a name="input_mtu_size"></a> [mtu\_size](#input\_mtu\_size) | mtu size | `number` | `8896` | no |
