@@ -54,6 +54,7 @@ func GetDeployScript(
 	computeContainerNum,
 	frontendContainerNum,
 	driveContainerNum int,
+	installDpdk bool,
 	gateways []string,
 ) (bashScript string, err error) {
 	state, err := common.GetClusterState(ctx, bucket)
@@ -81,7 +82,7 @@ func GetDeployScript(
 			WekaInstallUrl: installUrl,
 			WekaToken:      token,
 			NicsNum:        nicsNum,
-			InstallDpdk:    true,
+			InstallDpdk:    installDpdk,
 			Gateways:       gateways,
 			ProxyUrl:       proxyUrl,
 		}
@@ -123,7 +124,7 @@ func GetDeployScript(
 			WekaUsername:   creds.Username,
 			WekaPassword:   creds.Password,
 			IPs:            ips,
-			InstallDpdk:    true,
+			InstallDpdk:    installDpdk,
 			InstanceParams: instanceParams,
 			Gateways:       gateways,
 			ProxyUrl:       proxyUrl,

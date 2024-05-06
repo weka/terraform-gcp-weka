@@ -81,6 +81,7 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       NICS_NUM : local.nics_number
       CLUSTER_NAME : var.cluster_name
       PREFIX : var.prefix
+      INSTALL_DPDK : var.install_cluster_dpdk
       PROTECTION_LEVEL : var.protection_level
       STRIPE_WIDTH : var.stripe_width != -1 ? var.stripe_width : local.stripe_width
       HOTSPARE : var.hotspare
