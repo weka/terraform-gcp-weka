@@ -656,3 +656,9 @@ variable "shared_vpc_project_id" {
   type        = string
   default     = ""
 }
+
+variable "install_cluster_dpdk" {
+  type        = bool
+  default     = true
+  description = "Install weka cluster with DPDK"
+}

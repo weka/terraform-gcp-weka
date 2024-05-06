@@ -117,6 +117,7 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 	functionRootUrl := fmt.Sprintf("https://%s", r.Host)
 	smbwEnabled, _ := strconv.ParseBool(os.Getenv("SMBW_ENABLED"))
 	wekaHomeUrl := os.Getenv("WEKA_HOME_URL")
+	installDpdk, _ := strconv.ParseBool(os.Getenv("INSTALL_DPDK"))
 	addFrontend := false
 	if addFrontendNum > 0 {
 		addFrontend = true
@@ -161,6 +162,7 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 			},
 			AddFrontend: addFrontend,
 			WekaHomeUrl: wekaHomeUrl,
+			InstallDpdk: installDpdk,
 		},
 		Obs: protocol.ObsParams{
 			Name:              obsName,
@@ -212,6 +214,7 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 	proxyUrl := os.Getenv("PROXY_URL")
 	nicsNumStr := os.Getenv("NICS_NUM")
 	diskName := os.Getenv("DISK_NAME")
+	installDpdk, _ := strconv.ParseBool(os.Getenv("INSTALL_DPDK"))
 
 	functionRootUrl := fmt.Sprintf("https://%s", r.Host)
 
@@ -244,6 +247,7 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 		computeContainerNum,
 		frontendContainerNum,
 		driveContainerNum,
+		installDpdk,
 		gateways,
 	)
 	if err != nil {
