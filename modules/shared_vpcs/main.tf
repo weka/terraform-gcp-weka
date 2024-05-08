@@ -52,7 +52,7 @@ data "google_compute_network" "vpc_list_ids" {
 
 resource "google_compute_firewall" "sg_private" {
   count         = var.set_shared_vpc_peering ? length(var.vpcs_name) : 0
-  name          = "${var.prefix}-shared-sg-ingress-all-${count.index}"
+  name          = "${var.prefix}-shared-${var.peering_name}-sg-ingress-all-${count.index}-test"
   project       = var.project_id
   direction     = "INGRESS"
   network       = data.google_compute_network.vpc_list_ids[count.index].id
@@ -70,7 +70,7 @@ resource "google_compute_firewall" "sg_private" {
 
 resource "google_compute_firewall" "sg_private_egress" {
   count              = var.set_shared_vpc_peering ? length(var.vpcs_name) : 0
-  name               = "${var.prefix}-shared-sg-egress-all-${count.index}"
+  name               = "${var.prefix}-shared-${var.peering_name}-sg-egress-all-${count.index}-test"
   project            = var.project_id
   direction          = "EGRESS"
   network            = data.google_compute_network.vpc_list_ids[count.index].id
