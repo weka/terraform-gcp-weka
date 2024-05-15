@@ -63,7 +63,7 @@ func CreateInstance(ctx context.Context, project, zone, template, instanceName, 
 	EOL
 	fi
 
-	sudo yum install -y jq
+	sudo yum install -y jq || echo "Failed to install jq" && exit 1
 
 	gcloud config set functions/gen2 true
 
@@ -74,8 +74,10 @@ func CreateInstance(ctx context.Context, project, zone, template, instanceName, 
 		gcloud --quiet compute instances delete $instance_name --zone=$zone
 	}
 
+	echo "Generating weka deploy script..."
 	curl "$function_url?action=deploy" --fail -H "Authorization:bearer $(gcloud auth print-identity-token)" -d "{\"vm\": \"$instance_name\"}" > /tmp/deploy.sh
 	chmod +x /tmp/deploy.sh
+	echo "Running weka deploy script..."
 	(/tmp/deploy.sh 2>&1 | tee /tmp/weka_deploy.log) || self_deleting || shutdown -P
 	`
 	startUpScript = fmt.Sprintf(startUpScript, instanceName, functionRootUrl, yumRepoServer, proxyUrl)
