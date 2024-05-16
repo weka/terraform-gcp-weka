@@ -63,7 +63,7 @@ func CreateInstance(ctx context.Context, project, zone, template, instanceName, 
 	EOL
 	fi
 
-	sudo yum install -y jq || echo "Failed to install jq" && exit 1
+	sudo yum install -y jq || (echo "Failed to install jq" && exit 1)
 
 	gcloud config set functions/gen2 true
 
