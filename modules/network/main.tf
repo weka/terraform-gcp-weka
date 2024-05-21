@@ -154,7 +154,7 @@ resource "google_compute_firewall" "sg_weka_api" {
 }
 
 resource "google_compute_firewall" "sg_private" {
-  count         = length(var.subnets) == 0 ? length(local.vpcs_name) : 0
+  count         = length(var.subnets) == 0 ? length(var.subnets_range) : length(var.subnets)
   name          = "${var.prefix}-sg-all-${count.index}"
   project       = local.network_project_id
   network       = local.vpcs_name[count.index]
