@@ -17,7 +17,7 @@ locals {
     all_gateways                 = join(" ", data.google_compute_subnetwork.this.*.gateway_address)
     frontend_container_cores_num = var.frontend_container_cores_num
     backend_lb_ip                = var.backend_lb_ip
-    mount_clients_dpdk           = var.clients_use_dpdk
+    clients_use_dpdk             = var.clients_use_dpdk
     dpdk_base_memory_mb          = try(var.instance_config_overrides[var.machine_type].dpdk_base_memory_mb, 0)
   })
 

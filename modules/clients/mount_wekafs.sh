@@ -92,7 +92,7 @@ function retry {
 }
 
 mount_command="mount -t wekafs -o net=udp ${backend_lb_ip}/$FILESYSTEM_NAME $MOUNT_POINT"
-if [[ ${mount_clients_dpdk} == true ]]; then
+if [[ ${clients_use_dpdk} == true ]]; then
   mount_dpdk_base_memory_mb=""
   if [ ${dpdk_base_memory_mb} -gt 0 ]; then
       mount_dpdk_base_memory_mb="-o dpdk_base_memory_mb=${dpdk_base_memory_mb}"

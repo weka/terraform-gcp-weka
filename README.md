@@ -79,7 +79,7 @@ client_frontend_cores = DESIRED_NUM
 ### Mounting clients in udp mode
 In order to mount clients in UDP mode you should pass the following param (in addition to the above):
 ```hcl
-mount_clients_dpdk = false
+clients_use_dpdk = false
 ```
 
 ## NFS Protocol Gateways
