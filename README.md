@@ -106,6 +106,23 @@ nfs_setup_protocol                     = false
 nfs_setup_protocol = true
 ```
 
+## S3 Protocol Gateways
+<br>We support creating S3 protocol gateways that will be mounted automatically to the cluster.
+</br>
+for example:
+```hcl
+s3_protocol_gateways_number = 1
+```
+This will automatically create 1 instances.
+<br>In addition you can provide these optional variables:
+```hcl
+s3_protocol_gateway_instance_type         = "c2-standard-8"
+s3_protocol_gateway_nics_num              = 2
+s3_protocol_gateway_disk_size             = 48
+s3_protocol_gateway_frontend_cores_num    = 1
+s3_setup_protocol                         = false
+```
+
 ## SMB Protocol Gateways
 We support creating SMB protocol gateways that will be mounted automatically to the cluster.
 <br>In order to create you need to provide the number of protocol gateways instances you want (by default the number is 0),

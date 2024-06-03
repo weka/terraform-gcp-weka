@@ -66,3 +66,34 @@ module "smb_protocol_gateways" {
   ssh_public_key               = local.ssh_public_key
   depends_on                   = [module.network, module.peering, module.shared_vpc_peering, time_sleep.wait_120_seconds, google_compute_forwarding_rule.google_compute_forwarding_rule, google_secret_manager_secret.secret_token, google_cloudfunctions2_function.cloud_internal_function]
 }
+
+
+module "s3_protocol_gateways" {
+  count                        = var.s3_protocol_gateways_number > 0 ? 1 : 0
+  source                       = "./modules/protocol_gateways"
+  subnets_list                 = local.subnets_name
+  zone                         = var.zone
+  project_id                   = var.project_id
+  region                       = var.region
+  source_image_id              = var.source_image_id
+  gateways_number              = var.s3_protocol_gateways_number
+  gateways_name                = "${var.prefix}-${var.cluster_name}-s3-protocol-gateway"
+  protocol                     = "S3"
+  setup_protocol               = var.s3_setup_protocol
+  secondary_ips_per_nic        = 0
+  backend_lb_ip                = google_compute_forwarding_rule.google_compute_forwarding_rule.ip_address
+  install_weka_url             = local.install_weka_url
+  machine_type                 = var.s3_protocol_gateway_machine_type
+  yum_repo_server              = var.yum_repo_server
+  sa_email                     = local.sa_email
+  assign_public_ip             = local.assign_public_ip
+  disk_size                    = var.s3_protocol_gateway_disk_size
+  frontend_container_cores_num = var.s3_protocol_gateway_fe_cores_num
+  weka_token_id                = var.get_weka_io_token != "" ? google_secret_manager_secret.secret_token[0].id : var.get_weka_io_token
+  weka_password_id             = google_secret_manager_secret.secret_weka_password.id
+  proxy_url                    = var.proxy_url
+  network_project_id           = var.network_project_id
+  vm_username                  = var.vm_username
+  ssh_public_key               = local.ssh_public_key
+  depends_on                   = [module.network, module.peering, module.shared_vpc_peering, time_sleep.wait_120_seconds, google_compute_forwarding_rule.google_compute_forwarding_rule, google_secret_manager_secret.secret_token, google_cloudfunctions2_function.cloud_internal_function]
+}
