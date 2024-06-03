@@ -6,8 +6,8 @@ import (
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
 )
 
-func JoinFinalization(ctx context.Context, project, zone, instanceGroup, instanceName string) (err error) {
-	err = common.SetDeletionProtection(ctx, project, zone, instanceName)
+func JoinFinalization(ctx context.Context, project, zone, bucket, instanceGroup, instanceName string) (err error) {
+	err = common.SetDeletionProtection(ctx, project, zone, bucket, instanceName)
 	if err != nil {
 		return
 	}

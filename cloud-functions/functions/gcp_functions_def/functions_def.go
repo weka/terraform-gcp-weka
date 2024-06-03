@@ -14,12 +14,14 @@ type GCPFuncDef struct {
 
 func NewFuncDef(rootUrl string) functions_def.FunctionDef {
 	mapping := map[functions_def.FunctionName]bool{
-		functions_def.Clusterize:              true,
-		functions_def.ClusterizeFinalizaition: true,
-		functions_def.Deploy:                  true,
-		functions_def.Report:                  true,
-		functions_def.Join:                    true,
-		functions_def.JoinFinalization:        true,
+		functions_def.Clusterize:             true,
+		functions_def.ClusterizeFinalization: true,
+		functions_def.Deploy:                 true,
+		functions_def.Report:                 true,
+		functions_def.Join:                   true,
+		functions_def.JoinFinalization:       true,
+		functions_def.Fetch:                  true,
+		functions_def.Status:                 true,
 	}
 	return &GCPFuncDef{supportedActions: mapping, rootUrl: rootUrl}
 }

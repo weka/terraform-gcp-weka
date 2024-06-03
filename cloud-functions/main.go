@@ -130,10 +130,8 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var d struct {
-		Vm string `json:"vm"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
+	var vm protocol.Vm
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		failedDecodingReqBody(w, err)
 		return
 	}
@@ -147,14 +145,14 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 		UsernameId: usernameId,
 		PasswordId: passwordId,
 		Bucket:     bucket,
-		VmName:     d.Vm,
+		Vm:         vm,
 		Cluster: clusterizeCommon.ClusterParams{
-			HostsNum:    hostsNum,
-			ClusterName: clusterName,
-			Prefix:      prefix,
-			NvmesNum:    nvmesNum,
-			SetObs:      setObs,
-			SmbwEnabled: smbwEnabled,
+			ClusterizationTarget: hostsNum,
+			ClusterName:          clusterName,
+			Prefix:               prefix,
+			NvmesNum:             nvmesNum,
+			SetObs:               setObs,
+			SmbwEnabled:          smbwEnabled,
 			DataProtection: clusterizeCommon.DataProtectionParams{
 				StripeWidth:     stripeWidth,
 				ProtectionLevel: protectionLevel,
@@ -228,28 +226,29 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
-	bashScript, err := deploy.GetDeployScript(
-		ctx,
-		project,
-		zone,
-		instanceGroup,
-		usernameId,
-		passwordId,
-		tokenId,
-		bucket,
-		d.Vm,
-		nicsNumStr,
-		computeMemory,
-		installUrl,
-		proxyUrl,
-		functionRootUrl,
-		diskName,
-		computeContainerNum,
-		frontendContainerNum,
-		driveContainerNum,
-		installDpdk,
-		gateways,
-	)
+	params := deploy.GCPDeploymentParams{
+		Project:              project,
+		Zone:                 zone,
+		InstanceGroup:        instanceGroup,
+		UsernameId:           usernameId,
+		PasswordId:           passwordId,
+		TokenId:              tokenId,
+		Bucket:               bucket,
+		InstanceName:         d.Vm,
+		NicsNumStr:           nicsNumStr,
+		ComputeMemory:        computeMemory,
+		InstallUrl:           installUrl,
+		ProxyUrl:             proxyUrl,
+		FunctionRootUrl:      functionRootUrl,
+		DiskName:             diskName,
+		ComputeContainerNum:  computeContainerNum,
+		FrontendContainerNum: frontendContainerNum,
+		DriveContainerNum:    driveContainerNum,
+		InstallDpdk:          installDpdk,
+		Gateways:             gateways,
+	}
+
+	bashScript, err := deploy.GetDeployScript(ctx, params)
 	if err != nil {
 		log.Error().Err(err).Send()
 		respondWithErr(w, err, http.StatusBadRequest)
@@ -401,6 +400,7 @@ func JoinFinalization(w http.ResponseWriter, r *http.Request) {
 	project := os.Getenv("PROJECT")
 	zone := os.Getenv("ZONE")
 	instanceGroup := os.Getenv("INSTANCE_GROUP")
+	bucket := os.Getenv("BUCKET")
 
 	var d struct {
 		Name string `json:"name"`
@@ -411,7 +411,7 @@ func JoinFinalization(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	err := join_finalization.JoinFinalization(ctx, project, zone, instanceGroup, d.Name)
+	err := join_finalization.JoinFinalization(ctx, project, zone, bucket, instanceGroup, d.Name)
 
 	if err != nil {
 		log.Error().Err(err).Send()
@@ -493,7 +493,7 @@ func Status(w http.ResponseWriter, r *http.Request) {
 	if requestBody.Type == "" || requestBody.Type == "status" {
 		clusterStatus, err = status.GetClusterStatus(ctx, project, zone, bucket, instanceGroup, usernameId, passwordId)
 	} else if requestBody.Type == "progress" {
-		clusterStatus, err = status.GetReports(ctx, bucket)
+		clusterStatus, err = status.GetReports(ctx, project, zone, bucket, instanceGroup)
 	} else {
 		clusterStatus = "Invalid status type"
 	}
