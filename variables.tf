@@ -557,6 +557,37 @@ variable "smb_domain_name" {
   default     = ""
 }
 
+############################################### s3 protocol gateways variables ###################################################
+variable "s3_protocol_gateways_number" {
+  type        = number
+  description = "The number of protocol gateway virtual machines to deploy."
+  default     = 0
+}
+
+variable "s3_protocol_gateway_machine_type" {
+  type        = string
+  description = "The protocol gateways' virtual machine type (sku) to deploy."
+  default     = "c2-standard-8"
+}
+
+variable "s3_protocol_gateway_disk_size" {
+  type        = number
+  default     = 375
+  description = "The protocol gateways' default disk size."
+}
+
+variable "s3_protocol_gateway_fe_cores_num" {
+  type        = number
+  default     = 1
+  description = "The number of frontend cores on single protocol gateway machine."
+}
+
+variable "s3_setup_protocol" {
+  type        = bool
+  description = "Config protocol, default if false"
+  default     = false
+}
+
 variable "weka_home_url" {
   type        = string
   description = "Weka Home url"

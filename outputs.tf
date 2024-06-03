@@ -77,6 +77,13 @@ EOT
   description = "Ips of SMB protocol gateways"
 }
 
+output "s3_protocol_gateways_ips" {
+  value       = var.s3_protocol_gateways_number == 0 ? null : <<EOT
+gcloud compute instances list --filter="name~'${module.s3_protocol_gateways[0].gateways_name}'" --format "get(networkInterfaces[0].${local.ips_type})" --project ${var.project_id}
+EOT
+  description = "Ips of S3 protocol gateways"
+}
+
 output "cluster_helper_commands" {
   value       = <<EOT
 ########################################## get cluster status ##########################################
