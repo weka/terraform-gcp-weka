@@ -3,7 +3,6 @@ package common
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -15,8 +14,10 @@ import (
 	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 	"cloud.google.com/go/storage"
 	"github.com/rs/zerolog/log"
-	"github.com/weka/go-cloud-lib/protocol"
 	"google.golang.org/api/iterator"
+
+	"github.com/weka/go-cloud-lib/protocol"
+	reportLib "github.com/weka/go-cloud-lib/report"
 )
 
 func GetUsernameAndPassword(ctx context.Context, usernameId, passwordId string) (clusterCreds protocol.ClusterCreds, err error) {
@@ -279,29 +280,26 @@ func GetInstancesByClusterLabel(ctx context.Context, project, zone, clusterName 
 	return
 }
 
-func addInstanceToStateInstances(client *storage.Client, ctx context.Context, bucket, newInstance string) (instancesNames []string, err error) {
+func addInstanceToStateInstances(client *storage.Client, ctx context.Context, bucket string, newInstance protocol.Vm) (state protocol.ClusterState, err error) {
 	stateHandler := client.Bucket(bucket).Object("state")
 
-	state, err := ReadState(stateHandler, ctx)
+	state, err = ReadState(stateHandler, ctx)
 	if err != nil {
 		return
 	}
 	if len(state.Instances) == state.InitialSize {
 		//This might happen if someone increases the desired number before the clusterization id done
-		err = errors.New(fmt.Sprintf("number of instances is already the initial size, not adding instance %s to state instances list", newInstance))
+		err = fmt.Errorf("number of instances is already the initial size, not adding instance %s to state instances list", newInstance)
 		log.Error().Msgf("%s", err)
 		return
 	}
 	state.Instances = append(state.Instances, newInstance)
 
 	err = WriteState(stateHandler, ctx, state)
-	if err == nil {
-		instancesNames = state.Instances
-	}
 	return
 }
 
-func AddInstanceToStateInstances(ctx context.Context, bucket, newInstance string) (instancesNames []string, err error) {
+func AddInstanceToStateInstances(ctx context.Context, bucket string, newInstance protocol.Vm) (state protocol.ClusterState, err error) {
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		log.Error().Msgf("Failed creating storage client: %s", err)
@@ -316,11 +314,50 @@ func AddInstanceToStateInstances(ctx context.Context, bucket, newInstance string
 	}
 	defer Unlock(client, ctx, bucket, id)
 
-	instancesNames, err = addInstanceToStateInstances(client, ctx, bucket, newInstance)
+	state, err = addInstanceToStateInstances(client, ctx, bucket, newInstance)
 	return
 }
 
-func SetDeletionProtection(ctx context.Context, project, zone, instanceName string) (err error) {
+func UpdateStateReporting(ctx context.Context, bucket string, report protocol.Report) (err error) {
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		log.Error().Msgf("Failed creating storage client: %s", err)
+		return
+	}
+	defer client.Close()
+
+	id, err := Lock(client, ctx, bucket)
+	for err != nil {
+		time.Sleep(1 * time.Second)
+		id, err = Lock(client, ctx, bucket)
+	}
+	defer Unlock(client, ctx, bucket, id)
+
+	stateHandler := client.Bucket(bucket).Object("state")
+	state, err := ReadState(stateHandler, ctx)
+
+	err = reportLib.UpdateReport(report, &state)
+	if err != nil {
+		err = fmt.Errorf("failed updating state report")
+		return
+	}
+	err = WriteState(stateHandler, ctx, state)
+	return
+}
+
+func ReportMsg(ctx context.Context, hostName, bucket, reportType, message string) {
+	reportObj := protocol.Report{Type: reportType, Hostname: hostName, Message: message}
+	_ = UpdateStateReporting(ctx, bucket, reportObj)
+}
+
+func GetInstancesNames(instances []protocol.Vm) (vmNames []string) {
+	for _, instance := range instances {
+		vmNames = append(vmNames, instance.Name)
+	}
+	return
+}
+
+func SetDeletionProtection(ctx context.Context, project, zone, bucket, instanceName string) (err error) {
 	log.Info().Msgf("Setting deletion protection on %s", instanceName)
 
 	c, err := compute.NewInstancesRESTClient(ctx)
@@ -343,6 +380,10 @@ func SetDeletionProtection(ctx context.Context, project, zone, instanceName stri
 		log.Error().Msgf("%s", err)
 		return
 	}
+
+	msg := "Deletion protection was set successfully"
+	log.Info().Msg(msg)
+	ReportMsg(ctx, instanceName, bucket, "progress", msg)
 
 	return
 }
