@@ -18,6 +18,7 @@ import (
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/status"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/terminate"
 	clusterizeCommon "github.com/weka/go-cloud-lib/clusterize"
+	"github.com/weka/go-cloud-lib/protocol"
 	"github.com/weka/go-cloud-lib/scale_down"
 )
 
@@ -48,6 +49,10 @@ func Test_clusterize(t *testing.T) {
 	bucket := "weka-poc-wekaio-rnd-state"
 	instanceName := "weka-poc-vm-test"
 
+	vm := protocol.Vm{
+		Name: instanceName,
+	}
+
 	dataProtectionParams := clusterizeCommon.DataProtectionParams{
 		StripeWidth:     2,
 		ProtectionLevel: 2,
@@ -60,13 +65,13 @@ func Test_clusterize(t *testing.T) {
 		UsernameId: usernameId,
 		PasswordId: passwordId,
 		Bucket:     bucket,
-		VmName:     instanceName,
+		Vm:         vm,
 		Cluster: clusterizeCommon.ClusterParams{
-			HostsNum:       hostsNum,
-			ClusterName:    clusterName,
-			NvmesNum:       nvmesNumber,
-			SetObs:         false,
-			DataProtection: dataProtectionParams,
+			ClusterizationTarget: hostsNum,
+			ClusterName:          clusterName,
+			NvmesNum:             nvmesNumber,
+			SetObs:               false,
+			DataProtection:       dataProtectionParams,
 		},
 	}
 
@@ -121,27 +126,29 @@ func Test_deploy(t *testing.T) {
 	diskName := "weka-poc-disk"
 
 	ctx := context.TODO()
-	bashScript, err := deploy.GetDeployScript(
-		ctx,
-		project,
-		zone,
-		instanceGroup,
-		usernameId,
-		passwordId,
-		tokenId,
-		bucket,
-		instanceName,
-		nicNum,
-		computeMemory,
-		installUrl,
-		"",
-		functionRootUrl,
-		diskName,
-		computeContainerNum,
-		frontendContainerNum,
-		driveContainerNum,
-		gws,
-	)
+
+	params := deploy.GCPDeploymentParams{
+		Project:              project,
+		Zone:                 zone,
+		InstanceGroup:        instanceGroup,
+		UsernameId:           usernameId,
+		PasswordId:           passwordId,
+		TokenId:              tokenId,
+		Bucket:               bucket,
+		InstanceName:         instanceName,
+		NicsNumStr:           nicNum,
+		ComputeMemory:        computeMemory,
+		InstallUrl:           installUrl,
+		ProxyUrl:             "",
+		FunctionRootUrl:      functionRootUrl,
+		DiskName:             diskName,
+		ComputeContainerNum:  computeContainerNum,
+		FrontendContainerNum: frontendContainerNum,
+		DriveContainerNum:    driveContainerNum,
+		Gateways:             gws,
+	}
+
+	bashScript, err := deploy.GetDeployScript(ctx, params)
 	if err != nil {
 		t.Logf("Generating deploy scripts failed: %s", err)
 	} else {

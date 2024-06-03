@@ -3,9 +3,11 @@ package status
 import (
 	"context"
 	"encoding/json"
-	"github.com/weka/go-cloud-lib/logging"
 	"math/rand"
 	"time"
+
+	cloudLibCommon "github.com/weka/go-cloud-lib/common"
+	"github.com/weka/go-cloud-lib/logging"
 
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
 	"github.com/weka/go-cloud-lib/connectors"
@@ -14,7 +16,7 @@ import (
 	"github.com/weka/go-cloud-lib/protocol"
 )
 
-func GetReports(ctx context.Context, bucket string) (reports protocol.Reports, err error) {
+func GetReports(ctx context.Context, project, zone, bucket, instanceGroup string) (reports protocol.Reports, err error) {
 	logger := logging.LoggerFromCtx(ctx)
 	logger.Info().Msg("fetching cluster status...")
 
@@ -22,10 +24,46 @@ func GetReports(ctx context.Context, bucket string) (reports protocol.Reports, e
 	if err != nil {
 		return
 	}
-	reports.ReadyForClusterization = state.Instances
+	reports.ReadyForClusterization = common.GetInstancesNames(state.Instances)
 	reports.Progress = state.Progress
 	reports.Errors = state.Errors
 
+	clusterizationInstance := ""
+	if len(state.Instances) >= state.ClusterizationTarget {
+		clusterizationInstance = state.Instances[state.ClusterizationTarget-1].Name
+	}
+
+	progressInstancesNames := make([]string, 0, len(state.Progress))
+	for instance := range state.Progress {
+		progressInstancesNames = append(progressInstancesNames, instance)
+	}
+
+	var inProgress []string
+
+	if !state.Clusterized {
+		aliveInProgressInstances, err := common.GetInstances(ctx, project, zone, progressInstancesNames)
+		if err != nil {
+			return reports, err
+		}
+
+		for _, instance := range aliveInProgressInstances {
+			if !cloudLibCommon.IsItemInList(*instance.Name, reports.ReadyForClusterization) {
+				inProgress = append(inProgress, *instance.Name)
+			}
+		}
+	}
+
+	reports.InProgress = inProgress
+
+	summary := protocol.ClusterizationStatusSummary{
+		ReadyForClusterization: len(state.Instances),
+		InProgress:             len(inProgress),
+		ClusterizationInstance: clusterizationInstance,
+		ClusterizationTarget:   state.ClusterizationTarget,
+		Clusterized:            state.Clusterized,
+	}
+
+	reports.Summary = summary
 	return
 }
 
