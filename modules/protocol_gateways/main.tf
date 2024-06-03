@@ -23,7 +23,6 @@ locals {
     frontend_container_cores_num = var.frontend_container_cores_num
     subnet_prefixes              = join(" ", data.google_compute_subnetwork.this.*.ip_cidr_range)
     backend_lb_ip                = var.backend_lb_ip
-    weka_token_id                = var.weka_token_id
     weka_password_id             = var.weka_password_id
   })
 
@@ -42,13 +41,22 @@ locals {
     frontend_cores_num = var.frontend_container_cores_num
   })
 
-  protocol_script = var.protocol == "NFS" ? local.setup_nfs_protocol_script : local.setup_smb_protocol_script
+  setup_s3_protocol_script = file("${path.module}/setup_s3.sh")
 
-  setup_protocol_script = var.setup_protocol ? local.protocol_script : ""
+  setup_validation_script = templatefile("${path.module}/setup_validation.sh", {
+    gateways_number = var.gateways_number
+    gateways_name   = var.gateways_name
+  })
 
-  custom_data_parts = [
-    local.init_script, local.deploy_script, local.setup_protocol_script
-  ]
+  nfs_protocol_script = var.protocol == "NFS" ? local.setup_nfs_protocol_script : ""
+  smb_protocol_script = var.protocol == "SMB" ? local.setup_smb_protocol_script : ""
+  s3_protocol_script  = var.protocol == "S3" ? local.setup_s3_protocol_script : ""
+  validation_script   = var.setup_protocol && (var.protocol == "SMB" || var.protocol == "S3") ? local.setup_validation_script : ""
+
+  setup_protocol_script = var.setup_protocol ? compact([local.nfs_protocol_script, local.smb_protocol_script, local.s3_protocol_script]) : []
+
+  custom_data_parts = concat([local.init_script, local.deploy_script, local.validation_script], local.setup_protocol_script)
+
   custom_data = join("\n", local.custom_data_parts)
 }
 
@@ -122,7 +130,7 @@ resource "google_compute_instance_template" "this" {
   lifecycle {
     ignore_changes = [network_interface]
     precondition {
-      condition     = var.protocol == "NFS" ? var.gateways_number >= 1 : var.gateways_number >= 3 && var.gateways_number <= 8
+      condition     = var.protocol == "NFS" || var.protocol == "S3" ? var.gateways_number >= 1 : var.gateways_number >= 3 && var.gateways_number <= 8
       error_message = "The amount of protocol gateways should be at least 1 for NFS and at least 3 and at most 8 for SMB."
     }
     precondition {
