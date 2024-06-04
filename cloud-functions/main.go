@@ -182,7 +182,8 @@ func Fetch(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	hostGroupInfoResponse, err := fetch.GetFetchDataParams(ctx, project, zone, instanceGroup, bucket, usernameId, passwordId)
-	log.Debug().Msgf("result: %#v", hostGroupInfoResponse)
+
+	log.Debug().Msgf("result: %#v", hostGroupInfoResponse.WithHiddenPassword())
 	if err != nil {
 		log.Error().Err(err).Send()
 		respondWithErr(w, err, http.StatusBadRequest)
@@ -265,7 +266,7 @@ func ScaleDown(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "Failed decoding request body")
 		return
 	}
-	log.Debug().Msgf("input: %#v", info)
+	log.Debug().Msgf("input: %#v", info.WithHiddenPassword())
 
 	scaleResponse, err := scale_down.ScaleDown(ctx, info)
 	log.Debug().Msgf("result: %#v", scaleResponse)

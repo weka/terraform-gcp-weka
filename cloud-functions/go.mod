@@ -8,7 +8,7 @@ require (
 	cloud.google.com/go/storage v1.30.1
 	github.com/lithammer/dedent v1.1.0
 	github.com/rs/zerolog v1.29.1
-	github.com/weka/go-cloud-lib v0.0.0-20240527201824-8f28ede2b64e
+	github.com/weka/go-cloud-lib v0.0.0-20240604085853-8b99ebcd400c
 	google.golang.org/api v0.121.0
 	google.golang.org/protobuf v1.33.0
 )
