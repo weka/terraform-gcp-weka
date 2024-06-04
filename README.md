@@ -60,7 +60,7 @@ In order to setup tiering, you must provide the following variables:
 ```hcl
 tiering_enable_obs_integration = true
 tiering_obs_name               = "..."
-tiering_ssd_percent            = 20
+tiering_enable_ssd_percent     = 20
 ```
 
 ## Clients
