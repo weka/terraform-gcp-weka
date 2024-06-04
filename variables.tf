@@ -360,7 +360,7 @@ variable "tiering_enable_obs_integration" {
   description = "Determines whether to enable object stores integration with the Weka cluster. Set true to enable the integration."
 }
 
-variable "tiering_ssd_percent" {
+variable "tiering_enable_ssd_percent" {
   type        = number
   default     = 20
   description = "When OBS integration set to true , this parameter sets how much of the filesystem capacity should reside on SSD. For example, if this parameter is 20 and the total available SSD capacity is 20GB, the total capacity would be 100GB"
