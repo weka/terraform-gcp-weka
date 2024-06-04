@@ -96,6 +96,9 @@ func Clusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript s
 	clusterParams.WekaUsername = creds.Username
 	clusterParams.FindDrivesScript = dedent.Dedent(common.FindDrivesScript)
 	clusterParams.InstallDpdk = true
+	if clusterParams.NvmesNum > 8 {
+		clusterParams.PostClusterCreationScript = GetPostClusterCreationScript(p.Cluster.ClusterizationTarget)
+	}
 
 	scriptGenerator := clusterize.ClusterizeScriptGenerator{
 		Params:  clusterParams,
@@ -119,5 +122,38 @@ func GetObsScript(obsParams protocol.ObsParams) string {
 	`
 	return fmt.Sprintf(
 		dedent.Dedent(template), obsParams.TieringSsdPercent, obsParams.Name,
+	)
+}
+
+func GetPostClusterCreationScript(clusterizationTarget int) string {
+	template := `
+	DRIVE_PROCESSES=%d //UDP and DPDK
+	function wait_for_apply_completion() {
+		// wait for some process to be DOWN
+		while ! weka cluster process | grep -q DOWN; do
+			echo "Waiting for apply to start"
+			sleep 1
+		done
+
+		// while loop until all processes are UP
+		count=0
+		while [ $count -lt $DRIVE_PROCESSES ]; do
+			echo "Waiting for apply to finish"
+			sleep 1
+			count=$(weka cluster process | grep drives0 | grep UP | wc -l || true)
+		done
+	}
+
+	echo "Running disks override"
+	weka debug override add --key override_max_disks_in_node --value 32
+	weka cluster container | grep drives0 | awk '{print $1}' | xargs -IH weka cluster container dedicate H off
+	weka cluster container apply -f --all
+	wait_for_apply_completion
+	weka cluster container | grep drives0 | awk '{print $1}' | xargs -IH weka cluster container dedicate H on
+	weka cluster container apply -f --all
+	wait_for_apply_completion
+	`
+	return fmt.Sprintf(
+		dedent.Dedent(template), clusterizationTarget*2,
 	)
 }
