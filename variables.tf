@@ -60,7 +60,7 @@ variable "machine_type" {
   description = "Weka cluster backends machines type"
   default     = "c2-standard-8"
   validation {
-    condition     = contains(["c2-standard-8", "c2-standard-16"], var.machine_type)
+    condition     = contains(["c2-standard-8", "c2-standard-16", "n2-standard-8", "n2-standard-16"], var.machine_type)
     error_message = "Machine type isn't supported"
   }
 }
@@ -296,6 +296,20 @@ variable "containers_config_map" {
       frontend = 1
       nics     = 7
       memory   = ["24.2GB", "23.2GB"]
+    },
+    n2-standard-8 = {
+      compute  = 1
+      drive    = 1
+      frontend = 1
+      nics     = 4
+      memory   = ["3.1GB", "1.6GB"]
+    },
+    n2-standard-16 = {
+      compute  = 4
+      drive    = 1
+      frontend = 1
+      nics     = 7
+      memory   = ["18.9GB", "18.9GB"]
     }
   }
   validation {
