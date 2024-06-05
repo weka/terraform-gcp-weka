@@ -178,10 +178,11 @@ func Fetch(w http.ResponseWriter, r *http.Request) {
 	bucket := os.Getenv("BUCKET")
 	usernameId := os.Getenv("USER_NAME_ID")
 	passwordId := os.Getenv("PASSWORD_ID")
+	downBackendsRemovalTimeout, _ := time.ParseDuration(os.Getenv("DOWN_BACKENDS_REMOVAL_TIMEOUT"))
 
 	ctx := r.Context()
 
-	hostGroupInfoResponse, err := fetch.GetFetchDataParams(ctx, project, zone, instanceGroup, bucket, usernameId, passwordId)
+	hostGroupInfoResponse, err := fetch.GetFetchDataParams(ctx, project, zone, instanceGroup, bucket, usernameId, passwordId, downBackendsRemovalTimeout)
 
 	log.Debug().Msgf("result: %#v", hostGroupInfoResponse.WithHiddenPassword())
 	if err != nil {

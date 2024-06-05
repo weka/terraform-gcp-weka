@@ -3,15 +3,22 @@ package fetch
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
 	"github.com/weka/go-cloud-lib/protocol"
 )
 
+const defaultDownBackendsRemovalTimeout = 30 * time.Minute
+
 func GetFetchDataParams(
-	ctx context.Context, project, zone, instanceGroup, bucket, usernameId, passwordId string,
+	ctx context.Context, project, zone, instanceGroup, bucket, usernameId, passwordId string, downBackendsRemovalTimeout time.Duration,
 ) (hostGroupInfoResponse protocol.HostGroupInfoResponse, err error) {
+	if downBackendsRemovalTimeout == 0 {
+		downBackendsRemovalTimeout = defaultDownBackendsRemovalTimeout
+	}
+
 	creds, err := common.GetUsernameAndPassword(ctx, usernameId, passwordId)
 	if err != nil {
 		return
@@ -32,6 +39,7 @@ func GetFetchDataParams(
 		Password:                    creds.Password,
 		WekaBackendsDesiredCapacity: desiredCapacity,
 		WekaBackendInstances:        getHostGroupInfoInstances(instances),
+		DownBackendsRemovalTimeout:  downBackendsRemovalTimeout,
 		BackendIps:                  common.GetInstanceGroupBackendsIps(instances),
 		Role:                        "backend",
 		Version:                     1,

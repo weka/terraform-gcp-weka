@@ -662,3 +662,9 @@ variable "install_cluster_dpdk" {
   default     = true
   description = "Install weka cluster with DPDK"
 }
+
+variable "debug_down_backends_removal_timeout" {
+  type        = string
+  default     = "3h"
+  description = "Don't change this value without consulting weka support team. Timeout for removing down backends. Valid time units are ns, us (or µs), ms, s, m, h."
+}

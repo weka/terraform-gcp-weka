@@ -281,6 +281,7 @@ set_shared_vpc_peering = true
 | <a name="input_create_cloudscheduler_sa"></a> [create\_cloudscheduler\_sa](#input\_create\_cloudscheduler\_sa) | Create GCP cloudscheduler sa | `bool` | `true` | no |
 | <a name="input_create_nat_gateway"></a> [create\_nat\_gateway](#input\_create\_nat\_gateway) | NAT needs to be created when no public ip is assigned to the backend, to allow internet access | `bool` | `false` | no |
 | <a name="input_create_worker_pool"></a> [create\_worker\_pool](#input\_create\_worker\_pool) | Create worker pool | `bool` | `false` | no |
+| <a name="input_debug_down_backends_removal_timeout"></a> [debug\_down\_backends\_removal\_timeout](#input\_debug\_down\_backends\_removal\_timeout) | Don't change this value without consulting weka support team. Timeout for removing down backends. Valid time units are ns, us (or µs), ms, s, m, h. | `string` | `"3h"` | no |
 | <a name="input_default_disk_name"></a> [default\_disk\_name](#input\_default\_disk\_name) | The default disk name. | `string` | `"wekaio-volume"` | no |
 | <a name="input_default_disk_size"></a> [default\_disk\_size](#input\_default\_disk\_size) | The default disk size. | `number` | `48` | no |
 | <a name="input_dns_zone_project_id"></a> [dns\_zone\_project\_id](#input\_dns\_zone\_project\_id) | DNS zone project id. If not provided, will use the network project id. If network project id is also not provided will use the project id. | `string` | `""` | no |
