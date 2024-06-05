@@ -100,6 +100,7 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       # Weka proxy url
       PROXY_URL : var.proxy_url
       WEKA_HOME_URL : var.weka_home_url
+      DOWN_BACKENDS_REMOVAL_TIMEOUT : var.debug_down_backends_removal_timeout
     }
   }
   depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, module.peering, google_project_service.project_function_api, google_project_service.run_api, google_project_service.artifactregistry_api]
