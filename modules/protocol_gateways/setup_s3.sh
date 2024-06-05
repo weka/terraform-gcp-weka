@@ -1,8 +1,5 @@
 echo "$(date -u): running S3 script"
 
-wait_for_weka_fs || exit 1
-create_config_fs || exit 1
-
 not_ready_hosts=$(weka s3 cluster status | grep 'Not Ready' | wc -l)
 all_hosts=$(weka s3 cluster status | grep 'Host' | wc -l)
 

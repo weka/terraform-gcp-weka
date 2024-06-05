@@ -1,10 +1,5 @@
 echo "$(date -u): running smb script"
 
-if [[ ${smbw_enabled} == true ]]; then
-  wait_for_weka_fs || exit 1
-  create_config_fs || exit 1
-fi
-
 # wait for weka smb cluster to be ready in case it was created by another host
 weka smb cluster wait
 
@@ -75,4 +70,4 @@ weka smb cluster wait
 
 weka smb cluster status
 
-echo "$(date -u): SMB cluster ׳שד created successfully"
+echo "$(date -u): SMB cluster was created successfully"

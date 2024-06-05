@@ -46,6 +46,8 @@ locals {
   setup_validation_script = templatefile("${path.module}/setup_validation.sh", {
     gateways_number = var.gateways_number
     gateways_name   = var.gateways_name
+    protocol        = lower(var.protocol)
+    smbw_enabled    = var.smbw_enabled
   })
 
   nfs_protocol_script = var.protocol == "NFS" ? local.setup_nfs_protocol_script : ""

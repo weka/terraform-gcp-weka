@@ -107,4 +107,9 @@ if (( retry > max_retries )); then
     exit 1
 fi
 
+if [[ ${smbw_enabled} == true || ${protocol} == "s3" ]]; then
+    wait_for_weka_fs || exit 1
+    create_config_fs || exit 1
+fi
+
 echo "$(date -u): Done running validation"
