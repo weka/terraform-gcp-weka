@@ -120,10 +120,9 @@ This will automatically create 3 instances.
 <br>In addition you can provide these optional variables:
 ```hcl
 smb_protocol_gateway_secondary_ips_per_nic = 3
-smb_protocol_gateway_instance_type         = "c2-standard-8"
-smb_protocol_gateway_nics_num              = 2
+smb_protocol_gateway_machine_type          = "c2-standard-8"
 smb_protocol_gateway_disk_size             = 48
-smb_protocol_gateway_frontend_cores_num    = 1
+smb_protocol_gateway_fe_cores_num          = 1
 smb_setup_protocol                         = false
 smb_cluster_name                           = ""
 smb_domain_name                            = ""
