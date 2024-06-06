@@ -64,15 +64,14 @@ func CreateInstance(ctx context.Context, project, zone, template, instanceName, 
 	fi
 
 	os=$(awk -F= '/^NAME/{print $2}' /etc/os-release)
-    if [[ "$os" = *"Rocky"* ]]; then
+	if [[ "$os" = *"Rocky"* ]]; then
 		sudo yum install -y bc
 		sudo yum install -y perl-interpreter
 		sudo curl https://dl.rockylinux.org/vault/rocky/8.9/Devel/x86_64/os/Packages/k/kernel-devel-4.18.0-513.24.1.el8_9.x86_64.rpm --output kernel-devel-4.18.0-513.24.1.el8_9.x86_64.rpm
 		sudo rpm -i kernel-devel-4.18.0-513.24.1.el8_9.x86_64.rpm
 	fi
 
-    sudo yum install -y jq || (echo "Failed to install jq" && exit 1)
-
+	sudo yum install -y jq || (echo "Failed to install jq" && exit 1)
 
 	gcloud config set functions/gen2 true
 
