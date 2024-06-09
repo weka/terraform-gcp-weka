@@ -4,10 +4,9 @@ NICS_NUM=$((FRONTEND_CONTAINER_CORES_NUM+1))
 SUBNET_PREFIXES=( "${subnet_prefixes}" )
 GATEWAYS=""
 
-yum install python-ipaddress -y
 for subnet in $${SUBNET_PREFIXES[@]}
 do
-	gateway=$(python -c "import ipaddress;import sys;n = ipaddress.IPv4Network(unicode(sys.argv[1]));sys.stdout.write(n[1].compressed)" "$subnet")
+	gateway=$(python3 -c "import ipaddress;import sys;n = ipaddress.IPv4Network((sys.argv[1]));sys.stdout.write(n[1].compressed)" "$subnet")
 	GATEWAYS="$GATEWAYS $gateway"
 done
 GATEWAYS=$(echo "$GATEWAYS" | sed 's/ //')
