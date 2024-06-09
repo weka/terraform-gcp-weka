@@ -20,7 +20,7 @@ function retry_create_s3_cluster {
   count=$retry_max
   check_cluster_status
   while [ $count -gt 0 ]; do
-      weka s3 cluster create $filesystem_name .config_fs --container $all_container_ids_str --port 9000 && break
+      weka s3 cluster create $filesystem_name .config_fs --container $all_container_ids_str --tls off --port 9000 && break
       count=$(($count - 1))
       echo "Retrying create S3 cluster in $retry_sleep seconds..."
       sleep $retry_sleep
