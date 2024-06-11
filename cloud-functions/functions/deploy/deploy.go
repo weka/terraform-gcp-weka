@@ -44,6 +44,7 @@ type GCPDeploymentParams struct {
 	Bucket               string
 	InstanceName         string
 	NicsNumStr           string
+	NvmesNum             int
 	ComputeMemory        string
 	InstallUrl           string
 	ProxyUrl             string
@@ -81,14 +82,16 @@ func GetDeployScript(ctx context.Context, p GCPDeploymentParams) (bashScript str
 		}
 
 		deploymentParams := deploy.DeploymentParams{
-			VMName:         p.InstanceName,
-			InstanceParams: instanceParams,
-			WekaInstallUrl: p.InstallUrl,
-			WekaToken:      token,
-			NicsNum:        p.NicsNumStr,
-			InstallDpdk:    p.InstallDpdk,
-			Gateways:       p.Gateways,
-			ProxyUrl:       p.ProxyUrl,
+			VMName:           p.InstanceName,
+			InstanceParams:   instanceParams,
+			WekaInstallUrl:   p.InstallUrl,
+			WekaToken:        token,
+			NicsNum:          p.NicsNumStr,
+			InstallDpdk:      p.InstallDpdk,
+			Gateways:         p.Gateways,
+			ProxyUrl:         p.ProxyUrl,
+			NvmesNum:         p.NvmesNum,
+			FindDrivesScript: dedent.Dedent(common.FindDrivesScript),
 		}
 		deployScriptGenerator := deploy.DeployScriptGenerator{
 			FuncDef:       funcDef,
