@@ -69,10 +69,10 @@ func Test_clusterize(t *testing.T) {
 		Cluster: clusterizeCommon.ClusterParams{
 			ClusterizationTarget: hostsNum,
 			ClusterName:          clusterName,
-			NvmesNum:             nvmesNumber,
 			SetObs:               false,
 			DataProtection:       dataProtectionParams,
 		},
+		NvmesNum: nvmesNumber,
 	}
 
 	ctx := context.TODO()
