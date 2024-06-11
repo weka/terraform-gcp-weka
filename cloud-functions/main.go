@@ -150,7 +150,6 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 			ClusterizationTarget: hostsNum,
 			ClusterName:          clusterName,
 			Prefix:               prefix,
-			NvmesNum:             nvmesNum,
 			SetObs:               setObs,
 			SmbwEnabled:          smbwEnabled,
 			DataProtection: clusterizeCommon.DataProtectionParams{
@@ -167,6 +166,7 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 			TieringSsdPercent: tieringSsdPercent,
 		},
 		CloudFuncRootUrl: functionRootUrl,
+		NvmesNum:         nvmesNum,
 	}
 	fmt.Fprint(w, clusterize.Clusterize(ctx, params))
 }
@@ -213,6 +213,7 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 	installUrl := os.Getenv("INSTALL_URL")
 	proxyUrl := os.Getenv("PROXY_URL")
 	nicsNumStr := os.Getenv("NICS_NUM")
+	nvmesNum, _ := strconv.Atoi(os.Getenv("NVMES_NUM"))
 	diskName := os.Getenv("DISK_NAME")
 	installDpdk, _ := strconv.ParseBool(os.Getenv("INSTALL_DPDK"))
 
@@ -238,6 +239,7 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 		Bucket:               bucket,
 		InstanceName:         d.Vm,
 		NicsNumStr:           nicsNumStr,
+		NvmesNum:             nvmesNum,
 		ComputeMemory:        computeMemory,
 		InstallUrl:           installUrl,
 		ProxyUrl:             proxyUrl,

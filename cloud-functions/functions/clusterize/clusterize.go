@@ -29,6 +29,7 @@ type ClusterizationParams struct {
 	Obs        protocol.ObsParams
 	// root url for cloud function calls' definitions
 	CloudFuncRootUrl string
+	NvmesNum         int
 }
 
 func Clusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript string) {
@@ -96,7 +97,7 @@ func Clusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript s
 	clusterParams.WekaUsername = creds.Username
 	clusterParams.FindDrivesScript = dedent.Dedent(common.FindDrivesScript)
 	clusterParams.InstallDpdk = true
-	if clusterParams.NvmesNum > 8 {
+	if p.NvmesNum > 8 {
 		clusterParams.PostClusterCreationScript = GetPostClusterCreationScript(p.Cluster.ClusterizationTarget)
 	}
 
