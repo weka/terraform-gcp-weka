@@ -2,7 +2,6 @@ package report
 
 import (
 	"context"
-	"time"
 
 	"cloud.google.com/go/storage"
 	"github.com/rs/zerolog/log"
@@ -12,23 +11,19 @@ import (
 )
 
 func Report(ctx context.Context, report protocol.Report, bucket string) (err error) {
-	log.Info().Msgf("Updating state %s with %s", report.Type, report.Message)
+	log.Debug().Msgf("Updating state %s with %s", report.Type, report.Message)
+
 	client, err := storage.NewClient(ctx)
 	if err != nil {
-		log.Error().Msgf("Failed creating storage client: %s", err)
+		log.Error().Err(err).Msg("Failed creating storage client")
 		return
 	}
 	defer client.Close()
 
-	id, err := common.Lock(client, ctx, bucket)
-	for err != nil {
-		time.Sleep(1 * time.Second)
-		id, err = common.Lock(client, ctx, bucket)
-	}
-	defer common.Unlock(client, ctx, bucket, id)
+	id, err := common.LockBucket(ctx, client, bucket)
+	defer common.UnlockBucket(ctx, client, bucket, id)
 
 	stateHandler := client.Bucket(bucket).Object("state")
-
 	state, err := common.ReadState(stateHandler, ctx)
 	if err != nil {
 		return
@@ -39,6 +34,6 @@ func Report(ctx context.Context, report protocol.Report, bucket string) (err err
 		return
 	}
 
-	err = common.WriteState(stateHandler, ctx, state)
+	err = common.RetryWriteState(stateHandler, ctx, state)
 	return
 }

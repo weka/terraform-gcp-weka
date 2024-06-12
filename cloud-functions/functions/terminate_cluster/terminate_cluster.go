@@ -11,7 +11,7 @@ import (
 func DeleteStateObject(ctx context.Context, bucket string) (err error) {
 	client, err := storage.NewClient(ctx)
 	if err != nil {
-		log.Error().Msgf("Failed creating storage client: %s", err)
+		log.Error().Err(err).Msg("Failed creating storage client")
 		return
 	}
 	defer client.Close()
