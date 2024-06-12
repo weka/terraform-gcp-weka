@@ -3,7 +3,6 @@ package resize
 import (
 	"context"
 	"errors"
-	"time"
 
 	"cloud.google.com/go/storage"
 	"github.com/rs/zerolog/log"
@@ -11,19 +10,17 @@ import (
 )
 
 func UpdateValue(ctx context.Context, bucket string, newDesiredSize int) (err error) {
+	log.Debug().Msgf("Updating desired size to %d", newDesiredSize)
+
 	client, err := storage.NewClient(ctx)
 	if err != nil {
-		log.Error().Msgf("Failed creating storage client: %s", err)
+		log.Error().Err(err).Msg("Failed creating storage client")
 		return
 	}
 	defer client.Close()
 
-	id, err := common.Lock(client, ctx, bucket)
-	for err != nil {
-		time.Sleep(1 * time.Second)
-		id, err = common.Lock(client, ctx, bucket)
-	}
-	defer common.Unlock(client, ctx, bucket, id)
+	id, err := common.LockBucket(ctx, client, bucket)
+	defer common.UnlockBucket(ctx, client, bucket, id)
 
 	err = updateDesiredSize(client, ctx, bucket, newDesiredSize)
 	return
@@ -31,7 +28,6 @@ func UpdateValue(ctx context.Context, bucket string, newDesiredSize int) (err er
 
 func updateDesiredSize(client *storage.Client, ctx context.Context, bucket string, desiredSize int) (err error) {
 	stateHandler := client.Bucket(bucket).Object("state")
-
 	state, err := common.ReadState(stateHandler, ctx)
 	if err != nil {
 		return
@@ -43,6 +39,6 @@ func updateDesiredSize(client *storage.Client, ctx context.Context, bucket strin
 	}
 
 	state.DesiredSize = desiredSize
-	err = common.WriteState(stateHandler, ctx, state)
+	err = common.RetryWriteState(stateHandler, ctx, state)
 	return
 }
