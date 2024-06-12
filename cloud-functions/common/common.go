@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"strconv"
 	"strings"
 	"time"
@@ -14,18 +13,13 @@ import (
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 	"cloud.google.com/go/storage"
+	"github.com/googleapis/gax-go/v2"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/api/iterator"
 
 	"github.com/weka/go-cloud-lib/protocol"
 	reportLib "github.com/weka/go-cloud-lib/report"
 )
-
-var RateLimitSleepTime = time.Duration(rand.Intn(1000)) * time.Millisecond * 2
-
-func IsRateLimitError(err error) bool {
-	return strings.HasSuffix(err.Error(), "rateLimitExceeded") || strings.Contains(err.Error(), "Error 429")
-}
 
 func GetUsernameAndPassword(ctx context.Context, usernameId, passwordId string) (clusterCreds protocol.ClusterCreds, err error) {
 	client, err := secretmanager.NewClient(ctx)
@@ -194,19 +188,17 @@ func ReadState(stateHandler *storage.ObjectHandle, ctx context.Context) (state p
 	return
 }
 
-// NOTE: this function should be used only when the state is already locked
 func RetryWriteState(stateHandler *storage.ObjectHandle, ctx context.Context, state protocol.ClusterState) (err error) {
-	err = WriteState(stateHandler, ctx, state)
-	if err != nil && IsRateLimitError(err) {
-		log.Debug().Err(err).Msg("Rate limit exceeded, retrying")
+	// See https://cloud.google.com/storage/docs/samples/storage-configure-retries#storage_configure_retries-go
+	stateHandler = stateHandler.Retryer(
+		storage.WithBackoff(gax.Backoff{
+			Initial:    700 * time.Millisecond,
+			Max:        10 * time.Second, // maximum retry delay
+			Multiplier: 1.5,              // backoff multiplier
+		}),
+		storage.WithPolicy(storage.RetryAlways), // all requests are retried
+	)
 
-		time.Sleep(RateLimitSleepTime)
-		err = WriteState(stateHandler, ctx, state)
-	}
-	return
-}
-
-func WriteState(stateHandler *storage.ObjectHandle, ctx context.Context, state protocol.ClusterState) (err error) {
 	writer := stateHandler.NewWriter(ctx)
 	writer.ContentType = "application/json"
 

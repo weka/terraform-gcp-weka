@@ -6,6 +6,7 @@ require (
 	cloud.google.com/go/compute v1.19.1
 	cloud.google.com/go/secretmanager v1.10.0
 	cloud.google.com/go/storage v1.30.1
+	github.com/googleapis/gax-go/v2 v2.8.0
 	github.com/lithammer/dedent v1.1.0
 	github.com/rs/zerolog v1.29.1
 	github.com/weka/go-cloud-lib v0.0.0-20240605122357-6147fdd2a570
@@ -23,7 +24,6 @@ require (
 	github.com/google/s2a-go v0.1.3 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
-	github.com/googleapis/gax-go/v2 v2.8.0 // indirect
 	github.com/justinas/alice v1.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
