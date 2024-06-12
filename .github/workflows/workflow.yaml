@@ -16,6 +16,7 @@ concurrency: ci
 jobs:
   terraform:
     name: Terraform
+    if: false
     runs-on: ubuntu-latest
     defaults:
       run:
