@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"strconv"
 	"strings"
 	"time"
@@ -19,6 +20,12 @@ import (
 	"github.com/weka/go-cloud-lib/protocol"
 	reportLib "github.com/weka/go-cloud-lib/report"
 )
+
+var RateLimitSleepTime = time.Duration(rand.Intn(1000)) * time.Millisecond * 2
+
+func IsRateLimitError(err error) bool {
+	return strings.HasSuffix(err.Error(), "rateLimitExceeded") || strings.Contains(err.Error(), "Error 429")
+}
 
 func GetUsernameAndPassword(ctx context.Context, usernameId, passwordId string) (clusterCreds protocol.ClusterCreds, err error) {
 	client, err := secretmanager.NewClient(ctx)
@@ -187,6 +194,18 @@ func ReadState(stateHandler *storage.ObjectHandle, ctx context.Context) (state p
 	return
 }
 
+// NOTE: this function should be used only when the state is already locked
+func RetryWriteState(stateHandler *storage.ObjectHandle, ctx context.Context, state protocol.ClusterState) (err error) {
+	err = WriteState(stateHandler, ctx, state)
+	if err != nil && IsRateLimitError(err) {
+		log.Debug().Err(err).Msg("Rate limit exceeded, retrying")
+
+		time.Sleep(RateLimitSleepTime)
+		err = WriteState(stateHandler, ctx, state)
+	}
+	return
+}
+
 func WriteState(stateHandler *storage.ObjectHandle, ctx context.Context, state protocol.ClusterState) (err error) {
 	writer := stateHandler.NewWriter(ctx)
 	writer.ContentType = "application/json"
@@ -203,6 +222,8 @@ func WriteState(stateHandler *storage.ObjectHandle, ctx context.Context, state p
 	}
 	err = writer.Close()
 	if err != nil {
+		// Possible error (rate limit exceeded):
+		// Failed closing object writer: googleapi: Error 429: The object <path-to-obj> exceeded the rate limit for object mutation operations (create, update, and delete). Please reduce your request rate. See https://cloud.google.com/storage/docs/gcs429., rateLimitExceeded
 		log.Error().Msgf("Failed closing object writer: %s", err)
 	}
 	return
@@ -211,7 +232,7 @@ func WriteState(stateHandler *storage.ObjectHandle, ctx context.Context, state p
 func GetClusterState(ctx context.Context, bucket string) (state protocol.ClusterState, err error) {
 	client, err := storage.NewClient(ctx)
 	if err != nil {
-		log.Error().Msgf("Failed creating storage client: %s", err)
+		log.Error().Err(err).Msg("Failed creating storage client")
 		return
 	}
 	defer client.Close()
@@ -228,24 +249,22 @@ func GetClusterState(ctx context.Context, bucket string) (state protocol.Cluster
 	return
 }
 
-func UpdateClusterState(ctx context.Context, bucket string, state protocol.ClusterState) (err error) {
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		log.Error().Msgf("Failed creating storage client: %s", err)
-		return
-	}
-	defer client.Close()
-
-	id, err := Lock(client, ctx, bucket)
+func LockBucket(ctx context.Context, client *storage.Client, bucket string) (id string, err error) {
+	id, err = Lock(client, ctx, bucket)
 	for err != nil {
+		log.Debug().Str("bucket", bucket).Msgf("Failed locking bucket, retrying")
+
 		time.Sleep(1 * time.Second)
 		id, err = Lock(client, ctx, bucket)
 	}
-	defer Unlock(client, ctx, bucket, id)
+	return
+}
 
-	stateHandler := client.Bucket(bucket).Object("state")
-
-	err = WriteState(stateHandler, ctx, state)
+func UnlockBucket(ctx context.Context, client *storage.Client, bucket, id string) (err error) {
+	err = Unlock(client, ctx, bucket, id)
+	if err != nil {
+		log.Error().Err(err).Str("bucket", bucket).Msg("Failed unlocking bucket")
+	}
 	return
 }
 
@@ -295,24 +314,20 @@ func addInstanceToStateInstances(client *storage.Client, ctx context.Context, bu
 	}
 	state.Instances = append(state.Instances, newInstance)
 
-	err = WriteState(stateHandler, ctx, state)
+	err = RetryWriteState(stateHandler, ctx, state)
 	return
 }
 
 func AddInstanceToStateInstances(ctx context.Context, bucket string, newInstance protocol.Vm) (state protocol.ClusterState, err error) {
 	client, err := storage.NewClient(ctx)
 	if err != nil {
-		log.Error().Msgf("Failed creating storage client: %s", err)
+		log.Error().Err(err).Msg("Failed creating storage client")
 		return
 	}
 	defer client.Close()
 
-	id, err := Lock(client, ctx, bucket)
-	for err != nil {
-		time.Sleep(1 * time.Second)
-		id, err = Lock(client, ctx, bucket)
-	}
-	defer Unlock(client, ctx, bucket, id)
+	id, err := LockBucket(ctx, client, bucket)
+	defer UnlockBucket(ctx, client, bucket, id)
 
 	state, err = addInstanceToStateInstances(client, ctx, bucket, newInstance)
 	return
@@ -321,17 +336,13 @@ func AddInstanceToStateInstances(ctx context.Context, bucket string, newInstance
 func UpdateStateReporting(ctx context.Context, bucket string, report protocol.Report) (err error) {
 	client, err := storage.NewClient(ctx)
 	if err != nil {
-		log.Error().Msgf("Failed creating storage client: %s", err)
+		log.Error().Err(err).Msg("Failed creating storage client")
 		return
 	}
 	defer client.Close()
 
-	id, err := Lock(client, ctx, bucket)
-	for err != nil {
-		time.Sleep(1 * time.Second)
-		id, err = Lock(client, ctx, bucket)
-	}
-	defer Unlock(client, ctx, bucket, id)
+	id, err := LockBucket(ctx, client, bucket)
+	defer UnlockBucket(ctx, client, bucket, id)
 
 	stateHandler := client.Bucket(bucket).Object("state")
 	state, err := ReadState(stateHandler, ctx)
@@ -341,7 +352,7 @@ func UpdateStateReporting(ctx context.Context, bucket string, report protocol.Re
 		err = fmt.Errorf("failed updating state report")
 		return
 	}
-	err = WriteState(stateHandler, ctx, state)
+	err = RetryWriteState(stateHandler, ctx, state)
 	return
 }
 
