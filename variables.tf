@@ -481,7 +481,7 @@ variable "nfs_protocol_gateway_machine_type" {
 
 variable "nfs_protocol_gateway_disk_size" {
   type        = number
-  default     = 375
+  default     = 48
   description = "The protocol gateways' default disk size."
 }
 
