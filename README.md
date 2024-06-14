@@ -87,23 +87,15 @@ We support creating NFS protocol gateways that will be mounted automatically to 
 <br>In order to create you need to provide the number of protocol gateways instances you want (by default the number is 0),
 for example:
 ```hcl
-protocol_gateways_number = 2
+nfs_protocol_gateways_number = 2
 ```
 This will automatically create 2 instances.
 <br>In addition you can provide these optional variables:
 ```hcl
-protocol                               = VALUE
-protocol_gateway_secondary_ips_per_nic = 3
-protocol_gateway_instance_type         = "c2-standard-8"
-protocol_gateway_nics_num              = 2
-protocol_gateway_disk_size             = 375
-protocol_gateway_frontend_num          = 1
-nfs_setup_protocol                     = false
-```
-
-<br>In order to create stateless clients, you need to set this variable:
-```hcl
-nfs_setup_protocol = true
+nfs_protocol_gateway_machine_type  = "c2-standard-8"
+nfs_protocol_gateway_disk_size     = 48
+nfs_protocol_gateway_fe_cores_num  = 1
+nfs_setup_protocol                 = true
 ```
 
 ## S3 Protocol Gateways
@@ -116,11 +108,10 @@ s3_protocol_gateways_number = 1
 This will automatically create 1 instances.
 <br>In addition you can provide these optional variables:
 ```hcl
-s3_protocol_gateway_instance_type         = "c2-standard-8"
-s3_protocol_gateway_nics_num              = 2
-s3_protocol_gateway_disk_size             = 48
-s3_protocol_gateway_frontend_cores_num    = 1
-s3_setup_protocol                         = false
+s3_protocol_gateway_machine_type    = "c2-standard-8"
+s3_protocol_gateway_disk_size       = 48
+s3_protocol_gateway_fe_cores_num    = 1
+s3_setup_protocol                   = true
 ```
 
 ## SMB Protocol Gateways
@@ -136,29 +127,15 @@ smb_protocol_gateways_number = 3
 This will automatically create 3 instances.
 <br>In addition you can provide these optional variables:
 ```hcl
-smb_protocol_gateway_secondary_ips_per_nic = 3
-smb_protocol_gateway_machine_type          = "c2-standard-8"
-smb_protocol_gateway_disk_size             = 48
-smb_protocol_gateway_fe_cores_num          = 1
-smb_setup_protocol                         = false
-smb_cluster_name                           = ""
-smb_domain_name                            = ""
+smb_protocol_gateway_machine_type   = "c2-standard-8"
+smb_protocol_gateway_disk_size      = 48
+smb_protocol_gateway_fe_cores_num   = 1
+smb_setup_protocol                  = true
+smb_cluster_name                    = ""
+smb_domain_name                     = ""
 ```
-
-<br>In order to create stateless clients, you need to set this variable:
-```hcl
-smb_setup_protocol = true
-```
-
-<br>In order to enable SMBW, you need to set this variable:
-```hcl
-smbw_enabled = true
-```
-
 To join an SMB cluster in Active Directory, you need to manually run this command:
-
 `weka smb domain join <smb_domain_username> <smb_domain_password> [--server smb_server_name]`.
-
 
 ## Shared project
 To enable using Shared VPC.
