@@ -1,3 +1,6 @@
+data "google_client_openid_userinfo" "user" {
+}
+
 # ======================== cloud function ============================
 locals {
   function_zip_path       = "/tmp/${var.project_id}-${var.cluster_name}-cloud-functions.zip"
@@ -12,6 +15,10 @@ locals {
   cloud_internal_function_name = "${var.prefix}-${var.cluster_name}-weka-functions"
   function_ingress_settings    = var.subnet_autocreate_as_private ? "ALLOW_INTERNAL_ONLY" : "ALLOW_ALL"
   deployment_project_number    = data.google_project.project.number
+
+  user_email                             = data.google_client_openid_userinfo.user.email
+  domain_name                            = split("@", local.user_email)[1]
+  cloud_function_invoker_allowed_members = contains([local.user_email], "gserviceaccount.com") ? concat(["serviceAccount:${local.user_email}", "serviceAccount:${local.sa_email}"]) : concat(["domain:${local.domain_name}", "serviceAccount:${local.sa_email}"])
 }
 
 data "archive_file" "function_zip" {
@@ -107,11 +114,11 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
 
 # IAM entry for all users to invoke the function
 resource "google_cloudfunctions2_function_iam_member" "cloud_internal_invoker" {
+  count          = length(local.cloud_function_invoker_allowed_members)
   location       = google_cloudfunctions2_function.cloud_internal_function.location
   cloud_function = google_cloudfunctions2_function.cloud_internal_function.name
-
-  role   = "roles/cloudfunctions.invoker"
-  member = "allAuthenticatedUsers"
+  role           = "roles/cloudfunctions.invoker"
+  member         = local.cloud_function_invoker_allowed_members[count.index]
 }
 
 # ======================== scale_down ============================
@@ -146,11 +153,11 @@ resource "google_cloudfunctions2_function" "scale_down_function" {
 
 # IAM entry for all users to invoke the function
 resource "google_cloudfunctions2_function_iam_member" "weka_internal_invoker" {
-  location       = google_cloudfunctions2_function.scale_down_function.location
-  cloud_function = google_cloudfunctions2_function.scale_down_function.name
-
-  role   = "roles/cloudfunctions.invoker"
-  member = "allAuthenticatedUsers"
+  count          = length(local.cloud_function_invoker_allowed_members)
+  location       = google_cloudfunctions2_function.cloud_internal_function.location
+  cloud_function = google_cloudfunctions2_function.cloud_internal_function.name
+  role           = "roles/cloudfunctions.invoker"
+  member         = local.cloud_function_invoker_allowed_members[count.index]
 }
 
 # ======================== status ============================
@@ -194,9 +201,9 @@ resource "google_cloudfunctions2_function" "status_function" {
 
 # IAM entry for all users to invoke the function
 resource "google_cloudfunctions2_function_iam_member" "status_invoker" {
+  count          = length(local.cloud_function_invoker_allowed_members)
   location       = google_cloudfunctions2_function.status_function.location
   cloud_function = google_cloudfunctions2_function.status_function.name
-
-  role   = "roles/cloudfunctions.invoker"
-  member = "allAuthenticatedUsers"
+  role           = "roles/cloudfunctions.invoker"
+  member         = local.cloud_function_invoker_allowed_members[count.index]
 }
