@@ -115,7 +115,7 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 	tieringSsdPercent := os.Getenv("OBS_TIERING_SSD_PERCENT")
 	addFrontendNum, _ := strconv.Atoi(os.Getenv("FRONTEND_CONTAINER_CORES_NUM"))
 	functionRootUrl := fmt.Sprintf("https://%s", r.Host)
-	smbwEnabled, _ := strconv.ParseBool(os.Getenv("SMBW_ENABLED"))
+	createConfigFs, _ := strconv.ParseBool(os.Getenv("CREATE_CONFIG_FS"))
 	wekaHomeUrl := os.Getenv("WEKA_HOME_URL")
 	installDpdk, _ := strconv.ParseBool(os.Getenv("INSTALL_DPDK"))
 	addFrontend := false
@@ -151,7 +151,7 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 			ClusterName:          clusterName,
 			Prefix:               prefix,
 			SetObs:               setObs,
-			SmbwEnabled:          smbwEnabled,
+			CreateConfigFs:       createConfigFs,
 			DataProtection: clusterizeCommon.DataProtectionParams{
 				StripeWidth:     stripeWidth,
 				ProtectionLevel: protectionLevel,

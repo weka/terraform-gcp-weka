@@ -95,7 +95,7 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       YUM_REPO_SERVER : var.yum_repo_server
       BACKEND_TEMPLATE : google_compute_instance_template.this.id
       # SMBW
-      SMBW_ENABLED : var.smbw_enabled
+      CREATE_CONFIG_FS : (var.smbw_enabled && var.smb_setup_protocol) || var.s3_setup_protocol
       # Weka proxy url
       PROXY_URL : var.proxy_url
       WEKA_HOME_URL : var.weka_home_url
