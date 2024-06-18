@@ -1,14 +1,23 @@
-# GCP weka deployment Terraform module
-Terraform module that creates weka deployments.
-This module creates many resources as launch template, cloud functions, workflows, cloud scheduler etc.
-<br>**Note**: when applying this module it will create a workflow that will automatically starts instances according to the
-given cluster size.
+# GCP-WEKA deployment Terraform module
+The GCP-WEKA Deployment Terraform module simplifies the creation of WEKA deployments on the Google Cloud Platform (GCP). It allows you to efficiently manage resources such as launch templates, cloud functions, workflows, and schedulers. Using the Terraform module establishes a process that automatically launches instances based on the specified cluster size.
+
+<br>**Scope:** This README describes the Terraform module’s configuration files. For the introduction and deployment workflows, refer to **WEKA installation on GCP** in [WEKA documentation](https://docs.weka.io).
 
 ## Network deployment options
-This weka deployment can use existing network, or create network resources (vpcs, subnets, firewall(security group_, private DNS zone, vpc access connector) automatically.
-<br>Check our [examples](examples).
-<br>In case you want to use an existing network, you **must** provide network params.
-<br>**Example**:
+When deploying WEKA on GCP, you have two options for network configuration:
+
+* Use an existing network:
+<br>If you choose this option, WEKA uses your existing network resources.
+These resources include Virtual Private Clouds (VPCs), subnets, security groups (firewalls), private DNS zones, and VPC access connectors.
+Ensure that you provide the necessary network parameters when using an existing network.
+
+* Automatically create network resources:
+<br>Alternatively, WEKA can create the required network resources for you.
+This includes setting up VPCs, subnets, security groups, private DNS zones, and VPC access connectors.
+
+<br>Refer to the [examples](examples) for guidance.
+
+<br>**Example of using an existing network**:
 ```hcl
 vpcs_name           = ["vpc-0","vpc-1","vpc-2","vpc-3"]
 subnets_name        = ["subnet-0","subnet-1","subnet-2","subnet-3"]
@@ -17,7 +26,7 @@ private_zone_name   = "existing-private-zone"
 vpc_connector_name  = "existing-connector"
 ```
 
-## Usage
+## WEKA cluster deployment usage example
 ```hcl
 module "weka_deployment" {
   source                   = "weka/weka/gcp"
@@ -37,60 +46,63 @@ module "weka_deployment" {
   private_dns_name         = "weka.private.net."
 }
 ```
-## Deploy weka network on host project
-We support creating network on host project and deployment cluster on service project
-In order to setup, you must provide the following variable:
+## Deploy WEKA network on the host project
+You can deploy the network on the host project and the cluster on the service project.
+<br>To set up the deployment, provide the following variable:
 ```hcl
 network_project_id = NETWORK_PROJECT_ID
 ```
 
-### To enable public ip assignment:
+### Enable public IP assignment
+In GCP, external IP addresses are always public and can be assigned to instances. These addresses allow communication with resources outside the Virtual Private Cloud (VPC) network.
+<br>**Note:** Using external IP addresses may incur additional charges.
+<br> To enable public IP assignment, set:
 ```hcl
 assign_public_ip   = true
 ```
 
-### Create Cloud NAT
+### Create cloud NAT
+Cloud NAT (Network Address Translation) on GCP allows instances within a private network to access the internet without requiring external IP addresses, enhancing security by keeping instances private while enabling outbound connectivity.
+<br>To enable Cloud NAT, set:
 ```hcl
 create_nat_gateway = true
 ```
 
-## OBS
-We support tiering to bucket.
-In order to setup tiering, you must provide the following variables:
+## Object Storage Service (OBS) tiering
+WEKA supports tiering to buckets. To configure tiering, add the following variables:
 ```hcl
 tiering_enable_obs_integration = true
 tiering_obs_name               = "..."
 tiering_enable_ssd_percent     = 20
 ```
 
-## Clients
-We support creating clients that will be mounted automatically to the cluster.
-<br>In order to create clients you need to provide the number of clients you want (by default the number is 0),
-for example:
+## Automatic client creation and mounting
+WEKA enables automatic client creation and mounting. Specify the number of clients you need (default is 0).
+<br>For example, to create two clients, add the following:
 ```hcl
 clients_number = 2
 ```
-This will automatically create 2 clients.
-<br>In addition you can provide these optional variables:
+
+<br>You can also define the client instance type and the number of allocated cores with the following variables:
 ```hcl
 client_instance_type = "c2-standard-8"
 client_frontend_cores = DESIRED_NUM
 ```
-### Mounting clients in udp mode
-In order to mount clients in UDP mode you should pass the following param (in addition to the above):
+### UDP mode for client mounting
+To mount the clients in UDP mode, add the following:
 ```hcl
 clients_use_dpdk = false
 ```
 
-## NFS Protocol Gateways
-We support creating NFS protocol gateways that will be mounted automatically to the cluster.
-<br>In order to create you need to provide the number of protocol gateways instances you want (by default the number is 0),
-for example:
+## NFS protocol gateways
+WEKA supports the creation of NFS protocol gateways that automatically mount to the cluster. Specify the number of instances (default is 0).
+
+Example:
 ```hcl
 nfs_protocol_gateways_number = 2
 ```
-This will automatically create 2 instances.
-<br>In addition you can provide these optional variables:
+
+<br>Additional optional variables include:
 ```hcl
 nfs_protocol_gateway_machine_type  = "c2-standard-8"
 nfs_protocol_gateway_disk_size     = 48
@@ -98,15 +110,15 @@ nfs_protocol_gateway_fe_cores_num  = 1
 nfs_setup_protocol                 = true
 ```
 
-## S3 Protocol Gateways
-<br>We support creating S3 protocol gateways that will be mounted automatically to the cluster.
-</br>
-for example:
+## S3 protocol gateways
+WEKA supports the creation of S3 protocol gateways that automatically mount to the cluster. Specify the number of instances (default is 0).
+
+Example:
 ```hcl
 s3_protocol_gateways_number = 1
 ```
-This will automatically create 1 instances.
-<br>In addition you can provide these optional variables:
+
+<br>Additional optional variables include:
 ```hcl
 s3_protocol_gateway_machine_type    = "c2-standard-8"
 s3_protocol_gateway_disk_size       = 48
@@ -114,18 +126,15 @@ s3_protocol_gateway_fe_cores_num    = 1
 s3_setup_protocol                   = true
 ```
 
-## SMB Protocol Gateways
-We support creating SMB protocol gateways that will be mounted automatically to the cluster.
-<br>In order to create you need to provide the number of protocol gateways instances you want (by default the number is 0),
+## SMB protocol gateways
+WEKA supports the creation of SMB protocol gateways that automatically mount to the cluster. A minimum of three instances is required (default is 0).
 
-*The amount of SMB protocol gateways should be at least 3.*
-</br>
-for example:
+</br>Example:
 ```hcl
 smb_protocol_gateways_number = 3
 ```
-This will automatically create 3 instances.
-<br>In addition you can provide these optional variables:
+
+<br>Additional optional variables include:
 ```hcl
 smb_protocol_gateway_machine_type   = "c2-standard-8"
 smb_protocol_gateway_disk_size      = 48
@@ -134,12 +143,13 @@ smb_setup_protocol                  = true
 smb_cluster_name                    = ""
 smb_domain_name                     = ""
 ```
-To join an SMB cluster in Active Directory, you need to manually run this command:
+**Join an SMB cluster in the Active Directory**
+To join an SMB cluster in the Active Directory, run this command manually:
 `weka smb domain join <smb_domain_username> <smb_domain_password> [--server smb_server_name]`.
 
-## Shared project
-To enable using Shared VPC.
-In order to setup, you must provide the following variables:
+## Shared project configuration
+Shared VPC (Virtual Private Cloud) lets you connect resources from multiple projects to a common VPC network. It’s a way to share network resources securely and efficiently. The host project defines the network and service projects attached to it, allowing eligible resources to use the shared network.
+<br>To enable the use of Shared VPC, provide the following variables:
 ```hcl
 shared_vpcs                    = [".."]
 host_project                   = HOST_PROJECT_ID
@@ -147,12 +157,12 @@ host_shared_range              = [".."]
 shared_vpc_project_id          = SHARED_VPC_PROJECT_ID
 ```
 
-To enable project as host project, you must provide the following variable:
+<br>To enable the project as a host project, provide the following variable:
 ```hcl
 enable_shared_vpc_host_project = true
 ```
 
-To enable vpc network peering between host project and service project, you must provide the following variable:
+<br>To enable VPC network peering between the host project and the service project, provide the following variable:
 ```hcl
 set_shared_vpc_peering = true
 ```
