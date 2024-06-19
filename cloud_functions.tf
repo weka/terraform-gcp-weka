@@ -18,7 +18,7 @@ locals {
 
   user_email                             = data.google_client_openid_userinfo.user.email
   domain_name                            = split("@", local.user_email)[1]
-  cloud_function_invoker_allowed_members = contains([local.user_email], "gserviceaccount.com") ? concat(["serviceAccount:${local.user_email}", "serviceAccount:${local.sa_email}"]) : concat(["domain:${local.domain_name}", "serviceAccount:${local.sa_email}"])
+  cloud_function_invoker_allowed_members = endswith(local.user_email, "gserviceaccount.com") ? concat(["serviceAccount:${local.user_email}", "serviceAccount:${local.sa_email}"]) : concat(["domain:${local.domain_name}", "serviceAccount:${local.sa_email}"])
 }
 
 data "archive_file" "function_zip" {
