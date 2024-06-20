@@ -73,7 +73,7 @@ variable "region" {
 variable "nvmes_number" {
   type        = number
   description = "Number of local nvmes per host"
-  default     = 2
+  default     = 8
 }
 
 variable "assign_public_ip" {
