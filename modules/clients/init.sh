@@ -20,3 +20,5 @@ if [[ "$os" = *"Rocky"* ]]; then
 		sudo curl https://dl.rockylinux.org/vault/rocky/8.9/Devel/x86_64/os/Packages/k/kernel-devel-4.18.0-513.24.1.el8_9.x86_64.rpm --output kernel-devel-4.18.0-513.24.1.el8_9.x86_64.rpm
 		sudo rpm -i kernel-devel-4.18.0-513.24.1.el8_9.x86_64.rpm
 fi
+
+apt update && apt install -y net-tools && apt install -y gcc-12 || true
