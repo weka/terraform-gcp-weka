@@ -419,6 +419,7 @@ variable "shared_vpcs" {
 
 variable "host_shared_range" {
   type        = list(string)
+  default     = []
   description = "List of host ranges to allow security groups."
 }
 
