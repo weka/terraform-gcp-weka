@@ -55,11 +55,16 @@ func CreateInstance(ctx context.Context, project, zone, template, instanceName, 
 		mv /etc/yum.repos.d/*.repo /tmp/yum.repos.d/
 
 		cat >/etc/yum.repos.d/local.repo <<EOL
-	[local]
-	name=Centos Base
-	baseurl=$yum_repo_server
-	enabled=1
+	[localrepo-base]
+	name=RockyLinux Base
+	baseurl=$yum_repo_server/baseos/
 	gpgcheck=0
+	enabled=1
+	[localrepo-appstream]
+	name=RockyLinux Base
+	baseurl=$yum_repo_server/appstream/
+	gpgcheck=0
+	enabled=1
 	EOL
 	fi
 
@@ -67,8 +72,14 @@ func CreateInstance(ctx context.Context, project, zone, template, instanceName, 
 	if [[ "$os" = *"Rocky"* ]]; then
 		sudo yum install -y bc
 		sudo yum install -y perl-interpreter
-		sudo curl https://dl.rockylinux.org/vault/rocky/8.9/Devel/x86_64/os/Packages/k/kernel-devel-4.18.0-513.24.1.el8_9.x86_64.rpm --output kernel-devel-4.18.0-513.24.1.el8_9.x86_64.rpm
-		sudo rpm -i kernel-devel-4.18.0-513.24.1.el8_9.x86_64.rpm
+		if [ "$yum_repo_server" ]; then
+			yum -y install $yum_repo_server/baseos/Packages/k/kernel-devel-4.18.0-513.24.1.el8_9.x86_64.rpm
+			yum -y install wget
+		else
+			sudo curl https://dl.rockylinux.org/vault/rocky/8.9/Devel/x86_64/os/Packages/k/kernel-devel-4.18.0-513.24.1.el8_9.x86_64.rpm --output kernel-devel-4.18.0-513.24.1.el8_9.x86_64.rpm
+			sudo rpm -i kernel-devel-4.18.0-513.24.1.el8_9.x86_64.rpm
+		fi
+
 	fi
 
 	sudo yum install -y jq || (echo "Failed to install jq" && exit 1)
