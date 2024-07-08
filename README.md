@@ -309,6 +309,7 @@ set_shared_vpc_peering = true
 | <a name="input_nfs_protocol_gateway_secondary_ips_per_nic"></a> [nfs\_protocol\_gateway\_secondary\_ips\_per\_nic](#input\_nfs\_protocol\_gateway\_secondary\_ips\_per\_nic) | The number of secondary IPs per single NIC per NFS protocol gateway virtual machine. | `number` | `3` | no |
 | <a name="input_nfs_protocol_gateways_number"></a> [nfs\_protocol\_gateways\_number](#input\_nfs\_protocol\_gateways\_number) | The number of NFS protocol gateway virtual machines to deploy. | `number` | `0` | no |
 | <a name="input_nfs_setup_protocol"></a> [nfs\_setup\_protocol](#input\_nfs\_setup\_protocol) | Specifies whether to configure the NFS protocol. | `bool` | `false` | no |
+| <a name="input_nic_type"></a> [nic\_type](#input\_nic\_type) | The type of vNIC. Possible values: GVNIC, VIRTIO\_NET. | `string` | `null` | no |
 | <a name="input_nics_numbers"></a> [nics\_numbers](#input\_nics\_numbers) | Number of NICs per host. | `number` | `-1` | no |
 | <a name="input_nvmes_number"></a> [nvmes\_number](#input\_nvmes\_number) | Number of NVMe disks to attach to each host. | `number` | `2` | no |
 | <a name="input_prefix"></a> [prefix](#input\_prefix) | Prefix for all resources (maximum 15 characters). | `string` | `"weka"` | no |
