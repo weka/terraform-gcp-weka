@@ -318,6 +318,17 @@ variable "containers_config_map" {
   }
 }
 
+variable "nic_type" {
+  type        = string
+  default     = null
+  description = "The type of vNIC. Possible values: GVNIC, VIRTIO_NET."
+
+  validation {
+    condition     = var.nic_type == null || var.nic_type == "GVNIC" || var.nic_type == "VIRTIO_NET"
+    error_message = "The vNIC type must be either GVNIC or VIRTIO_NET."
+  }
+}
+
 variable "protection_level" {
   type        = number
   default     = 2
@@ -470,6 +481,11 @@ variable "client_nic_type" {
   type        = string
   default     = null
   description = "The type of virtual network interface (vNIC). Valid values include GVNIC and VIRTIO_NET."
+
+  validation {
+    condition     = var.client_nic_type == null || var.client_nic_type == "GVNIC" || var.client_nic_type == "VIRTIO_NET"
+    error_message = "The vNIC type must be either GVNIC or VIRTIO_NET."
+  }
 }
 
 ############################################### nfs protocol gateways variables ###################################################
