@@ -41,7 +41,7 @@ func (d *GCPFuncDef) GetFunctionCmdDefinition(name functions_def.FunctionName) s
 		funcDefTemplate := `
 		function %s {
 			local json_data=$1
-			curl %s?action=%s -H "Authorization:bearer $(gcloud auth print-identity-token)" -H "Content-Type:application/json" -d "$json_data"
+			curl --retry 10 %s?action=%s -H "Authorization:bearer $(gcloud auth print-identity-token)" -H "Content-Type:application/json" -d "$json_data"
 		}
 		`
 		funcDef = fmt.Sprintf(funcDefTemplate, name, d.rootUrl, name)
