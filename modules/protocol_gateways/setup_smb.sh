@@ -38,33 +38,34 @@ if [[ ${smbw_enabled} == false ]]; then
     smb_cmd_extention="--smb"
 fi
 
-# run command with retry
-function retry_command {
+function retry_create_smb_cluster {
   retry_max=60
   retry_sleep=30
   count=$retry_max
-  command=$1
-  msg=$2
-
 
   while [ $count -gt 0 ]; do
-      eval "$command" && break
+      # old smb config, where smb is the default
+      weka smb cluster create ${cluster_name} ${domain_name} $smbw_cmd_extention --container-ids $all_container_ids_str && break
+      # new smb config, where smbw is the default
+      weka smb cluster create ${cluster_name} ${domain_name} .config_fs --container-ids $all_container_ids_str $smb_cmd_extention && break
       count=$(($count - 1))
-      echo "Retrying $msg in $retry_sleep seconds..."
+      echo "Retrying create SMB cluster in $retry_sleep seconds..."
       sleep $retry_sleep
   done
   [ $count -eq 0 ] && {
-      echo "$msg failed after $retry_max attempts"
-      echo "$(date -u): $msg failed"
+      echo "create SMB cluster command failed after $retry_max attempts"
+      echo "$(date -u): create SMB cluster failed"
       return 1
   }
   return 0
 }
 
+echo "$(date -u): Retrying create SMB cluster..."
 sed -i "/$HOSTNAME/d" /etc/hosts
-create_smb_cmd="weka smb cluster create ${cluster_name} ${domain_name} $smbw_cmd_extention --container-ids $all_container_ids_str || weka smb cluster create ${cluster_name} ${domain_name} .config_fs --container-ids $all_container_ids_str $smb_cmd_extention"
-echo "running: $create_smb_cmd"
-retry_command "$create_smb_cmd" "create smb cluster"
+
+retry_create_smb_cluster
+
+echo "$(date -u): Successfully create SMB cluster..."
 
 weka smb cluster wait
 
