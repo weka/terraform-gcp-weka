@@ -380,6 +380,18 @@ variable "tiering_enable_ssd_percent" {
   description = "When the OBS integration setting is enabled, this parameter sets the percentage of the filesystem capacity that resides on the SSD. For example, if this parameter is set to 20 (percent) and the total available SSD capacity is 20GB, the total capacity is 100 GB."
 }
 
+variable "tiering_obs_target_ssd_retention" {
+  type        = number
+  description = "Target retention period (in seconds) before tiering to OBS (how long data will stay in SSD). Default is 86400 seconds (24 hours)."
+  default     = 86400
+}
+
+variable "tiering_obs_start_demote" {
+  type        = number
+  description = "Target tiering cue (in seconds) before starting upload data to OBS (turning it into read cache). Default is 10 seconds."
+  default     = 10
+}
+
 variable "set_dedicated_fe_container" {
   type        = bool
   default     = true
