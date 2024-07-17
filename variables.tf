@@ -456,7 +456,7 @@ variable "client_frontend_cores" {
 
 variable "client_source_image_id" {
   type        = string
-  description = "Client Source image ID to use, by default rocky 8 is used, other distributive might work, but only rocky 8 is tested by Weka with this TF module"
+  description = "Client Source image ID is set to Rocky 8.9. For the list of all supported Weka Client OSs please refer to: https://docs.weka.io/planning-and-installation/prerequisites-and-compatibility#operating-system"
   default     = "rocky-linux-8-v20240515"
 }
 
