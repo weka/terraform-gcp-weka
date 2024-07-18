@@ -27,9 +27,10 @@ func Test_bunch(t *testing.T) {
 	zone := "europe-west1-b"
 	instanceGroup := "weka-instance-group"
 	bucket := "weka-poc-state"
+	stateName := "state"
 
 	ctx := context.TODO()
-	err := clusterize_finalization.ClusterizeFinalization(ctx, project, zone, instanceGroup, bucket)
+	err := clusterize_finalization.ClusterizeFinalization(ctx, project, zone, instanceGroup, bucket, stateName, "")
 	if err != nil {
 		t.Log("bunch test passed")
 	} else {
@@ -80,15 +81,19 @@ func Test_clusterize(t *testing.T) {
 }
 
 func Test_fetch(t *testing.T) {
-	project := "wekaio-rnd"
-	zone := "europe-west1-b"
-	instanceGroup := "weka-instance-group"
-	bucket := "weka-poc-state"
-	usernameId := "projects/896245720241/secrets/weka-poc-username/versions/1"
-	passwordId := "projects/896245720241/secrets/weka-poc-password/versions/1"
-
 	ctx := context.TODO()
-	result, err := fetch.GetFetchDataParams(ctx, project, zone, instanceGroup, bucket, usernameId, passwordId)
+
+	p := fetch.FetchInput{
+		Project:       "wekaio-rnd",
+		Zone:          "europe-west1-b",
+		InstanceGroup: "weka-instance-group",
+		Bucket:        "weka-poc-state",
+		StateObject:   "state",
+		UsernameId:    "projects/896245720241/secrets/weka-poc-username/versions/1",
+		PasswordId:    "projects/896245720241/secrets/weka-poc-password/versions/1",
+	}
+
+	result, err := fetch.FetchHostGroupInfo(ctx, p)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -148,7 +153,7 @@ func Test_deploy(t *testing.T) {
 		Gateways:             gws,
 	}
 
-	bashScript, err := deploy.GetDeployScript(ctx, params)
+	bashScript, err := deploy.GetBackendsDeployScript(ctx, params)
 	if err != nil {
 		t.Logf("Generating deploy scripts failed: %s", err)
 	} else {
@@ -199,8 +204,8 @@ func Test_scaleUp(t *testing.T) {
 	yumRepoServer := ""
 	proxyUrl := ""
 	ctx := context.TODO()
-	scale_up.CreateInstance(ctx, project, zone, backendTemplate, instanceName, yumRepoServer, proxyUrl, functionRootUrl)
-	instances := common.GetInstancesByClusterLabel(ctx, project, zone, clusterName)
+	scale_up.CreateBackendInstance(ctx, project, zone, backendTemplate, instanceName, yumRepoServer, proxyUrl, functionRootUrl)
+	instances, _ := common.GetInstancesByClusterLabel(ctx, project, zone, clusterName)
 	instanceGroupSize := len(instances)
 	t.Logf("Instance group size is: %d", instanceGroupSize)
 	for _, instance := range instances {
@@ -240,9 +245,10 @@ func Test_Transient(t *testing.T) {
 
 func Test_resize(t *testing.T) {
 	bucket := "weka-poc-state"
+	stateName := "state"
 	newDesiredValue := 6
 	ctx := context.TODO()
-	resize.UpdateValue(ctx, bucket, newDesiredValue)
+	resize.UpdateValue(ctx, bucket, stateName, newDesiredValue)
 }
 
 func Test_status(t *testing.T) {
@@ -250,12 +256,13 @@ func Test_status(t *testing.T) {
 	project := "wekaio-rnd"
 	zone := "europe-west1-b"
 	bucket := "weka-poc-wekaio-rnd"
+	stateName := "state"
 	instanceGroup := "weka-poc-instance-group"
 	usernameId := "projects/896245720241/secrets/weka-poc-username/versions/1"
 	passwordId := "projects/896245720241/secrets/weka-poc-password/versions/1"
 
 	ctx := context.TODO()
-	clusterStatus, err := status.GetClusterStatus(ctx, project, zone, bucket, instanceGroup, usernameId, passwordId)
+	clusterStatus, err := status.GetClusterStatus(ctx, project, zone, bucket, stateName, instanceGroup, usernameId, passwordId)
 	if err != nil {
 		t.Logf("Failed getting status %s", err)
 	} else {

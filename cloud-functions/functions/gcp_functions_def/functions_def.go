@@ -2,6 +2,7 @@ package gcp_functions_def
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/lithammer/dedent"
 	"github.com/weka/go-cloud-lib/functions_def"
@@ -37,6 +38,15 @@ func (d *GCPFuncDef) GetFunctionCmdDefinition(name functions_def.FunctionName) s
 		}
 		`
 		funcDef = fmt.Sprintf(funcDefTemplate, name, name)
+	} else if name == functions_def.Status {
+		url := strings.ReplaceAll(d.rootUrl, "weka-functions", string(name))
+		funcDefTemplate := `
+		function %s {
+		    local json_data=$1
+			curl --retry 10 %s -H "Authorization:bearer $(gcloud auth print-identity-token)" -H "Content-Type:application/json" -d "$json_data"
+		}
+		`
+		funcDef = fmt.Sprintf(funcDefTemplate, name, url)
 	} else {
 		funcDefTemplate := `
 		function %s {

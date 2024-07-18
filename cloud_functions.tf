@@ -10,6 +10,7 @@ locals {
   get_compute_memory      = var.set_dedicated_fe_container ? var.containers_config_map[var.machine_type].memory[1] : var.containers_config_map[var.machine_type].memory[0]
   state_bucket            = var.state_bucket_name == "" ? google_storage_bucket.weka_deployment[0].name : var.state_bucket_name
   install_weka_url        = var.install_weka_url != "" ? var.install_weka_url : "https://$TOKEN@get.weka.io/dist/v1/install/${var.weka_version}/${var.weka_version}"
+  gateways_name           = "${var.prefix}-${var.cluster_name}-nfs-protocol-gateway"
 
   # common function for multiple actions
   cloud_internal_function_name = "${var.prefix}-${var.cluster_name}-weka-functions"
@@ -69,12 +70,14 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       REGION : var.region
       CLOUD_FUNCTION_NAME : local.cloud_internal_function_name
       INSTANCE_GROUP : google_compute_instance_group.this.name
+      NFS_INSTANCE_GROUP : var.nfs_setup_protocol ? google_compute_instance_group.nfs[0].name : ""
       GATEWAYS : join(",", [for s in data.google_compute_subnetwork.this : s.gateway_address])
       SUBNETS : format("(%s)", join(" ", [for s in data.google_compute_subnetwork.this : s.ip_cidr_range]))
       USER_NAME_ID : google_secret_manager_secret_version.user_secret_key.id
       PASSWORD_ID : google_secret_manager_secret_version.password_secret_key.id
       TOKEN_ID : var.get_weka_io_token == "" ? "" : google_secret_manager_secret_version.token_secret_key[0].id
       BUCKET : local.state_bucket
+      STATE_BLOB_NAME : google_storage_bucket_object.state.name
       INSTALL_URL : local.install_weka_url
       # Configuration for google_cloudfunctions2_function.cloud_internal_function may not refer to itself.
       # REPORT_URL : format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=report")
@@ -109,6 +112,21 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       PROXY_URL : var.proxy_url
       WEKA_HOME_URL : var.weka_home_url
       DOWN_BACKENDS_REMOVAL_TIMEOUT : var.debug_down_backends_removal_timeout
+      BACKEND_LB_IP : google_compute_forwarding_rule.google_compute_forwarding_rule.ip_address
+      TRACES_PER_FRONTEND : var.traces_per_ionode
+      # NFS vars
+      NFS_GATEWAYS_NAME : var.nfs_setup_protocol ? local.gateways_name : ""
+      NFS_STATE_BLOB_NAME : var.nfs_setup_protocol ? google_storage_bucket_object.nfs_state[0].name : ""
+      NFS_GATEWAYS_TEMPLATE_NAME : var.nfs_setup_protocol ? local.gateways_name : ""
+      NFS_INTERFACE_GROUP_NAME : var.nfs_interface_group_name
+      NFS_SECONDARY_IPS_NUM : var.nfs_protocol_gateway_secondary_ips_per_nic
+      NFS_PROTOCOL_GATEWAY_FE_CORES_NUM : var.nfs_protocol_gateway_fe_cores_num
+      NFS_PROTOCOL_GATEWAYS_NUM : var.nfs_protocol_gateways_number
+      NFS_DISK_SIZE : var.nfs_protocol_gateway_disk_size
+      SMB_DISK_SIZE                     = var.smb_protocol_gateway_disk_size
+      S3_DISK_SIZE                      = var.s3_protocol_gateway_disk_size
+      SMB_PROTOCOL_GATEWAY_FE_CORES_NUM = var.smb_protocol_gateway_fe_cores_num
+      S3_PROTOCOL_GATEWAY_FE_CORES_NUM  = var.s3_protocol_gateway_fe_cores_num
     }
   }
   depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, module.peering, google_project_service.project_function_api, google_project_service.run_api, google_project_service.artifactregistry_api]
@@ -193,7 +211,10 @@ resource "google_cloudfunctions2_function" "status_function" {
       PROJECT : var.project_id
       ZONE : var.zone
       BUCKET : local.state_bucket
+      STATE_BLOB_NAME : google_storage_bucket_object.state.name
+      NFS_STATE_BLOB_NAME : var.nfs_setup_protocol ? google_storage_bucket_object.nfs_state[0].name : ""
       INSTANCE_GROUP : google_compute_instance_group.this.name
+      NFS_INSTANCE_GROUP : var.nfs_setup_protocol ? google_compute_instance_group.nfs[0].name : ""
       USER_NAME_ID : google_secret_manager_secret_version.user_secret_key.id
       PASSWORD_ID : google_secret_manager_secret_version.password_secret_key.id
     }

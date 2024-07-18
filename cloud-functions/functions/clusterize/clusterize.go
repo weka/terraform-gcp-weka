@@ -3,6 +3,8 @@ package clusterize
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 
 	"github.com/weka/go-cloud-lib/functions_def"
@@ -18,31 +20,86 @@ import (
 )
 
 type ClusterizationParams struct {
-	Project    string
-	Region     string
-	Zone       string
-	UsernameId string
-	PasswordId string
-	Bucket     string
-	Vm         protocol.Vm
-	Cluster    clusterize.ClusterParams
-	Obs        protocol.ObsParams
+	Project     string
+	Region      string
+	Zone        string
+	UsernameId  string
+	PasswordId  string
+	Bucket      string
+	StateObject string
+	Vm          protocol.Vm
+	Cluster     clusterize.ClusterParams
+	Obs         protocol.ObsParams
 	// root url for cloud function calls' definitions
 	CloudFuncRootUrl string
 	NvmesNum         int
+	NFSParams        protocol.NFSParams
+	NFSStateObject   string
+	BackendLbIp      string
+}
+
+func NFSClusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript string) {
+	nfsInterfaceGroupName := os.Getenv("NFS_INTERFACE_GROUP_NAME")
+	nfsProtocolgwsNum, _ := strconv.Atoi(os.Getenv("NFS_PROTOCOL_GATEWAYS_NUM"))
+	nfsSecondaryIpsNum, _ := strconv.Atoi(os.Getenv("NFS_SECONDARY_IPS_NUM"))
+
+	state, err := common.AddInstanceToStateInstances(ctx, p.Bucket, p.NFSStateObject, p.Vm)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return
+	}
+
+	funcDef := gcp_functions_def.NewFuncDef(p.CloudFuncRootUrl)
+	reportFunction := funcDef.GetFunctionCmdDefinition(functions_def.Report)
+
+	msg := fmt.Sprintf("This (%s) is nfs instance %d/%d that is ready for joining the interface group", p.Vm.Name, len(state.Instances), nfsProtocolgwsNum)
+	log.Info().Msgf(msg)
+	if len(state.Instances) != nfsProtocolgwsNum {
+		clusterizeScript = cloudCommon.GetScriptWithReport(msg, reportFunction, p.Vm.Protocol)
+		return
+	}
+
+	var containersUid []string
+	var nicNames []string
+	for _, instance := range state.Instances {
+		containersUid = append(containersUid, instance.ContainerUid)
+		nicNames = append(nicNames, instance.NicName)
+	}
+
+	// TODO: add nfsSecondaryIpsNum check
+	secondaryIps := make([]string, 0, nfsSecondaryIpsNum)
+
+	nfsParams := protocol.NFSParams{
+		InterfaceGroupName: nfsInterfaceGroupName,
+		SecondaryIps:       secondaryIps,
+		ContainersUid:      containersUid,
+		NicNames:           nicNames,
+		HostsNum:           nfsProtocolgwsNum,
+	}
+
+	scriptGenerator := clusterize.ConfigureNfsScriptGenerator{
+		Params:         nfsParams,
+		FuncDef:        funcDef,
+		LoadBalancerIP: p.BackendLbIp,
+		Name:           p.Vm.Name,
+	}
+
+	clusterizeScript = scriptGenerator.GetNFSSetupScript()
+	log.Info().Msg("Clusterization script for NFS generated")
+	return
 }
 
 func Clusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript string) {
 	funcDef := gcp_functions_def.NewFuncDef(p.CloudFuncRootUrl)
 	reportFunction := funcDef.GetFunctionCmdDefinition(functions_def.Report)
 
-	state, err := common.AddInstanceToStateInstances(ctx, p.Bucket, p.Vm)
+	state, err := common.AddInstanceToStateInstances(ctx, p.Bucket, p.StateObject, p.Vm)
 	if err != nil {
 		clusterizeScript = cloudCommon.GetErrorScript(err, reportFunction, p.Vm.Protocol)
 		return
 	}
 
-	err = common.SetDeletionProtection(ctx, p.Project, p.Zone, p.Bucket, p.Vm.Name)
+	err = common.SetDeletionProtection(ctx, p.Project, p.Zone, p.Bucket, p.StateObject, p.Vm.Name)
 	if err != nil {
 		clusterizeScript = cloudCommon.GetErrorScript(err, reportFunction, p.Vm.Protocol)
 		return
@@ -68,7 +125,9 @@ func Clusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript s
 						Hostname: p.Vm.Name,
 						Message:  fmt.Sprintf("Failed creating obs bucket %s: %s", p.Obs.Name, err),
 					},
-					p.Bucket)
+					p.Bucket,
+					p.StateObject,
+				)
 				if err != nil {
 					log.Error().Err(err).Send()
 				}
@@ -78,14 +137,6 @@ func Clusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript s
 		}
 	}
 
-	creds, err := common.GetUsernameAndPassword(ctx, p.UsernameId, p.PasswordId)
-	if err != nil {
-		log.Error().Err(err).Send()
-		clusterizeScript = cloudCommon.GetErrorScript(err, reportFunction, p.Vm.Protocol)
-		return
-	}
-	log.Info().Msgf("Fetched weka cluster creds successfully")
-
 	instancesNames := common.GetInstancesNames(state.Instances)
 	ips := common.GetBackendsIps(ctx, p.Project, p.Zone, instancesNames)
 
@@ -93,8 +144,6 @@ func Clusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript s
 	clusterParams.VMNames = instancesNames
 	clusterParams.IPs = ips
 	clusterParams.ObsScript = GetObsScript(p.Obs)
-	clusterParams.WekaPassword = creds.Password
-	clusterParams.WekaUsername = creds.Username
 	clusterParams.FindDrivesScript = dedent.Dedent(common.FindDrivesScript)
 	clusterParams.InstallDpdk = true
 	if p.NvmesNum > 8 {
