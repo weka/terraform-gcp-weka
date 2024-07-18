@@ -48,6 +48,11 @@ output "lb_url" {
   description = "URL of LB"
 }
 
+output "backend_lb_ip" {
+  value       = google_compute_forwarding_rule.google_compute_forwarding_rule.ip_address
+  description = "The backend load balancer ip address."
+}
+
 output "cluster_name" {
   value       = var.cluster_name
   description = "The cluster name"

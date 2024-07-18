@@ -21,6 +21,14 @@ import (
 	reportLib "github.com/weka/go-cloud-lib/report"
 )
 
+const (
+	WekaClusterLabelKey    = "weka_cluster_name"
+	WekaProtocolGwLabelKey = "weka_protocol_gateway"
+
+	NfsInterfaceGroupPortKey   = "nfs_interface_group_port"
+	NfsInterfaceGroupPortValue = "ready"
+)
+
 func GetUsernameAndPassword(ctx context.Context, usernameId, passwordId string) (clusterCreds protocol.ClusterCreds, err error) {
 	client, err := secretmanager.NewClient(ctx)
 	if err != nil {
@@ -119,8 +127,9 @@ func GetInstanceGroupInstanceNames(ctx context.Context, project, zone, instanceG
 	return
 }
 
-func Lock(client *storage.Client, ctx context.Context, bucket string) (id string, err error) {
-	lockHandler := client.Bucket(bucket).Object("lock")
+func Lock(client *storage.Client, ctx context.Context, bucket, object string) (id string, err error) {
+	objLockName := fmt.Sprintf("%s.lock", object)
+	lockHandler := client.Bucket(bucket).Object(objLockName)
 
 	w := lockHandler.If(storage.Conditions{DoesNotExist: true}).NewWriter(ctx)
 
@@ -157,13 +166,14 @@ func Lock(client *storage.Client, ctx context.Context, bucket string) (id string
 	return
 }
 
-func Unlock(client *storage.Client, ctx context.Context, bucket, id string) (err error) {
+func Unlock(client *storage.Client, ctx context.Context, bucket, object, id string) (err error) {
+	objLockName := fmt.Sprintf("%s.lock", object)
 	gen, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		log.Error().Msgf("Lock ID should be numerical value, got '%s'", id)
 		return
 	}
-	LockHandler := client.Bucket(bucket).Object("lock")
+	LockHandler := client.Bucket(bucket).Object(objLockName)
 	if err = LockHandler.If(storage.Conditions{GenerationMatch: gen}).Delete(ctx); err != nil {
 		log.Error().Msgf("delete failed: %s", err)
 		return
@@ -221,7 +231,7 @@ func RetryWriteState(stateHandler *storage.ObjectHandle, ctx context.Context, st
 	return
 }
 
-func GetClusterState(ctx context.Context, bucket string) (state protocol.ClusterState, err error) {
+func GetClusterState(ctx context.Context, bucket, object string) (state protocol.ClusterState, err error) {
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed creating storage client")
@@ -229,50 +239,46 @@ func GetClusterState(ctx context.Context, bucket string) (state protocol.Cluster
 	}
 	defer client.Close()
 
-	id, err := Lock(client, ctx, bucket)
-	for err != nil {
-		time.Sleep(1 * time.Second)
-		id, err = Lock(client, ctx, bucket)
-	}
-	defer Unlock(client, ctx, bucket, id)
+	id, err := LockBucket(ctx, client, bucket, object)
+	defer UnlockBucket(ctx, client, bucket, object, id)
 
-	stateHandler := client.Bucket(bucket).Object("state")
+	stateHandler := client.Bucket(bucket).Object(object)
 	state, err = ReadState(stateHandler, ctx)
 	return
 }
 
-func LockBucket(ctx context.Context, client *storage.Client, bucket string) (id string, err error) {
-	id, err = Lock(client, ctx, bucket)
+func LockBucket(ctx context.Context, client *storage.Client, bucket, object string) (id string, err error) {
+	id, err = Lock(client, ctx, bucket, object)
 	for err != nil {
-		log.Debug().Str("bucket", bucket).Msgf("Failed locking bucket, retrying")
+		log.Debug().Str("bucket", bucket).Str("object", object).Msgf("Failed locking storage object, retrying")
 
 		time.Sleep(1 * time.Second)
-		id, err = Lock(client, ctx, bucket)
+		id, err = Lock(client, ctx, bucket, object)
 	}
 	return
 }
 
-func UnlockBucket(ctx context.Context, client *storage.Client, bucket, id string) (err error) {
-	err = Unlock(client, ctx, bucket, id)
+func UnlockBucket(ctx context.Context, client *storage.Client, bucket, object, id string) (err error) {
+	err = Unlock(client, ctx, bucket, object, id)
 	if err != nil {
-		log.Error().Err(err).Str("bucket", bucket).Msg("Failed unlocking bucket")
+		log.Error().Err(err).Str("bucket", bucket).Str("object", object).Msg("Failed unlocking storage object")
 	}
 	return
 }
 
-func GetInstancesByClusterLabel(ctx context.Context, project, zone, clusterName string) (instances []*computepb.Instance) {
+func GetInstancesByLabel(ctx context.Context, project, zone, labelKey, labelValue string) (instances []*computepb.Instance, err error) {
 	instanceClient, err := compute.NewInstancesRESTClient(ctx)
 	if err != nil {
-		log.Error().Msgf("%s", err)
+		log.Error().Err(err).Send()
 		return
 	}
 	defer instanceClient.Close()
 
-	clusterNameFilter := fmt.Sprintf("labels.weka_cluster_name=%s", clusterName)
+	labelFilter := fmt.Sprintf("labels.%s=%s", labelKey, labelValue)
 	listInstanceRequest := &computepb.ListInstancesRequest{
 		Project: project,
 		Zone:    zone,
-		Filter:  &clusterNameFilter,
+		Filter:  &labelFilter,
 	}
 
 	listInstanceIter := instanceClient.List(ctx, listInstanceRequest)
@@ -283,16 +289,25 @@ func GetInstancesByClusterLabel(ctx context.Context, project, zone, clusterName 
 			break
 		}
 		if err != nil {
-			log.Error().Msgf("%s", err)
+			log.Error().Err(err).Send()
 			break
 		}
 		instances = append(instances, resp)
 	}
+	log.Debug().Msgf("Found %d instances with label %s=%s", len(instances), labelKey, labelValue)
 	return
 }
 
-func addInstanceToStateInstances(client *storage.Client, ctx context.Context, bucket string, newInstance protocol.Vm) (state protocol.ClusterState, err error) {
-	stateHandler := client.Bucket(bucket).Object("state")
+func GetInstancesByClusterLabel(ctx context.Context, project, zone, clusterName string) ([]*computepb.Instance, error) {
+	return GetInstancesByLabel(ctx, project, zone, WekaClusterLabelKey, clusterName)
+}
+
+func GetInstancesByProtocolGwLabel(ctx context.Context, project, zone, gatewaysName string) ([]*computepb.Instance, error) {
+	return GetInstancesByLabel(ctx, project, zone, WekaProtocolGwLabelKey, gatewaysName)
+}
+
+func addInstanceToStateInstances(client *storage.Client, ctx context.Context, bucket, object string, newInstance protocol.Vm) (state protocol.ClusterState, err error) {
+	stateHandler := client.Bucket(bucket).Object(object)
 
 	state, err = ReadState(stateHandler, ctx)
 	if err != nil {
@@ -301,7 +316,7 @@ func addInstanceToStateInstances(client *storage.Client, ctx context.Context, bu
 	if len(state.Instances) == state.InitialSize {
 		//This might happen if someone increases the desired number before the clusterization id done
 		err = fmt.Errorf("number of instances is already the initial size, not adding instance %s to state instances list", newInstance)
-		log.Error().Msgf("%s", err)
+		log.Error().Err(err).Send()
 		return
 	}
 	state.Instances = append(state.Instances, newInstance)
@@ -310,7 +325,7 @@ func addInstanceToStateInstances(client *storage.Client, ctx context.Context, bu
 	return
 }
 
-func AddInstanceToStateInstances(ctx context.Context, bucket string, newInstance protocol.Vm) (state protocol.ClusterState, err error) {
+func AddInstanceToStateInstances(ctx context.Context, bucket, object string, newInstance protocol.Vm) (state protocol.ClusterState, err error) {
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed creating storage client")
@@ -318,14 +333,14 @@ func AddInstanceToStateInstances(ctx context.Context, bucket string, newInstance
 	}
 	defer client.Close()
 
-	id, err := LockBucket(ctx, client, bucket)
-	defer UnlockBucket(ctx, client, bucket, id)
+	id, err := LockBucket(ctx, client, bucket, object)
+	defer UnlockBucket(ctx, client, bucket, object, id)
 
-	state, err = addInstanceToStateInstances(client, ctx, bucket, newInstance)
+	state, err = addInstanceToStateInstances(client, ctx, bucket, object, newInstance)
 	return
 }
 
-func UpdateStateReporting(ctx context.Context, bucket string, report protocol.Report) (err error) {
+func UpdateStateReporting(ctx context.Context, bucket, object string, report protocol.Report) (err error) {
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed creating storage client")
@@ -333,10 +348,10 @@ func UpdateStateReporting(ctx context.Context, bucket string, report protocol.Re
 	}
 	defer client.Close()
 
-	id, err := LockBucket(ctx, client, bucket)
-	defer UnlockBucket(ctx, client, bucket, id)
+	id, err := LockBucket(ctx, client, bucket, object)
+	defer UnlockBucket(ctx, client, bucket, object, id)
 
-	stateHandler := client.Bucket(bucket).Object("state")
+	stateHandler := client.Bucket(bucket).Object(object)
 	state, err := ReadState(stateHandler, ctx)
 
 	err = reportLib.UpdateReport(report, &state)
@@ -348,9 +363,9 @@ func UpdateStateReporting(ctx context.Context, bucket string, report protocol.Re
 	return
 }
 
-func ReportMsg(ctx context.Context, hostName, bucket, reportType, message string) {
+func ReportMsg(ctx context.Context, hostName, bucket, object, reportType, message string) {
 	reportObj := protocol.Report{Type: reportType, Hostname: hostName, Message: message}
-	_ = UpdateStateReporting(ctx, bucket, reportObj)
+	_ = UpdateStateReporting(ctx, bucket, object, reportObj)
 }
 
 func GetInstancesNames(instances []protocol.Vm) (vmNames []string) {
@@ -360,12 +375,12 @@ func GetInstancesNames(instances []protocol.Vm) (vmNames []string) {
 	return
 }
 
-func SetDeletionProtection(ctx context.Context, project, zone, bucket, instanceName string) (err error) {
+func SetDeletionProtection(ctx context.Context, project, zone, bucket, object, instanceName string) (err error) {
 	log.Info().Msgf("Setting deletion protection on %s", instanceName)
 
 	c, err := compute.NewInstancesRESTClient(ctx)
 	if err != nil {
-		log.Error().Msgf("%s", err)
+		log.Error().Err(err).Send()
 		return
 	}
 	defer c.Close()
@@ -380,14 +395,64 @@ func SetDeletionProtection(ctx context.Context, project, zone, bucket, instanceN
 
 	_, err = c.SetDeletionProtection(ctx, req)
 	if err != nil {
-		log.Error().Msgf("%s", err)
+		log.Error().Err(err).Send()
 		return
 	}
 
 	msg := "Deletion protection was set successfully"
 	log.Info().Msg(msg)
-	ReportMsg(ctx, instanceName, bucket, "progress", msg)
+	ReportMsg(ctx, instanceName, bucket, object, "progress", msg)
 
+	return
+}
+
+func AddLabelsOnInstance(ctx context.Context, project, zone, instanceName string, labels map[string]string) (err error) {
+	log.Info().Msgf("Adding labels: %v to instance %s", labels, instanceName)
+
+	c, err := compute.NewInstancesRESTClient(ctx)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return
+	}
+
+	// get instance to get old labels fingerprint
+	instance, err := c.Get(ctx, &computepb.GetInstanceRequest{
+		Project:  project,
+		Zone:     zone,
+		Instance: instanceName,
+	})
+	if err != nil {
+		err = fmt.Errorf("error getting instance: %w", err)
+		log.Error().Err(err).Send()
+		return
+	}
+
+	newLabels := make(map[string]string)
+	for k, v := range instance.Labels {
+		newLabels[k] = v
+	}
+	for k, v := range labels {
+		newLabels[k] = v
+	}
+
+	req := &computepb.SetLabelsInstanceRequest{
+		Project:  project,
+		Zone:     zone,
+		Instance: instanceName,
+		InstancesSetLabelsRequestResource: &computepb.InstancesSetLabelsRequest{
+			Labels:           newLabels,
+			LabelFingerprint: instance.LabelFingerprint,
+		},
+	}
+
+	_, err = c.SetLabels(ctx, req)
+	if err != nil {
+		err = fmt.Errorf("error adding labels to instance: %w", err)
+		log.Error().Err(err).Send()
+		return
+	}
+
+	log.Info().Any("labels", labels).Msg("Labels were added to instance successfully")
 	return
 }
 
@@ -405,7 +470,7 @@ func AddInstancesToGroup(ctx context.Context, project, zone, instanceGroup strin
 
 	instancesGroupClient, err := compute.NewInstanceGroupsRESTClient(ctx)
 	if err != nil {
-		log.Error().Msgf("%s", err)
+		log.Error().Err(err).Send()
 		return
 	}
 	defer instancesGroupClient.Close()
@@ -419,7 +484,7 @@ func AddInstancesToGroup(ctx context.Context, project, zone, instanceGroup strin
 	})
 
 	if err != nil {
-		log.Error().Msgf("%s", err)
+		log.Error().Err(err).Send()
 		return
 	}
 
@@ -432,7 +497,7 @@ func UnsetDeletionProtection(ctx context.Context, project, zone, instanceName st
 
 	c, err := compute.NewInstancesRESTClient(ctx)
 	if err != nil {
-		log.Error().Msgf("%s", err)
+		log.Error().Err(err).Send()
 		return
 	}
 	defer c.Close()
@@ -447,7 +512,7 @@ func UnsetDeletionProtection(ctx context.Context, project, zone, instanceName st
 
 	_, err = c.SetDeletionProtection(ctx, req)
 	if err != nil {
-		log.Error().Msgf("%s", err)
+		log.Error().Err(err).Send()
 		return
 	}
 

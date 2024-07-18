@@ -498,7 +498,12 @@ variable "nfs_protocol_gateways_number" {
 variable "nfs_protocol_gateway_secondary_ips_per_nic" {
   type        = number
   description = "The number of secondary IPs per single NIC per NFS protocol gateway virtual machine."
-  default     = 3
+  default     = 0
+
+  validation {
+    condition     = var.nfs_protocol_gateway_secondary_ips_per_nic == 0
+    error_message = "Secondary (floating) IPs are currently not supported for GCP NFS protocol gateways."
+  }
 }
 
 variable "nfs_protocol_gateway_machine_type" {
@@ -523,6 +528,17 @@ variable "nfs_setup_protocol" {
   type        = bool
   description = "Specifies whether to configure the NFS protocol."
   default     = false
+}
+
+variable "nfs_interface_group_name" {
+  type        = string
+  description = "Interface group name."
+  default     = "weka-ig"
+
+  validation {
+    condition     = length(var.nfs_interface_group_name) <= 11
+    error_message = "The interface group name should be up to 11 characters long."
+  }
 }
 
 ############################################### smb protocol gateways variables ###################################################

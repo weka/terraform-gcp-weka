@@ -12,16 +12,13 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func getInstanceTemplate(project, template string) (*computepb.InstanceTemplate, error) {
-	ctx := context.Background()
+func getInstanceTemplateByName(ctx context.Context, project, templateName string) (*computepb.InstanceTemplate, error) {
 	instanceTemplatesClient, err := compute.NewInstanceTemplatesRESTClient(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("NewInstanceTemplatesRESTClient: %w", err)
 	}
 	defer instanceTemplatesClient.Close()
 
-	templateParts := strings.Split(template, "/")
-	templateName := templateParts[len(templateParts)-1]
 	req := &computepb.GetInstanceTemplateRequest{
 		Project:          project,
 		InstanceTemplate: templateName,
@@ -30,10 +27,17 @@ func getInstanceTemplate(project, template string) (*computepb.InstanceTemplate,
 	return instanceTemplatesClient.Get(ctx, req)
 }
 
-func CreateInstance(ctx context.Context, project, zone, template, instanceName, yumRepoServer, proxyUrl, functionRootUrl string) (err error) {
+func getInstanceTemplate(ctx context.Context, project, template string) (*computepb.InstanceTemplate, error) {
+	templateParts := strings.Split(template, "/")
+	templateName := templateParts[len(templateParts)-1]
+
+	return getInstanceTemplateByName(ctx, project, templateName)
+}
+
+func CreateBackendInstance(ctx context.Context, project, zone, template, instanceName, yumRepoServer, proxyUrl, functionRootUrl string) (err error) {
 	instancesClient, err := compute.NewInstancesRESTClient(ctx)
 	if err != nil {
-		log.Error().Msgf("%s", err)
+		log.Error().Err(err).Msg("Failed to create instances client")
 		return
 	}
 	defer instancesClient.Close()
@@ -94,7 +98,7 @@ func CreateInstance(ctx context.Context, project, zone, template, instanceName, 
 	}
 
 	echo "Generating weka deploy script..."
-	curl "$function_url?action=deploy" --fail -H "Authorization:bearer $(gcloud auth print-identity-token)" -d "{\"vm\": \"$instance_name\"}" > /tmp/deploy.sh
+	curl "$function_url?action=deploy" --fail -H "Authorization:bearer $(gcloud auth print-identity-token)" -d "{\"name\": \"$instance_name\"}" > /tmp/deploy.sh
 	chmod +x /tmp/deploy.sh
 	echo "Running weka deploy script..."
 	(/tmp/deploy.sh 2>&1 | tee /tmp/weka_deploy.log) || self_deleting || shutdown -P
@@ -102,14 +106,14 @@ func CreateInstance(ctx context.Context, project, zone, template, instanceName, 
 	startUpScript = fmt.Sprintf(startUpScript, instanceName, functionRootUrl, yumRepoServer, proxyUrl)
 	startUpScript = dedent.Dedent(startUpScript)
 
-	instanceTemplate, err := getInstanceTemplate(project, template)
+	instanceTemplate, err := getInstanceTemplate(ctx, project, template)
 	if err != nil {
 		log.Error().Msgf("Failed to get instance template (project=%s, template=%s): %s", project, template, err)
 		return
 	}
 
 	items := []*computepb.Items{
-		&computepb.Items{
+		{
 			Key:   proto.String("startup-script"),
 			Value: &startUpScript,
 		},
@@ -140,5 +144,35 @@ func CreateInstance(ctx context.Context, project, zone, template, instanceName, 
 		return
 	}
 
+	return
+}
+
+func CreateNFSInstance(ctx context.Context, project, zone, templateName, instanceName, yumRepoServer, proxyUrl, functionRootUrl string) (err error) {
+	instancesClient, err := compute.NewInstancesRESTClient(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to create instances client")
+		return
+	}
+	defer instancesClient.Close()
+
+	instanceTemplate, err := getInstanceTemplateByName(ctx, project, templateName)
+	if err != nil {
+		log.Error().Msgf("Failed to get instance template (project=%s, template=%s): %s", project, templateName, err)
+		return
+	}
+
+	req := &computepb.InsertInstanceRequest{
+		Project: project,
+		Zone:    zone,
+		InstanceResource: &computepb.Instance{
+			Name: proto.String(instanceName),
+		},
+		SourceInstanceTemplate: instanceTemplate.SelfLink,
+	}
+
+	_, err = instancesClient.Insert(ctx, req)
+	if err != nil {
+		log.Error().Msgf("Instance creation failed: %s", err)
+	}
 	return
 }

@@ -16,11 +16,11 @@ import (
 	"github.com/weka/go-cloud-lib/protocol"
 )
 
-func GetReports(ctx context.Context, project, zone, bucket, instanceGroup string) (reports protocol.Reports, err error) {
+func GetReports(ctx context.Context, project, zone, bucket, object, instanceGroup string) (reports protocol.Reports, err error) {
 	logger := logging.LoggerFromCtx(ctx)
 	logger.Info().Msg("fetching cluster status...")
 
-	state, err := common.GetClusterState(ctx, bucket)
+	state, err := common.GetClusterState(ctx, bucket, object)
 	if err != nil {
 		return
 	}
@@ -67,8 +67,8 @@ func GetReports(ctx context.Context, project, zone, bucket, instanceGroup string
 	return
 }
 
-func GetClusterStatus(ctx context.Context, project, zone, bucket, instanceGroup, usernameId, passwordId string) (clusterStatus protocol.ClusterStatus, err error) {
-	state, err := common.GetClusterState(ctx, bucket)
+func GetClusterStatus(ctx context.Context, project, zone, bucket, object, instanceGroup, usernameId, passwordId string) (clusterStatus protocol.ClusterStatus, err error) {
+	state, err := common.GetClusterState(ctx, bucket, object)
 	if err != nil {
 		return
 	}
