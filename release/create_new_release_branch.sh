@@ -16,7 +16,7 @@ fi
 git checkout dev
 git pull
 git checkout -b "dev-$new_weka_version"
-old_weka_version=$(awk '/Weka version/{getline;print $NF;}' variables.tf | tr -d \")
+old_weka_version=$(awk '/WEKA version/{getline;print $NF;}' variables.tf | tr -d \")
 
 file_paths=(
     variables.tf
