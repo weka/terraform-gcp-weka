@@ -19,6 +19,6 @@ module "weka_deployment" {
   assign_public_ip                     = false
   create_worker_pool                   = true
   weka_tar_project_id                  = "wekaio-rnd"
-  install_weka_url                     = "gs://weka-installation/weka-4.2.11.tar"
+  install_weka_url                     = "gs://weka-installation/weka-4.2.12.tar"
   create_nat_gateway                   = false
 }

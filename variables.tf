@@ -95,14 +95,14 @@ variable "get_weka_io_token" {
 
 variable "install_weka_url" {
   type        = string
-  description = "The URL to WEKA installation script or tar object. Examples: URL to installation script: https://TOKEN@get.weka.io/dist/v1/install/4.3.1/4.3.1. URL to tar object: https://TOKEN@get.weka.io/dist/v1/pkg/weka-4.3.1.tar. URL to tar object in a cloud bucket: gs://weka-installation/weka-4.2.11.tar. (Replace TOKEN with your valid WEKA download token)."
+  description = "The URL to WEKA installation script or tar object. Examples: URL to installation script: https://TOKEN@get.weka.io/dist/v1/install/4.3.1/4.3.1. URL to tar object: https://TOKEN@get.weka.io/dist/v1/pkg/weka-4.3.1.tar. URL to tar object in a cloud bucket: gs://weka-installation/weka-4.2.12.tar. (Replace TOKEN with your valid WEKA download token)."
   default     = ""
 }
 
 variable "weka_version" {
   type        = string
   description = "WEKA version"
-  default     = "4.2.11"
+  default     = "4.2.12"
 }
 
 variable "weka_username" {
