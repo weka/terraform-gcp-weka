@@ -10,8 +10,8 @@ import (
 	reportLib "github.com/weka/go-cloud-lib/report"
 )
 
-func Report(ctx context.Context, report protocol.Report, bucket string) (err error) {
-	log.Debug().Msgf("Updating state %s with %s", report.Type, report.Message)
+func Report(ctx context.Context, report protocol.Report, bucket, object string) (err error) {
+	log.Debug().Msgf("Updating %s %s with %s", object, report.Type, report.Message)
 
 	client, err := storage.NewClient(ctx)
 	if err != nil {
@@ -20,10 +20,10 @@ func Report(ctx context.Context, report protocol.Report, bucket string) (err err
 	}
 	defer client.Close()
 
-	id, err := common.LockBucket(ctx, client, bucket)
-	defer common.UnlockBucket(ctx, client, bucket, id)
+	id, err := common.LockBucket(ctx, client, bucket, object)
+	defer common.UnlockBucket(ctx, client, bucket, object, id)
 
-	stateHandler := client.Bucket(bucket).Object("state")
+	stateHandler := client.Bucket(bucket).Object(object)
 	state, err := common.ReadState(stateHandler, ctx)
 	if err != nil {
 		return

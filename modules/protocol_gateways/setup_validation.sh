@@ -1,5 +1,10 @@
 echo "$(date -u): running validation for setting protocol script"
 
+function report {
+  local json_data=$1
+  curl ${report_function_url} -H "Authorization:bearer $(gcloud auth print-identity-token)" -d "$json_data"
+}
+
 weka local ps
 
 filesystem_name="default"
@@ -14,7 +19,9 @@ function wait_for_weka_fs(){
     sleep 10
   done
   if (( i > max_retries )); then
-      echo "$(date -u): timeout: weka filesystem $filesystem_name is not up after $max_retries attempts."
+      err_msg="timeout: weka filesystem $filesystem_name is not up after $max_retries attempts."
+      echo "$(date -u): $err_msg"
+      report "{\"hostname\": \"$instance_name\", \"type\": \"error\", \"message\": \"$err_msg\"}"
       return 1
   fi
 }
@@ -45,9 +52,11 @@ function create_config_fs(){
   elif [[ $output == *"Not enough available drive capacity for filesystem"* ]]; then
     err_msg="Not enough available drive capacity for filesystem $config_filesystem_name for size $size"
     echo "$(date -u): $err_msg"
+    report "{\"hostname\": \"$instance_name\", \"type\": \"error\", \"message\": \"$err_msg\"}"
     return 1
   else
     echo "$(date -u): output: $output"
+    report "{\"hostname\": \"$instance_name\", \"type\": \"error\", \"message\": \"cannot create weka filesystem $config_filesystem_name\"}"
     return 1
   fi
 }
@@ -63,7 +72,9 @@ for (( i=0; i < max_retries; i++ )); do
   sleep 30
 done
 if (( i > max_retries )); then
-    echo "$(date -u): timeout: weka cluster is not up after $max_retries attempts."
+    err_msg="timeout: weka cluster is not up after $max_retries attempts."
+    echo "$(date -u): $err_msg"
+    report "{\"hostname\": \"$instance_name\", \"type\": \"error\", \"message\": \"$err_msg\"}"
     exit 1
 fi
 
@@ -75,6 +86,7 @@ for ((i=0; i<20; i++)); do
   container_id=$(weka cluster container | grep frontend0 | grep ${gateways_name} | grep $current_mngmnt_ip | grep UP | awk '{print $1}')
   if [ -n "$container_id" ]; then
       echo "$(date -u): frontend0 container id: $container_id"
+      report "{\"hostname\": \"$instance_name\", \"type\": \"progress\", \"message\": \"frontend0 container $container_id is up\"}"
       break
   fi
   echo "$(date -u): waiting for frontend0 container to be up"
@@ -82,7 +94,9 @@ for ((i=0; i<20; i++)); do
 done
 
 if [ -z "$container_id" ]; then
-  echo "$(date -u): Failed to get the frontend0 container ID."
+  err_msg="Failed to get the frontend0 container ID."
+  echo "$(date -u): $err_msg"
+  report "{\"hostname\": \"$instance_name\", \"type\": \"error\", \"message\": \"$err_msg\"}"
   exit 1
 fi
 
@@ -103,7 +117,9 @@ for (( retry=1; retry<=max_retries; retry++ )); do
 done
 
 if (( retry > max_retries )); then
-    echo "$(date -u): timeout: not all containers are ready after $max_retries attempts."
+    err_msg="timeout: not all containers are ready after $max_retries attempts."
+    echo "$(date -u): $err_msg"
+    report "{\"hostname\": \"$instance_name\", \"type\": \"error\", \"message\": \"$err_msg\"}"
     exit 1
 fi
 

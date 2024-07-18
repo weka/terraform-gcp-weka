@@ -61,23 +61,6 @@ variable "gateways_name" {
   description = "The protocol group name."
 }
 
-variable "interface_group_name" {
-  type        = string
-  description = "Interface group name."
-  default     = "weka-ig"
-
-  validation {
-    condition     = length(var.interface_group_name) <= 11
-    error_message = "The interface group name should be up to 11 characters long."
-  }
-}
-
-variable "client_group_name" {
-  type        = string
-  description = "Client access group name."
-  default     = "weka-cg"
-}
-
 variable "vm_username" {
   type        = string
   description = "The user name for logging in to the virtual machines."
@@ -116,24 +99,9 @@ variable "frontend_container_cores_num" {
   }
 }
 
-variable "install_weka_url" {
-  type        = string
-  description = "The URL of the Weka release download tar file."
-
-  validation {
-    condition     = length(var.install_weka_url) > 0
-    error_message = "The URL should not be empty."
-  }
-}
-
 variable "sa_email" {
   type        = string
   description = "service account email"
-}
-
-variable "backend_lb_ip" {
-  type        = string
-  description = "Backend Load balance private ip"
 }
 
 variable "source_image_id" {
@@ -141,22 +109,11 @@ variable "source_image_id" {
   description = "Source image id"
 }
 
-variable "weka_token_id" {
-  type        = string
-  description = "Id of weka token"
-}
-
-variable "weka_password_id" {
-  type        = string
-  description = "Id of weka password"
-}
-
 variable "proxy_url" {
   type        = string
   description = "Weka home proxy url"
   default     = ""
 }
-
 
 variable "setup_protocol" {
   type        = bool
@@ -189,4 +146,14 @@ variable "network_project_id" {
   type        = string
   default     = ""
   description = "Network project id"
+}
+
+variable "deploy_function_url" {
+  type        = string
+  description = "The URL of deploy function from cloud functions."
+}
+
+variable "report_function_url" {
+  type        = string
+  description = "The URL of report function from cloud functions."
 }

@@ -9,8 +9,8 @@ import (
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
 )
 
-func UpdateValue(ctx context.Context, bucket string, newDesiredSize int) (err error) {
-	log.Debug().Msgf("Updating desired size to %d", newDesiredSize)
+func UpdateValue(ctx context.Context, bucket, object string, newDesiredSize int) (err error) {
+	log.Debug().Msgf("Updating %s desired size to %d", object, newDesiredSize)
 
 	client, err := storage.NewClient(ctx)
 	if err != nil {
@@ -19,15 +19,15 @@ func UpdateValue(ctx context.Context, bucket string, newDesiredSize int) (err er
 	}
 	defer client.Close()
 
-	id, err := common.LockBucket(ctx, client, bucket)
-	defer common.UnlockBucket(ctx, client, bucket, id)
+	id, err := common.LockBucket(ctx, client, bucket, object)
+	defer common.UnlockBucket(ctx, client, bucket, object, id)
 
-	err = updateDesiredSize(client, ctx, bucket, newDesiredSize)
+	err = updateDesiredSize(client, ctx, bucket, object, newDesiredSize)
 	return
 }
 
-func updateDesiredSize(client *storage.Client, ctx context.Context, bucket string, desiredSize int) (err error) {
-	stateHandler := client.Bucket(bucket).Object("state")
+func updateDesiredSize(client *storage.Client, ctx context.Context, bucket, object string, desiredSize int) (err error) {
+	stateHandler := client.Bucket(bucket).Object(object)
 	state, err := common.ReadState(stateHandler, ctx)
 	if err != nil {
 		return
