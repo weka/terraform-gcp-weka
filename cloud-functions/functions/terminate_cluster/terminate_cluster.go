@@ -8,7 +8,7 @@ import (
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
 )
 
-func DeleteStateObject(ctx context.Context, bucket string) (err error) {
+func DeleteStateObject(ctx context.Context, bucket, object string) (err error) {
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed creating storage client")
@@ -16,15 +16,18 @@ func DeleteStateObject(ctx context.Context, bucket string) (err error) {
 	}
 	defer client.Close()
 
-	stateHandler := client.Bucket(bucket).Object("state")
+	stateHandler := client.Bucket(bucket).Object(object)
 	return stateHandler.Delete(ctx)
 }
 
-func TerminateInstances(ctx context.Context, project, zone, clusterName string) (terminatingInstances []string, errs []error) {
-	instances := common.GetInstancesByClusterLabel(ctx, project, zone, clusterName)
+func TerminateInstances(ctx context.Context, project, zone, labelKey, labelValue string) (terminatingInstances []string, errs []error) {
+	instances, err := common.GetInstancesByLabel(ctx, project, zone, labelKey, labelValue)
+	if err != nil {
+		errs = append(errs, err)
+		return
+	}
 	var instanceNames []string
 	var instanceName string
-	var err error
 	for _, instance := range instances {
 		instanceName = *instance.Name
 		err = common.UnsetDeletionProtection(ctx, project, zone, instanceName)

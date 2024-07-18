@@ -2,6 +2,7 @@ package clusterize_finalization
 
 import (
 	"context"
+	"fmt"
 
 	"cloud.google.com/go/storage"
 	"github.com/rs/zerolog/log"
@@ -9,7 +10,7 @@ import (
 	"github.com/weka/go-cloud-lib/protocol"
 )
 
-func ClusterizeFinalization(ctx context.Context, project, zone, instanceGroup, bucket string) (err error) {
+func ClusterizeFinalization(ctx context.Context, project, zone, instanceGroup, bucket, object string, protocolGw protocol.ProtocolGW) (err error) {
 	log.Info().Msg("Finalizing clusterization")
 
 	client, err := storage.NewClient(ctx)
@@ -19,16 +20,34 @@ func ClusterizeFinalization(ctx context.Context, project, zone, instanceGroup, b
 	}
 	defer client.Close()
 
-	id, err := common.LockBucket(ctx, client, bucket)
-	defer common.UnlockBucket(ctx, client, bucket, id)
+	id, err := common.LockBucket(ctx, client, bucket, object)
+	defer common.UnlockBucket(ctx, client, bucket, object, id)
 
-	stateHandler := client.Bucket(bucket).Object("state")
+	stateHandler := client.Bucket(bucket).Object(object)
 	state, err := common.ReadState(stateHandler, ctx)
 	if err != nil {
 		return
 	}
 
 	instanceNames := common.GetInstancesNames(state.Instances)
+
+	if protocolGw == protocol.NFS {
+		// Add tag to all clusterized NFS instances
+		labels := map[string]string{
+			common.NfsInterfaceGroupPortKey: common.NfsInterfaceGroupPortValue,
+		}
+		log.Info().Msgf("Adding label %s to %d NFS instances %v", common.NfsInterfaceGroupPortKey, len(instanceNames), instanceNames)
+
+		for _, instanceName := range instanceNames {
+			err = common.AddLabelsOnInstance(ctx, project, zone, instanceName, labels)
+			if err != nil {
+				err = fmt.Errorf("cannot add label %s to instance %s: %w", common.NfsInterfaceGroupPortKey, instanceName, err)
+				common.ReportMsg(ctx, instanceName, bucket, object, "error", err.Error())
+				continue
+			}
+		}
+	}
+
 	err = common.AddInstancesToGroup(ctx, project, zone, instanceGroup, instanceNames)
 	if err != nil {
 		return

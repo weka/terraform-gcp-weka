@@ -135,7 +135,7 @@ func TerminateUnhealthyInstances(ctx context.Context, project, zone, instanceGro
 
 	c, err := compute.NewRegionBackendServicesRESTClient(ctx)
 	if err != nil {
-		log.Error().Msgf("%s", err)
+		log.Error().Err(err).Send()
 		errs = append(errs, err)
 		return
 	}
@@ -197,7 +197,7 @@ func TerminateUnhealthyInstances(ctx context.Context, project, zone, instanceGro
 				Zone:     zone,
 			})
 			if err != nil {
-				log.Error().Msgf("%s", err)
+				log.Error().Err(err).Send()
 				return
 			}
 
@@ -240,7 +240,7 @@ func Terminate(
 	asgInstanceIds := common.GetInstanceGroupInstanceNames(ctx, project, zone, instanceGroup)
 	log.Info().Msgf("Found %d instances on ASG", len(asgInstanceIds))
 	if err != nil {
-		log.Error().Msgf("%s", err)
+		log.Error().Err(err).Send()
 		return
 	}
 
@@ -252,7 +252,7 @@ func Terminate(
 
 	deltaInstanceIds, err := getDeltaInstancesIds(ctx, project, zone, asgInstanceIds, scaleResponse)
 	if err != nil {
-		log.Error().Msgf("%s", err)
+		log.Error().Err(err).Send()
 		return
 	}
 
@@ -263,7 +263,7 @@ func Terminate(
 
 	candidatesToTerminate, err := common.GetInstances(ctx, project, zone, deltaInstanceIds)
 	if err != nil {
-		log.Error().Msgf("%s", err)
+		log.Error().Err(err).Send()
 		return
 	}
 

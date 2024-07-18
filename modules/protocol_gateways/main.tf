@@ -11,25 +11,12 @@ locals {
   private_nic_first_index = var.assign_public_ip ? 1 : 0
   nics_numbers            = var.frontend_container_cores_num + 1
   init_script = templatefile("${path.module}/init.sh", {
-    yum_repo_server  = var.yum_repo_server
-    subnet_range     = join(" ", data.google_compute_subnetwork.this.*.ip_cidr_range)
-    disk_size        = local.disk_size
-    install_weka_url = var.install_weka_url
-    weka_token_id    = var.weka_token_id == "" ? "NONE" : var.weka_token_id
-    proxy_url        = var.proxy_url
-  })
-
-  deploy_script = templatefile("${path.module}/deploy_protocol_gateways.sh", {
-    frontend_container_cores_num = var.frontend_container_cores_num
-    subnet_prefixes              = join(" ", data.google_compute_subnetwork.this.*.ip_cidr_range)
-    backend_lb_ip                = var.backend_lb_ip
-    weka_password_id             = var.weka_password_id
-  })
-
-  setup_nfs_protocol_script = templatefile("${path.module}/setup_nfs.sh", {
-    gateways_name        = var.gateways_name
-    interface_group_name = var.interface_group_name
-    client_group_name    = var.client_group_name
+    yum_repo_server     = var.yum_repo_server
+    disk_size           = local.disk_size
+    proxy_url           = var.proxy_url
+    deploy_function_url = var.deploy_function_url
+    report_function_url = var.report_function_url
+    protocol            = lower(var.protocol)
   })
 
   setup_smb_protocol_script = templatefile("${path.module}/setup_smb.sh", {
@@ -44,20 +31,20 @@ locals {
   setup_s3_protocol_script = file("${path.module}/setup_s3.sh")
 
   setup_validation_script = templatefile("${path.module}/setup_validation.sh", {
-    gateways_number = var.gateways_number
-    gateways_name   = var.gateways_name
-    protocol        = lower(var.protocol)
-    smbw_enabled    = var.smbw_enabled
+    gateways_number     = var.gateways_number
+    gateways_name       = var.gateways_name
+    protocol            = lower(var.protocol)
+    smbw_enabled        = var.smbw_enabled
+    report_function_url = var.report_function_url
   })
 
-  nfs_protocol_script = var.protocol == "NFS" ? local.setup_nfs_protocol_script : ""
   smb_protocol_script = var.protocol == "SMB" ? local.setup_smb_protocol_script : ""
   s3_protocol_script  = var.protocol == "S3" ? local.setup_s3_protocol_script : ""
   validation_script   = var.setup_protocol && (var.protocol == "SMB" || var.protocol == "S3") ? local.setup_validation_script : ""
 
-  setup_protocol_script = var.setup_protocol ? compact([local.nfs_protocol_script, local.smb_protocol_script, local.s3_protocol_script]) : []
+  setup_protocol_script = var.setup_protocol ? compact([local.smb_protocol_script, local.s3_protocol_script]) : []
 
-  custom_data_parts = concat([local.init_script, local.deploy_script, local.validation_script], local.setup_protocol_script)
+  custom_data_parts = concat([local.init_script, local.validation_script], local.setup_protocol_script)
 
   custom_data = join("\n", local.custom_data_parts)
 }
@@ -69,6 +56,10 @@ resource "google_compute_instance_template" "this" {
   project                 = var.project_id
   tags                    = [var.gateways_name]
   metadata_startup_script = local.custom_data
+
+  labels = {
+    weka_protocol_gateway = var.gateways_name
+  }
 
   metadata = {
     apply-alias-ip-ranges = true
@@ -151,7 +142,7 @@ resource "google_compute_instance_template" "this" {
 }
 
 resource "google_compute_instance_from_template" "this" {
-  count                    = var.gateways_number
+  count                    = var.protocol != "NFS" ? var.gateways_number : 0
   name                     = "${var.gateways_name}-instance-${count.index}"
   zone                     = var.zone
   source_instance_template = google_compute_instance_template.this.self_link
