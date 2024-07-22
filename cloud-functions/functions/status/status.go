@@ -67,7 +67,7 @@ func GetReports(ctx context.Context, project, zone, bucket, object, instanceGrou
 	return
 }
 
-func GetClusterStatus(ctx context.Context, project, zone, bucket, object, instanceGroup, usernameId, passwordId string) (clusterStatus protocol.ClusterStatus, err error) {
+func GetClusterStatus(ctx context.Context, project, zone, bucket, object, instanceGroup, usernameId, passwordId, adminPasswordId string) (clusterStatus protocol.ClusterStatus, err error) {
 	state, err := common.GetClusterState(ctx, bucket, object)
 	if err != nil {
 		return
@@ -80,7 +80,7 @@ func GetClusterStatus(ctx context.Context, project, zone, bucket, object, instan
 		return
 	}
 
-	creds, err := common.GetUsernameAndPassword(ctx, usernameId, passwordId)
+	creds, err := common.GetDeploymentOrAdminUsernameAndPassword(ctx, project, usernameId, passwordId, adminPasswordId)
 	if err != nil {
 		return
 	}

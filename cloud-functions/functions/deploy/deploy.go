@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	secretmanager "cloud.google.com/go/secretmanager/apiv1"
-	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 	"github.com/lithammer/dedent"
 	"github.com/rs/zerolog/log"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
@@ -20,17 +18,7 @@ func getGCPInstanceNameCmd() string {
 }
 
 func getWekaIoToken(ctx context.Context, tokenId string) (token string, err error) {
-	client, err := secretmanager.NewClient(ctx)
-	if err != nil {
-		return
-	}
-	defer client.Close()
-
-	res, err := client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{Name: tokenId})
-	if err != nil {
-		return
-	}
-	token = string(res.Payload.Data)
+	token, err = common.GetSecret(ctx, tokenId)
 	return
 }
 
@@ -38,8 +26,6 @@ type GCPDeploymentParams struct {
 	Project               string
 	Zone                  string
 	InstanceGroup         string
-	UsernameId            string
-	PasswordId            string
 	TokenId               string // we allow empty token id for private network installation
 	Bucket                string
 	StateObject           string

@@ -21,8 +21,9 @@ type FetchInput struct {
 	InstanceGroup              string
 	Bucket                     string
 	StateObject                string
-	UsernameId                 string
-	PasswordId                 string
+	DeploymentUsernameId       string
+	DeploymentPasswordId       string
+	AdminPasswordId            string
 	DownBackendsRemovalTimeout time.Duration
 	NFSInstanceGroup           string
 	NFSStateObject             string
@@ -32,11 +33,6 @@ type FetchInput struct {
 func FetchHostGroupInfo(ctx context.Context, params FetchInput) (hostGroupInfoResponse protocol.HostGroupInfoResponse, err error) {
 	if params.DownBackendsRemovalTimeout == 0 {
 		params.DownBackendsRemovalTimeout = defaultDownBackendsRemovalTimeout
-	}
-
-	creds, err := common.GetUsernameAndPassword(ctx, params.UsernameId, params.PasswordId)
-	if err != nil {
-		return
 	}
 
 	instanceNames := common.GetInstanceGroupInstanceNames(ctx, params.Project, params.Zone, params.InstanceGroup)
@@ -51,19 +47,48 @@ func FetchHostGroupInfo(ctx context.Context, params FetchInput) (hostGroupInfoRe
 		return
 	}
 
+	var wekaPassword string
+	var adminPassword string
+	var username string
+	var creds protocol.ClusterCreds
+	if params.ShowAdminPassword {
+		creds, err = common.GetWekaAdminCredentials(ctx, params.Project, params.AdminPasswordId)
+		if err != nil {
+			err = fmt.Errorf("failed to get admin password: %w", err)
+			log.Error().Err(err).Send()
+			return
+		}
+		adminPassword = creds.Password
+
+		creds, err = common.GetWekaDeploymentCredentials(ctx, params.Project, params.DeploymentUsernameId, params.DeploymentPasswordId)
+		if err != nil {
+			err = fmt.Errorf("failed to get deployment credentials: %w", err)
+			log.Error().Err(err).Send()
+			return
+		}
+		wekaPassword = creds.Password
+		username = creds.Username
+	} else {
+		creds, err = common.GetDeploymentOrAdminUsernameAndPassword(ctx, params.Project, params.DeploymentUsernameId, params.DeploymentPasswordId, params.AdminPasswordId)
+		if err != nil {
+			err = fmt.Errorf("failed to get weka credentials: %w", err)
+			log.Error().Err(err).Send()
+			return
+		}
+		wekaPassword = creds.Password
+		username = creds.Username
+	}
+
 	hostGroupInfoResponse = protocol.HostGroupInfoResponse{
-		Username:                    creds.Username,
-		Password:                    creds.Password,
+		Username:                    username,
+		Password:                    wekaPassword,
+		AdminPassword:               adminPassword,
 		WekaBackendsDesiredCapacity: desiredCapacity,
 		WekaBackendInstances:        getHostGroupInfoInstances(instances),
 		DownBackendsRemovalTimeout:  params.DownBackendsRemovalTimeout,
 		BackendIps:                  common.GetInstanceGroupBackendsIps(instances),
 		Role:                        "backend",
 		Version:                     1,
-	}
-
-	if params.ShowAdminPassword {
-		hostGroupInfoResponse.AdminPassword = creds.Password
 	}
 
 	if params.NFSStateObject != "" {
