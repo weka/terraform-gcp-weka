@@ -105,12 +105,6 @@ variable "weka_version" {
   default     = "4.2.12.87"
 }
 
-variable "weka_username" {
-  type        = string
-  description = "A unique identifier for a user authorized to access the WEKA cluster (GUI, CLI, and API)."
-  default     = "admin"
-}
-
 variable "cluster_size" {
   type        = number
   description = "The number of instances deployed for your WEKA cluster."

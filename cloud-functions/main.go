@@ -123,7 +123,8 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 	prefix := os.Getenv("PREFIX")
 	nvmesNum, _ := strconv.Atoi(os.Getenv("NVMES_NUM"))
 	usernameId := os.Getenv("USER_NAME_ID")
-	passwordId := os.Getenv("PASSWORD_ID")
+	deploymentPasswordId := os.Getenv("DEPLOYMENT_PASSWORD_ID")
+	adminPasswordId := os.Getenv("ADMIN_PASSWORD_ID")
 	bucket := os.Getenv("BUCKET")
 	stateObject := os.Getenv("STATE_BLOB_NAME")
 	nfsStateObject := os.Getenv("NFS_STATE_BLOB_NAME")
@@ -163,14 +164,15 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	params := clusterize.ClusterizationParams{
-		Project:     project,
-		Region:      region,
-		Zone:        zone,
-		UsernameId:  usernameId,
-		PasswordId:  passwordId,
-		Bucket:      bucket,
-		StateObject: stateObject,
-		Vm:          vm,
+		Project:              project,
+		Region:               region,
+		Zone:                 zone,
+		UsernameId:           usernameId,
+		AdminPasswordId:      adminPasswordId,
+		DeploymentPasswordId: deploymentPasswordId,
+		Bucket:               bucket,
+		StateObject:          stateObject,
+		Vm:                   vm,
 		Cluster: clusterizeCommon.ClusterParams{
 			ClusterizationTarget: hostsNum,
 			ClusterName:          clusterName,
@@ -214,17 +216,20 @@ func Fetch(w http.ResponseWriter, r *http.Request) {
 	zone := os.Getenv("ZONE")
 	instanceGroup := os.Getenv("INSTANCE_GROUP")
 	bucket := os.Getenv("BUCKET")
-	usernameId := os.Getenv("USER_NAME_ID")
-	passwordId := os.Getenv("PASSWORD_ID")
 	downBackendsRemovalTimeout, _ := time.ParseDuration(os.Getenv("DOWN_BACKENDS_REMOVAL_TIMEOUT"))
 	stateObject := os.Getenv("STATE_BLOB_NAME")
 	nfsStateObject := os.Getenv("NFS_STATE_BLOB_NAME")
 	nfsInstanceGroup := os.Getenv("NFS_INSTANCE_GROUP")
+	usernameId := os.Getenv("USER_NAME_ID")
+	deploymentPasswordId := os.Getenv("DEPLOYMENT_PASSWORD_ID")
+	adminPasswordId := os.Getenv("ADMIN_PASSWORD_ID")
 
 	var input protocol.FetchRequest
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		failedDecodingReqBody(w, err)
-		return
+	if r.Body != nil && r.Body != http.NoBody {
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			failedDecodingReqBody(w, err)
+			return
+		}
 	}
 
 	ctx := r.Context()
@@ -234,9 +239,10 @@ func Fetch(w http.ResponseWriter, r *http.Request) {
 		Zone:                       zone,
 		InstanceGroup:              instanceGroup,
 		Bucket:                     bucket,
-		UsernameId:                 usernameId,
-		PasswordId:                 passwordId,
 		StateObject:                stateObject,
+		DeploymentUsernameId:       usernameId,
+		DeploymentPasswordId:       deploymentPasswordId,
+		AdminPasswordId:            adminPasswordId,
 		NFSStateObject:             nfsStateObject,
 		NFSInstanceGroup:           nfsInstanceGroup,
 		DownBackendsRemovalTimeout: downBackendsRemovalTimeout,
@@ -260,8 +266,6 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 	project := os.Getenv("PROJECT")
 	zone := os.Getenv("ZONE")
 	instanceGroup := os.Getenv("INSTANCE_GROUP")
-	usernameId := os.Getenv("USER_NAME_ID")
-	passwordId := os.Getenv("PASSWORD_ID")
 	tokenId := os.Getenv("TOKEN_ID")
 	bucket := os.Getenv("BUCKET")
 	stateObject := os.Getenv("STATE_BLOB_NAME")
@@ -307,8 +311,6 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 		Project:               project,
 		Zone:                  zone,
 		InstanceGroup:         instanceGroup,
-		UsernameId:            usernameId,
-		PasswordId:            passwordId,
 		TokenId:               tokenId,
 		Bucket:                bucket,
 		StateObject:           stateObject,
@@ -704,7 +706,8 @@ func Status(w http.ResponseWriter, r *http.Request) {
 	stateObject := os.Getenv("STATE_BLOB_NAME")
 	instanceGroup := os.Getenv("INSTANCE_GROUP")
 	usernameId := os.Getenv("USER_NAME_ID")
-	passwordId := os.Getenv("PASSWORD_ID")
+	adminPasswordId := os.Getenv("ADMIN_PASSWORD_ID")
+	deploymentPasswordId := os.Getenv("DEPLOYMENT_PASSWORD_ID")
 	nfsStateObject := os.Getenv("NFS_STATE_BLOB_NAME")
 	nfsInstanceGroup := os.Getenv("NFS_INSTANCE_GROUP")
 
@@ -722,7 +725,7 @@ func Status(w http.ResponseWriter, r *http.Request) {
 	var clusterStatus interface{}
 	var err error
 	if requestBody.Type == "" || requestBody.Type == "status" {
-		clusterStatus, err = status.GetClusterStatus(ctx, project, zone, bucket, stateObject, instanceGroup, usernameId, passwordId)
+		clusterStatus, err = status.GetClusterStatus(ctx, project, zone, bucket, stateObject, instanceGroup, usernameId, deploymentPasswordId, adminPasswordId)
 	} else if requestBody.Type == "progress" && requestBody.Protocol == "" {
 		clusterStatus, err = status.GetReports(ctx, project, zone, bucket, stateObject, instanceGroup)
 	} else if requestBody.Type == "progress" && requestBody.Protocol == "nfs" {
