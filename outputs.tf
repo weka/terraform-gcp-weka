@@ -116,7 +116,7 @@ curl -m 70 -X POST "${local.terminate_cluster_uri}" \
 
 ################################# get weka password secret login ############################################
 
-gcloud secrets versions access 1 --secret=${local.weka_cluster_password_secret_id}  --project ${var.project_id} --format='get(payload.data)' | base64 -d
+gcloud secrets versions access latest --secret=${local.weka_cluster_password_secret_id}  --project ${var.project_id} --format='get(payload.data)' | base64 -d
 
 ############################################## get backend ips ##############################################
 

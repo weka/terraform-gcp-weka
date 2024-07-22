@@ -22,6 +22,8 @@ import (
 )
 
 const (
+	AdminUsername = "admin"
+
 	WekaClusterLabelKey    = "weka_cluster_name"
 	WekaProtocolGwLabelKey = "weka_protocol_gateway"
 
@@ -29,23 +31,121 @@ const (
 	NfsInterfaceGroupPortValue = "ready"
 )
 
-func GetUsernameAndPassword(ctx context.Context, usernameId, passwordId string) (clusterCreds protocol.ClusterCreds, err error) {
+func GetDeploymentOrAdminUsernameAndPassword(ctx context.Context, project, usernameId, passwordId, adminPasswordId string) (clusterCreds protocol.ClusterCreds, err error) {
+	log.Info().Msgf("Fetching username %s and password %s", usernameId, passwordId)
 	client, err := secretmanager.NewClient(ctx)
 	if err != nil {
 		return
 	}
 	defer client.Close()
 
-	res, err := client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{Name: usernameId})
+	deploymentPassword, err := getLatestSecretVersion(ctx, client, passwordId)
+	// if deploymentPassword doesn't exist, try to get adminPassword
+	if err != nil && (strings.Contains(err.Error(), "NOT_FOUND") || strings.Contains(err.Error(), "NotFound")) {
+		adminPassword, err := getLatestSecretVersion(ctx, client, adminPasswordId)
+		if err != nil {
+			log.Error().Err(err).Send()
+			return clusterCreds, err
+		}
+		clusterCreds.Password = adminPassword
+		clusterCreds.Username = AdminUsername
+		return clusterCreds, nil
+	}
+	if err != nil {
+		log.Error().Err(err).Send()
+		return clusterCreds, err
+	}
+
+	clusterCreds.Password = deploymentPassword
+	clusterCreds.Username, err = getLatestSecretVersion(ctx, client, usernameId)
+	if err != nil {
+		log.Error().Err(err).Send()
+	}
+	return
+}
+
+func GetWekaAdminCredentials(ctx context.Context, project, adminPasswordId string) (clusterCreds protocol.ClusterCreds, err error) {
+	log.Info().Msgf("Fetching admin password %s", adminPasswordId)
+	client, err := secretmanager.NewClient(ctx)
 	if err != nil {
 		return
 	}
-	clusterCreds.Username = string(res.Payload.Data)
-	res, err = client.AccessSecretVersion(ctx, &secretmanagerpb.AccessSecretVersionRequest{Name: passwordId})
+	defer client.Close()
+
+	adminPassword, err := getLatestSecretVersion(ctx, client, adminPasswordId)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return clusterCreds, err
+	}
+	clusterCreds.Password = adminPassword
+	clusterCreds.Username = AdminUsername
+	return
+}
+
+func GetWekaDeploymentCredentials(ctx context.Context, project, usernameId, passwordId string) (clusterCreds protocol.ClusterCreds, err error) {
+	log.Info().Msgf("Fetching weka deployment username %s and password %s", usernameId, passwordId)
+	client, err := secretmanager.NewClient(ctx)
 	if err != nil {
 		return
 	}
-	clusterCreds.Password = string(res.Payload.Data)
+	defer client.Close()
+
+	deploymentPassword, err := getLatestSecretVersion(ctx, client, passwordId)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return clusterCreds, err
+	}
+
+	username, err := getLatestSecretVersion(ctx, client, usernameId)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return clusterCreds, err
+	}
+
+	clusterCreds.Password = deploymentPassword
+	clusterCreds.Username = username
+	return
+}
+
+func getLatestSecretVersion(ctx context.Context, client *secretmanager.Client, secretId string) (secret string, err error) {
+	req := &secretmanagerpb.AccessSecretVersionRequest{
+		Name: fmt.Sprintf("%s/versions/latest", secretId),
+	}
+	secretVersion, err := client.AccessSecretVersion(ctx, req)
+	if err != nil {
+		err = fmt.Errorf("failed accessing secret version (%s): %w", secretId, err)
+		return
+	}
+	secret = string(secretVersion.Payload.Data)
+	return
+}
+
+func GetSecret(ctx context.Context, secretId string) (secret string, err error) {
+	client, err := secretmanager.NewClient(ctx)
+	if err != nil {
+		return
+	}
+	defer client.Close()
+
+	return getLatestSecretVersion(ctx, client, secretId)
+}
+
+func SetSecretVersion(ctx context.Context, secretId, secret string) (err error) {
+	client, err := secretmanager.NewClient(ctx)
+	if err != nil {
+		return
+	}
+	defer client.Close()
+
+	_, err = client.AddSecretVersion(ctx, &secretmanagerpb.AddSecretVersionRequest{
+		Parent: secretId,
+		Payload: &secretmanagerpb.SecretPayload{
+			Data: []byte(secret),
+		},
+	})
+	if err != nil {
+		err = fmt.Errorf("failed adding secret version: %w", err)
+	}
 	return
 }
 

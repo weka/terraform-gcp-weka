@@ -18,11 +18,24 @@ resource "google_secret_manager_secret" "secret_weka_password" {
 
 resource "google_secret_manager_secret_version" "password_secret_key" {
   secret      = google_secret_manager_secret.secret_weka_password.id
-  secret_data = random_password.password.result
+  secret_data = ""
 
   lifecycle {
     ignore_changes = [secret_data]
   }
+}
+
+resource "google_secret_manager_secret" "weka_deployment_password" {
+  secret_id = "${var.prefix}-${var.cluster_name}-deployment-password"
+  project   = var.project_id
+  replication {
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
+  }
+  depends_on = [google_project_service.secret_manager]
 }
 
 resource "google_secret_manager_secret" "secret_weka_username" {
@@ -40,7 +53,7 @@ resource "google_secret_manager_secret" "secret_weka_username" {
 
 resource "google_secret_manager_secret_version" "user_secret_key" {
   secret      = google_secret_manager_secret.secret_weka_username.id
-  secret_data = var.weka_username
+  secret_data = "weka-deployment"
 
   lifecycle {
     ignore_changes = [secret_data]

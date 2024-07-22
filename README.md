@@ -176,7 +176,6 @@ set_shared_vpc_peering = true
 | <a name="requirement_archive"></a> [archive](#requirement\_archive) | ~>2.4.0 |
 | <a name="requirement_google"></a> [google](#requirement\_google) | ~>4.38.0 |
 | <a name="requirement_local"></a> [local](#requirement\_local) | ~>2.4.0 |
-| <a name="requirement_random"></a> [random](#requirement\_random) | ~>3.5.1 |
 | <a name="requirement_time"></a> [time](#requirement\_time) | ~>0.9.1 |
 | <a name="requirement_tls"></a> [tls](#requirement\_tls) | ~>4.0.4 |
 
@@ -187,7 +186,6 @@ set_shared_vpc_peering = true
 | <a name="provider_archive"></a> [archive](#provider\_archive) | ~>2.4.0 |
 | <a name="provider_google"></a> [google](#provider\_google) | ~>4.38.0 |
 | <a name="provider_local"></a> [local](#provider\_local) | ~>2.4.0 |
-| <a name="provider_random"></a> [random](#provider\_random) | ~>3.5.1 |
 | <a name="provider_time"></a> [time](#provider\_time) | ~>0.9.1 |
 | <a name="provider_tls"></a> [tls](#provider\_tls) | ~>4.0.4 |
 
@@ -219,6 +217,7 @@ set_shared_vpc_peering = true
 | [google_cloudfunctions2_function_iam_member.weka_internal_invoker](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/cloudfunctions2_function_iam_member) | resource |
 | [google_compute_forwarding_rule.google_compute_forwarding_rule](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_forwarding_rule) | resource |
 | [google_compute_forwarding_rule.ui_forwarding_rule](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_forwarding_rule) | resource |
+| [google_compute_instance_group.nfs](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance_group) | resource |
 | [google_compute_instance_group.this](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance_group) | resource |
 | [google_compute_instance_template.this](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance_template) | resource |
 | [google_compute_region_backend_service.backend_service](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_region_backend_service) | resource |
@@ -245,17 +244,18 @@ set_shared_vpc_peering = true
 | [google_secret_manager_secret.secret_token](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/secret_manager_secret) | resource |
 | [google_secret_manager_secret.secret_weka_password](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/secret_manager_secret) | resource |
 | [google_secret_manager_secret.secret_weka_username](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/secret_manager_secret) | resource |
+| [google_secret_manager_secret.weka_deployment_password](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/secret_manager_secret) | resource |
 | [google_secret_manager_secret_version.password_secret_key](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/secret_manager_secret_version) | resource |
 | [google_secret_manager_secret_version.token_secret_key](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/secret_manager_secret_version) | resource |
 | [google_secret_manager_secret_version.user_secret_key](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/secret_manager_secret_version) | resource |
 | [google_storage_bucket.weka_deployment](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/storage_bucket) | resource |
 | [google_storage_bucket_object.cloud_functions_zip](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/storage_bucket_object) | resource |
+| [google_storage_bucket_object.nfs_state](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/storage_bucket_object) | resource |
 | [google_storage_bucket_object.state](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/storage_bucket_object) | resource |
 | [google_workflows_workflow.scale_down](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/workflows_workflow) | resource |
 | [google_workflows_workflow.scale_up](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/workflows_workflow) | resource |
 | [local_file.private_key](https://registry.terraform.io/providers/hashicorp/local/latest/docs/resources/file) | resource |
 | [local_file.public_key](https://registry.terraform.io/providers/hashicorp/local/latest/docs/resources/file) | resource |
-| [random_password.password](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
 | [time_sleep.wait_120_seconds](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) | resource |
 | [tls_private_key.ssh_key](https://registry.terraform.io/providers/hashicorp/tls/latest/docs/resources/private_key) | resource |
 | [archive_file.function_zip](https://registry.terraform.io/providers/hashicorp/archive/latest/docs/data-sources/file) | data source |
@@ -303,10 +303,11 @@ set_shared_vpc_peering = true
 | <a name="input_machine_type"></a> [machine\_type](#input\_machine\_type) | The machine type for the WEKA backend instance. Select one from the list of supported options. | `string` | `"c2-standard-8"` | no |
 | <a name="input_mtu_size"></a> [mtu\_size](#input\_mtu\_size) | The Maximum Transmission Unit (MTU) size is the largest packet size that can be transmitted over a network. | `number` | `8896` | no |
 | <a name="input_network_project_id"></a> [network\_project\_id](#input\_network\_project\_id) | The project ID for the network. | `string` | `""` | no |
+| <a name="input_nfs_interface_group_name"></a> [nfs\_interface\_group\_name](#input\_nfs\_interface\_group\_name) | Interface group name. | `string` | `"weka-ig"` | no |
 | <a name="input_nfs_protocol_gateway_disk_size"></a> [nfs\_protocol\_gateway\_disk\_size](#input\_nfs\_protocol\_gateway\_disk\_size) | The default disk size for NFS protocol gateways. | `number` | `48` | no |
 | <a name="input_nfs_protocol_gateway_fe_cores_num"></a> [nfs\_protocol\_gateway\_fe\_cores\_num](#input\_nfs\_protocol\_gateway\_fe\_cores\_num) | The number of frontend cores on each NFS protocol gateway machine. | `number` | `1` | no |
 | <a name="input_nfs_protocol_gateway_machine_type"></a> [nfs\_protocol\_gateway\_machine\_type](#input\_nfs\_protocol\_gateway\_machine\_type) | The virtual machine type (SKU) for the NFS protocol gateways to deploy. | `string` | `"c2-standard-8"` | no |
-| <a name="input_nfs_protocol_gateway_secondary_ips_per_nic"></a> [nfs\_protocol\_gateway\_secondary\_ips\_per\_nic](#input\_nfs\_protocol\_gateway\_secondary\_ips\_per\_nic) | The number of secondary IPs per single NIC per NFS protocol gateway virtual machine. | `number` | `3` | no |
+| <a name="input_nfs_protocol_gateway_secondary_ips_per_nic"></a> [nfs\_protocol\_gateway\_secondary\_ips\_per\_nic](#input\_nfs\_protocol\_gateway\_secondary\_ips\_per\_nic) | The number of secondary IPs per single NIC per NFS protocol gateway virtual machine. | `number` | `0` | no |
 | <a name="input_nfs_protocol_gateways_number"></a> [nfs\_protocol\_gateways\_number](#input\_nfs\_protocol\_gateways\_number) | The number of NFS protocol gateway virtual machines to deploy. | `number` | `0` | no |
 | <a name="input_nfs_setup_protocol"></a> [nfs\_setup\_protocol](#input\_nfs\_setup\_protocol) | Specifies whether to configure the NFS protocol. | `bool` | `false` | no |
 | <a name="input_nic_type"></a> [nic\_type](#input\_nic\_type) | The type of vNIC. Possible values: GVNIC, VIRTIO\_NET. | `string` | `null` | no |
@@ -377,6 +378,7 @@ set_shared_vpc_peering = true
 
 | Name | Description |
 |------|-------------|
+| <a name="output_backend_lb_ip"></a> [backend\_lb\_ip](#output\_backend\_lb\_ip) | The backend load balancer ip address. |
 | <a name="output_client_ips"></a> [client\_ips](#output\_client\_ips) | If 'assign\_public\_ip' is set to true, it will output clients public ips, otherwise private ips. |
 | <a name="output_cluster_helper_commands"></a> [cluster\_helper\_commands](#output\_cluster\_helper\_commands) | Useful commands and script to interact with weka cluster |
 | <a name="output_cluster_name"></a> [cluster\_name](#output\_cluster\_name) | The cluster name |

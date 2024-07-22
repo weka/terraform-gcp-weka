@@ -73,9 +73,10 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       NFS_INSTANCE_GROUP : var.nfs_setup_protocol ? google_compute_instance_group.nfs[0].name : ""
       GATEWAYS : join(",", [for s in data.google_compute_subnetwork.this : s.gateway_address])
       SUBNETS : format("(%s)", join(" ", [for s in data.google_compute_subnetwork.this : s.ip_cidr_range]))
-      USER_NAME_ID : google_secret_manager_secret_version.user_secret_key.id
-      PASSWORD_ID : google_secret_manager_secret_version.password_secret_key.id
-      TOKEN_ID : var.get_weka_io_token == "" ? "" : google_secret_manager_secret_version.token_secret_key[0].id
+      USER_NAME_ID : google_secret_manager_secret.secret_weka_username.id
+      ADMIN_PASSWORD_ID = google_secret_manager_secret.secret_weka_password.id
+      DEPLOYMENT_PASSWORD_ID : google_secret_manager_secret.weka_deployment_password.id
+      TOKEN_ID : var.get_weka_io_token == "" ? "" : google_secret_manager_secret.secret_token[0].id
       BUCKET : local.state_bucket
       STATE_BLOB_NAME : google_storage_bucket_object.state.name
       INSTALL_URL : local.install_weka_url
@@ -215,8 +216,9 @@ resource "google_cloudfunctions2_function" "status_function" {
       NFS_STATE_BLOB_NAME : var.nfs_setup_protocol ? google_storage_bucket_object.nfs_state[0].name : ""
       INSTANCE_GROUP : google_compute_instance_group.this.name
       NFS_INSTANCE_GROUP : var.nfs_setup_protocol ? google_compute_instance_group.nfs[0].name : ""
-      USER_NAME_ID : google_secret_manager_secret_version.user_secret_key.id
-      PASSWORD_ID : google_secret_manager_secret_version.password_secret_key.id
+      USER_NAME_ID : google_secret_manager_secret.secret_weka_username.id
+      ADMIN_PASSWORD_ID : google_secret_manager_secret.secret_weka_password.id
+      DEPLOYMENT_PASSWORD_ID : google_secret_manager_secret.weka_deployment_password.id
     }
   }
   depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, google_project_service.project_function_api, google_project_service.run_api, google_project_service.artifactregistry_api]
