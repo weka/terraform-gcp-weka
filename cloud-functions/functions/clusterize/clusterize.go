@@ -17,19 +17,21 @@ import (
 	"github.com/weka/go-cloud-lib/clusterize"
 	cloudCommon "github.com/weka/go-cloud-lib/common"
 	"github.com/weka/go-cloud-lib/protocol"
+	"github.com/weka/go-cloud-lib/utils"
 )
 
 type ClusterizationParams struct {
-	Project     string
-	Region      string
-	Zone        string
-	UsernameId  string
-	PasswordId  string
-	Bucket      string
-	StateObject string
-	Vm          protocol.Vm
-	Cluster     clusterize.ClusterParams
-	Obs         protocol.ObsParams
+	Project              string
+	Region               string
+	Zone                 string
+	UsernameId           string
+	AdminPasswordId      string
+	DeploymentPasswordId string
+	Bucket               string
+	StateObject          string
+	Vm                   protocol.Vm
+	Cluster              clusterize.ClusterParams
+	Obs                  protocol.ObsParams
 	// root url for cloud function calls' definitions
 	CloudFuncRootUrl string
 	NvmesNum         int
@@ -135,6 +137,22 @@ func Clusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript s
 		} else {
 			log.Info().Msgf("Using existing obs bucket %s", p.Obs.Name)
 		}
+	}
+
+	log.Info().Msg("setting weka admin password in secrets manager")
+	adminPassword := utils.GeneratePassword(16, 1, 1, 1)
+	err = common.SetSecretVersion(ctx, p.AdminPasswordId, adminPassword)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return
+	}
+
+	log.Info().Msg("setting weka deployment password in secrets manager")
+	wekaDeploymentPassword := utils.GeneratePassword(16, 1, 1, 1)
+	err = common.SetSecretVersion(ctx, p.DeploymentPasswordId, wekaDeploymentPassword)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return
 	}
 
 	instancesNames := common.GetInstancesNames(state.Instances)

@@ -61,12 +61,12 @@ func Test_clusterize(t *testing.T) {
 	}
 
 	params := clusterize.ClusterizationParams{
-		Project:    project,
-		Zone:       zone,
-		UsernameId: usernameId,
-		PasswordId: passwordId,
-		Bucket:     bucket,
-		Vm:         vm,
+		Project:              project,
+		Zone:                 zone,
+		UsernameId:           usernameId,
+		DeploymentPasswordId: passwordId,
+		Bucket:               bucket,
+		Vm:                   vm,
 		Cluster: clusterizeCommon.ClusterParams{
 			ClusterizationTarget: hostsNum,
 			ClusterName:          clusterName,
@@ -89,8 +89,6 @@ func Test_fetch(t *testing.T) {
 		InstanceGroup: "weka-instance-group",
 		Bucket:        "weka-poc-state",
 		StateObject:   "state",
-		UsernameId:    "projects/896245720241/secrets/weka-poc-username/versions/1",
-		PasswordId:    "projects/896245720241/secrets/weka-poc-password/versions/1",
 	}
 
 	result, err := fetch.FetchHostGroupInfo(ctx, p)
@@ -111,8 +109,6 @@ func Test_deploy(t *testing.T) {
 	project := "wekaio-rnd"
 	zone := "europe-west1-b"
 	instanceGroup := "weka-instance-group"
-	usernameId := "projects/896245720241/secrets/weka-poc-username/versions/1"
-	passwordId := "projects/896245720241/secrets/weka-poc-password/versions/1"
 	tokenId := "projects/896245720241/secrets/weka-poc-token/versions/1"
 	nicNum := "3"
 	gws := []string{"10.0.0.1", "10.1.0.1", "10.2.0.1", "10.3.0.1"}
@@ -136,8 +132,6 @@ func Test_deploy(t *testing.T) {
 		Project:              project,
 		Zone:                 zone,
 		InstanceGroup:        instanceGroup,
-		UsernameId:           usernameId,
-		PasswordId:           passwordId,
 		TokenId:              tokenId,
 		Bucket:               bucket,
 		InstanceName:         instanceName,
@@ -262,7 +256,7 @@ func Test_status(t *testing.T) {
 	passwordId := "projects/896245720241/secrets/weka-poc-password/versions/1"
 
 	ctx := context.TODO()
-	clusterStatus, err := status.GetClusterStatus(ctx, project, zone, bucket, stateName, instanceGroup, usernameId, passwordId)
+	clusterStatus, err := status.GetClusterStatus(ctx, project, zone, bucket, stateName, instanceGroup, usernameId, passwordId, "")
 	if err != nil {
 		t.Logf("Failed getting status %s", err)
 	} else {
