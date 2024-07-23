@@ -63,9 +63,9 @@ output "project_id" {
   description = "Project ID"
 }
 
-output "weka_cluster_password_secret_id" {
+output "weka_cluster_admin_password_secret_id" {
   value       = local.weka_cluster_password_secret_id
-  description = "Secret id of weka_password"
+  description = "Secret id of weka cluster admin password"
 }
 
 output "nfs_protocol_gateways_ips" {
