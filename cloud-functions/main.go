@@ -218,7 +218,7 @@ func Fetch(w http.ResponseWriter, r *http.Request) {
 	bucket := os.Getenv("BUCKET")
 	downBackendsRemovalTimeout, _ := time.ParseDuration(os.Getenv("DOWN_BACKENDS_REMOVAL_TIMEOUT"))
 	stateObject := os.Getenv("STATE_BLOB_NAME")
-	nfsStateObject := os.Getenv("NFS_STATE_BLOB_NAME")
+	nfsStateObject := "" // Disabling Scale down. To return support, need to change to: 'os.Getenv("NFS_STATE_BLOB_NAME")'
 	nfsInstanceGroup := os.Getenv("NFS_INSTANCE_GROUP")
 	usernameId := os.Getenv("USER_NAME_ID")
 	deploymentPasswordId := os.Getenv("DEPLOYMENT_PASSWORD_ID")
