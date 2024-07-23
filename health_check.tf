@@ -33,6 +33,7 @@ resource "google_compute_forwarding_rule" "google_compute_forwarding_rule" {
   region                = var.region
   load_balancing_scheme = "INTERNAL"
   all_ports             = true
+  allow_global_access   = true
   network               = data.google_compute_network.this[0].self_link
   subnetwork            = data.google_compute_subnetwork.this[0].self_link
   lifecycle {
@@ -89,6 +90,7 @@ resource "google_compute_forwarding_rule" "ui_forwarding_rule" {
   region                = var.region
   load_balancing_scheme = "INTERNAL"
   all_ports             = true
+  allow_global_access   = true
   network               = data.google_compute_network.this[0].self_link
   subnetwork            = data.google_compute_subnetwork.this[0].self_link
   lifecycle {
