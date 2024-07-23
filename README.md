@@ -393,5 +393,5 @@ set_shared_vpc_peering = true
 | <a name="output_smb_protocol_gateways_ips"></a> [smb\_protocol\_gateways\_ips](#output\_smb\_protocol\_gateways\_ips) | Ips of SMB protocol gateways |
 | <a name="output_terminate_cluster_uri"></a> [terminate\_cluster\_uri](#output\_terminate\_cluster\_uri) | URL of terminate function |
 | <a name="output_vm_username"></a> [vm\_username](#output\_vm\_username) | Provided as part of output for automated use of terraform, ssh user to weka cluster vm |
-| <a name="output_weka_cluster_password_secret_id"></a> [weka\_cluster\_password\_secret\_id](#output\_weka\_cluster\_password\_secret\_id) | Secret id of weka\_password |
+| <a name="output_weka_cluster_admin_password_secret_id"></a> [weka\_cluster\_admin\_password\_secret\_id](#output\_weka\_cluster\_admin\_password\_secret\_id) | Secret id of weka cluster admin password |
 <!-- END_TF_DOCS -->
