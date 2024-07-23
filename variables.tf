@@ -186,7 +186,7 @@ variable "allow_weka_api_cidrs" {
 variable "source_image_id" {
   type        = string
   description = "Source image for deployment (default: rocky-linux-8-v20240515). While other distributions may be compatible, only Rocky Linux 8 is officially tested with this Terraform module."
-  default     = "rocky-linux-8-v20240515"
+  default     = "projects/wekaio-rnd/global/images/weka-custom-image-rocky8-1721729266"
 }
 
 variable "private_zone_name" {
@@ -468,7 +468,7 @@ variable "client_frontend_cores" {
 variable "client_source_image_id" {
   type        = string
   description = "Client Source image ID is set to Rocky 8.9. For the list of all supported Weka Client OSs please refer to: https://docs.weka.io/planning-and-installation/prerequisites-and-compatibility#operating-system"
-  default     = "rocky-linux-8-v20240515"
+  default     = "projects/wekaio-rnd/global/images/weka-custom-image-rocky8-1721729266"
 }
 
 variable "clients_use_dpdk" {

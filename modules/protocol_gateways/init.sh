@@ -18,14 +18,6 @@ gpgcheck=0
 EOL
 fi
 
-os=$(awk -F= '/^NAME/{print $2}' /etc/os-release)
-if [[ "$os" = *"Rocky"* ]]; then
-		sudo yum install -y perl-interpreter
-		sudo curl https://dl.rockylinux.org/vault/rocky/8.9/Devel/x86_64/os/Packages/k/kernel-devel-4.18.0-513.24.1.el8_9.x86_64.rpm --output kernel-devel-4.18.0-513.24.1.el8_9.x86_64.rpm
-		sudo rpm -i kernel-devel-4.18.0-513.24.1.el8_9.x86_64.rpm
-fi
-
-
 # getNetStrForDpdk bash function definitiion
 function getNetStrForDpdk() {
   i=$1
@@ -105,7 +97,6 @@ mkdir -p $INSTALLATION_PATH
 cd $INSTALLATION_PATH
 
 echo "$(date -u): before weka agent installation"
-yum -y install jq
 # get token for secret manager (get-weka-io-token)
 max_retries=12 # 12 * 10 = 2 minutes
 if [[ ${weka_token_id} != "NONE" ]]; then
