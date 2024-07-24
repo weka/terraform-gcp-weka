@@ -54,10 +54,6 @@ resource "google_secret_manager_secret" "secret_weka_username" {
 resource "google_secret_manager_secret_version" "user_secret_key" {
   secret      = google_secret_manager_secret.secret_weka_username.id
   secret_data = "weka-deployment"
-
-  lifecycle {
-    ignore_changes = [secret_data]
-  }
 }
 
 resource "google_secret_manager_secret" "secret_token" {
