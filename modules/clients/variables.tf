@@ -48,6 +48,7 @@ variable "clients_number" {
 variable "source_image_id" {
   type        = string
   description = "os of image"
+  default     = "rocky-linux-8-v20240515"
 }
 
 variable "frontend_container_cores_num" {
