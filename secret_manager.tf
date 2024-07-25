@@ -18,7 +18,7 @@ resource "google_secret_manager_secret" "secret_weka_password" {
 
 resource "google_secret_manager_secret_version" "password_secret_key" {
   secret      = google_secret_manager_secret.secret_weka_password.id
-  secret_data = ""
+  secret_data = "<placeholder-for-weka-admin-password>"
 
   lifecycle {
     ignore_changes = [secret_data]
