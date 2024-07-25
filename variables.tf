@@ -751,3 +751,9 @@ variable "debug_down_backends_removal_timeout" {
   default     = "3h"
   description = "Timeout duration for removing non-functional backends. Specify the timeout period in time units: ns, us (or µs), ms, s, m, h. This parameter is critical for managing the removal of non-operational backend resources. Consult with the WEKA Success Team before making any changes."
 }
+
+variable "lb_allow_global_access" {
+  type        = bool
+  default     = false
+  description = "Specifies whether to allow access to the load balancer from all regions."
+}
