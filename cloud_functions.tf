@@ -78,7 +78,7 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       DEPLOYMENT_PASSWORD_ID : google_secret_manager_secret.weka_deployment_password.id
       TOKEN_ID : var.get_weka_io_token == "" ? "" : google_secret_manager_secret.secret_token[0].id
       BUCKET : local.state_bucket
-      STATE_BLOB_NAME : google_storage_bucket_object.state.name
+      STATE_OBJ_NAME : google_storage_bucket_object.state.name
       INSTALL_URL : local.install_weka_url
       # Configuration for google_cloudfunctions2_function.cloud_internal_function may not refer to itself.
       # REPORT_URL : format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=report")
@@ -117,7 +117,7 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       TRACES_PER_FRONTEND : var.traces_per_ionode
       # NFS vars
       NFS_GATEWAYS_NAME : var.nfs_setup_protocol ? local.gateways_name : ""
-      NFS_STATE_BLOB_NAME : var.nfs_setup_protocol ? google_storage_bucket_object.nfs_state[0].name : ""
+      NFS_STATE_OBJ_NAME : var.nfs_setup_protocol ? google_storage_bucket_object.nfs_state[0].name : ""
       NFS_GATEWAYS_TEMPLATE_NAME : var.nfs_setup_protocol ? local.gateways_name : ""
       NFS_INTERFACE_GROUP_NAME : var.nfs_interface_group_name
       NFS_SECONDARY_IPS_NUM : var.nfs_protocol_gateway_secondary_ips_per_nic
@@ -212,8 +212,8 @@ resource "google_cloudfunctions2_function" "status_function" {
       PROJECT : var.project_id
       ZONE : var.zone
       BUCKET : local.state_bucket
-      STATE_BLOB_NAME : google_storage_bucket_object.state.name
-      NFS_STATE_BLOB_NAME : var.nfs_setup_protocol ? google_storage_bucket_object.nfs_state[0].name : ""
+      STATE_OBJ_NAME : google_storage_bucket_object.state.name
+      NFS_STATE_OBJ_NAME : var.nfs_setup_protocol ? google_storage_bucket_object.nfs_state[0].name : ""
       INSTANCE_GROUP : google_compute_instance_group.this.name
       NFS_INSTANCE_GROUP : var.nfs_setup_protocol ? google_compute_instance_group.nfs[0].name : ""
       USER_NAME_ID : google_secret_manager_secret.secret_weka_username.id
