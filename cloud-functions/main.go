@@ -64,10 +64,10 @@ func ClusterizeFinalization(w http.ResponseWriter, r *http.Request) {
 	var stateObject string
 	var instanceGroup string
 	if vmProtocol.Protocol == protocol.NFS {
-		stateObject = os.Getenv("NFS_STATE_BLOB_NAME")
+		stateObject = os.Getenv("NFS_STATE_OBJ_NAME")
 		instanceGroup = os.Getenv("NFS_INSTANCE_GROUP")
 	} else {
-		stateObject = os.Getenv("STATE_BLOB_NAME")
+		stateObject = os.Getenv("STATE_OBJ_NAME")
 		instanceGroup = os.Getenv("INSTANCE_GROUP")
 	}
 
@@ -126,8 +126,8 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 	deploymentPasswordId := os.Getenv("DEPLOYMENT_PASSWORD_ID")
 	adminPasswordId := os.Getenv("ADMIN_PASSWORD_ID")
 	bucket := os.Getenv("BUCKET")
-	stateObject := os.Getenv("STATE_BLOB_NAME")
-	nfsStateObject := os.Getenv("NFS_STATE_BLOB_NAME")
+	stateObject := os.Getenv("STATE_OBJ_NAME")
+	nfsStateObject := os.Getenv("NFS_STATE_OBJ_NAME")
 	// data protection-related vars
 	stripeWidth, _ := strconv.Atoi(os.Getenv("STRIPE_WIDTH"))
 	protectionLevel, _ := strconv.Atoi(os.Getenv("PROTECTION_LEVEL"))
@@ -217,8 +217,8 @@ func Fetch(w http.ResponseWriter, r *http.Request) {
 	instanceGroup := os.Getenv("INSTANCE_GROUP")
 	bucket := os.Getenv("BUCKET")
 	downBackendsRemovalTimeout, _ := time.ParseDuration(os.Getenv("DOWN_BACKENDS_REMOVAL_TIMEOUT"))
-	stateObject := os.Getenv("STATE_BLOB_NAME")
-	nfsStateObject := "" // Disabling Scale down. To return support, need to change to: 'os.Getenv("NFS_STATE_BLOB_NAME")'
+	stateObject := os.Getenv("STATE_OBJ_NAME")
+	nfsStateObject := "" // Disabling Scale down. To return support, need to change to: 'os.Getenv("NFS_STATE_OBJ_NAME")'
 	nfsInstanceGroup := os.Getenv("NFS_INSTANCE_GROUP")
 	usernameId := os.Getenv("USER_NAME_ID")
 	deploymentPasswordId := os.Getenv("DEPLOYMENT_PASSWORD_ID")
@@ -268,8 +268,8 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 	instanceGroup := os.Getenv("INSTANCE_GROUP")
 	tokenId := os.Getenv("TOKEN_ID")
 	bucket := os.Getenv("BUCKET")
-	stateObject := os.Getenv("STATE_BLOB_NAME")
-	nfsStateObject := os.Getenv("NFS_STATE_BLOB_NAME")
+	stateObject := os.Getenv("STATE_OBJ_NAME")
+	nfsStateObject := os.Getenv("NFS_STATE_OBJ_NAME")
 	nfsInstanceGroup := os.Getenv("NFS_INSTANCE_GROUP")
 	gateways := strings.Split(os.Getenv("GATEWAYS"), ",")
 	backendLbIp := os.Getenv("BACKEND_LB_IP")
@@ -390,8 +390,8 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 	clusterName := os.Getenv("CLUSTER_NAME")
 	backendTemplate := os.Getenv("BACKEND_TEMPLATE")
 	bucket := os.Getenv("BUCKET")
-	stateObject := os.Getenv("STATE_BLOB_NAME")
-	nfsStateObject := os.Getenv("NFS_STATE_BLOB_NAME")
+	stateObject := os.Getenv("STATE_OBJ_NAME")
+	nfsStateObject := os.Getenv("NFS_STATE_OBJ_NAME")
 	nfsGatewaysName := os.Getenv("NFS_GATEWAYS_NAME")
 	nfsTemplateName := os.Getenv("NFS_GATEWAYS_TEMPLATE_NAME")
 	yumRepoServer := os.Getenv("YUM_REPO_SERVER")
@@ -567,9 +567,9 @@ func Resize(w http.ResponseWriter, r *http.Request) {
 
 	var stateObject string
 	if d.Protocol != nil && *d.Protocol == "nfs" {
-		stateObject = os.Getenv("NFS_STATE_BLOB_NAME")
+		stateObject = os.Getenv("NFS_STATE_OBJ_NAME")
 	} else {
-		stateObject = os.Getenv("STATE_BLOB_NAME")
+		stateObject = os.Getenv("STATE_OBJ_NAME")
 	}
 
 	ctx := r.Context()
@@ -600,10 +600,10 @@ func JoinFinalization(w http.ResponseWriter, r *http.Request) {
 	var stateObject string
 	var instanceGroup string
 	if d.Protocol == protocol.NFS {
-		stateObject = os.Getenv("NFS_STATE_BLOB_NAME")
+		stateObject = os.Getenv("NFS_STATE_OBJ_NAME")
 		instanceGroup = os.Getenv("NFS_INSTANCE_GROUP")
 	} else {
-		stateObject = os.Getenv("STATE_BLOB_NAME")
+		stateObject = os.Getenv("STATE_OBJ_NAME")
 		instanceGroup = os.Getenv("INSTANCE_GROUP")
 	}
 
@@ -623,8 +623,8 @@ func TerminateCluster(w http.ResponseWriter, r *http.Request) {
 	zone := os.Getenv("ZONE")
 	bucket := os.Getenv("BUCKET")
 	clusterName := os.Getenv("CLUSTER_NAME")
-	stateObject := os.Getenv("STATE_BLOB_NAME")
-	nfsStateObject := os.Getenv("NFS_STATE_BLOB_NAME")
+	stateObject := os.Getenv("STATE_OBJ_NAME")
+	nfsStateObject := os.Getenv("NFS_STATE_OBJ_NAME")
 	nfsGatewaysName := os.Getenv("NFS_GATEWAYS_NAME")
 
 	// to lower the risk of unintended cluster termination, we will not have the cluster name as an env var but require
@@ -703,12 +703,12 @@ func Status(w http.ResponseWriter, r *http.Request) {
 	project := os.Getenv("PROJECT")
 	zone := os.Getenv("ZONE")
 	bucket := os.Getenv("BUCKET")
-	stateObject := os.Getenv("STATE_BLOB_NAME")
+	stateObject := os.Getenv("STATE_OBJ_NAME")
 	instanceGroup := os.Getenv("INSTANCE_GROUP")
 	usernameId := os.Getenv("USER_NAME_ID")
 	adminPasswordId := os.Getenv("ADMIN_PASSWORD_ID")
 	deploymentPasswordId := os.Getenv("DEPLOYMENT_PASSWORD_ID")
-	nfsStateObject := os.Getenv("NFS_STATE_BLOB_NAME")
+	nfsStateObject := os.Getenv("NFS_STATE_OBJ_NAME")
 	nfsInstanceGroup := os.Getenv("NFS_INSTANCE_GROUP")
 
 	var requestBody struct {
@@ -762,9 +762,9 @@ func Report(w http.ResponseWriter, r *http.Request) {
 
 	var stateObject string
 	if report.Protocol == protocol.NFS {
-		stateObject = os.Getenv("NFS_STATE_BLOB_NAME")
+		stateObject = os.Getenv("NFS_STATE_OBJ_NAME")
 	} else {
-		stateObject = os.Getenv("STATE_BLOB_NAME")
+		stateObject = os.Getenv("STATE_OBJ_NAME")
 	}
 
 	ctx := r.Context()
