@@ -363,7 +363,6 @@ set_shared_vpc_peering = true
 | <a name="input_weka_home_url"></a> [weka\_home\_url](#input\_weka\_home\_url) | The URL for WEKA Home. | `string` | `""` | no |
 | <a name="input_weka_tar_bucket_name"></a> [weka\_tar\_bucket\_name](#input\_weka\_tar\_bucket\_name) | The bucket name for the WEKA software tar file. | `string` | `""` | no |
 | <a name="input_weka_tar_project_id"></a> [weka\_tar\_project\_id](#input\_weka\_tar\_project\_id) | The project ID for the WEKA software tar file. | `string` | `""` | no |
-| <a name="input_weka_username"></a> [weka\_username](#input\_weka\_username) | A unique identifier for a user authorized to access the WEKA cluster (GUI, CLI, and API). | `string` | `"admin"` | no |
 | <a name="input_weka_version"></a> [weka\_version](#input\_weka\_version) | WEKA version | `string` | `"4.2.11"` | no |
 | <a name="input_worker_address_prefix_length"></a> [worker\_address\_prefix\_length](#input\_worker\_address\_prefix\_length) | The prefix length for IP addresses, expressed in the worker\_pool\_address\_cidr. For example, use 24 for a /24 subnet or 16 for a /16 subnet. The maximum value is 24. | `string` | `"16"` | no |
 | <a name="input_worker_disk_size"></a> [worker\_disk\_size](#input\_worker\_disk\_size) | The size of the disk attached to the worker node in GB. | `number` | `100` | no |
