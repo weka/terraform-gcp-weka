@@ -144,6 +144,7 @@ func Clusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript s
 	err = common.SetSecretVersion(ctx, p.AdminPasswordId, adminPassword)
 	if err != nil {
 		log.Error().Err(err).Send()
+		clusterizeScript = cloudCommon.GetErrorScript(err, reportFunction, p.Vm.Protocol)
 		return
 	}
 
@@ -152,6 +153,7 @@ func Clusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript s
 	err = common.SetSecretVersion(ctx, p.DeploymentPasswordId, wekaDeploymentPassword)
 	if err != nil {
 		log.Error().Err(err).Send()
+		clusterizeScript = cloudCommon.GetErrorScript(err, reportFunction, p.Vm.Protocol)
 		return
 	}
 
