@@ -57,12 +57,8 @@ variable "zone" {
 
 variable "machine_type" {
   type        = string
-  description = "The machine type for the WEKA backend instance. Select one from the list of supported options."
+  description = "The machine type for the WEKA backend instance."
   default     = "c2-standard-8"
-  validation {
-    condition     = contains(["c2-standard-8", "c2-standard-16", "n2-standard-8", "n2-standard-16"], var.machine_type)
-    error_message = "The chosen machine type is not compatible. Select one from the list of supported options."
-  }
 }
 
 variable "region" {
