@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"strconv"
 	"strings"
@@ -90,9 +91,21 @@ func NFSClusterize(ctx context.Context, p ClusterizationParams) (clusterizeScrip
 	nfsInterfaceGroupName := os.Getenv("NFS_INTERFACE_GROUP_NAME")
 	nfsProtocolgwsNum, _ := strconv.Atoi(os.Getenv("NFS_PROTOCOL_GATEWAYS_NUM"))
 	nfsSecondaryIpsNum, _ := strconv.Atoi(os.Getenv("NFS_SECONDARY_IPS_NUM"))
+	gateways := strings.Split(os.Getenv("GATEWAYS"), ",")
+	subnets := strings.Split(os.Getenv("SUBNETS"), ",")
 
 	funcDef := gcp_functions_def.NewFuncDef(p.CloudFuncRootUrl)
 	reportFunction := funcDef.GetFunctionCmdDefinition(functions_def.Report)
+
+	_, ipNet, err := net.ParseCIDR(subnets[0])
+	if err != nil {
+		err = fmt.Errorf("failed to parse subnet cidr %s: %w", subnets[0], err)
+		clusterizeScript = cloudCommon.GetErrorScript(err, reportFunction, p.Vm.Protocol)
+		return
+	}
+
+	gateway := gateways[0]
+	subnetMask := net.IP(ipNet.Mask).String()
 
 	state, err := common.AddInstanceToStateInstances(ctx, p.Bucket, p.NFSStateObject, p.Vm)
 	if err != nil {
@@ -129,8 +142,22 @@ func NFSClusterize(ctx context.Context, p ClusterizationParams) (clusterizeScrip
 		nicNames = append(nicNames, instance.NicName)
 	}
 
-	// TODO: add nfsSecondaryIpsNum check
-	secondaryIps := make([]string, 0, nfsSecondaryIpsNum)
+	instancesNames := common.GetInstancesNames(state.Instances)
+	nfsInstances, err := common.GetInstances(ctx, p.Project, p.Zone, instancesNames)
+	if err != nil {
+		err = fmt.Errorf("failed to get instances: %w", err)
+		log.Error().Err(err).Send()
+		clusterizeScript = cloudCommon.GetErrorScript(err, reportFunction, p.Vm.Protocol)
+		return
+	}
+
+	secondaryIps := common.GetInstancesAliasIps(ctx, nfsInstances)
+	if len(secondaryIps) < nfsSecondaryIpsNum {
+		err = fmt.Errorf("not enough secondary ips found: %d/%d", len(secondaryIps), nfsSecondaryIpsNum)
+		log.Error().Err(err).Send()
+		clusterizeScript = cloudCommon.GetErrorScript(err, reportFunction, p.Vm.Protocol)
+		return
+	}
 
 	nfsParams := protocol.NFSParams{
 		InterfaceGroupName: nfsInterfaceGroupName,
@@ -138,6 +165,8 @@ func NFSClusterize(ctx context.Context, p ClusterizationParams) (clusterizeScrip
 		ContainersUid:      containersUid,
 		NicNames:           nicNames,
 		HostsNum:           nfsProtocolgwsNum,
+		Gateway:            gateway,
+		SubnetMask:         subnetMask,
 	}
 
 	scriptGenerator := clusterize.ConfigureNfsScriptGenerator{

@@ -29,7 +29,10 @@ resource "google_project_iam_member" "sa_member_role" {
     "roles/cloudfunctions.developer",
     "roles/workflows.invoker",
     "roles/vpcaccess.serviceAgent",
-    "roles/pubsub.subscriber"
+    "roles/pubsub.subscriber",
+    "roles/compute.networkAdmin", # needed for Internal Static IP creation
+    "roles/networkmanagement.admin",
+    "roles/compute.instanceAdmin.v1", # needed for 'compute.instances.updateNetworkInterface'
   ])
   role    = each.key
   member  = "serviceAccount:${google_service_account.sa.email}"

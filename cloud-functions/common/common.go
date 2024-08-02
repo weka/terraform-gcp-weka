@@ -162,6 +162,18 @@ func generateInstanceNamesFilter(instanceNames []string) (namesFilter string) {
 	return
 }
 
+func GetInstancesAliasIps(ctx context.Context, instances []*computepb.Instance) (aliasIps []string) {
+	for _, instance := range instances {
+		for _, networkInterface := range instance.NetworkInterfaces {
+			for _, aliasIp := range networkInterface.AliasIpRanges {
+				ip := strings.Split(*aliasIp.IpCidrRange, "/")[0]
+				aliasIps = append(aliasIps, ip)
+			}
+		}
+	}
+	return
+}
+
 func GetInstances(ctx context.Context, project, zone string, instanceNames []string) (instances []*computepb.Instance, err error) {
 	if len(instanceNames) == 0 {
 		log.Warn().Msg("Got empty instance names list")
@@ -739,6 +751,88 @@ func CreateBucket(ctx context.Context, project, region, obsName string) (err err
 	if err = client.Bucket(obsName).Create(ctx, project, attrs); err != nil {
 		log.Error().Err(err).Send()
 		return
+	}
+	return
+}
+
+func ListInstanceInternalStaticIps(ctx context.Context, project, region, instanceName string) (ips []string, err error) {
+	ipClient, err := compute.NewAddressesRESTClient(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to create ips client")
+		return
+	}
+	defer ipClient.Close()
+
+	staticIps, err := listInstanceInternalStaticIps(ctx, ipClient, project, region, instanceName)
+	if err != nil {
+		return
+	}
+
+	for _, ip := range staticIps {
+		ips = append(ips, *ip.Address)
+	}
+	return
+}
+
+func listInstanceInternalStaticIps(ctx context.Context, client *compute.AddressesClient, project, region, instanceName string) (ips []*computepb.Address, err error) {
+	filter := fmt.Sprintf("name:%s-ip-*", instanceName)
+
+	req := &computepb.ListAddressesRequest{
+		Project: project,
+		Region:  region,
+		Filter:  &filter,
+	}
+
+	it := client.List(ctx, req)
+	for {
+		ip, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("failed to list internal static IPs: %w", err)
+		}
+		ips = append(ips, ip)
+	}
+	return
+}
+
+func ReleaseInstanceInternalStaticIps(ctx context.Context, project, zone, instanceName string) (err error) {
+	region := zone[:len(zone)-2]
+
+	ipClient, err := compute.NewAddressesRESTClient(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to create ips client")
+		return
+	}
+	defer ipClient.Close()
+
+	staticIps, err := listInstanceInternalStaticIps(ctx, ipClient, project, region, instanceName)
+	if err != nil {
+		return
+	}
+
+	ipNames := make([]string, len(staticIps))
+	for i, ip := range staticIps {
+		ipNames[i] = *ip.Name
+	}
+
+	var errs []error
+	for _, ipName := range ipNames {
+		req := &computepb.DeleteAddressRequest{
+			Project: project,
+			Region:  region,
+			Address: ipName,
+		}
+		_, err := ipClient.Delete(ctx, req)
+		if err != nil {
+			errs = append(errs, err)
+			log.Error().Err(err).Msgf("Failed to delete internal static IP %s", ipName)
+		}
+	}
+
+	if len(errs) > 0 {
+		err = fmt.Errorf("failed to release internal static IPs: %v", errs)
 	}
 	return
 }
