@@ -357,6 +357,12 @@ variable "default_disk_name" {
   description = "The default disk name."
 }
 
+variable "boot_disk_type" {
+  type        = string
+  default     = "pd-standard"
+  description = "The boot disk type."
+}
+
 variable "traces_per_ionode" {
   default     = 10
   type        = number
