@@ -158,6 +158,18 @@ func generateInstanceNamesFilter(instanceNames []string) (namesFilter string) {
 	return
 }
 
+func GetInstancesAliasIps(ctx context.Context, instances []*computepb.Instance) (aliasIps []string) {
+	for _, instance := range instances {
+		for _, networkInterface := range instance.NetworkInterfaces {
+			for _, aliasIp := range networkInterface.AliasIpRanges {
+				ip := strings.Split(*aliasIp.IpCidrRange, "/")[0]
+				aliasIps = append(aliasIps, ip)
+			}
+		}
+	}
+	return
+}
+
 func GetInstances(ctx context.Context, project, zone string, instanceNames []string) (instances []*computepb.Instance, err error) {
 	if len(instanceNames) == 0 {
 		log.Warn().Msg("Got empty instance names list")
