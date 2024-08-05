@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/lithammer/dedent"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/api/iterator"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -147,7 +149,7 @@ func CreateBackendInstance(ctx context.Context, project, zone, template, instanc
 	return
 }
 
-func CreateNFSInstance(ctx context.Context, project, zone, templateName, instanceName, yumRepoServer, proxyUrl, functionRootUrl string) (err error) {
+func CreateNFSInstance(ctx context.Context, project, zone, templateName, instanceName, yumRepoServer, proxyUrl, functionRootUrl string, secondaryIpsNum int) (err error) {
 	instancesClient, err := compute.NewInstancesRESTClient(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create instances client")
@@ -161,11 +163,30 @@ func CreateNFSInstance(ctx context.Context, project, zone, templateName, instanc
 		return
 	}
 
+	subnet := instanceTemplate.Properties.NetworkInterfaces[0].Subnetwork
+	region := zone[:len(zone)-2]
+
+	ips, err := createInternalStaticIps(ctx, project, region, *subnet, instanceName, secondaryIpsNum)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to create secondary IPs")
+		return
+	}
+
+	nics := instanceTemplate.Properties.NetworkInterfaces
+	// modify fisrt nic to use alias ips
+	nics[0].AliasIpRanges = make([]*computepb.AliasIpRange, len(ips))
+	for i, ip := range ips {
+		nics[0].AliasIpRanges[i] = &computepb.AliasIpRange{
+			IpCidrRange: &ip,
+		}
+	}
+
 	req := &computepb.InsertInstanceRequest{
 		Project: project,
 		Zone:    zone,
 		InstanceResource: &computepb.Instance{
-			Name: proto.String(instanceName),
+			Name:              proto.String(instanceName),
+			NetworkInterfaces: nics,
 		},
 		SourceInstanceTemplate: instanceTemplate.SelfLink,
 	}
@@ -174,5 +195,108 @@ func CreateNFSInstance(ctx context.Context, project, zone, templateName, instanc
 	if err != nil {
 		log.Error().Msgf("Instance creation failed: %s", err)
 	}
+	return
+}
+
+func createInternalStaticIps(ctx context.Context, project, region, subnet, instanceName string, ipsNum int) (ips []string, err error) {
+	ipClient, err := compute.NewAddressesRESTClient(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to create ips client")
+		return
+	}
+	defer ipClient.Close()
+
+	defer func() {
+		if err != nil {
+			for _, ip := range ips {
+				req := &computepb.DeleteAddressRequest{
+					Project: project,
+					Region:  region,
+					Address: ip,
+				}
+				_, err := ipClient.Delete(ctx, req)
+				if err != nil {
+					log.Error().Err(err).Msgf("Failed to delete internal static IP %s", ip)
+				}
+			}
+		}
+	}()
+
+	var wg sync.WaitGroup
+	errCh := make(chan error, ipsNum)
+	defer close(errCh)
+
+	for i := 0; i < ipsNum; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+
+			addressName := fmt.Sprintf("%s-ip-%d", instanceName, i)
+			addressType := "INTERNAL"
+			purpose := "GCE_ENDPOINT"
+			address := &computepb.Address{
+				Name:        &addressName,
+				Subnetwork:  &subnet,
+				AddressType: &addressType,
+				Region:      &region,
+				Purpose:     &purpose,
+			}
+
+			req := &computepb.InsertAddressRequest{
+				Project:         project,
+				Region:          region,
+				AddressResource: address,
+			}
+
+			operation, err := ipClient.Insert(ctx, req)
+			if err != nil {
+				errCh <- fmt.Errorf("failed to create internal static IP %s: %w", addressName, err)
+				return
+			}
+
+			err = operation.Wait(ctx)
+			if err != nil {
+				errCh <- fmt.Errorf("failed to wait for internal static IP creation %s: %w", addressName, err)
+			}
+		}(i)
+	}
+
+	wg.Wait()
+
+	// get all errors
+	var errs []string
+	for i := 0; i < ipsNum; i++ {
+		select {
+		case err := <-errCh:
+			errs = append(errs, err.Error())
+		default:
+		}
+	}
+	if len(errs) > 0 {
+		err = fmt.Errorf("failed to create internal static IPs: %s", strings.Join(errs, ", "))
+		return nil, err
+	}
+
+	// get all created ips (filter by name)
+	filter := fmt.Sprintf("name:%s-ip-*", instanceName)
+
+	req := &computepb.ListAddressesRequest{
+		Project: project,
+		Region:  region,
+		Filter:  &filter,
+	}
+
+	it := ipClient.List(ctx, req)
+	for {
+		ip, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("failed to list internal static IPs: %w", err)
+		}
+		ips = append(ips, *ip.Address)
+	}
+	log.Info().Msgf("Created internal static IPs: %v", ips)
 	return
 }

@@ -495,11 +495,6 @@ variable "nfs_protocol_gateway_secondary_ips_per_nic" {
   type        = number
   description = "The number of secondary IPs per single NIC per NFS protocol gateway virtual machine."
   default     = 0
-
-  validation {
-    condition     = var.nfs_protocol_gateway_secondary_ips_per_nic == 0
-    error_message = "Secondary (floating) IPs are currently not supported for GCP NFS protocol gateways."
-  }
 }
 
 variable "nfs_protocol_gateway_machine_type" {

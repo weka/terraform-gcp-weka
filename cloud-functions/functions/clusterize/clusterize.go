@@ -40,6 +40,16 @@ type ClusterizationParams struct {
 	BackendLbIp      string
 }
 
+const nicsMetadataUrl = "http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces"
+
+func getGatewayCmd() string {
+	return fmt.Sprintf("curl -s -H Metadata-Flavor:Google %s/0/gateway", nicsMetadataUrl)
+}
+
+func getSubnetMaskCmd() string {
+	return fmt.Sprintf("curl -s -H Metadata-Flavor:Google %s/0/subnetmask", nicsMetadataUrl)
+}
+
 func NFSClusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript string) {
 	nfsInterfaceGroupName := os.Getenv("NFS_INTERFACE_GROUP_NAME")
 	nfsProtocolgwsNum, _ := strconv.Atoi(os.Getenv("NFS_PROTOCOL_GATEWAYS_NUM"))
@@ -68,8 +78,22 @@ func NFSClusterize(ctx context.Context, p ClusterizationParams) (clusterizeScrip
 		nicNames = append(nicNames, instance.NicName)
 	}
 
-	// TODO: add nfsSecondaryIpsNum check
-	secondaryIps := make([]string, 0, nfsSecondaryIpsNum)
+	instancesNames := common.GetInstancesNames(state.Instances)
+	nfsInstances, err := common.GetInstances(ctx, p.Project, p.Zone, instancesNames)
+	if err != nil {
+		err = fmt.Errorf("failed to get instances: %w", err)
+		log.Error().Err(err).Send()
+		clusterizeScript = cloudCommon.GetErrorScript(err, reportFunction, p.Vm.Protocol)
+		return
+	}
+
+	secondaryIps := common.GetInstancesAliasIps(ctx, nfsInstances)
+	if len(secondaryIps) < nfsSecondaryIpsNum {
+		err = fmt.Errorf("not enough secondary ips found: %d/%d", len(secondaryIps), nfsSecondaryIpsNum)
+		log.Error().Err(err).Send()
+		clusterizeScript = cloudCommon.GetErrorScript(err, reportFunction, p.Vm.Protocol)
+		return
+	}
 
 	nfsParams := protocol.NFSParams{
 		InterfaceGroupName: nfsInterfaceGroupName,
@@ -77,6 +101,8 @@ func NFSClusterize(ctx context.Context, p ClusterizationParams) (clusterizeScrip
 		ContainersUid:      containersUid,
 		NicNames:           nicNames,
 		HostsNum:           nfsProtocolgwsNum,
+		GetGatewayCmd:      getGatewayCmd(),
+		GetSubnetMaskCmd:   getSubnetMaskCmd(),
 	}
 
 	scriptGenerator := clusterize.ConfigureNfsScriptGenerator{

@@ -397,6 +397,7 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 	yumRepoServer := os.Getenv("YUM_REPO_SERVER")
 	proxyUrl := os.Getenv("PROXY_URL")
 	functionRootUrl := fmt.Sprintf("https://%s", r.Host)
+	nfsSecondaryIpsNum, _ := strconv.Atoi(os.Getenv("NFS_SECONDARY_IPS_NUM"))
 
 	ctx := r.Context()
 	backends, err := common.GetInstancesByClusterLabel(ctx, project, zone, clusterName)
@@ -465,7 +466,7 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 		for i := nfsGatewaysNumber; i < nfsDesiredSize; i++ {
 			instanceName := fmt.Sprintf("%s-%s%03d", nfsGatewaysName, currentTime, i)
 			log.Info().Msgf("creating new NFS instance: %s", instanceName)
-			if err := scale_up.CreateNFSInstance(ctx, project, zone, nfsTemplateName, instanceName, yumRepoServer, proxyUrl, functionRootUrl); err != nil {
+			if err := scale_up.CreateNFSInstance(ctx, project, zone, nfsTemplateName, instanceName, yumRepoServer, proxyUrl, functionRootUrl, nfsSecondaryIpsNum); err != nil {
 				err = fmt.Errorf("instance %s creation failed %s.", instanceName, err)
 				log.Error().Err(err).Send()
 				respondWithErr(w, err, http.StatusBadRequest)
