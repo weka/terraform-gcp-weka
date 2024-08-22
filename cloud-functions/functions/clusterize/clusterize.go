@@ -2,6 +2,7 @@ package clusterize
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -40,19 +41,73 @@ type ClusterizationParams struct {
 	BackendLbIp      string
 }
 
+func GetSelfDeletingScriptWithReport(message, cloudFuncRootUrl string, vm protocol.Vm) string {
+	funcDef := gcp_functions_def.NewFuncDef(cloudFuncRootUrl)
+	reportFunctionDef := funcDef.GetFunctionCmdDefinition(functions_def.Report)
+
+	s := `
+	#!/bin/bash
+
+	instance_name=%s
+
+	# report function definition
+	%s
+
+	PROTOCOL="%s"
+	report "{\"hostname\": \"$HOSTNAME\", \"protocol\": \"$PROTOCOL\", \"type\": \"progress\", \"message\": \"Self-terminating: %s\"}"
+
+	self_deleting() {
+		echo "self deleting..."
+		zone=$(curl -X GET http://metadata.google.internal/computeMetadata/v1/instance/zone -H 'Metadata-Flavor: Google')
+		gcloud compute instances update $instance_name --no-deletion-protection --zone=$zone
+		gcloud --quiet compute instances delete $instance_name --zone=$zone
+	}
+
+	self_deleting || shutdown -P
+	`
+	return fmt.Sprintf(dedent.Dedent(s), vm.Name, reportFunctionDef, vm.Protocol, message)
+}
+
+func ReportErrorAndTerminateInstance(ctx context.Context, p ClusterizationParams, err error) error {
+	object := p.StateObject
+	if p.Vm.Protocol == protocol.NFS {
+		object = p.NFSStateObject
+	}
+	msg := fmt.Sprintf("Terminating instance due to error: %v", err)
+	common.ReportMsg(ctx, p.Vm.Name, p.Bucket, object, "progress", msg)
+
+	_, errs := common.TerminateInstances(ctx, p.Project, p.Zone, []string{p.Vm.Name})
+	if len(errs) > 0 {
+		err := fmt.Errorf("failed to terminate instance %s: %s", p.Vm.Name, errs[0])
+		log.Error().Err(err).Send()
+		common.ReportMsg(ctx, p.Vm.Name, p.Bucket, object, "progress", err.Error())
+		return err
+	}
+	return nil
+}
+
 func NFSClusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript string) {
 	nfsInterfaceGroupName := os.Getenv("NFS_INTERFACE_GROUP_NAME")
 	nfsProtocolgwsNum, _ := strconv.Atoi(os.Getenv("NFS_PROTOCOL_GATEWAYS_NUM"))
 	nfsSecondaryIpsNum, _ := strconv.Atoi(os.Getenv("NFS_SECONDARY_IPS_NUM"))
 
-	state, err := common.AddInstanceToStateInstances(ctx, p.Bucket, p.NFSStateObject, p.Vm)
-	if err != nil {
-		log.Error().Err(err).Send()
-		return
-	}
-
 	funcDef := gcp_functions_def.NewFuncDef(p.CloudFuncRootUrl)
 	reportFunction := funcDef.GetFunctionCmdDefinition(functions_def.Report)
+
+	state, err := common.AddInstanceToStateInstances(ctx, p.Bucket, p.NFSStateObject, p.Vm)
+	if err != nil {
+		var e *common.ExtraInstanceForClusterizationError
+		if errors.As(err, &e) {
+			err1 := ReportErrorAndTerminateInstance(ctx, p, err)
+			if err1 != nil {
+				log.Error().Err(err1).Send()
+				return GetSelfDeletingScriptWithReport(err.Error(), p.CloudFuncRootUrl, p.Vm)
+			}
+			return
+		}
+		clusterizeScript = cloudCommon.GetErrorScript(err, reportFunction, p.Vm.Protocol)
+		return
+	}
 
 	msg := fmt.Sprintf("This (%s) is nfs instance %d/%d that is ready for joining the interface group", p.Vm.Name, len(state.Instances), nfsProtocolgwsNum)
 	log.Info().Msgf(msg)
@@ -97,6 +152,15 @@ func Clusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript s
 
 	state, err := common.AddInstanceToStateInstances(ctx, p.Bucket, p.StateObject, p.Vm)
 	if err != nil {
+		var e *common.ExtraInstanceForClusterizationError
+		if errors.As(err, &e) {
+			err1 := ReportErrorAndTerminateInstance(ctx, p, err)
+			if err1 != nil {
+				log.Error().Err(err1).Send()
+				return GetSelfDeletingScriptWithReport(err.Error(), p.CloudFuncRootUrl, p.Vm)
+			}
+			return
+		}
 		clusterizeScript = cloudCommon.GetErrorScript(err, reportFunction, p.Vm.Protocol)
 		return
 	}
@@ -107,7 +171,7 @@ func Clusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript s
 		return
 	}
 
-	msg := fmt.Sprintf("This (%s) is instance %d/%d that is ready for clusterization", p.Vm.Name, len(state.Instances), state.DesiredSize)
+	msg := fmt.Sprintf("This (%s) is instance %d/%d that is ready for clusterization", p.Vm.Name, len(state.Instances), state.ClusterizationTarget)
 	log.Info().Msgf(msg)
 	if len(state.Instances) != p.Cluster.ClusterizationTarget {
 		clusterizeScript = cloudCommon.GetScriptWithReport(msg, reportFunction, p.Vm.Protocol)
