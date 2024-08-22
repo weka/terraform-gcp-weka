@@ -489,7 +489,7 @@ func Terminate(w http.ResponseWriter, r *http.Request) {
 	project := os.Getenv("PROJECT")
 	zone := os.Getenv("ZONE")
 	instanceGroup := os.Getenv("INSTANCE_GROUP")
-	nfsInstanceGroup := os.Getenv("NFS_INSTANCE_GROUP")
+	nfsInstanceGroup := "" // Disabling Scale down. To return support, need to change to: os.Getenv("NFS_INSTANCE_GROUP")
 	loadBalancerName := os.Getenv("LOAD_BALANCER_NAME")
 
 	var scaleResponse protocol.ScaleResponse
