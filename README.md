@@ -174,7 +174,7 @@ set_shared_vpc_peering = true
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >=1.3.1 |
 | <a name="requirement_archive"></a> [archive](#requirement\_archive) | ~>2.4.0 |
-| <a name="requirement_google"></a> [google](#requirement\_google) | ~>4.38.0 |
+| <a name="requirement_google"></a> [google](#requirement\_google) | >=4.38.0 |
 | <a name="requirement_local"></a> [local](#requirement\_local) | ~>2.4.0 |
 | <a name="requirement_time"></a> [time](#requirement\_time) | ~>0.9.1 |
 | <a name="requirement_tls"></a> [tls](#requirement\_tls) | ~>4.0.4 |
@@ -184,7 +184,7 @@ set_shared_vpc_peering = true
 | Name | Version |
 |------|---------|
 | <a name="provider_archive"></a> [archive](#provider\_archive) | ~>2.4.0 |
-| <a name="provider_google"></a> [google](#provider\_google) | ~>4.38.0 |
+| <a name="provider_google"></a> [google](#provider\_google) | >=4.38.0 |
 | <a name="provider_local"></a> [local](#provider\_local) | ~>2.4.0 |
 | <a name="provider_time"></a> [time](#provider\_time) | ~>0.9.1 |
 | <a name="provider_tls"></a> [tls](#provider\_tls) | ~>4.0.4 |
