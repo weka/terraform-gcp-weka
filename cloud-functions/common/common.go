@@ -413,10 +413,15 @@ func addInstanceToStateInstances(client *storage.Client, ctx context.Context, bu
 	if err != nil {
 		return
 	}
-	if len(state.Instances) == state.InitialSize {
+	if state.Clusterized {
+		err = NewExtraInstanceForClusterizationError(newInstance.Name)
+		log.Error().Msgf("cluster is already clusterized, not adding instance %s to state instances list", newInstance)
+		return
+	}
+	if len(state.Instances) >= state.ClusterizationTarget {
 		//This might happen if someone increases the desired number before the clusterization id done
-		err = fmt.Errorf("number of instances is already the initial size, not adding instance %s to state instances list", newInstance)
-		log.Error().Err(err).Send()
+		err = NewExtraInstanceForClusterizationError(newInstance.Name)
+		log.Error().Msgf("number of instances is already same as clusterization target, not adding instance %s to state instances list", newInstance)
 		return
 	}
 	state.Instances = append(state.Instances, newInstance)
