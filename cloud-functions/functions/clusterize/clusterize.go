@@ -109,6 +109,12 @@ func NFSClusterize(ctx context.Context, p ClusterizationParams) (clusterizeScrip
 		return
 	}
 
+	err = common.SetDeletionProtection(ctx, p.Project, p.Zone, p.Bucket, p.NFSStateObject, p.Vm.Name)
+	if err != nil {
+		clusterizeScript = cloudCommon.GetErrorScript(err, reportFunction, p.Vm.Protocol)
+		return
+	}
+
 	msg := fmt.Sprintf("This (%s) is nfs instance %d/%d that is ready for joining the interface group", p.Vm.Name, len(state.Instances), nfsProtocolgwsNum)
 	log.Info().Msgf(msg)
 	if len(state.Instances) != nfsProtocolgwsNum {

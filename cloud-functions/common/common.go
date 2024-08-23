@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"strconv"
 	"strings"
 	"time"
@@ -17,6 +18,9 @@ import (
 	"github.com/rs/zerolog/log"
 	"google.golang.org/api/iterator"
 
+	"github.com/weka/go-cloud-lib/connectors"
+	"github.com/weka/go-cloud-lib/lib/jrpc"
+	"github.com/weka/go-cloud-lib/lib/weka"
 	"github.com/weka/go-cloud-lib/protocol"
 	reportLib "github.com/weka/go-cloud-lib/report"
 )
@@ -366,6 +370,34 @@ func UnlockBucket(ctx context.Context, client *storage.Client, bucket, object, i
 	return
 }
 
+func GetWekaJrpcPool(ctx context.Context, project, zone, instanceGroup, usernameId, passwordId, adminPasswordId string) (jpool *jrpc.Pool, err error) {
+	creds, err := GetDeploymentOrAdminUsernameAndPassword(ctx, project, usernameId, passwordId, adminPasswordId)
+	if err != nil {
+		return
+	}
+
+	jrpcBuilder := func(ip string) *jrpc.BaseClient {
+		return connectors.NewJrpcClient(ctx, ip, weka.ManagementJrpcPort, creds.Username, creds.Password)
+	}
+
+	instances, err := GetInstances(ctx, project, zone, GetInstanceGroupInstanceNames(ctx, project, zone, instanceGroup))
+	if err != nil {
+		return
+	}
+
+	ips := GetInstanceGroupBackendsIps(instances)
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	r.Shuffle(len(ips), func(i, j int) { ips[i], ips[j] = ips[j], ips[i] })
+	jpool = &jrpc.Pool{
+		Ips:     ips,
+		Clients: map[string]*jrpc.BaseClient{},
+		Active:  "",
+		Builder: jrpcBuilder,
+		Ctx:     ctx,
+	}
+	return
+}
+
 func GetInstancesByLabel(ctx context.Context, project, zone, labelKey, labelValue string) (instances []*computepb.Instance, err error) {
 	instanceClient, err := compute.NewInstancesRESTClient(ctx)
 	if err != nil {
@@ -500,6 +532,7 @@ func SetDeletionProtection(ctx context.Context, project, zone, bucket, object, i
 
 	_, err = c.SetDeletionProtection(ctx, req)
 	if err != nil {
+		ReportMsg(ctx, instanceName, bucket, object, "error", fmt.Sprintf("failed setting deletion protection: %v", err))
 		log.Error().Err(err).Send()
 		return
 	}

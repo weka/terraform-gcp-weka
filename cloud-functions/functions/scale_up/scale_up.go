@@ -7,8 +7,13 @@ import (
 
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
+	"cloud.google.com/go/storage"
 	"github.com/lithammer/dedent"
 	"github.com/rs/zerolog/log"
+	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
+	"github.com/weka/go-cloud-lib/lib/jrpc"
+	"github.com/weka/go-cloud-lib/lib/weka"
+	"github.com/weka/go-cloud-lib/protocol"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -173,6 +178,150 @@ func CreateNFSInstance(ctx context.Context, project, zone, templateName, instanc
 	_, err = instancesClient.Insert(ctx, req)
 	if err != nil {
 		log.Error().Msgf("Instance creation failed: %s", err)
+	}
+	return
+}
+
+func MigrateExistingNFSInstances(
+	ctx context.Context, project, zone, bucket, nfsObject, gatewaysName, defaultIgName, nfsInstanceGroup, backendsInstanceGroup, usernameId, passwordId, adminPasswordId string,
+) (migratedInstanceNames []string, err error) {
+	log.Info().Msg("Migrating existing NFS instances to state")
+
+	jpool, err := common.GetWekaJrpcPool(ctx, project, zone, backendsInstanceGroup, usernameId, passwordId, adminPasswordId)
+	if err != nil {
+		return
+	}
+
+	interfaceGroups := weka.InterfaceGroupListResponse{}
+	err = jpool.Call(weka.JrpcInterfaceGroupList, struct{}{}, &interfaceGroups)
+	if err != nil {
+		err = fmt.Errorf("failed to get interface groups from weka jrpc: %w", err)
+		return
+	}
+
+	var interfaceGroup *weka.InterfaceGroup
+
+	if len(interfaceGroups) == 0 {
+		log.Info().Msg("No NFS interface groups configured")
+	} else {
+		log.Info().Msgf("More than one NFS interface group configured, picking default one: %s", defaultIgName)
+		for _, ig := range interfaceGroups {
+			if ig.Name == defaultIgName {
+				interfaceGroup = &ig
+				break
+			}
+		}
+		if interfaceGroup == nil {
+			err = fmt.Errorf("default NFS interface group with name %s not found", defaultIgName)
+			return
+		}
+	}
+
+	// get NFS state
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed creating storage client")
+		return
+	}
+	defer client.Close()
+
+	id, err := common.LockBucket(ctx, client, bucket, nfsObject)
+	defer common.UnlockBucket(ctx, client, bucket, nfsObject, id)
+
+	stateHandler := client.Bucket(bucket).Object(nfsObject)
+	nfsState, err := common.ReadState(stateHandler, ctx)
+	if err != nil {
+		return
+	}
+
+	// put existing instances in state (if any)
+	if interfaceGroup != nil {
+		gwVms, err1 := getProtocolGwInstancesFromInterfaceGroup(ctx, jpool, interfaceGroup)
+		if err1 != nil {
+			err = fmt.Errorf("failed to get protocol gw instances from interface group: %w", err1)
+			return
+		}
+
+		if interfaceGroup.Status == "OK" {
+			nfsState.Clusterized = true
+		} else {
+			nfsState.Instances = append(nfsState.Instances, gwVms...)
+		}
+
+		err1 = addNfsInstancesToGroup(ctx, project, zone, nfsInstanceGroup, gwVms)
+		if err1 != nil {
+			err = fmt.Errorf("failed to add gw instances to group: %w", err1)
+			return
+		}
+
+		labels := map[string]string{
+			common.WekaProtocolGwLabelKey:   gatewaysName,
+			common.NfsInterfaceGroupPortKey: common.NfsInterfaceGroupPortValue,
+		}
+		err1 = setLabelsOnNfsInstances(ctx, project, zone, gwVms, labels)
+		if err1 != nil {
+			err = fmt.Errorf("failed to set labels on gw instances: %w", err1)
+			return
+		}
+
+		migratedInstanceNames = common.GetInstancesNames(gwVms)
+		log.Info().Msgf("Migrated %d existing NFS instances to state: %v", len(gwVms), migratedInstanceNames)
+	}
+
+	nfsState.MigrateExisting = false
+	err = common.RetryWriteState(stateHandler, ctx, nfsState)
+	return
+}
+
+func addNfsInstancesToGroup(ctx context.Context, project, zone, instanceGroup string, vms []protocol.Vm) (err error) {
+	log.Info().Msgf("Adding %d NFS instances to group %s", len(vms), instanceGroup)
+
+	instanceNames := common.GetInstancesNames(vms)
+	err = common.AddInstancesToGroup(ctx, project, zone, instanceGroup, instanceNames)
+	if err != nil {
+		log.Error().Err(err).Strs("instances", instanceNames).Str("group", instanceGroup).Msg("Failed to add instances to group")
+		return
+	}
+	log.Info().Msgf("Added %d existing NFS instances to group: %s", len(vms), instanceGroup)
+	return
+}
+
+func setLabelsOnNfsInstances(ctx context.Context, project, zone string, vms []protocol.Vm, labels map[string]string) (err error) {
+	log.Info().Msgf("Setting labels on %d gw instances", len(vms))
+
+	var errs []error
+	for _, vm := range vms {
+		err := common.AddLabelsOnInstance(ctx, project, zone, vm.Name, labels)
+		if err != nil {
+			errs = append(errs, err)
+			log.Error().Err(err).Msgf("Failed to set labels on gw instance: %s", vm.Name)
+		} else {
+			log.Info().Msgf("Set labels on gw instance: %s", vm.Name)
+		}
+	}
+	if len(errs) > 0 {
+		err = fmt.Errorf("failed to set labels on gw instances: %v", errs)
+	}
+	return
+}
+
+func getProtocolGwInstancesFromInterfaceGroup(ctx context.Context, jpool *jrpc.Pool, interfaceGroup *weka.InterfaceGroup) (vms []protocol.Vm, err error) {
+	hosts := weka.HostListResponse{}
+	err = jpool.Call(weka.JrpcHostList, struct{}{}, &hosts)
+	if err != nil {
+		err = fmt.Errorf("failed to get hosts from weka jrpc: %w", err)
+		return
+	}
+
+	vms = make([]protocol.Vm, len(interfaceGroup.Ports))
+	for i, port := range interfaceGroup.Ports {
+		host := hosts[port.HostId]
+		vm := protocol.Vm{
+			Name:         host.Hostname,
+			Protocol:     protocol.NFS,
+			ContainerUid: host.Uid,
+		}
+		vms[i] = vm
 	}
 	return
 }
