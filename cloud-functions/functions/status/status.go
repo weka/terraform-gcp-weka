@@ -3,15 +3,11 @@ package status
 import (
 	"context"
 	"encoding/json"
-	"math/rand"
-	"time"
 
 	cloudLibCommon "github.com/weka/go-cloud-lib/common"
 	"github.com/weka/go-cloud-lib/logging"
 
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
-	"github.com/weka/go-cloud-lib/connectors"
-	"github.com/weka/go-cloud-lib/lib/jrpc"
 	"github.com/weka/go-cloud-lib/lib/weka"
 	"github.com/weka/go-cloud-lib/protocol"
 )
@@ -80,29 +76,9 @@ func GetClusterStatus(ctx context.Context, project, zone, bucket, object, instan
 		return
 	}
 
-	creds, err := common.GetDeploymentOrAdminUsernameAndPassword(ctx, project, usernameId, passwordId, adminPasswordId)
+	jpool, err := common.GetWekaJrpcPool(ctx, project, zone, instanceGroup, usernameId, passwordId, adminPasswordId)
 	if err != nil {
 		return
-	}
-
-	jrpcBuilder := func(ip string) *jrpc.BaseClient {
-		return connectors.NewJrpcClient(ctx, ip, weka.ManagementJrpcPort, creds.Username, creds.Password)
-	}
-
-	instances, err := common.GetInstances(ctx, project, zone, common.GetInstanceGroupInstanceNames(ctx, project, zone, instanceGroup))
-	if err != nil {
-		return
-	}
-
-	ips := common.GetInstanceGroupBackendsIps(instances)
-	rand.Seed(time.Now().UnixNano())
-	rand.Shuffle(len(ips), func(i, j int) { ips[i], ips[j] = ips[j], ips[i] })
-	jpool := &jrpc.Pool{
-		Ips:     ips,
-		Clients: map[string]*jrpc.BaseClient{},
-		Active:  "",
-		Builder: jrpcBuilder,
-		Ctx:     ctx,
 	}
 
 	var rawWekaStatus json.RawMessage

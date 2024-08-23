@@ -394,9 +394,15 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 	nfsStateObject := os.Getenv("NFS_STATE_OBJ_NAME")
 	nfsGatewaysName := os.Getenv("NFS_GATEWAYS_NAME")
 	nfsTemplateName := os.Getenv("NFS_GATEWAYS_TEMPLATE_NAME")
+	nfsInterfaceGroupName := os.Getenv("NFS_INTERFACE_GROUP_NAME")
+	nfsInstanceGroup := os.Getenv("NFS_INSTANCE_GROUP")
 	yumRepoServer := os.Getenv("YUM_REPO_SERVER")
 	proxyUrl := os.Getenv("PROXY_URL")
 	functionRootUrl := fmt.Sprintf("https://%s", r.Host)
+	instanceGroup := os.Getenv("INSTANCE_GROUP")
+	usernameId := os.Getenv("USER_NAME_ID")
+	adminPasswordId := os.Getenv("ADMIN_PASSWORD_ID")
+	deploymentPasswordId := os.Getenv("DEPLOYMENT_PASSWORD_ID")
 
 	ctx := r.Context()
 	backends, err := common.GetInstancesByClusterLabel(ctx, project, zone, clusterName)
@@ -438,6 +444,7 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 
 	var nfsGatewaysNumber int
 	var nfsDesiredSize int
+	var nfsMigrateExisting bool
 
 	if nfsStateObject != "" {
 		nfsGateways, err := common.GetInstancesByProtocolGwLabel(ctx, project, zone, nfsGatewaysName)
@@ -459,14 +466,31 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Info().Msgf("NFS desired size is: %d", nfsState.DesiredSize)
 		nfsDesiredSize = nfsState.DesiredSize
+		nfsMigrateExisting = nfsState.MigrateExisting
 	}
 
-	if nfsGatewaysNumber < nfsDesiredSize {
+	if nfsMigrateExisting && state.Clusterized {
+		migratedInstances, err := scale_up.MigrateExistingNFSInstances(
+			ctx, project, zone, bucket, nfsStateObject, nfsGatewaysName, nfsInterfaceGroupName, nfsInstanceGroup, instanceGroup, usernameId, deploymentPasswordId, adminPasswordId,
+		)
+		if err != nil {
+			err = fmt.Errorf("failed migrating existing NFS instances: %w", err)
+			log.Error().Err(err).Send()
+			respondWithErr(w, err, http.StatusBadRequest)
+			return
+		} else {
+			// setting deletion protection outside of the migration function, because it modifies state object
+			for _, vmName := range migratedInstances {
+				common.SetDeletionProtection(ctx, project, zone, bucket, nfsStateObject, vmName)
+			}
+			fmt.Fprintf(w, "Migrating existing NFS instances completed successfully: %v. ", migratedInstances)
+		}
+	} else if nfsGatewaysNumber < nfsDesiredSize {
 		for i := nfsGatewaysNumber; i < nfsDesiredSize; i++ {
 			instanceName := fmt.Sprintf("%s-%s%03d", nfsGatewaysName, currentTime, i)
 			log.Info().Msgf("creating new NFS instance: %s", instanceName)
 			if err := scale_up.CreateNFSInstance(ctx, project, zone, nfsTemplateName, instanceName, yumRepoServer, proxyUrl, functionRootUrl); err != nil {
-				err = fmt.Errorf("instance %s creation failed %s.", instanceName, err)
+				err = fmt.Errorf("instance %s creation failed %s", instanceName, err)
 				log.Error().Err(err).Send()
 				respondWithErr(w, err, http.StatusBadRequest)
 				return
