@@ -268,7 +268,7 @@ func MigrateExistingNFSInstances(
 		log.Info().Msgf("Migrated %d existing NFS instances to state: %v", len(gwVms), migratedInstanceNames)
 	}
 
-	nfsState.MigrateExisting = false
+	nfsState.NfsInstancesMigrated = true
 	err = common.RetryWriteState(stateHandler, ctx, nfsState)
 	return
 }
