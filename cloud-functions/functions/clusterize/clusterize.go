@@ -147,6 +147,11 @@ func NFSClusterize(ctx context.Context, p ClusterizationParams) (clusterizeScrip
 		Name:           p.Vm.Name,
 	}
 
+	err = common.UpdateStateNfsMigrated(ctx, p.Bucket, p.NFSStateObject)
+	if err != nil {
+		clusterizeScript = cloudCommon.GetErrorScript(err, reportFunction, p.Vm.Protocol)
+		return
+	}
 	clusterizeScript = scriptGenerator.GetNFSSetupScript()
 	log.Info().Msg("Clusterization script for NFS generated")
 	return

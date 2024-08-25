@@ -477,6 +477,27 @@ func AddInstanceToStateInstances(ctx context.Context, bucket, object string, new
 	return
 }
 
+func UpdateStateNfsMigrated(ctx context.Context, bucket, object string) (err error) {
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed creating storage client")
+		return
+	}
+	defer client.Close()
+
+	id, err := LockBucket(ctx, client, bucket, object)
+	defer UnlockBucket(ctx, client, bucket, object, id)
+
+	stateHandler := client.Bucket(bucket).Object(object)
+	state, err := ReadState(stateHandler, ctx)
+	if err != nil {
+		return
+	}
+	state.NfsInstancesMigrated = true
+	err = RetryWriteState(stateHandler, ctx, state)
+	return
+}
+
 func UpdateStateReporting(ctx context.Context, bucket, object string, report protocol.Report) (err error) {
 	client, err := storage.NewClient(ctx)
 	if err != nil {

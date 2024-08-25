@@ -444,7 +444,7 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 
 	var nfsGatewaysNumber int
 	var nfsDesiredSize int
-	var nfsMigrateExisting bool
+	var nfsInstancesMigrated bool
 
 	if nfsStateObject != "" {
 		nfsGateways, err := common.GetInstancesByProtocolGwLabel(ctx, project, zone, nfsGatewaysName)
@@ -466,10 +466,10 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Info().Msgf("NFS desired size is: %d", nfsState.DesiredSize)
 		nfsDesiredSize = nfsState.DesiredSize
-		nfsMigrateExisting = nfsState.MigrateExisting
+		nfsInstancesMigrated = nfsState.NfsInstancesMigrated
 	}
 
-	if nfsMigrateExisting && state.Clusterized {
+	if nfsStateObject != "" && !nfsInstancesMigrated && state.Clusterized {
 		migratedInstances, err := scale_up.MigrateExistingNFSInstances(
 			ctx, project, zone, bucket, nfsStateObject, nfsGatewaysName, nfsInterfaceGroupName, nfsInstanceGroup, instanceGroup, usernameId, deploymentPasswordId, adminPasswordId,
 		)
