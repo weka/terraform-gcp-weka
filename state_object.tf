@@ -21,12 +21,12 @@ resource "google_storage_bucket_object" "nfs_state" {
   bucket       = local.state_bucket
   content_type = "application/json"
   content = jsonencode({
-    initial_size          = var.nfs_protocol_gateways_number
-    desired_size          = var.nfs_protocol_gateways_number
-    instances             = []
-    clusterized           = false
-    clusterization_target = var.nfs_protocol_gateways_number
-    migrate_existing      = true
+    initial_size           = var.nfs_protocol_gateways_number
+    desired_size           = var.nfs_protocol_gateways_number
+    instances              = []
+    clusterized            = false
+    clusterization_target  = var.nfs_protocol_gateways_number
+    nfs_instances_migrated = false
   })
 
   lifecycle {
