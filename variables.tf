@@ -98,6 +98,7 @@ variable "install_weka_url" {
 variable "weka_version" {
   type        = string
   description = "WEKA version"
+  default     = ""
 }
 
 variable "cluster_size" {
