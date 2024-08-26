@@ -41,7 +41,7 @@ resource "google_storage_bucket_object" "cloud_functions_zip" {
 # ======================== deploy ============================
 resource "google_cloudfunctions2_function" "cloud_internal_function" {
   name        = local.cloud_internal_function_name
-  description = "deploy, fetch, resize, clusterize, clusterize finalization, join, join_finalization, terminate, transient, terminate_cluster, scale_up functions"
+  description = "deploy, fetch, resize, clusterize, clusterize finalization, join, join_finalization, join_nfs_finalization, terminate, transient, terminate_cluster, scale_up functions"
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
   build_config {
     runtime     = "go122"
