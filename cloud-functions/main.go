@@ -97,6 +97,8 @@ func CloudInternal(w http.ResponseWriter, r *http.Request) {
 		Fetch(w, r)
 	case "join_finalization":
 		JoinFinalization(w, r)
+	case "join_nfs_finalization":
+		JoinFinalization(w, r)
 	case "report":
 		Report(w, r)
 	case "resize":
