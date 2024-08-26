@@ -130,6 +130,12 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       S3_PROTOCOL_GATEWAY_FE_CORES_NUM  = var.s3_protocol_gateway_fe_cores_num
     }
   }
+  lifecycle {
+    precondition {
+      condition     = var.install_weka_url != "" || var.weka_version != ""
+      error_message = "Please provide either 'install_weka_url' or 'weka_version' variables."
+    }
+  }
   depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, module.peering, google_project_service.project_function_api, google_project_service.run_api, google_project_service.artifactregistry_api]
 }
 
