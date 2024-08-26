@@ -21,6 +21,7 @@ func NewFuncDef(rootUrl string) functions_def.FunctionDef {
 		functions_def.Report:                 true,
 		functions_def.Join:                   true,
 		functions_def.JoinFinalization:       true,
+		functions_def.JoinNfsFinalization:    true,
 		functions_def.Fetch:                  true,
 		functions_def.Status:                 true,
 	}
