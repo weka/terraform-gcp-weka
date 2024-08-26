@@ -21,7 +21,8 @@ resource "google_compute_region_backend_service" "backend_service" {
   health_checks         = [google_compute_region_health_check.health_check.id]
   network               = data.google_compute_network.this[0].self_link
   backend {
-    group = google_compute_instance_group.this.self_link
+    group          = google_compute_instance_group.this.self_link
+    balancing_mode = "CONNECTION"
   }
   depends_on = [module.network, module.shared_vpc_peering, google_compute_instance_group.this]
 }
@@ -78,7 +79,8 @@ resource "google_compute_region_backend_service" "ui_backend_service" {
   health_checks         = [google_compute_region_health_check.ui_check.id]
   network               = data.google_compute_network.this[0].self_link
   backend {
-    group = google_compute_instance_group.this.self_link
+    group          = google_compute_instance_group.this.self_link
+    balancing_mode = "CONNECTION"
   }
   depends_on = [module.network, module.shared_vpc_peering, google_compute_instance_group.this]
 }
