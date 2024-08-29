@@ -142,7 +142,7 @@ func GetBackendsDeployScript(ctx context.Context, p GCPDeploymentParams) (bashSc
 func GetNfsDeployScript(ctx context.Context, p GCPDeploymentParams) (bashScript string, err error) {
 	log.Info().Msg("Getting NFS deploy script")
 
-	state, err := common.GetClusterState(ctx, p.Bucket, p.StateObject)
+	state, err := common.GetClusterState(ctx, p.Bucket, p.NFSStateObject)
 	if err != nil {
 		log.Error().Err(err).Send()
 		return
