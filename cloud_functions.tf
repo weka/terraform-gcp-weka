@@ -31,7 +31,7 @@ data "archive_file" "function_zip" {
 
 # ================== function zip =======================
 resource "google_storage_bucket_object" "cloud_functions_zip" {
-  name       = "${var.prefix}-${var.cluster_name}-cloud-functions.zip"
+  name       = "${var.prefix}-${var.cluster_name}-cloud-functions-${filemd5(local.function_zip_path)}.zip"
   bucket     = local.state_bucket
   source     = local.function_zip_path
   depends_on = [data.archive_file.function_zip, google_project_service.run_api, google_project_service.artifactregistry_api]
