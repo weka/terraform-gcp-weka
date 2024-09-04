@@ -25,7 +25,7 @@ func GetReports(ctx context.Context, project, zone, bucket, object, instanceGrou
 	reports.Errors = state.Errors
 
 	clusterizationInstance := ""
-	if len(state.Instances) >= state.ClusterizationTarget {
+	if len(state.Instances) >= state.ClusterizationTarget && state.ClusterizationTarget > 0 {
 		clusterizationInstance = state.Instances[state.ClusterizationTarget-1].Name
 	}
 
