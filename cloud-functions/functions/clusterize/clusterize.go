@@ -272,15 +272,15 @@ func GetObsScript(obsParams protocol.ObsParams) string {
 
 func GetPostClusterCreationScript(clusterizationTarget int) string {
 	template := `
-	DRIVE_PROCESSES=%d //UDP and DPDK
+	DRIVE_PROCESSES=%d # UDP and DPDK
 	function wait_for_apply_completion() {
-		// wait for some process to be DOWN
-		while ! weka cluster process | grep -q DOWN; do
+		# wait for some process to be DOWN
+		while ! weka cluster process 2>/dev/null | grep -q DOWN; do
 			echo "Waiting for apply to start"
 			sleep 1
 		done
 
-		// while loop until all processes are UP
+		# while loop until all processes are UP
 		count=0
 		while [ $count -lt $DRIVE_PROCESSES ]; do
 			echo "Waiting for apply to finish"
