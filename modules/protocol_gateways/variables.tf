@@ -132,7 +132,7 @@ variable "smb_cluster_name" {
   default     = "Weka-SMB"
   validation {
     condition     = length(var.smb_cluster_name) > 0 && length(var.smb_cluster_name) <= 15
-    error_message = "The SMB cluster name should be less than 15 characters long."
+    error_message = "The SMB cluster name must be between 1 and 15 characters long."
   }
 }
 
