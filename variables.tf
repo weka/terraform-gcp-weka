@@ -12,13 +12,13 @@ variable "project_id" {
   description = "Project id"
 }
 
-variable "nics_numbers" {
+variable "nic_number" {
   type        = number
   description = "Number of NICs per host."
   default     = -1
 
   validation {
-    condition     = var.nics_numbers == -1 || var.nics_numbers > 0
+    condition     = var.nic_number == -1 || var.nic_number > 0
     error_message = "The number of NICs can either be greater than 0 or equal to -1."
   }
 }
