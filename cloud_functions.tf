@@ -61,7 +61,7 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
     timeout_seconds                = 540
     vpc_connector                  = local.vpc_connector_id
     ingress_settings               = local.function_ingress_settings
-    vpc_connector_egress_settings  = "PRIVATE_RANGES_ONLY"
+    vpc_connector_egress_settings  = var.vpc_connector_egress_settings
     all_traffic_on_latest_revision = true
     service_account_email          = local.sa_email
     environment_variables = {
@@ -171,7 +171,7 @@ resource "google_cloudfunctions2_function" "scale_down_function" {
     timeout_seconds                = 540
     vpc_connector                  = local.vpc_connector_id
     ingress_settings               = local.function_ingress_settings
-    vpc_connector_egress_settings  = "PRIVATE_RANGES_ONLY"
+    vpc_connector_egress_settings  = var.vpc_connector_egress_settings
     all_traffic_on_latest_revision = true
     service_account_email          = local.sa_email
   }
@@ -211,7 +211,7 @@ resource "google_cloudfunctions2_function" "status_function" {
     timeout_seconds                = 540
     vpc_connector                  = local.vpc_connector_id
     ingress_settings               = local.function_ingress_settings
-    vpc_connector_egress_settings  = "PRIVATE_RANGES_ONLY"
+    vpc_connector_egress_settings  = var.vpc_connector_egress_settings
     all_traffic_on_latest_revision = true
     service_account_email          = local.sa_email
     environment_variables = {

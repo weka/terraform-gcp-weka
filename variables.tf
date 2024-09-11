@@ -143,6 +143,16 @@ variable "vpc_connector_id" {
   default     = ""
 }
 
+variable "vpc_connector_egress_settings" {
+  type        = string
+  description = "Egress settings for the VPC connector. Possible values: ALL_TRAFFIC, PRIVATE_RANGES_ONLY."
+  default     = "PRIVATE_RANGES_ONLY"
+  validation {
+    condition     = var.vpc_connector_egress_settings == "ALL_TRAFFIC" || var.vpc_connector_egress_settings == "PRIVATE_RANGES_ONLY"
+    error_message = "Invalid egress settings for the VPC connector. Possible values: ALL_TRAFFIC, PRIVATE_RANGES_ONLY."
+  }
+}
+
 variable "sa_email" {
   type        = string
   description = "Email address of an existing service account to be used. Leave blank to create a new service account during deployment."
