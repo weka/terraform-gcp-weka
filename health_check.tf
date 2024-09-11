@@ -37,6 +37,9 @@ resource "google_compute_forwarding_rule" "google_compute_forwarding_rule" {
   allow_global_access   = var.lb_allow_global_access
   network               = data.google_compute_network.this[0].self_link
   subnetwork            = data.google_compute_subnetwork.this[0].self_link
+  labels = {
+    goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
+  }
   lifecycle {
     ignore_changes = [network, subnetwork]
   }
@@ -95,6 +98,9 @@ resource "google_compute_forwarding_rule" "ui_forwarding_rule" {
   allow_global_access   = var.lb_allow_global_access
   network               = data.google_compute_network.this[0].self_link
   subnetwork            = data.google_compute_subnetwork.this[0].self_link
+  labels = {
+    goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
+  }
   lifecycle {
     ignore_changes = [network, subnetwork]
   }

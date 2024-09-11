@@ -59,6 +59,7 @@ resource "google_compute_instance_template" "this" {
 
   labels = {
     weka_protocol_gateway = var.gateways_name
+    goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
   }
 
   metadata = {
@@ -148,7 +149,9 @@ resource "google_compute_instance_from_template" "this" {
   source_instance_template = google_compute_instance_template.this.self_link
   can_ip_forward           = false
   depends_on               = [google_compute_instance_template.this]
-
+  labels = {
+    goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
+  }
   lifecycle {
     ignore_changes = all
   }

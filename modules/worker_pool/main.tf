@@ -76,7 +76,6 @@ resource "google_compute_network_peering_routes_config" "service_networking_peer
 
   export_custom_routes = true
   import_custom_routes = true
-
   depends_on = [
     google_service_networking_connection.worker_pool_connection, google_project_service_identity.servicenetworking_agent, google_project_iam_member.servicenetworking_agent, google_project_iam_member.service_networking_network_proj
   ]

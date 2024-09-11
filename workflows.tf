@@ -60,12 +60,17 @@ resource "google_workflows_workflow" "scale_down" {
   - returnOutput:
       return: $${TransientResult}
 EOF
-
+  labels = {
+    goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
+  }
   depends_on = [google_project_service.workflows, google_cloudfunctions2_function.scale_down_function, google_cloudfunctions2_function.cloud_internal_function]
 }
 
 resource "google_pubsub_topic" "scale_down_trigger_topic" {
   name = "${var.prefix}-${var.cluster_name}-scale-down"
+  labels = {
+    goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
+  }
 }
 
 # needed for google_eventarc_trigger
@@ -93,7 +98,10 @@ resource "google_eventarc_trigger" "scale_down_trigger" {
   }
 
   service_account = local.sa_email
-  depends_on      = [google_workflows_workflow.scale_down, google_pubsub_topic.scale_down_trigger_topic]
+  labels = {
+    goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
+  }
+  depends_on = [google_workflows_workflow.scale_down, google_pubsub_topic.scale_down_trigger_topic]
 }
 
 resource "google_cloud_scheduler_job" "scale_down_job" {
@@ -128,12 +136,17 @@ resource "google_workflows_workflow" "scale_up" {
   - returnOutput:
       return: $${ScaleUpResult}
 EOF
-
+  labels = {
+    goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
+  }
   depends_on = [google_project_service.workflows, google_cloudfunctions2_function.cloud_internal_function]
 }
 
 resource "google_pubsub_topic" "scale_up_trigger_topic" {
   name = "${var.prefix}-${var.cluster_name}-scale-up"
+  labels = {
+    goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
+  }
 }
 
 resource "google_eventarc_trigger" "scale_up_trigger" {
@@ -154,7 +167,9 @@ resource "google_eventarc_trigger" "scale_up_trigger" {
   }
 
   service_account = local.sa_email
-
+  labels = {
+    goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
+  }
   depends_on = [google_workflows_workflow.scale_up, google_pubsub_topic.scale_up_trigger_topic]
 }
 

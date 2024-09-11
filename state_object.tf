@@ -8,7 +8,6 @@ resource "google_storage_bucket_object" "state" {
   bucket       = local.state_bucket
   content_type = "application/json"
   content      = "{\"initial_size\":${var.cluster_size}, \"desired_size\":${var.cluster_size}, \"instances\":[], \"clusterized\":false, \"clusterization_target\":${var.cluster_size}}"
-
   lifecycle {
     ignore_changes = all
   }
@@ -28,7 +27,6 @@ resource "google_storage_bucket_object" "nfs_state" {
     clusterization_target  = var.nfs_protocol_gateways_number
     nfs_instances_migrated = false
   })
-
   lifecycle {
     ignore_changes = all
   }
