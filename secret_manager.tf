@@ -19,7 +19,6 @@ resource "google_secret_manager_secret" "secret_weka_password" {
 resource "google_secret_manager_secret_version" "password_secret_key" {
   secret      = google_secret_manager_secret.secret_weka_password.id
   secret_data = "<placeholder-for-weka-admin-password>"
-
   lifecycle {
     ignore_changes = [secret_data]
   }
@@ -35,6 +34,9 @@ resource "google_secret_manager_secret" "weka_deployment_password" {
       }
     }
   }
+  labels = {
+    goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
+  }
   depends_on = [google_project_service.secret_manager]
 }
 
@@ -47,6 +49,9 @@ resource "google_secret_manager_secret" "secret_weka_username" {
         location = var.region
       }
     }
+  }
+  labels = {
+    goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
   }
   depends_on = [google_project_service.secret_manager]
 }
@@ -67,6 +72,9 @@ resource "google_secret_manager_secret" "secret_token" {
       }
     }
   }
+  labels = {
+    goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
+  }
   depends_on = [google_project_service.secret_manager]
 }
 
@@ -74,7 +82,6 @@ resource "google_secret_manager_secret_version" "token_secret_key" {
   count       = var.get_weka_io_token != "" ? 1 : 0
   secret      = google_secret_manager_secret.secret_token[0].id
   secret_data = var.get_weka_io_token
-
   lifecycle {
     ignore_changes = [secret_data]
   }

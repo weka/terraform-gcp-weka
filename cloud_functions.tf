@@ -130,6 +130,9 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       S3_PROTOCOL_GATEWAY_FE_CORES_NUM  = var.s3_protocol_gateway_fe_cores_num
     }
   }
+  labels = {
+    goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
+  }
   lifecycle {
     precondition {
       condition     = var.install_weka_url != "" || var.weka_version != ""
@@ -174,6 +177,9 @@ resource "google_cloudfunctions2_function" "scale_down_function" {
     vpc_connector_egress_settings  = var.vpc_connector_egress_settings
     all_traffic_on_latest_revision = true
     service_account_email          = local.sa_email
+  }
+  labels = {
+    goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
   }
   depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, google_project_service.project_function_api, google_project_service.run_api, google_project_service.artifactregistry_api]
 }
@@ -226,6 +232,9 @@ resource "google_cloudfunctions2_function" "status_function" {
       ADMIN_PASSWORD_ID : google_secret_manager_secret.secret_weka_password.id
       DEPLOYMENT_PASSWORD_ID : google_secret_manager_secret.weka_deployment_password.id
     }
+  }
+  labels = {
+    goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
   }
   depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, google_project_service.project_function_api, google_project_service.run_api, google_project_service.artifactregistry_api]
 }
