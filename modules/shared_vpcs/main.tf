@@ -61,7 +61,6 @@ resource "google_compute_firewall" "sg_private" {
     protocol = "all"
   }
   source_tags = ["all"]
-
   lifecycle {
     ignore_changes = [network]
   }

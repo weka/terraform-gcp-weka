@@ -4,6 +4,9 @@ resource "google_storage_bucket" "weka_deployment" {
   name                        = "${var.prefix}-${var.cluster_name}-${var.project_id}"
   location                    = var.region
   uniform_bucket_level_access = true
+  labels = {
+    goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
+  }
   lifecycle {
     precondition {
       condition     = length(var.prefix) + length(var.cluster_name) + length(var.project_id) <= 63
@@ -26,7 +29,8 @@ resource "google_compute_instance_template" "this" {
 
   tags = ["${var.prefix}-${var.cluster_name}-backends", "allow-health-check", "backends", "all-apis"]
   labels = {
-    weka_cluster_name = var.cluster_name
+    weka_cluster_name     = var.cluster_name
+    goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
   }
   service_account {
     email  = local.sa_email
@@ -96,7 +100,6 @@ resource "google_compute_instance_group" "this" {
   zone       = var.zone
   network    = data.google_compute_network.this[0].self_link
   depends_on = [google_compute_region_health_check.health_check, module.network, module.shared_vpc_peering]
-
   lifecycle {
     ignore_changes = [network]
   }
@@ -108,7 +111,6 @@ resource "google_compute_instance_group" "nfs" {
   zone       = var.zone
   network    = data.google_compute_network.this[0].self_link
   depends_on = [google_compute_region_health_check.health_check, module.network, module.shared_vpc_peering]
-
   lifecycle {
     ignore_changes = [network]
   }
