@@ -289,6 +289,8 @@ func GetPostClusterCreationScript(clusterizationTarget int) string {
 		done
 	}
 
+	echo "Disabling NVMEs"
+	weka debug config override clusterInfo.nvmeEnabled false
 	echo "Running disks override"
 	weka debug override add --key override_max_disks_in_node --value 32
 	weka cluster container | grep drives0 | awk '{print $1}' | xargs -IH weka cluster container dedicate H off
