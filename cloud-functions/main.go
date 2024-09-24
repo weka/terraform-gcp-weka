@@ -412,7 +412,9 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 		err = fmt.Errorf("failed getting instances by cluster label: %w", err)
 		log.Error().Err(err).Send()
 		respondWithErr(w, err, http.StatusBadRequest)
+		return
 	}
+
 	backendsNumber := len(backends)
 	log.Info().Msgf("Number of backends is: %d", backendsNumber)
 

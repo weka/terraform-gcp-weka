@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -416,11 +417,12 @@ func GetInstancesByLabel(ctx context.Context, project, zone, labelKey, labelValu
 	listInstanceIter := instanceClient.List(ctx, listInstanceRequest)
 
 	for {
-		resp, err := listInstanceIter.Next()
-		if err == iterator.Done {
+		resp, err2 := listInstanceIter.Next()
+		if errors.Is(err2, iterator.Done) {
 			break
 		}
-		if err != nil {
+		if err2 != nil {
+			err = fmt.Errorf("error getting next instances by label: %w", err2)
 			log.Error().Err(err).Send()
 			break
 		}
