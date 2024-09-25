@@ -34,7 +34,7 @@ function retry_create_s3_cluster {
   return 0
 }
 
-if [[ $(weka s3 cluster status) ]]; then
+if [[ $(weka s3 cluster status |grep -v 'IP') ]]; then
         check_cluster_status
         if (( all_hosts > 0 && not_ready_hosts == 0 && all_hosts < cluster_size )); then
               echo "$(date -u): S3 cluster already exists, adding current container to it"
