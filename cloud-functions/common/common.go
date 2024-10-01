@@ -753,5 +753,6 @@ for d in json.load(sys.stdin)['disks']:
 	if d['type'] != 'DISK': continue
 	if d['isMounted']: continue
 	if not d['model'].startswith('nvme_card'): continue
+	if d['model'] == "nvme_card-pd": continue
 	print(d['devPath'])
 `
