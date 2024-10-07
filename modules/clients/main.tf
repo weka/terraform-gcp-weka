@@ -21,7 +21,7 @@ locals {
     dpdk_base_memory_mb          = try(var.instance_config_overrides[var.machine_type].dpdk_base_memory_mb, 0)
   })
 
-  custom_data_parts = [local.preparation_script, local.mount_wekafs_script]
+  custom_data_parts = [local.preparation_script, local.mount_wekafs_script, "${var.custom_data}\n"]
   vms_custom_data   = join("\n", local.custom_data_parts)
 }
 
