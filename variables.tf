@@ -494,6 +494,12 @@ variable "client_nic_type" {
   }
 }
 
+variable "clients_custom_data" {
+  type        = string
+  description = "Custom data to pass to the client instances"
+  default     = ""
+}
+
 ############################################### nfs protocol gateways variables ###################################################
 variable "nfs_protocol_gateways_number" {
   type        = number
