@@ -242,7 +242,7 @@ func Clusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript s
 	clusterParams.FindDrivesScript = dedent.Dedent(common.FindDrivesScript)
 	clusterParams.InstallDpdk = true
 	if p.NvmesNum > 8 {
-		clusterParams.PostClusterCreationScript = GetPostClusterCreationScript(p.Cluster.ClusterizationTarget)
+		clusterParams.PostClusterCreationScript = GetPostClusterCreationScript(p.Cluster.ClusterizationTarget, p.NvmesNum)
 	}
 
 	scriptGenerator := clusterize.ClusterizeScriptGenerator{
@@ -270,9 +270,10 @@ func GetObsScript(obsParams protocol.ObsParams) string {
 	)
 }
 
-func GetPostClusterCreationScript(clusterizationTarget int) string {
+func GetPostClusterCreationScript(clusterizationTarget, nvmesNum int) string {
 	template := `
 	DRIVE_PROCESSES=%d # UDP and DPDK
+	NVMES_PER_MACHINE=%d
 	function wait_for_apply_completion() {
 		# wait for some process to be DOWN
 		while ! weka cluster process 2>/dev/null | grep -q DOWN; do
@@ -289,6 +290,11 @@ func GetPostClusterCreationScript(clusterizationTarget int) string {
 		done
 	}
 
+	if [ $NVMES_PER_MACHINE -ge 24 ]; then
+		echo "Disabling NVMEs"
+		weka debug config override clusterInfo.nvmeEnabled false
+	fi
+
 	echo "Running disks override"
 	weka debug override add --key override_max_disks_in_node --value 32
 	weka cluster container | grep drives0 | awk '{print $1}' | xargs -IH weka cluster container dedicate H off
@@ -299,6 +305,6 @@ func GetPostClusterCreationScript(clusterizationTarget int) string {
 	wait_for_apply_completion
 	`
 	return fmt.Sprintf(
-		dedent.Dedent(template), clusterizationTarget*2,
+		dedent.Dedent(template), clusterizationTarget*2, nvmesNum,
 	)
 }
