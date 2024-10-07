@@ -163,3 +163,9 @@ variable "nic_type" {
   default     = null
   description = "The type of vNIC. Possible values: GVNIC, VIRTIO_NET."
 }
+
+variable "custom_data" {
+  type        = string
+  description = "Custom data to pass to the instances"
+  default     = ""
+}
