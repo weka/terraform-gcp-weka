@@ -405,6 +405,7 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 	usernameId := os.Getenv("USER_NAME_ID")
 	adminPasswordId := os.Getenv("ADMIN_PASSWORD_ID")
 	deploymentPasswordId := os.Getenv("DEPLOYMENT_PASSWORD_ID")
+	nfsSecondaryIpsNum, _ := strconv.Atoi(os.Getenv("NFS_SECONDARY_IPS_NUM"))
 
 	ctx := r.Context()
 	backends, err := common.GetInstancesByClusterLabel(ctx, project, zone, clusterName)
@@ -493,8 +494,8 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 		for i := nfsGatewaysNumber; i < nfsDesiredSize; i++ {
 			instanceName := fmt.Sprintf("%s-%s%03d", nfsGatewaysName, currentTime, i)
 			log.Info().Msgf("creating new NFS instance: %s", instanceName)
-			if err := scale_up.CreateNFSInstance(ctx, project, zone, nfsTemplateName, instanceName, yumRepoServer, proxyUrl, functionRootUrl); err != nil {
-				err = fmt.Errorf("instance %s creation failed %s", instanceName, err)
+			if err := scale_up.CreateNFSInstance(ctx, project, zone, nfsTemplateName, instanceName, yumRepoServer, proxyUrl, functionRootUrl, nfsSecondaryIpsNum); err != nil {
+				err = fmt.Errorf("instance %s creation failed %s.", instanceName, err)
 				log.Error().Err(err).Send()
 				respondWithErr(w, err, http.StatusBadRequest)
 				return
@@ -691,7 +692,7 @@ func TerminateCluster(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, "Deleted NFS state successfully.")
 		}
 
-		terminatingNfsInstances, errs := terminate_cluster.TerminateInstances(ctx, project, zone, common.WekaProtocolGwLabelKey, nfsGatewaysName)
+		terminatingNfsInstances, errs := terminate_cluster.TerminateInstances(ctx, project, zone, common.WekaProtocolGwLabelKey, nfsGatewaysName, true)
 		if len(errs) > 0 {
 			fmt.Fprintf(w, "Got the following failure while terminating NFS instances: %s.", errs)
 		}
@@ -715,7 +716,7 @@ func TerminateCluster(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "Deleted cluster state successfully.")
 	}
 
-	terminatingInstances, errs := terminate_cluster.TerminateInstances(ctx, project, zone, common.WekaClusterLabelKey, d.Name)
+	terminatingInstances, errs := terminate_cluster.TerminateInstances(ctx, project, zone, common.WekaClusterLabelKey, d.Name, false)
 	if len(errs) > 0 {
 		fmt.Fprintf(w, "Got the following failure while terminating instances: %s.", errs)
 	}
