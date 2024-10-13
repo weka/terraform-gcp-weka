@@ -411,7 +411,7 @@ variable "tiering_obs_start_demote" {
 
 variable "set_dedicated_fe_container" {
   type        = bool
-  default     = true
+  default     = false
   description = "Creates a cluster with dedicated frontend containers."
 }
 
