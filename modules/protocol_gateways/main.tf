@@ -91,12 +91,6 @@ resource "google_compute_instance_template" "this" {
       subnetwork         = data.google_compute_subnetwork.this[network_interface.value].id
       subnetwork_project = local.network_project_id
       access_config {}
-      dynamic "alias_ip_range" {
-        for_each = range(var.secondary_ips_per_nic)
-        content {
-          ip_cidr_range = "/32"
-        }
-      }
     }
   }
   # nic with private ip
@@ -105,12 +99,6 @@ resource "google_compute_instance_template" "this" {
     content {
       subnetwork         = data.google_compute_subnetwork.this[network_interface.value].id
       subnetwork_project = local.network_project_id
-      dynamic "alias_ip_range" {
-        for_each = range(var.secondary_ips_per_nic)
-        content {
-          ip_cidr_range = "/32"
-        }
-      }
     }
   }
 

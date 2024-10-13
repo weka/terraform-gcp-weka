@@ -20,7 +20,7 @@ func DeleteStateObject(ctx context.Context, bucket, object string) (err error) {
 	return stateHandler.Delete(ctx)
 }
 
-func TerminateInstances(ctx context.Context, project, zone, labelKey, labelValue string) (terminatingInstances []string, errs []error) {
+func TerminateInstances(ctx context.Context, project, zone, labelKey, labelValue string, releaseIps bool) (terminatingInstances []string, errs []error) {
 	instances, err := common.GetInstancesByLabel(ctx, project, zone, labelKey, labelValue)
 	if err != nil {
 		errs = append(errs, err)
@@ -39,5 +39,20 @@ func TerminateInstances(ctx context.Context, project, zone, labelKey, labelValue
 	}
 	terminatingInstances, errs2 := common.TerminateInstances(ctx, project, zone, instanceNames)
 	errs = append(errs, errs2...)
+
+	if releaseIps {
+		errs2 = releaseInstancesIps(ctx, project, zone, instanceNames)
+		errs = append(errs, errs2...)
+	}
+	return
+}
+
+func releaseInstancesIps(ctx context.Context, project, zone string, instances []string) (errs []error) {
+	for _, instance := range instances {
+		err := common.ReleaseInstanceInternalStaticIps(ctx, project, zone, instance)
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}
 	return
 }
