@@ -27,15 +27,7 @@ fi
 
 os=$(awk -F= '/^NAME/{print $2}' /etc/os-release)
 if [[ "$os" = *"Rocky"* ]]; then
-	sudo yum install -y bc
-	sudo yum install -y perl-interpreter
-	if [ "${yum_repo_server}" ]; then
-		yum -y install ${yum_repo_server}/baseos/Packages/k/kernel-devel-4.18.0-513.24.1.el8_9.x86_64.rpm
-		yum -y install wget
-	else
-		sudo curl https://dl.rockylinux.org/vault/rocky/8.9/Devel/x86_64/os/Packages/k/kernel-devel-4.18.0-513.24.1.el8_9.x86_64.rpm --output kernel-devel-4.18.0-513.24.1.el8_9.x86_64.rpm
-		sudo rpm -i kernel-devel-4.18.0-513.24.1.el8_9.x86_64.rpm
-	fi
+    yum install -y kernel-devel-$(uname -r)
 fi
 
 sudo yum install -y jq || (echo "Failed to install jq" && exit 1)
