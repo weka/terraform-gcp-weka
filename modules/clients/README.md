@@ -41,7 +41,7 @@ No modules.
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | project name | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | region name | `string` | n/a | yes |
 | <a name="input_sa_email"></a> [sa\_email](#input\_sa\_email) | service account email | `string` | n/a | yes |
-| <a name="input_source_image_id"></a> [source\_image\_id](#input\_source\_image\_id) | os of image | `string` | `"rocky-linux-8-v20240515"` | no |
+| <a name="input_source_image_id"></a> [source\_image\_id](#input\_source\_image\_id) | os of image | `string` | `"rocky-linux-8-v20240910"` | no |
 | <a name="input_ssh_public_key"></a> [ssh\_public\_key](#input\_ssh\_public\_key) | Ssh public key to pass to vms. | `string` | n/a | yes |
 | <a name="input_subnets_list"></a> [subnets\_list](#input\_subnets\_list) | list of subnet names | `list(string)` | n/a | yes |
 | <a name="input_vm_username"></a> [vm\_username](#input\_vm\_username) | The user name for logging in to the virtual machines. | `string` | `"weka"` | no |
