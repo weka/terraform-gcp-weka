@@ -81,6 +81,16 @@ variable "allow_weka_api_cidrs" {
   default     = []
 }
 
+variable "sg_custom_ingress_rules" {
+  type = list(object({
+    to_port     = number
+    protocol    = string
+    cidr_blocks = list(string)
+  }))
+  default     = []
+  description = "Custom inbound rules to be added to the security group."
+}
+
 variable "private_zone_name" {
   type        = string
   description = "Private zone name"

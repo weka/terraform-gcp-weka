@@ -183,6 +183,16 @@ variable "allow_weka_api_cidrs" {
   default     = []
 }
 
+variable "sg_custom_ingress_rules" {
+  type = list(object({
+    to_port     = number
+    protocol    = string
+    cidr_blocks = list(string)
+  }))
+  default     = []
+  description = "Custom inbound rules to be added to the security group."
+}
+
 variable "source_image_id" {
   type        = string
   description = "Source image for deployment (default: rocky-linux-8-v20240910). While other distributions may be compatible, only Rocky Linux 8.10 is officially tested with this Terraform module."
