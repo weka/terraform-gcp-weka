@@ -22,6 +22,7 @@ module "network" {
   vpc_connector_id                   = var.vpc_connector_id
   allow_ssh_cidrs                    = var.allow_ssh_cidrs
   allow_weka_api_cidrs               = var.allow_weka_api_cidrs
+  sg_custom_ingress_rules            = var.sg_custom_ingress_rules
   private_zone_name                  = var.private_zone_name
   mtu_size                           = var.mtu_size
   subnet_autocreate_as_private       = var.subnet_autocreate_as_private

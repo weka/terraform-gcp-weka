@@ -14,6 +14,15 @@ locals {
   network_self_link         = length(var.vpcs) == 0 ? google_compute_network.vpc_network.*.self_link : data.google_compute_network.vpc_list_ids.*.self_link
   vpcs_name                 = length(var.vpcs) == 0 ? google_compute_network.vpc_network.*.name : var.vpcs
   deployment_project_number = data.google_project.project.number
+  vpc_custom_rule_combinations = flatten([
+    for rule in var.sg_custom_ingress_rules : [
+      for vpc_name in local.vpcs_name : {
+        rule     = rule
+        vpc_name = vpc_name
+      }
+    ]
+  ])
+
 }
 data "google_project" "project" {}
 
@@ -150,6 +159,20 @@ resource "google_compute_firewall" "sg_weka_api" {
     ports    = ["14000"]
   }
   source_tags = ["weka-api"]
+  target_tags = ["backends"]
+}
+
+resource "google_compute_firewall" "sg_custom_ingress_rules" {
+  count         = length(local.vpc_custom_rule_combinations)
+  project       = local.network_project_id
+  name          = "${var.prefix}-sg-custom-${count.index}"
+  network       = local.vpc_custom_rule_combinations[count.index]["vpc_name"]
+  source_ranges = local.vpc_custom_rule_combinations[count.index]["rule"]["cidr_blocks"]
+  allow {
+    protocol = local.vpc_custom_rule_combinations[count.index]["rule"]["protocol"]
+    ports    = [local.vpc_custom_rule_combinations[count.index]["rule"]["to_port"]]
+  }
+  source_tags = ["custom-ingress-rules"]
   target_tags = ["backends"]
 }
 
