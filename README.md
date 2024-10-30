@@ -316,6 +316,7 @@ set_shared_vpc_peering = true
 | <a name="input_nic_number"></a> [nic\_number](#input\_nic\_number) | Number of NICs per host. | `number` | `-1` | no |
 | <a name="input_nic_type"></a> [nic\_type](#input\_nic\_type) | The type of vNIC. Possible values: GVNIC, VIRTIO\_NET. | `string` | `null` | no |
 | <a name="input_nvmes_number"></a> [nvmes\_number](#input\_nvmes\_number) | Number of NVMe disks to attach to each host. | `number` | `2` | no |
+| <a name="input_post_cluster_setup_script"></a> [post\_cluster\_setup\_script](#input\_post\_cluster\_setup\_script) | A script to run after the cluster is up | `string` | `""` | no |
 | <a name="input_prefix"></a> [prefix](#input\_prefix) | Prefix for all resources (maximum 15 characters). | `string` | `"weka"` | no |
 | <a name="input_private_dns_name"></a> [private\_dns\_name](#input\_private\_dns\_name) | Private DNS name. | `string` | `""` | no |
 | <a name="input_private_zone_name"></a> [private\_zone\_name](#input\_private\_zone\_name) | Private zone name. | `string` | `""` | no |
@@ -331,6 +332,7 @@ set_shared_vpc_peering = true
 | <a name="input_s3_setup_protocol"></a> [s3\_setup\_protocol](#input\_s3\_setup\_protocol) | Specifies whether to configure S3 protocol cluster. | `bool` | `false` | no |
 | <a name="input_sa_email"></a> [sa\_email](#input\_sa\_email) | Email address of an existing service account to be used. Leave blank to create a new service account during deployment. | `string` | `""` | no |
 | <a name="input_set_dedicated_fe_container"></a> [set\_dedicated\_fe\_container](#input\_set\_dedicated\_fe\_container) | Creates a cluster with dedicated frontend containers. | `bool` | `false` | no |
+| <a name="input_set_default_fs"></a> [set\_default\_fs](#input\_set\_default\_fs) | Set the default filesystem which will use the full available capacity | `bool` | `true` | no |
 | <a name="input_set_peering"></a> [set\_peering](#input\_set\_peering) | Specifies whether to apply peering connection between subnets. | `bool` | `true` | no |
 | <a name="input_set_shared_vpc_peering"></a> [set\_shared\_vpc\_peering](#input\_set\_shared\_vpc\_peering) | Enables peering for shared VPC. | `bool` | `true` | no |
 | <a name="input_sg_custom_ingress_rules"></a> [sg\_custom\_ingress\_rules](#input\_sg\_custom\_ingress\_rules) | Custom inbound rules to be added to the security group. | <pre>list(object({<br>    to_port     = number<br>    protocol    = string<br>    cidr_blocks = list(string)<br>  }))</pre> | `[]` | no |
