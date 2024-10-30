@@ -145,6 +145,9 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 	wekaHomeUrl := os.Getenv("WEKA_HOME_URL")
 	installDpdk, _ := strconv.ParseBool(os.Getenv("INSTALL_DPDK"))
 	backendLbIp := os.Getenv("BACKEND_LB_IP")
+	setDefaultFs, _ := strconv.ParseBool(os.Getenv("SET_DEFAULT_FS"))
+	postClusterSetupScript := os.Getenv("POST_CLUSTER_SETUP_SCRIPT")
+
 	addFrontend := false
 	if addFrontendNum > 0 {
 		addFrontend = true
@@ -191,6 +194,8 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 			InstallDpdk:               installDpdk,
 			TieringTargetSSDRetention: tieringTargetSsdRetention,
 			TieringStartDemote:        tieringStartDemote,
+			SetDefaultFs:              setDefaultFs,
+			PostClusterSetupScript:    postClusterSetupScript,
 		},
 		Obs: protocol.ObsParams{
 			Name:              obsName,

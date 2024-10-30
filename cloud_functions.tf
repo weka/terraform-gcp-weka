@@ -128,6 +128,8 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       S3_DISK_SIZE                      = var.s3_protocol_gateway_disk_size
       SMB_PROTOCOL_GATEWAY_FE_CORES_NUM = var.smb_protocol_gateway_fe_cores_num
       S3_PROTOCOL_GATEWAY_FE_CORES_NUM  = var.s3_protocol_gateway_fe_cores_num
+      SET_DEFAULT_FS                    = var.set_default_fs
+      POST_CLUSTER_SETUP_SCRIPT         = var.post_cluster_setup_script
     }
   }
   labels = {
