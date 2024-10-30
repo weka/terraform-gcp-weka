@@ -98,6 +98,8 @@ github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsT
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 github.com/weka/go-cloud-lib v0.0.0-20240827073450-1db7d60030ab h1:/DX4vsQ6XBerb6Z1uR4mnV+170Z8bvlsg9CrEnbW1YI=
 github.com/weka/go-cloud-lib v0.0.0-20240827073450-1db7d60030ab/go.mod h1:FCQuk2bLvtDHe2Kjsu0oInJP1VOVsuxqPGHGMmVIPMg=
+github.com/weka/go-cloud-lib v0.0.0-20241030124057-ec13a72a73b2 h1:yb0J9EPSfGxbq+9+7BwhuE4svGaAPM0iT7skK/pAA5M=
+github.com/weka/go-cloud-lib v0.0.0-20241030124057-ec13a72a73b2/go.mod h1:FCQuk2bLvtDHe2Kjsu0oInJP1VOVsuxqPGHGMmVIPMg=
 go.opencensus.io v0.24.0 h1:y73uSU6J157QMP2kn2r30vwW1A2W2WFwSCGnAVxeaD0=
 go.opencensus.io v0.24.0/go.mod h1:vNK8G9p7aAivkbmorf4v+7Hgx+Zs0yY+0fOtgBfjQKo=
 go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.49.0 h1:4Pp6oUg3+e/6M4C0A/3kJ2VYa++dsWVTtGgLVj5xtHg=
