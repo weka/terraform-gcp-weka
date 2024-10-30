@@ -785,3 +785,15 @@ variable "lb_allow_global_access" {
   default     = false
   description = "Specifies whether to allow access to the load balancer from all regions."
 }
+
+variable "set_default_fs" {
+  type        = bool
+  description = "Set the default filesystem which will use the full available capacity"
+  default     = true
+}
+
+variable "post_cluster_setup_script" {
+  type        = string
+  description = "A script to run after the cluster is up"
+  default     = ""
+}
