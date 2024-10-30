@@ -333,6 +333,7 @@ set_shared_vpc_peering = true
 | <a name="input_set_dedicated_fe_container"></a> [set\_dedicated\_fe\_container](#input\_set\_dedicated\_fe\_container) | Creates a cluster with dedicated frontend containers. | `bool` | `false` | no |
 | <a name="input_set_peering"></a> [set\_peering](#input\_set\_peering) | Specifies whether to apply peering connection between subnets. | `bool` | `true` | no |
 | <a name="input_set_shared_vpc_peering"></a> [set\_shared\_vpc\_peering](#input\_set\_shared\_vpc\_peering) | Enables peering for shared VPC. | `bool` | `true` | no |
+| <a name="input_sg_custom_ingress_rules"></a> [sg\_custom\_ingress\_rules](#input\_sg\_custom\_ingress\_rules) | Custom inbound rules to be added to the security group. | <pre>list(object({<br>    to_port     = number<br>    protocol    = string<br>    cidr_blocks = list(string)<br>  }))</pre> | `[]` | no |
 | <a name="input_shared_vpc_project_id"></a> [shared\_vpc\_project\_id](#input\_shared\_vpc\_project\_id) | The project ID for the shared VPC. | `string` | `""` | no |
 | <a name="input_shared_vpcs"></a> [shared\_vpcs](#input\_shared\_vpcs) | list of shared vpc names. | `list(string)` | `[]` | no |
 | <a name="input_smb_cluster_name"></a> [smb\_cluster\_name](#input\_smb\_cluster\_name) | The name of the SMB cluster. | `string` | `"Weka-SMB"` | no |
