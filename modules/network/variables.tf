@@ -167,3 +167,9 @@ variable "vpc_number" {
   default     = 0
   description = "Number of vpcs, should be passed only when not creating subnets."
 }
+
+variable "labels_map" {
+  type        = map(string)
+  default     = {}
+  description = "A map of labels to assign the same metadata to all resources in the environment. Format: key:value."
+}

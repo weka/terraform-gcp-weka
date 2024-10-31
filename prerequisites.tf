@@ -35,6 +35,7 @@ module "network" {
   set_peering                        = var.set_peering
   vpcs                               = var.vpcs_name
   create_nat_gateway                 = var.create_nat_gateway
+  labels_map                         = var.labels_map
   depends_on                         = [module.service_account]
 }
 

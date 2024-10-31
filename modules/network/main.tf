@@ -391,9 +391,9 @@ resource "google_dns_managed_zone" "private_zone" {
       }
     }
   }
-  labels = {
+  labels = merge(var.labels_map, {
     goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
-  }
+  })
   depends_on = [google_project_service.project_dns]
 }
 
@@ -456,9 +456,9 @@ resource "google_compute_global_forwarding_rule" "apis_forwarding_rule" {
   network               = google_compute_network.vpc_network[0].self_link
   ip_address            = google_compute_global_address.apis_ip[0].id
   load_balancing_scheme = ""
-  labels = {
+  labels = merge(var.labels_map, {
     goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
-  }
+  })
   depends_on = [google_compute_global_address.apis_ip]
 }
 
@@ -470,9 +470,9 @@ resource "google_compute_global_forwarding_rule" "vpcsc_forwarding_rule" {
   network               = google_compute_network.vpc_network[0].self_link
   ip_address            = google_compute_global_address.vpcsc_ip[0].id
   load_balancing_scheme = ""
-  labels = {
+  labels = merge(var.labels_map, {
     goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
-  }
+  })
   depends_on = [google_compute_global_address.vpcsc_ip]
 }
 
@@ -506,9 +506,9 @@ resource "google_dns_managed_zone" "cloud_run_zone" {
       }
     }
   }
-  labels = {
+  labels = merge(var.labels_map, {
     goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
-  }
+  })
   depends_on = [google_project_service.project_dns, google_compute_network.vpc_network]
 }
 
@@ -539,9 +539,9 @@ resource "google_dns_managed_zone" "googleapis_zone" {
       }
     }
   }
-  labels = {
+  labels = merge(var.labels_map, {
     goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
-  }
+  })
   depends_on = [google_project_service.project_dns, google_compute_network.vpc_network]
 }
 

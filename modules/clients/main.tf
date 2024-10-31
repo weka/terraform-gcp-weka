@@ -71,9 +71,9 @@ resource "google_compute_instance" "this" {
   scheduling {
     on_host_maintenance = try(var.instance_config_overrides[var.machine_type].host_maintenance, "MIGRATE")
   }
-  labels = {
+  labels = merge(var.labels_map, {
     goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
-  }
+  })
   lifecycle {
     ignore_changes = [network_interface, metadata_startup_script]
   }

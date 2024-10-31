@@ -169,3 +169,9 @@ variable "custom_data" {
   description = "Custom data to pass to the instances"
   default     = ""
 }
+
+variable "labels_map" {
+  type        = map(string)
+  default     = {}
+  description = "A map of labels to assign the same metadata to all resources in the environment. Format: key:value."
+}
