@@ -132,9 +132,9 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
       POST_CLUSTER_SETUP_SCRIPT         = var.post_cluster_setup_script
     }
   }
-  labels = {
+  labels = merge(var.labels_map, {
     goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
-  }
+  })
   lifecycle {
     precondition {
       condition     = var.install_weka_url != "" || var.weka_version != ""
@@ -180,9 +180,9 @@ resource "google_cloudfunctions2_function" "scale_down_function" {
     all_traffic_on_latest_revision = true
     service_account_email          = local.sa_email
   }
-  labels = {
+  labels = merge(var.labels_map, {
     goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
-  }
+  })
   depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, google_project_service.project_function_api, google_project_service.run_api, google_project_service.artifactregistry_api]
 }
 
@@ -235,9 +235,9 @@ resource "google_cloudfunctions2_function" "status_function" {
       DEPLOYMENT_PASSWORD_ID : google_secret_manager_secret.weka_deployment_password.id
     }
   }
-  labels = {
+  labels = merge(var.labels_map, {
     goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
-  }
+  })
   depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, google_project_service.project_function_api, google_project_service.run_api, google_project_service.artifactregistry_api]
 }
 
