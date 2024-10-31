@@ -90,39 +90,30 @@ EOT
 }
 
 output "cluster_helper_commands" {
-  value       = <<EOT
-########################################## get cluster status ##########################################
-curl -m 70 -X POST "${local.get_cluster_status_uri}" \
--H "Authorization:bearer $(gcloud auth print-identity-token)" \
--H "Content-Type:application/json" -d '{"type":"progress"}'
+  value = {
+    get_status            = <<EOT
 # for fetching cluster status pass: -d '{"type":"status"}'
-
-########################################## resize cluster command ##########################################
+curl -m 70 -X POST "${local.get_cluster_status_uri}" \
+  -H "Authorization:bearer $(gcloud auth print-identity-token)" \
+  -H "Content-Type:application/json" -d '{"type":"progress"}'
+EOT
+    resize_cluster        = <<EOT
 curl -m 70 -X POST "${local.resize_cluster_uri}" \
--H "Authorization:bearer $(gcloud auth print-identity-token)" \
--H "Content-Type:application/json" \
--d '{"value":ENTER_NEW_VALUE_HERE}'
-
-
-########################################## pre-terraform destroy, cluster terminate function ################
-
+  -H "Authorization:bearer $(gcloud auth print-identity-token)" \
+  -H "Content-Type:application/json" \
+  -d '{"value":ENTER_NEW_VALUE_HERE}'
+EOT
+    pre_terraform_destroy = <<EOT
 # replace CLUSTER_NAME with the actual cluster name, as a confirmation of the destructive action
 # this function needs to be executed prior to terraform destroy
 curl -m 70 -X POST "${local.terminate_cluster_uri}" \
--H "Authorization:bearer $(gcloud auth print-identity-token)" \
--H "Content-Type:application/json" \
--d '{"name":"CLUSTER_NAME"}'
-
-
-################################# get weka password secret login ############################################
-
-gcloud secrets versions access latest --secret=${local.weka_cluster_password_secret_id}  --project ${var.project_id} --format='get(payload.data)' | base64 -d
-
-############################################## get backend ips ##############################################
-
-gcloud compute instances list --filter="labels.weka_cluster_name=${var.cluster_name}" --format "get(networkInterfaces[0].${local.ips_type})" --project ${var.project_id}
-
+  -H "Authorization:bearer $(gcloud auth print-identity-token)" \
+  -H "Content-Type:application/json" \
+  -d '{"name":"CLUSTER_NAME"}'
 EOT
+    get_password          = "gcloud secrets versions access latest --secret=${local.weka_cluster_password_secret_id}  --project ${var.project_id} --format='get(payload.data)' | base64 -d"
+    get_backend_ips       = "gcloud compute instances list --filter='labels.weka_cluster_name=${var.cluster_name}' --format 'get(networkInterfaces[0].${local.ips_type})' --project ${var.project_id}"
+  }
   description = "Useful commands and script to interact with weka cluster"
 }
 
