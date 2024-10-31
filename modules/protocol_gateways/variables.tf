@@ -157,3 +157,9 @@ variable "report_function_url" {
   type        = string
   description = "The URL of report function from cloud functions."
 }
+
+variable "labels_map" {
+  type        = map(string)
+  default     = {}
+  description = "A map of labels to assign the same metadata to all resources in the environment. Format: key:value."
+}

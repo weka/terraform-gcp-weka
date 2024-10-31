@@ -4,9 +4,9 @@ resource "google_storage_bucket" "weka_deployment" {
   name                        = "${var.prefix}-${var.cluster_name}-${var.project_id}"
   location                    = var.region
   uniform_bucket_level_access = true
-  labels = {
+  labels = merge(var.labels_map, {
     goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
-  }
+  })
   lifecycle {
     precondition {
       condition     = length(var.prefix) + length(var.cluster_name) + length(var.project_id) <= 63
@@ -28,10 +28,10 @@ resource "google_compute_instance_template" "this" {
   can_ip_forward = false
 
   tags = ["${var.prefix}-${var.cluster_name}-backends", "allow-health-check", "backends", "all-apis"]
-  labels = {
+  labels = merge(var.labels_map, {
     weka_cluster_name     = var.cluster_name
     goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
-  }
+  })
   service_account {
     email  = local.sa_email
     scopes = ["cloud-platform"]

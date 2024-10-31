@@ -34,9 +34,9 @@ resource "google_secret_manager_secret" "weka_deployment_password" {
       }
     }
   }
-  labels = {
+  labels = merge(var.labels_map, {
     goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
-  }
+  })
   depends_on = [google_project_service.secret_manager]
 }
 
@@ -50,9 +50,9 @@ resource "google_secret_manager_secret" "secret_weka_username" {
       }
     }
   }
-  labels = {
+  labels = merge(var.labels_map, {
     goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
-  }
+  })
   depends_on = [google_project_service.secret_manager]
 }
 
@@ -72,9 +72,9 @@ resource "google_secret_manager_secret" "secret_token" {
       }
     }
   }
-  labels = {
+  labels = merge(var.labels_map, {
     goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
-  }
+  })
   depends_on = [google_project_service.secret_manager]
 }
 

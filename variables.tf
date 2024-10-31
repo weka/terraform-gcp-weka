@@ -797,3 +797,9 @@ variable "post_cluster_setup_script" {
   description = "A script to run after the cluster is up"
   default     = ""
 }
+
+variable "labels_map" {
+  type        = map(string)
+  default     = {}
+  description = "A map of labels to assign the same metadata to all resources in the environment. Format: key:value."
+}

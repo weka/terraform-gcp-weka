@@ -60,17 +60,17 @@ resource "google_workflows_workflow" "scale_down" {
   - returnOutput:
       return: $${TransientResult}
 EOF
-  labels = {
+  labels = merge(var.labels_map, {
     goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
-  }
+  })
   depends_on = [google_project_service.workflows, google_cloudfunctions2_function.scale_down_function, google_cloudfunctions2_function.cloud_internal_function]
 }
 
 resource "google_pubsub_topic" "scale_down_trigger_topic" {
   name = "${var.prefix}-${var.cluster_name}-scale-down"
-  labels = {
+  labels = merge(var.labels_map, {
     goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
-  }
+  })
 }
 
 # needed for google_eventarc_trigger
@@ -98,9 +98,9 @@ resource "google_eventarc_trigger" "scale_down_trigger" {
   }
 
   service_account = local.sa_email
-  labels = {
+  labels = merge(var.labels_map, {
     goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
-  }
+  })
   depends_on = [google_workflows_workflow.scale_down, google_pubsub_topic.scale_down_trigger_topic]
 }
 
@@ -136,17 +136,17 @@ resource "google_workflows_workflow" "scale_up" {
   - returnOutput:
       return: $${ScaleUpResult}
 EOF
-  labels = {
+  labels = merge(var.labels_map, {
     goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
-  }
+  })
   depends_on = [google_project_service.workflows, google_cloudfunctions2_function.cloud_internal_function]
 }
 
 resource "google_pubsub_topic" "scale_up_trigger_topic" {
   name = "${var.prefix}-${var.cluster_name}-scale-up"
-  labels = {
+  labels = merge(var.labels_map, {
     goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
-  }
+  })
 }
 
 resource "google_eventarc_trigger" "scale_up_trigger" {
@@ -167,9 +167,9 @@ resource "google_eventarc_trigger" "scale_up_trigger" {
   }
 
   service_account = local.sa_email
-  labels = {
+  labels = merge(var.labels_map, {
     goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
-  }
+  })
   depends_on = [google_workflows_workflow.scale_up, google_pubsub_topic.scale_up_trigger_topic]
 }
 
