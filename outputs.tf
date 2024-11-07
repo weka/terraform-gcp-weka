@@ -1,13 +1,12 @@
 locals {
-  get_cluster_status_uri          = google_cloudfunctions2_function.status_function.service_config[0].uri
-  resize_cluster_uri              = format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=resize")
+  resize_cluster_uri              = format("%s%s", local.internal_function_uri, "?action=resize")
   lb_url                          = trimsuffix(google_dns_record_set.record_a.name, ".")
-  terminate_cluster_uri           = format("%s%s", google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri, "?action=terminate_cluster")
+  terminate_cluster_uri           = format("%s%s", local.internal_function_uri, "?action=terminate_cluster")
   weka_cluster_password_secret_id = google_secret_manager_secret.secret_weka_password.secret_id
   ips_type                        = local.assign_public_ip ? "accessConfigs[0].natIP" : "networkIP"
   functions_url = {
-    progressing_status = { url = local.get_cluster_status_uri, body = { "type" : "progress" } }
-    status             = { url = local.get_cluster_status_uri, body = { "type" : "status" } }
+    progressing_status = { url = local.status_function_uri, body = { "type" : "progress" } }
+    status             = { url = local.status_function_uri, body = { "type" : "status" } }
     resize             = { url = local.resize_cluster_uri, body = { "value" : 7 } }
     destroy            = { url = local.terminate_cluster_uri, body = { "name" : var.cluster_name } }
   }
@@ -29,7 +28,7 @@ output "private_ssh_key" {
 }
 
 output "get_cluster_status_uri" {
-  value       = local.get_cluster_status_uri
+  value       = local.status_function_uri
   description = "URL of status function"
 }
 
@@ -93,7 +92,7 @@ output "cluster_helper_commands" {
   value = {
     get_status            = <<EOT
 # for fetching cluster status pass: -d '{"type":"status"}'
-curl -m 70 -X POST "${local.get_cluster_status_uri}" \
+curl -m 70 -X POST "${local.status_function_uri}" \
   -H "Authorization:bearer $(gcloud auth print-identity-token)" \
   -H "Content-Type:application/json" -d '{"type":"progress"}'
 EOT
@@ -120,4 +119,9 @@ EOT
 output "client_ips" {
   value       = var.clients_number > 0 ? module.clients[0].client_ips : []
   description = "If 'assign_public_ip' is set to true, it will output clients public ips, otherwise private ips."
+}
+
+output "vpc_self_links" {
+  value       = length(var.subnets_name) == 0 ? module.network[0].vpc_self_links : null
+  description = "List of VPC self-links"
 }
