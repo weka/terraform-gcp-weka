@@ -241,6 +241,12 @@ variable "cloud_functions_region_map" {
   }
 }
 
+variable "cloud_run_image_prefix" {
+  type        = string
+  description = "Image reference for Cloud Functions"
+  default     = null
+}
+
 variable "workflow_map_region" {
   type        = map(string)
   description = "Defines a mapping between regions lacking Cloud Workflows functionality and alternative regions. It ensures Cloud Workflows functionality by redirecting workflows to supported regions when necessary."

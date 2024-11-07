@@ -24,7 +24,7 @@ resource "google_workflows_workflow" "scale_down" {
   - fetch:
       call: http.post
       args:
-          url: ${google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri}
+          url: ${local.internal_function_uri}
           query:
             action: fetch
           auth:
@@ -33,7 +33,7 @@ resource "google_workflows_workflow" "scale_down" {
   - scale_down:
       call: http.post
       args:
-          url: ${google_cloudfunctions2_function.scale_down_function.service_config[0].uri}
+          url: ${local.scaleup_function_uri}
           body: $${FetchResult.body}
           auth:
             type: OIDC
@@ -41,7 +41,7 @@ resource "google_workflows_workflow" "scale_down" {
   - terminate:
       call: http.post
       args:
-          url: ${google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri}
+          url: ${local.internal_function_uri}
           query:
             action: terminate
           body: $${ScaleResult.body}
@@ -51,7 +51,7 @@ resource "google_workflows_workflow" "scale_down" {
   - transient:
       call: http.post
       args:
-          url: ${google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri}
+          url: ${local.internal_function_uri}
           query:
             action: transient
           body: $${TerminateResult.body}
@@ -64,7 +64,11 @@ EOF
   labels = merge(var.labels_map, {
     goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
   })
-  depends_on = [google_project_service.workflows, google_cloudfunctions2_function.scale_down_function, google_cloudfunctions2_function.cloud_internal_function]
+  depends_on = [
+    google_project_service.workflows,
+    google_cloudfunctions2_function.scale_down_function, google_cloudfunctions2_function.cloud_internal_function,
+    google_cloud_run_v2_service.scale_down, google_cloud_run_v2_service.cloud_internal
+  ]
 }
 
 resource "google_pubsub_topic" "scale_down_trigger_topic" {
@@ -129,7 +133,7 @@ resource "google_workflows_workflow" "scale_up" {
   - scale_up:
       call: http.get
       args:
-          url: ${google_cloudfunctions2_function.cloud_internal_function.service_config[0].uri}
+          url: ${local.internal_function_uri}
           query:
             action: scale_up
           auth:
@@ -141,7 +145,7 @@ EOF
   labels = merge(var.labels_map, {
     goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
   })
-  depends_on = [google_project_service.workflows, google_cloudfunctions2_function.cloud_internal_function]
+  depends_on = [google_project_service.workflows, google_cloudfunctions2_function.cloud_internal_function, google_cloud_run_v2_service.cloud_internal]
 }
 
 resource "google_pubsub_topic" "scale_up_trigger_topic" {
