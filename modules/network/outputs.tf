@@ -3,6 +3,11 @@ output "vpcs_names" {
   description = "List of vpcs names"
 }
 
+output "vpc_self_links" {
+  value       = [for v in google_compute_network.vpc_network : v.self_link]
+  description = "List of VPC self-links"
+}
+
 output "gateway_address" {
   value       = length(var.subnets) == 0 ? length(var.subnets_range) > 0 ? [for g in google_compute_subnetwork.subnetwork : g.gateway_address] : [] : [for g in data.google_compute_subnetwork.subnets_list_ids : g.gateway_address]
   description = "List of vpcs gateway addresses"

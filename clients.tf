@@ -23,6 +23,7 @@ module "clients" {
   labels_map                   = var.labels_map
   depends_on = [
     google_compute_forwarding_rule.google_compute_forwarding_rule, google_workflows_workflow.scale_up,
-    google_cloudfunctions2_function.cloud_internal_function, module.shared_vpc_peering, module.peering
+    google_cloudfunctions2_function.cloud_internal_function, module.shared_vpc_peering, module.peering,
+    google_cloud_run_v2_service.cloud_internal
   ]
 }
