@@ -803,3 +803,13 @@ variable "labels_map" {
   default     = {}
   description = "A map of labels to assign the same metadata to all resources in the environment. Format: key:value."
 }
+
+variable "ip_stack_type" {
+  type        = string
+  description = "The stack type. Possible values: IPV4_ONLY, IPV4_IPV6."
+  default     = "IPV4_ONLY"
+  validation {
+    condition     = var.ip_stack_type == "IPV4_ONLY" || var.ip_stack_type == "IPV4_IPV6"
+    error_message = "The stack type must be either IPV4_ONLY or IPV4_IPV6."
+  }
+}
