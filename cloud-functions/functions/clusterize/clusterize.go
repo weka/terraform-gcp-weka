@@ -262,7 +262,7 @@ func GetObsScript(obsParams protocol.ObsParams) string {
 
 	weka fs tier s3 add gcp-bucket --hostname storage.googleapis.com --port 443 --bucket "$OBS_NAME" --protocol https --auth-method AWSSignature4
 	weka fs tier s3 attach default gcp-bucket
-	tiering_percent=$(echo "$full_capacity * 100 / $OBS_TIERING_SSD_PERCENT" | bc)
+	tiering_percent=$(($full_capacity * 100 / $OBS_TIERING_SSD_PERCENT"))
 	weka fs update default --total-capacity "$tiering_percent"B
 	`
 	return fmt.Sprintf(
