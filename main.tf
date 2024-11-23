@@ -67,6 +67,7 @@ resource "google_compute_instance_template" "this" {
       nic_type           = var.nic_type
       subnetwork         = data.google_compute_subnetwork.this[network_interface.value].name
       subnetwork_project = local.network_project_id
+      stack_type         = var.ip_stack_type
       access_config {}
     }
   }
@@ -79,6 +80,7 @@ resource "google_compute_instance_template" "this" {
       nic_type           = var.nic_type
       subnetwork_project = local.network_project_id
       subnetwork         = data.google_compute_subnetwork.this[network_interface.value].name
+      stack_type         = var.ip_stack_type
     }
   }
 

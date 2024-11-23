@@ -36,6 +36,7 @@ module "network" {
   vpcs                               = var.vpcs_name
   create_nat_gateway                 = var.create_nat_gateway
   labels_map                         = var.labels_map
+  ip_stack_type                      = var.ip_stack_type
   depends_on                         = [module.service_account]
 }
 

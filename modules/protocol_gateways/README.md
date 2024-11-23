@@ -34,6 +34,7 @@ No modules.
 | <a name="input_frontend_container_cores_num"></a> [frontend\_container\_cores\_num](#input\_frontend\_container\_cores\_num) | The number of frontend ionodes per instance. | `number` | `1` | no |
 | <a name="input_gateways_name"></a> [gateways\_name](#input\_gateways\_name) | The protocol group name. | `string` | n/a | yes |
 | <a name="input_gateways_number"></a> [gateways\_number](#input\_gateways\_number) | The number of virtual machines to deploy as protocol gateways. | `number` | n/a | yes |
+| <a name="input_ip_stack_type"></a> [ip\_stack\_type](#input\_ip\_stack\_type) | The stack type. Possible values: IPV4\_ONLY, IPV4\_IPV6. | `string` | `"IPV4_ONLY"` | no |
 | <a name="input_labels_map"></a> [labels\_map](#input\_labels\_map) | A map of labels to assign the same metadata to all resources in the environment. Format: key:value. | `map(string)` | `{}` | no |
 | <a name="input_machine_type"></a> [machine\_type](#input\_machine\_type) | Weka cluster backends machines type | `string` | `"c2-standard-8"` | no |
 | <a name="input_network_project_id"></a> [network\_project\_id](#input\_network\_project\_id) | Network project id | `string` | `""` | no |

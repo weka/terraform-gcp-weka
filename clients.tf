@@ -21,6 +21,7 @@ module "clients" {
   nic_type                     = var.client_nic_type
   custom_data                  = var.clients_custom_data
   labels_map                   = var.labels_map
+  ip_stack_type                = var.ip_stack_type
   depends_on = [
     google_compute_forwarding_rule.google_compute_forwarding_rule, google_workflows_workflow.scale_up,
     google_cloudfunctions2_function.cloud_internal_function, module.shared_vpc_peering, module.peering

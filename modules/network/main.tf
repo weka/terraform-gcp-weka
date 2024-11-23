@@ -72,6 +72,7 @@ resource "google_compute_network" "vpc_network" {
   mtu                             = var.mtu_size
   routing_mode                    = "REGIONAL"
   delete_default_routes_on_create = var.subnet_autocreate_as_private
+  enable_ula_internal_ipv6        = var.ip_stack_type == "IPV4_IPV6"
   depends_on                      = [google_project_service.project_compute, google_project_service.project_gcp_api]
 }
 
@@ -84,6 +85,8 @@ resource "google_compute_subnetwork" "subnetwork" {
   region                   = var.region
   network                  = local.vpcs_name[count.index]
   private_ip_google_access = true
+  stack_type               = var.ip_stack_type
+  ipv6_access_type         = var.subnet_autocreate_as_private ? "INTERNAL" : "EXTERNAL"
   depends_on               = [google_compute_network.vpc_network]
 }
 
@@ -96,6 +99,8 @@ resource "google_compute_subnetwork" "psc_subnetwork" {
   region                   = var.region
   network                  = google_compute_network.vpc_network[0].name
   private_ip_google_access = true
+  stack_type               = var.ip_stack_type
+  ipv6_access_type         = "INTERNAL"
   depends_on               = [google_compute_network.vpc_network]
 }
 
@@ -206,6 +211,8 @@ resource "google_compute_subnetwork" "connector_subnet" {
   region                   = lookup(var.vpc_connector_region_map, var.region, var.region)
   private_ip_google_access = true
   network                  = local.vpcs_name[count.index]
+  stack_type               = var.ip_stack_type
+  ipv6_access_type         = "INTERNAL"
   depends_on               = [google_compute_network.vpc_network]
 }
 

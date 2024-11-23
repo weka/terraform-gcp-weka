@@ -92,6 +92,7 @@ No modules.
 | <a name="input_endpoint_apis_internal_ip_address"></a> [endpoint\_apis\_internal\_ip\_address](#input\_endpoint\_apis\_internal\_ip\_address) | Private ip for all-apis endpoint | `string` | `"10.0.1.5"` | no |
 | <a name="input_endpoint_vpcsc_internal_ip_address"></a> [endpoint\_vpcsc\_internal\_ip\_address](#input\_endpoint\_vpcsc\_internal\_ip\_address) | Private ip for vpc service connection endpoint | `string` | `"10.0.1.6"` | no |
 | <a name="input_googleapis_dns_zone_name"></a> [googleapis\_dns\_zone\_name](#input\_googleapis\_dns\_zone\_name) | Name of existing Private dns zone for domain googleapis.com. | `string` | `""` | no |
+| <a name="input_ip_stack_type"></a> [ip\_stack\_type](#input\_ip\_stack\_type) | The stack type. Possible values: IPV4\_ONLY, IPV4\_IPV6. | `string` | `"IPV4_ONLY"` | no |
 | <a name="input_labels_map"></a> [labels\_map](#input\_labels\_map) | A map of labels to assign the same metadata to all resources in the environment. Format: key:value. | `map(string)` | `{}` | no |
 | <a name="input_mtu_size"></a> [mtu\_size](#input\_mtu\_size) | mtu size | `number` | n/a | yes |
 | <a name="input_network_project_id"></a> [network\_project\_id](#input\_network\_project\_id) | Network project id | `string` | `""` | no |
