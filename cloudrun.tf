@@ -7,11 +7,12 @@ locals {
 }
 # ======================== deploy ============================
 resource "google_cloud_run_v2_service" "cloud_internal" {
-  count       = local.is_using_cloudfunctions ? 0 : 1
-  name        = local.cloud_internal_function_name
-  description = "deploy, fetch, resize, clusterize, clusterize finalization, join, join_finalization, terminate, transient, terminate_cluster, scale_up functions"
-  location    = lookup(var.cloud_functions_region_map, var.region, var.region)
-  ingress     = local.cloudrun_ingress_map[local.function_ingress_settings]
+  count               = local.is_using_cloudfunctions ? 0 : 1
+  name                = local.cloud_internal_function_name
+  description         = "deploy, fetch, resize, clusterize, clusterize finalization, join, join_finalization, terminate, transient, terminate_cluster, scale_up functions"
+  location            = lookup(var.cloud_functions_region_map, var.region, var.region)
+  ingress             = local.cloudrun_ingress_map[local.function_ingress_settings]
+  deletion_protection = false
   traffic {
     type    = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
     percent = 100
@@ -64,11 +65,12 @@ resource "google_cloud_run_v2_service_iam_member" "cloud_internal_invoker" {
 
 # ======================== scale_down ============================
 resource "google_cloud_run_v2_service" "scale_down" {
-  count       = local.is_using_cloudfunctions ? 0 : 1
-  name        = "${var.prefix}-${var.cluster_name}-scale-down"
-  description = "scale cluster down"
-  location    = lookup(var.cloud_functions_region_map, var.region, var.region)
-  ingress     = local.cloudrun_ingress_map[local.function_ingress_settings]
+  count               = local.is_using_cloudfunctions ? 0 : 1
+  name                = "${var.prefix}-${var.cluster_name}-scale-down"
+  description         = "scale cluster down"
+  location            = lookup(var.cloud_functions_region_map, var.region, var.region)
+  ingress             = local.cloudrun_ingress_map[local.function_ingress_settings]
+  deletion_protection = false
   traffic {
     type    = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
     percent = 100
@@ -114,11 +116,12 @@ resource "google_cloud_run_v2_service_iam_member" "weka_internal_invoker" {
 
 # ======================== status ============================
 resource "google_cloud_run_v2_service" "status" {
-  count       = local.is_using_cloudfunctions ? 0 : 1
-  name        = "${var.prefix}-${var.cluster_name}-status"
-  description = "get cluster status"
-  location    = lookup(var.cloud_functions_region_map, var.region, var.region)
-  ingress     = local.cloudrun_ingress_map[local.function_ingress_settings]
+  count               = local.is_using_cloudfunctions ? 0 : 1
+  name                = "${var.prefix}-${var.cluster_name}-status"
+  description         = "get cluster status"
+  location            = lookup(var.cloud_functions_region_map, var.region, var.region)
+  ingress             = local.cloudrun_ingress_map[local.function_ingress_settings]
+  deletion_protection = false
   traffic {
     type    = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
     percent = 100
