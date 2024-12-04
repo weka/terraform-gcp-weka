@@ -122,5 +122,6 @@ No modules.
 | <a name="output_subnets_range"></a> [subnets\_range](#output\_subnets\_range) | List of vpcs subnets ranges |
 | <a name="output_subnetwork_name"></a> [subnetwork\_name](#output\_subnetwork\_name) | List of vpcs subnets names |
 | <a name="output_vpc_connector_id"></a> [vpc\_connector\_id](#output\_vpc\_connector\_id) | Vpc connector id |
+| <a name="output_vpc_self_links"></a> [vpc\_self\_links](#output\_vpc\_self\_links) | List of VPC self-links |
 | <a name="output_vpcs_names"></a> [vpcs\_names](#output\_vpcs\_names) | List of vpcs names |
 <!-- END_TF_DOCS -->
