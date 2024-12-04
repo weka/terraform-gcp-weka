@@ -207,6 +207,12 @@ set_shared_vpc_peering = true
 
 | Name | Type |
 |------|------|
+| [google_cloud_run_v2_service.cloud_internal](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/cloud_run_v2_service) | resource |
+| [google_cloud_run_v2_service.scale_down](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/cloud_run_v2_service) | resource |
+| [google_cloud_run_v2_service.status](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/cloud_run_v2_service) | resource |
+| [google_cloud_run_v2_service_iam_member.cloud_internal_invoker](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/cloud_run_v2_service_iam_member) | resource |
+| [google_cloud_run_v2_service_iam_member.status_invoker](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/cloud_run_v2_service_iam_member) | resource |
+| [google_cloud_run_v2_service_iam_member.weka_internal_invoker](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/cloud_run_v2_service_iam_member) | resource |
 | [google_cloud_scheduler_job.scale_down_job](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/cloud_scheduler_job) | resource |
 | [google_cloud_scheduler_job.scale_up_job](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/cloud_scheduler_job) | resource |
 | [google_cloudfunctions2_function.cloud_internal_function](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/cloudfunctions2_function) | resource |
@@ -281,6 +287,7 @@ set_shared_vpc_peering = true
 | <a name="input_clients_use_dpdk"></a> [clients\_use\_dpdk](#input\_clients\_use\_dpdk) | Enables mounting WEKA clients in DPDK mode. | `bool` | `true` | no |
 | <a name="input_cloud_functions_region_map"></a> [cloud\_functions\_region\_map](#input\_cloud\_functions\_region\_map) | Defines a mapping between regions lacking Cloud Functions functionality and alternative regions. It ensures Cloud Functions availability by redirecting workflows to supported regions when necessary. | `map(string)` | <pre>{<br>  "asia-south2": "asia-south1",<br>  "europe-north1": "europe-west1",<br>  "europe-west4": "europe-west1",<br>  "southamerica-west1": "northamerica-northeast1",<br>  "us-east5": "us-east1"<br>}</pre> | no |
 | <a name="input_cloud_run_dns_zone_name"></a> [cloud\_run\_dns\_zone\_name](#input\_cloud\_run\_dns\_zone\_name) | The name of existing private DNS zone for the domain run.app (it provides GCP hosting services). | `string` | `""` | no |
+| <a name="input_cloud_run_image_prefix"></a> [cloud\_run\_image\_prefix](#input\_cloud\_run\_image\_prefix) | Image reference for Cloud Functions | `string` | `null` | no |
 | <a name="input_cloud_scheduler_region_map"></a> [cloud\_scheduler\_region\_map](#input\_cloud\_scheduler\_region\_map) | Defines a mapping between regions lacking Cloud Scheduler functionality and alternative regions. It ensures Cloud Scheduler functionality by redirecting workflows to supported regions when necessary. | `map(string)` | <pre>{<br>  "asia-south2": "asia-south1",<br>  "europe-north1": "europe-west1",<br>  "europe-west4": "europe-west1",<br>  "southamerica-west1": "northamerica-northeast1",<br>  "us-east5": "us-east1"<br>}</pre> | no |
 | <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | Cluster name prefix for all resources. | `string` | n/a | yes |
 | <a name="input_cluster_size"></a> [cluster\_size](#input\_cluster\_size) | The number of instances deployed for your WEKA cluster. | `number` | n/a | yes |
@@ -400,5 +407,6 @@ set_shared_vpc_peering = true
 | <a name="output_smb_protocol_gateways_ips"></a> [smb\_protocol\_gateways\_ips](#output\_smb\_protocol\_gateways\_ips) | Ips of SMB protocol gateways |
 | <a name="output_terminate_cluster_uri"></a> [terminate\_cluster\_uri](#output\_terminate\_cluster\_uri) | URL of terminate function |
 | <a name="output_vm_username"></a> [vm\_username](#output\_vm\_username) | Provided as part of output for automated use of terraform, ssh user to weka cluster vm |
+| <a name="output_vpc_self_links"></a> [vpc\_self\_links](#output\_vpc\_self\_links) | List of VPC self-links |
 | <a name="output_weka_cluster_admin_password_secret_id"></a> [weka\_cluster\_admin\_password\_secret\_id](#output\_weka\_cluster\_admin\_password\_secret\_id) | Secret id of weka cluster admin password |
 <!-- END_TF_DOCS -->
