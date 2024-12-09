@@ -255,6 +255,42 @@ resource "google_cloudfunctions2_function" "status_function" {
   depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, google_project_service.project_function_api, google_project_service.run_api, google_project_service.artifactregistry_api]
 }
 
+# ======================== weka-api ============================
+resource "google_cloudfunctions2_function" "weka_api_function" {
+  count       = local.is_using_cloudfunctions ? 1 : 0
+  name        = "${var.prefix}-${var.cluster_name}-weka-api"
+  description = "weka api request"
+  location    = lookup(var.cloud_functions_region_map, var.region, var.region)
+  build_config {
+    runtime     = "go122"
+    entry_point = "Status"
+    worker_pool = local.worker_pool_id
+    source {
+      storage_source {
+        bucket = local.state_bucket
+        object = google_storage_bucket_object.cloud_functions_zip.name
+      }
+    }
+  }
+
+  service_config {
+    max_instance_count             = 3
+    min_instance_count             = 1
+    available_memory               = "256Mi"
+    timeout_seconds                = 540
+    vpc_connector                  = local.vpc_connector_id
+    ingress_settings               = local.function_ingress_settings
+    vpc_connector_egress_settings  = var.vpc_connector_egress_settings
+    all_traffic_on_latest_revision = true
+    service_account_email          = local.sa_email
+    environment_variables          = local.status_function_environment
+  }
+  labels = merge(var.labels_map, {
+    goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
+  })
+  depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, google_project_service.project_function_api, google_project_service.run_api, google_project_service.artifactregistry_api]
+}
+
 # IAM entry for all users to invoke the function
 resource "google_cloudfunctions2_function_iam_member" "status_invoker" {
   count          = local.is_using_cloudfunctions ? length(local.cloud_function_invoker_allowed_members) : 0
