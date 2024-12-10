@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/weka_api"
+
 	"cloud.google.com/go/storage"
 	"github.com/rs/zerolog/log"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
@@ -778,6 +780,59 @@ func Status(w http.ResponseWriter, r *http.Request) {
 	err = json.NewEncoder(w).Encode(clusterStatus)
 	if err != nil {
 		err = fmt.Errorf("failed decoding status: %s", err)
+		log.Error().Err(err).Send()
+		respondWithErr(w, err, http.StatusBadRequest)
+		return
+	}
+}
+
+func WekaApi(w http.ResponseWriter, r *http.Request) {
+
+	res, err := weka_api.RunWekaApi(r)
+	if err != nil {
+		log.Info().Msgf("error %v", err)
+	}
+
+	// var requestBody struct {
+	// 	Type     string `json:"type"`
+	// 	Protocol string `json:"protocol"`
+	// }
+
+	// if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
+	// 	failedDecodingReqBody(w, err)
+	// 	return
+	// }
+
+	// ctx := r.Context()
+	// var clusterStatus interface{}
+	// if requestBody.Type == "" || requestBody.Type == "status" {
+	// 	clusterStatus, err = status.GetClusterStatus(ctx, project, zone, bucket, stateObject, instanceGroup, usernameId, deploymentPasswordId, adminPasswordId)
+	// } else if requestBody.Type == "progress" && requestBody.Protocol == "" {
+	// 	clusterStatus, err = status.GetReports(ctx, project, zone, bucket, stateObject, instanceGroup)
+	// } else if requestBody.Type == "progress" && requestBody.Protocol == "nfs" {
+	// 	clusterStatus, err = status.GetReports(ctx, project, zone, bucket, nfsStateObject, nfsInstanceGroup)
+	// } else {
+	// 	clusterStatus = "Invalid status type"
+	// }
+
+	// if err != nil {
+	// 	err = fmt.Errorf("failed retrieving status: %s", err)
+	// 	log.Error().Err(err).Send()
+	// 	respondWithErr(w, err, http.StatusBadRequest)
+	// 	return
+	// }
+
+	response := struct {
+		Status   int
+		Response interface{}
+	}{
+		Status:   200,
+		Response: res,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(response)
+	if err != nil {
+		//err = fmt.Errorf("failed decoding status: %s", err)
 		log.Error().Err(err).Send()
 		respondWithErr(w, err, http.StatusBadRequest)
 		return

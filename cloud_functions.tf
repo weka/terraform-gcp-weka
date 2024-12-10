@@ -263,7 +263,7 @@ resource "google_cloudfunctions2_function" "weka_api_function" {
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
   build_config {
     runtime     = "go122"
-    entry_point = "Status"
+    entry_point = "WekaApi"
     worker_pool = local.worker_pool_id
     source {
       storage_source {
