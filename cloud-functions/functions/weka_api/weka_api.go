@@ -1,9 +1,9 @@
 package weka_api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"os"
 
 	"github.com/rs/zerolog/log"
@@ -11,40 +11,19 @@ import (
 	"github.com/weka/go-cloud-lib/lib/weka"
 )
 
-type WekaApi struct {
+type WekaApiRequest struct {
+	Method  string            `json:"method"`
+	Payload map[string]string `json:"payload"`
 }
 
-func RunWekaApi(r *http.Request) (interface{}, error) {
+func RunWekaApi(ctx context.Context, wr *WekaApiRequest) (interface{}, error) {
 	log.Info().Msg("RunWekaApi> ")
 	project := os.Getenv("PROJECT")
 	zone := os.Getenv("ZONE")
-	bucket := os.Getenv("BUCKET")
-	stateObject := os.Getenv("STATE_OBJ_NAME")
 	instanceGroup := os.Getenv("INSTANCE_GROUP")
 	usernameId := os.Getenv("USER_NAME_ID")
 	adminPasswordId := os.Getenv("ADMIN_PASSWORD_ID")
 	deploymentPasswordId := os.Getenv("DEPLOYMENT_PASSWORD_ID")
-
-	log.Info().Msgf("instance group %v", instanceGroup)
-
-	ctx := r.Context()
-
-	state, err := common.GetClusterState(ctx, bucket, stateObject)
-	if err != nil {
-		log.Error().Msgf("failed to get cluster state %v", err)
-		return nil, err
-	}
-	log.Info().Msgf("got state %v", state)
-
-	var requestBody struct {
-		Method  string            `json:"method"`
-		Payload map[string]string `json:"payload"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
-		return nil, fmt.Errorf("failed to decode request %w", err)
-	}
-	log.Info().Msgf("request body %v", requestBody)
 
 	jpool, err := common.GetWekaJrpcPool(ctx, project, zone, instanceGroup, usernameId, deploymentPasswordId, adminPasswordId)
 	if err != nil {
@@ -56,9 +35,11 @@ func RunWekaApi(r *http.Request) (interface{}, error) {
 
 	var rawWekaStatus json.RawMessage
 	var jrpcMethod weka.JrpcMethod
-	switch requestBody.Method {
+	switch wr.Method {
 	case "status":
 		jrpcMethod = weka.JrpcStatus
+	default:
+		return nil, fmt.Errorf("weka api method %s is not supported", wr.Method)
 	}
 
 	err = jpool.Call(jrpcMethod, struct{}{}, &rawWekaStatus)

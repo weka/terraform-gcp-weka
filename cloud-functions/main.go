@@ -788,51 +788,24 @@ func Status(w http.ResponseWriter, r *http.Request) {
 
 func WekaApi(w http.ResponseWriter, r *http.Request) {
 
-	res, err := weka_api.RunWekaApi(r)
+	var wekaRequest weka_api.WekaApiRequest
+	if err := json.NewDecoder(r.Body).Decode(&wekaRequest); err != nil {
+		failedDecodingReqBody(w, err)
+		return
+	}
+
+	res, err := weka_api.RunWekaApi(r.Context(), &wekaRequest)
 	if err != nil {
-		log.Info().Msgf("error %v", err)
+		err = fmt.Errorf("failed running weka-api[%s] request: %v", wekaRequest.Method, err)
+		log.Error().Err(err).Send()
+		respondWithErr(w, err, http.StatusBadRequest)
+		return
 	}
 
-	// var requestBody struct {
-	// 	Type     string `json:"type"`
-	// 	Protocol string `json:"protocol"`
-	// }
-
-	// if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
-	// 	failedDecodingReqBody(w, err)
-	// 	return
-	// }
-
-	// ctx := r.Context()
-	// var clusterStatus interface{}
-	// if requestBody.Type == "" || requestBody.Type == "status" {
-	// 	clusterStatus, err = status.GetClusterStatus(ctx, project, zone, bucket, stateObject, instanceGroup, usernameId, deploymentPasswordId, adminPasswordId)
-	// } else if requestBody.Type == "progress" && requestBody.Protocol == "" {
-	// 	clusterStatus, err = status.GetReports(ctx, project, zone, bucket, stateObject, instanceGroup)
-	// } else if requestBody.Type == "progress" && requestBody.Protocol == "nfs" {
-	// 	clusterStatus, err = status.GetReports(ctx, project, zone, bucket, nfsStateObject, nfsInstanceGroup)
-	// } else {
-	// 	clusterStatus = "Invalid status type"
-	// }
-
-	// if err != nil {
-	// 	err = fmt.Errorf("failed retrieving status: %s", err)
-	// 	log.Error().Err(err).Send()
-	// 	respondWithErr(w, err, http.StatusBadRequest)
-	// 	return
-	// }
-
-	response := struct {
-		Status   int
-		Response interface{}
-	}{
-		Status:   200,
-		Response: res,
-	}
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(response)
+	err = json.NewEncoder(w).Encode(res)
 	if err != nil {
-		//err = fmt.Errorf("failed decoding status: %s", err)
+		err = fmt.Errorf("failed decoding request: %s", err)
 		log.Error().Err(err).Send()
 		respondWithErr(w, err, http.StatusBadRequest)
 		return
