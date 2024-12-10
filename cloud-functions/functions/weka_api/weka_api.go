@@ -26,8 +26,6 @@ func RunWekaApi(r *http.Request) (interface{}, error) {
 	deploymentPasswordId := os.Getenv("DEPLOYMENT_PASSWORD_ID")
 
 	log.Info().Msgf("instance group %v", instanceGroup)
-	// nfsStateObject := os.Getenv("NFS_STATE_OBJ_NAME")
-	// nfsInstanceGroup := os.Getenv("NFS_INSTANCE_GROUP")
 
 	ctx := r.Context()
 
@@ -39,8 +37,8 @@ func RunWekaApi(r *http.Request) (interface{}, error) {
 	log.Info().Msgf("got state %v", state)
 
 	var requestBody struct {
-		Type     string `json:"type"`
-		Protocol string `json:"protocol"`
+		Method  string            `json:"method"`
+		Payload map[string]string `json:"payload"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
@@ -48,7 +46,6 @@ func RunWekaApi(r *http.Request) (interface{}, error) {
 	}
 	log.Info().Msgf("request body %v", requestBody)
 
-	// jpool, err := common.GetWekaJrpcPool(ctx, project, zone, instanceGroup, usernameId, deploymentPasswordId, adminPasswordId)
 	jpool, err := common.GetWekaJrpcPool(ctx, project, zone, instanceGroup, usernameId, deploymentPasswordId, adminPasswordId)
 	if err != nil {
 		log.Error().Msgf("failed to get jrpc pool %w", err)
@@ -58,16 +55,19 @@ func RunWekaApi(r *http.Request) (interface{}, error) {
 	log.Info().Msgf("RunWekaApi> ips list %v", jpool.Ips)
 
 	var rawWekaStatus json.RawMessage
+	var jrpcMethod weka.JrpcMethod
+	switch requestBody.Method {
+	case "status":
+		jrpcMethod = weka.JrpcStatus
+	}
 
-	err = jpool.Call(weka.JrpcStatus, struct{}{}, &rawWekaStatus)
+	err = jpool.Call(jrpcMethod, struct{}{}, &rawWekaStatus)
 	if err != nil {
 		log.Error().Msgf("failed to call jrpc %w", err)
 		return nil, fmt.Errorf("failed to call jrpc %w", err)
 	}
 
 	log.Info().Msgf("received %v", rawWekaStatus)
-	// switch requestBody.Type {
 
-	// }
 	return rawWekaStatus, nil
 }
