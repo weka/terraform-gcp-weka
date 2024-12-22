@@ -105,6 +105,7 @@ locals {
   internal_function_uri   = local.is_using_cloudfunctions ? google_cloudfunctions2_function.cloud_internal_function[0].service_config[0].uri : google_cloud_run_v2_service.cloud_internal[0].uri
   scaleup_function_uri    = local.is_using_cloudfunctions ? google_cloudfunctions2_function.scale_down_function[0].service_config[0].uri : google_cloud_run_v2_service.scale_down[0].uri
   status_function_uri     = local.is_using_cloudfunctions ? google_cloudfunctions2_function.status_function[0].service_config[0].uri : google_cloud_run_v2_service.status[0].uri
+  weka_api_function_uri   = local.is_using_cloudfunctions ? google_cloudfunctions2_function.weka_api_function[0].service_config[0].uri : google_cloud_run_v2_service.weka_api[0].uri
 
 }
 
