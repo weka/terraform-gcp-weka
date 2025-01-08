@@ -226,11 +226,13 @@ resource "google_project_iam_member" "vpcaccess_network_user" {
 }
 
 resource "google_vpc_access_connector" "connector" {
-  count    = var.vpc_connector_id == "" && var.vpc_connector_range != "" ? 1 : 0
-  provider = google-beta
-  project  = var.project_id
-  name     = "${var.prefix}-connector"
-  region   = lookup(var.vpc_connector_region_map, var.region, var.region)
+  count         = var.vpc_connector_id == "" && var.vpc_connector_range != "" ? 1 : 0
+  provider      = google-beta
+  project       = var.project_id
+  name          = "${var.prefix}-connector"
+  min_instances = 2
+  max_instances = 3
+  region        = lookup(var.vpc_connector_region_map, var.region, var.region)
   subnet {
     name       = google_compute_subnetwork.connector_subnet[0].name
     project_id = local.network_project_id
