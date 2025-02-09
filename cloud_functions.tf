@@ -150,6 +150,7 @@ locals {
 resource "google_cloudfunctions2_function" "cloud_internal_function" {
   count       = local.is_using_cloudfunctions ? 1 : 0
   name        = local.cloud_internal_function_name
+  project     = var.project_id
   description = "deploy, fetch, resize, clusterize, clusterize finalization, join, join_finalization, join_nfs_finalization, terminate, transient, terminate_cluster, scale_up functions"
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
   build_config {
@@ -191,6 +192,7 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
 # IAM entry for all users to invoke the function
 resource "google_cloudfunctions2_function_iam_member" "cloud_internal_invoker" {
   count          = local.is_using_cloudfunctions ? length(local.cloud_function_invoker_allowed_members) : 0
+  project        = google_cloudfunctions2_function.cloud_internal_function[0].project
   location       = google_cloudfunctions2_function.cloud_internal_function[0].location
   cloud_function = google_cloudfunctions2_function.cloud_internal_function[0].name
   role           = "roles/cloudfunctions.invoker"
@@ -203,6 +205,7 @@ resource "google_cloudfunctions2_function_iam_member" "cloud_internal_invoker" {
 resource "google_cloudfunctions2_function" "scale_down_function" {
   count       = local.is_using_cloudfunctions ? 1 : 0
   name        = "${var.prefix}-${var.cluster_name}-scale-down"
+  project     = var.project_id
   description = "scale cluster down"
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
   build_config {
@@ -237,6 +240,7 @@ resource "google_cloudfunctions2_function" "scale_down_function" {
 # IAM entry for all users to invoke the function
 resource "google_cloudfunctions2_function_iam_member" "weka_internal_invoker" {
   count          = local.is_using_cloudfunctions ? length(local.cloud_function_invoker_allowed_members) : 0
+  project        = google_cloudfunctions2_function.cloud_internal_function[0].project
   location       = google_cloudfunctions2_function.cloud_internal_function[0].location
   cloud_function = google_cloudfunctions2_function.cloud_internal_function[0].name
   role           = "roles/cloudfunctions.invoker"
@@ -247,6 +251,7 @@ resource "google_cloudfunctions2_function_iam_member" "weka_internal_invoker" {
 resource "google_cloudfunctions2_function" "status_function" {
   count       = local.is_using_cloudfunctions ? 1 : 0
   name        = "${var.prefix}-${var.cluster_name}-status"
+  project     = var.project_id
   description = "get cluster status"
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
   build_config {
@@ -283,6 +288,7 @@ resource "google_cloudfunctions2_function" "status_function" {
 # IAM entry for all users to invoke the function
 resource "google_cloudfunctions2_function_iam_member" "status_invoker" {
   count          = local.is_using_cloudfunctions ? length(local.cloud_function_invoker_allowed_members) : 0
+  project        = google_cloudfunctions2_function.status_function[0].project
   location       = google_cloudfunctions2_function.status_function[0].location
   cloud_function = google_cloudfunctions2_function.status_function[0].name
   role           = "roles/cloudfunctions.invoker"

@@ -2,6 +2,7 @@
 resource "google_storage_bucket" "weka_deployment" {
   count                       = var.state_bucket_name == "" ? 1 : 0
   name                        = "${var.prefix}-${var.cluster_name}-${var.project_id}"
+  project                     = var.project_id
   location                    = var.region
   uniform_bucket_level_access = true
   labels = merge(var.labels_map, {
@@ -24,6 +25,8 @@ locals {
 
 resource "google_compute_instance_template" "this" {
   name           = "${var.prefix}-${var.cluster_name}-backends"
+  project        = var.project_id
+  region         = var.region
   machine_type   = var.machine_type
   can_ip_forward = false
 
@@ -97,6 +100,7 @@ resource "google_compute_instance_template" "this" {
 
 resource "google_compute_instance_group" "this" {
   name       = "${var.prefix}-${var.cluster_name}-instance-group"
+  project    = var.project_id
   zone       = var.zone
   network    = data.google_compute_network.this[0].self_link
   depends_on = [google_compute_region_health_check.health_check, module.network, module.shared_vpc_peering]
@@ -108,6 +112,7 @@ resource "google_compute_instance_group" "this" {
 resource "google_compute_instance_group" "nfs" {
   count      = var.nfs_setup_protocol ? 1 : 0
   name       = "${var.prefix}-${var.cluster_name}-nfs-group"
+  project    = var.project_id
   zone       = var.zone
   network    = data.google_compute_network.this[0].self_link
   depends_on = [google_compute_region_health_check.health_check, module.network, module.shared_vpc_peering]

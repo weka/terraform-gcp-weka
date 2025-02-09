@@ -10,7 +10,7 @@ locals {
   ])
   peering_list              = [for t in local.temp : t if t["from"] != t["to"]]
   network_project_id        = var.network_project_id != "" ? var.network_project_id : var.project_id
-  project_id_list           = concat([var.project_id], [var.network_project_id])
+  project_id_list           = [for project_id in [var.project_id, var.network_project_id, data.google_project.project.project_id] : project_id if project_id != null && project_id != ""]
   network_self_link         = length(var.vpcs) == 0 ? google_compute_network.vpc_network.*.self_link : data.google_compute_network.vpc_list_ids.*.self_link
   vpcs_name                 = length(var.vpcs) == 0 ? google_compute_network.vpc_network.*.name : var.vpcs
   deployment_project_number = data.google_project.project.number
@@ -24,7 +24,9 @@ locals {
   ])
 
 }
-data "google_project" "project" {}
+data "google_project" "project" {
+  project_id = var.project_id
+}
 
 data "google_compute_network" "vpc_list_ids" {
   count   = length(var.vpcs)
@@ -430,6 +432,7 @@ resource "google_compute_route" "private_googleapis_route" {
 
 resource "google_compute_route" "default_route" {
   count            = var.subnet_autocreate_as_private && var.create_nat_gateway ? 1 : 0
+  project          = local.network_project_id
   dest_range       = "0.0.0.0/0"
   name             = "default-route"
   network          = google_compute_network.vpc_network[0].name

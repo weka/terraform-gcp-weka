@@ -1,10 +1,12 @@
 resource "google_project_service" "workflows" {
+  project                    = var.project_id
   service                    = "workflows.googleapis.com"
   disable_on_destroy         = false
   disable_dependent_services = false
 }
 
 data "google_project" "project" {
+  project_id = var.project_id
 }
 
 resource "google_project_iam_member" "cloudscheduler" {
@@ -16,6 +18,7 @@ resource "google_project_iam_member" "cloudscheduler" {
 
 resource "google_workflows_workflow" "scale_down" {
   name                = "${var.prefix}-${var.cluster_name}-scale-down-workflow"
+  project             = var.project_id
   region              = lookup(var.workflow_map_region, var.region, var.region)
   description         = "scale down workflow"
   service_account     = local.sa_email
@@ -72,7 +75,8 @@ EOF
 }
 
 resource "google_pubsub_topic" "scale_down_trigger_topic" {
-  name = "${var.prefix}-${var.cluster_name}-scale-down"
+  name    = "${var.prefix}-${var.cluster_name}-scale-down"
+  project = var.project_id
   labels = merge(var.labels_map, {
     goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
   })
@@ -80,6 +84,7 @@ resource "google_pubsub_topic" "scale_down_trigger_topic" {
 
 # needed for google_eventarc_trigger
 resource "google_project_service" "eventarc_api" {
+  project                    = var.project_id
   service                    = "eventarc.googleapis.com"
   disable_on_destroy         = false
   disable_dependent_services = false
@@ -87,6 +92,7 @@ resource "google_project_service" "eventarc_api" {
 
 resource "google_eventarc_trigger" "scale_down_trigger" {
   name     = "${var.prefix}-${var.cluster_name}-scale-down"
+  project  = var.project_id
   location = var.region
   matching_criteria {
     attribute = "type"
@@ -111,6 +117,7 @@ resource "google_eventarc_trigger" "scale_down_trigger" {
 
 resource "google_cloud_scheduler_job" "scale_down_job" {
   name        = "${var.prefix}-${var.cluster_name}-scale-down"
+  project     = var.project_id
   description = "scale down job"
   schedule    = "* * * * *"
   region      = lookup(var.cloud_scheduler_region_map, var.region, var.region)
@@ -125,6 +132,7 @@ resource "google_cloud_scheduler_job" "scale_down_job" {
 
 resource "google_workflows_workflow" "scale_up" {
   name                = "${var.prefix}-${var.cluster_name}-scale-up-workflow"
+  project             = var.project_id
   region              = lookup(var.workflow_map_region, var.region, var.region)
   description         = "scale up workflow"
   service_account     = local.sa_email
@@ -149,7 +157,8 @@ EOF
 }
 
 resource "google_pubsub_topic" "scale_up_trigger_topic" {
-  name = "${var.prefix}-${var.cluster_name}-scale-up"
+  name    = "${var.prefix}-${var.cluster_name}-scale-up"
+  project = var.project_id
   labels = merge(var.labels_map, {
     goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
   })
@@ -157,6 +166,7 @@ resource "google_pubsub_topic" "scale_up_trigger_topic" {
 
 resource "google_eventarc_trigger" "scale_up_trigger" {
   name     = "${var.prefix}-${var.cluster_name}-scale-up"
+  project  = var.project_id
   location = var.region
   matching_criteria {
     attribute = "type"
@@ -181,6 +191,7 @@ resource "google_eventarc_trigger" "scale_up_trigger" {
 
 resource "google_cloud_scheduler_job" "scale_up_job" {
   name        = "${var.prefix}-${var.cluster_name}-scale-up"
+  project     = var.project_id
   description = "scale up job"
   schedule    = "* * * * *"
   region      = lookup(var.cloud_scheduler_region_map, var.region, var.region)
