@@ -123,6 +123,28 @@ resource "google_storage_bucket_object" "cloud_functions_zip" {
   depends_on = [data.archive_file.function_zip, google_project_service.run_api, google_project_service.artifactregistry_api]
 }
 
+# ==================== service account =======================
+resource "google_service_account" "cloudbuild" {
+  count      = var.function_build_service_account.create ? 1 : 0
+  project    = var.project_id
+  account_id = "${var.prefix}-${var.function_build_service_account.name}"
+}
+
+data "google_service_account" "cloudbuild" {
+  count      = var.function_build_service_account.create ? 0 : 1
+  project    = var.project_id
+  account_id = var.function_build_service_account.name
+}
+
+resource "google_project_iam_member" "cloudbuild_agent" {
+  project = var.project_id
+  role    = "roles/cloudbuild.builds.builder"
+  member  = local.function_build_service_account.member
+}
+
+locals {
+  function_build_service_account = var.function_build_service_account.create ? google_service_account.cloudbuild[0] : data.google_service_account.cloudbuild[0]
+}
 
 # ======================== deploy ============================
 resource "google_cloudfunctions2_function" "cloud_internal_function" {
@@ -131,9 +153,10 @@ resource "google_cloudfunctions2_function" "cloud_internal_function" {
   description = "deploy, fetch, resize, clusterize, clusterize finalization, join, join_finalization, join_nfs_finalization, terminate, transient, terminate_cluster, scale_up functions"
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
   build_config {
-    runtime     = "go122"
-    entry_point = "CloudInternal"
-    worker_pool = local.worker_pool_id
+    runtime         = "go122"
+    entry_point     = "CloudInternal"
+    worker_pool     = local.worker_pool_id
+    service_account = local.function_build_service_account.id
     source {
       storage_source {
         bucket = local.state_bucket
@@ -183,9 +206,10 @@ resource "google_cloudfunctions2_function" "scale_down_function" {
   description = "scale cluster down"
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
   build_config {
-    runtime     = "go122"
-    entry_point = "ScaleDown"
-    worker_pool = local.worker_pool_id
+    runtime         = "go122"
+    entry_point     = "ScaleDown"
+    service_account = local.function_build_service_account.id
+    worker_pool     = local.worker_pool_id
     source {
       storage_source {
         bucket = local.state_bucket
@@ -226,9 +250,10 @@ resource "google_cloudfunctions2_function" "status_function" {
   description = "get cluster status"
   location    = lookup(var.cloud_functions_region_map, var.region, var.region)
   build_config {
-    runtime     = "go122"
-    entry_point = "Status"
-    worker_pool = local.worker_pool_id
+    runtime         = "go122"
+    entry_point     = "Status"
+    worker_pool     = local.worker_pool_id
+    service_account = local.function_build_service_account.id
     source {
       storage_source {
         bucket = local.state_bucket

@@ -449,6 +449,15 @@ variable "create_worker_pool" {
   description = "Determines whether to create a worker pool. Set to true if a worker pool is needed."
 }
 
+variable "function_build_service_account" {
+  type = object({
+    create = optional(bool, false)
+    name   = string
+  })
+  nullable    = false
+  description = "Service Account used for building Cloud Functions."
+}
+
 ######################## shared vpcs variables ##########################
 variable "host_project" {
   type        = string
