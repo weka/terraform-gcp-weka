@@ -241,6 +241,20 @@ variable "cloud_functions_region_map" {
   }
 }
 
+variable "cloud_functions_ingress" {
+  type        = string
+  description = "Ingress settings for the Cloud Function"
+  default     = null
+  validation {
+    condition = var.cloud_functions_ingress == null ? true : contains([
+      "ALLOW_ALL",
+      "ALLOW_INTERNAL_ONLY",
+      "ALLOW_INTERNAL_AND_GCLB"
+    ], var.cloud_functions_ingress)
+    error_message = "Allowed values are: ALLOW_ALL, ALLOW_INTERNAL_ONLY, ALLOW_INTERNAL_AND_GCLB and null"
+  }
+}
+
 variable "cloud_run_image_prefix" {
   type        = string
   description = "Image reference for Cloud Functions"

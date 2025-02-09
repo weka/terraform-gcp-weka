@@ -14,7 +14,7 @@ locals {
 
   # common function for multiple actions
   cloud_internal_function_name = "${var.prefix}-${var.cluster_name}-weka-functions"
-  function_ingress_settings    = var.subnet_autocreate_as_private ? "ALLOW_INTERNAL_ONLY" : "ALLOW_ALL"
+  function_ingress_settings    = coalesce(var.cloud_functions_ingress, var.subnet_autocreate_as_private ? "ALLOW_INTERNAL_ONLY" : "ALLOW_ALL")
   deployment_project_number    = data.google_project.project.number
 
   user_email                             = data.google_client_openid_userinfo.user.email
