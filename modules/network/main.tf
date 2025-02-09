@@ -428,6 +428,15 @@ resource "google_compute_route" "private_googleapis_route" {
   priority         = 1000
 }
 
+resource "google_compute_route" "default_route" {
+  count            = var.subnet_autocreate_as_private && var.create_nat_gateway ? 1 : 0
+  dest_range       = "0.0.0.0/0"
+  name             = "default-route"
+  network          = google_compute_network.vpc_network[0].name
+  next_hop_gateway = "projects/${local.network_project_id}/global/gateways/default-internet-gateway"
+  priority         = 1000
+}
+
 resource "google_compute_global_address" "vpcsc_ip" {
   count        = var.subnet_autocreate_as_private ? 1 : 0
   project      = local.network_project_id
