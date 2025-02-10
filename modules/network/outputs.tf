@@ -23,6 +23,11 @@ output "subnets_range" {
   description = "List of vpcs subnets ranges"
 }
 
+output "subnets_self_link" {
+  value       = [for v in google_compute_subnetwork.subnetwork : v.self_link]
+  description = "List of primary subnet self-links"
+}
+
 output "vpc_connector_id" {
   value       = var.vpc_connector_id == "" && var.vpc_connector_range != "" ? google_vpc_access_connector.connector[0].id : ""
   description = "Vpc connector id"
