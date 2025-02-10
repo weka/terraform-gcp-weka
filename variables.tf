@@ -241,11 +241,32 @@ variable "cloud_functions_region_map" {
   }
 }
 
+variable "cloud_functions_ingress" {
+  type        = string
+  description = "Ingress settings for the Cloud Function"
+  default     = null
+  validation {
+    condition = var.cloud_functions_ingress == null ? true : contains([
+      "ALLOW_ALL",
+      "ALLOW_INTERNAL_ONLY",
+      "ALLOW_INTERNAL_AND_GCLB"
+    ], var.cloud_functions_ingress)
+    error_message = "Allowed values are: ALLOW_ALL, ALLOW_INTERNAL_ONLY, ALLOW_INTERNAL_AND_GCLB and null"
+  }
+}
+
 variable "cloud_run_image_prefix" {
   type        = string
   description = "Image reference for Cloud Functions"
   default     = null
 }
+
+variable "cloud_run_image_tag" {
+  type        = string
+  description = "Tag of the Cloud Functions images to use, not used if var.cloud_run_image_prefix is null"
+  default     = null
+}
+
 
 variable "workflow_map_region" {
   type        = map(string)
@@ -447,6 +468,15 @@ variable "create_worker_pool" {
   type        = bool
   default     = false
   description = "Determines whether to create a worker pool. Set to true if a worker pool is needed."
+}
+
+variable "function_build_service_account" {
+  type = object({
+    create = optional(bool, false)
+    name   = string
+  })
+  nullable    = false
+  description = "Service Account used for building Cloud Functions."
 }
 
 ######################## shared vpcs variables ##########################

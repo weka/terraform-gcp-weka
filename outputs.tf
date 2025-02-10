@@ -125,3 +125,8 @@ output "vpc_self_links" {
   value       = length(var.subnets_name) == 0 ? module.network[0].vpc_self_links : null
   description = "List of VPC self-links"
 }
+
+output "subnets_self_link" {
+  value       = length(var.subnets_name) == 0 ? module.network[0].subnets_self_link : null
+  description = "List of primary subnets created in VPCs, ull if subnets where not created"
+}
