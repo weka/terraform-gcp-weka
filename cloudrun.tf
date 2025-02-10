@@ -31,7 +31,7 @@ resource "google_cloud_run_v2_service" "cloud_internal" {
       egress    = "ALL_TRAFFIC"
     }
     containers {
-      image = "${var.cloud_run_image_prefix}-cloudinternal"
+      image = "${var.cloud_run_image_prefix}-cloudinternal${var.cloud_run_image_tag == null ? "" : ":${var.cloud_run_image_tag}"}"
       resources {
         limits = {
           cpu    = "1"
@@ -91,7 +91,7 @@ resource "google_cloud_run_v2_service" "scale_down" {
       egress    = "ALL_TRAFFIC"
     }
     containers {
-      image = "${var.cloud_run_image_prefix}-scaledown"
+      image = "${var.cloud_run_image_prefix}-scaledown${var.cloud_run_image_tag == null ? "" : ":${var.cloud_run_image_tag}"}"
       resources {
         limits = {
           cpu    = "1"
@@ -144,7 +144,7 @@ resource "google_cloud_run_v2_service" "status" {
       egress    = "ALL_TRAFFIC"
     }
     containers {
-      image = "${var.cloud_run_image_prefix}-status"
+      image = "${var.cloud_run_image_prefix}-status${var.cloud_run_image_tag == null ? "" : ":${var.cloud_run_image_tag}"}"
       resources {
         limits = {
           cpu    = "1"

@@ -261,6 +261,13 @@ variable "cloud_run_image_prefix" {
   default     = null
 }
 
+variable "cloud_run_image_tag" {
+  type        = string
+  description = "Tag of the Cloud Functions images to use, not used if var.cloud_run_image_prefix is null"
+  default     = null
+}
+
+
 variable "workflow_map_region" {
   type        = map(string)
   description = "Defines a mapping between regions lacking Cloud Workflows functionality and alternative regions. It ensures Cloud Workflows functionality by redirecting workflows to supported regions when necessary."
