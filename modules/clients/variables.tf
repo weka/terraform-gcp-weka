@@ -97,19 +97,22 @@ variable "instance_config_overrides" {
     c2d-standard-32 = {
       dpdk_base_memory_mb = 32
     },
+    c2d-standard-56 = {
+      dpdk_base_memory_mb = 32
+    },
     c2d-standard-112 = {
       dpdk_base_memory_mb = 32
     },
     n2-standard-48 = {
       dpdk_base_memory_mb = 32
     },
-    c2d-standard-56 = {
-      dpdk_base_memory_mb = 32
-    },
-    n2-standard-128 = {
+    n2-standard-80 = {
       dpdk_base_memory_mb = 32
     },
     n2-standard-96 = {
+      dpdk_base_memory_mb = 32
+    },
+    n2-standard-128 = {
       dpdk_base_memory_mb = 32
     },
     n2d-standard-32 = {
