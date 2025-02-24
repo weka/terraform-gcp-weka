@@ -19,15 +19,15 @@ module "create_worker_pool" {
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >=1.3.1 |
-| <a name="requirement_google"></a> [google](#requirement\_google) | >=6.12.0 |
-| <a name="requirement_google-beta"></a> [google-beta](#requirement\_google-beta) | ~> 3.83.0 |
+| <a name="requirement_google"></a> [google](#requirement\_google) | >=6.21.0 |
+| <a name="requirement_google-beta"></a> [google-beta](#requirement\_google-beta) | >=6.21.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_google"></a> [google](#provider\_google) | >=6.12.0 |
-| <a name="provider_google-beta"></a> [google-beta](#provider\_google-beta) | ~> 3.83.0 |
+| <a name="provider_google"></a> [google](#provider\_google) | >=6.21.0 |
+| <a name="provider_google-beta"></a> [google-beta](#provider\_google-beta) | >=6.21.0 |
 
 ## Modules
 
