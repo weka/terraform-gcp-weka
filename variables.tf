@@ -336,11 +336,11 @@ variable "containers_config_map" {
 
 variable "nic_type" {
   type        = string
-  default     = null
+  default     = "VIRTIO_NET"
   description = "The type of vNIC. Possible values: GVNIC, VIRTIO_NET."
 
   validation {
-    condition     = var.nic_type == null || var.nic_type == "GVNIC" || var.nic_type == "VIRTIO_NET"
+    condition     = var.nic_type == "GVNIC" || var.nic_type == "VIRTIO_NET"
     error_message = "The vNIC type must be either GVNIC or VIRTIO_NET."
   }
 }
