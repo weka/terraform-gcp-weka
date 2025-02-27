@@ -12,9 +12,9 @@ module "weka_deployment" {
   weka_tar_bucket_name                 = "weka-installation"
   zone                                 = var.zone
   cluster_size                         = 6
-  yum_repository_appstream_url         = "http://10.26.2.2/appstream"
-  yum_repository_baseos_url            = "http://10.26.2.2/baseos"
-  vpcs_to_peer_to_deployment_vpc       = ["yum-global-wekaio-rnd-vpc"]
+  yum_repository_appstream_url         = "https://europe-west1-yum.pkg.dev/remote/wekaio-rnd/appstream-rocky-8-10"
+  yum_repository_baseos_url            = "https://europe-west1-yum.pkg.dev/remote/wekaio-rnd/baseos-rocky-8-10"
+  vpcs_to_peer_to_deployment_vpc       = ["global-wekaio-rnd-vpc"]
   vpcs_range_to_peer_to_deployment_vpc = ["10.26.2.0/24"]
   tiering_enable_obs_integration       = true
   assign_public_ip                     = false
