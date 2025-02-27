@@ -39,7 +39,7 @@ func getInstanceTemplate(ctx context.Context, project, template string) (*comput
 	return getInstanceTemplateByName(ctx, project, templateName)
 }
 
-func CreateBackendInstance(ctx context.Context, project, zone, template, instanceName, yumRepoServer, proxyUrl, functionRootUrl string) (err error) {
+func CreateBackendInstance(ctx context.Context, project, zone, template, instanceName, yumRepositoryBaseosUrl, yumRepositoryAppstreamUrl, proxyUrl, functionRootUrl string) (err error) {
 	instancesClient, err := compute.NewInstancesRESTClient(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create instances client")
@@ -52,28 +52,31 @@ func CreateBackendInstance(ctx context.Context, project, zone, template, instanc
 	set -ex
 	instance_name=%s
 	function_url=%s
-	yum_repo_server=%s
+	yumRepositoryBaseosUrl=%s
+	yumRepositoryAppstreamUrl=%s
 	proxy_url=%s
 
 	if [ "$proxy_url" ] ; then
 		sudo sed -i "/distroverpkg=centos-release/a proxy=$proxy_url" /etc/yum.conf
 	fi
 
-	if [ "$yum_repo_server" ] ; then
+	if [ "$yumRepositoryBaseosUrl" ] ; then
 		mkdir /tmp/yum.repos.d
 		mv /etc/yum.repos.d/*.repo /tmp/yum.repos.d/
 
 		cat >/etc/yum.repos.d/local.repo <<EOL
 	[localrepo-base]
-	name=RockyLinux Base
-	baseurl=$yum_repo_server/baseos/
+	name=RockyLinux BaseOs
+	baseurl=$yumRepositoryBaseosUrl
 	gpgcheck=0
 	enabled=1
+	module_hotfixes=1
 	[localrepo-appstream]
-	name=RockyLinux Base
-	baseurl=$yum_repo_server/appstream/
+	name=RockyLinux AppStream
+	baseurl=$yumRepositoryAppstreamUrl
 	gpgcheck=0
 	enabled=1
+	module_hotfixes=1
 	EOL
 	fi
 
@@ -82,7 +85,7 @@ func CreateBackendInstance(ctx context.Context, project, zone, template, instanc
 		yum install -y kernel-devel-$(uname -r)
 	fi
 
-	sudo yum install -y jq || (echo "Failed to install jq" && exit 1)
+	yum install -y jq || (echo "Failed to install jq" && exit 1)
 
 	gcloud config set functions/gen2 true
 
@@ -99,7 +102,7 @@ func CreateBackendInstance(ctx context.Context, project, zone, template, instanc
 	echo "Running weka deploy script..."
 	(/tmp/deploy.sh 2>&1 | tee /tmp/weka_deploy.log) || self_deleting || shutdown -P
 	`
-	startUpScript = fmt.Sprintf(startUpScript, instanceName, functionRootUrl, yumRepoServer, proxyUrl)
+	startUpScript = fmt.Sprintf(startUpScript, instanceName, functionRootUrl, yumRepositoryBaseosUrl, yumRepositoryAppstreamUrl, proxyUrl)
 	startUpScript = dedent.Dedent(startUpScript)
 
 	instanceTemplate, err := getInstanceTemplate(ctx, project, template)
@@ -143,7 +146,7 @@ func CreateBackendInstance(ctx context.Context, project, zone, template, instanc
 	return
 }
 
-func CreateNFSInstance(ctx context.Context, project, zone, templateName, instanceName, yumRepoServer, proxyUrl, functionRootUrl string) (err error) {
+func CreateNFSInstance(ctx context.Context, project, zone, templateName, instanceName, yumRepositoryBaseosUrl, yumRepositoryAppstreamUrl, proxyUrl, functionRootUrl string) (err error) {
 	instancesClient, err := compute.NewInstancesRESTClient(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create instances client")

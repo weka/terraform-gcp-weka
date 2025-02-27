@@ -62,8 +62,9 @@ locals {
     # for terminate
     LOAD_BALANCER_NAME = google_compute_region_backend_service.backend_service.name
     # for scale_up
-    YUM_REPO_SERVER  = var.yum_repo_server
-    BACKEND_TEMPLATE = google_compute_instance_template.this.id
+    YUM_REPOSITORY_BASEOS_URL    = var.yum_repository_baseos_url
+    YUM_REPOSITORY_APPSTREAM_URL = var.yum_repository_appstream_url
+    BACKEND_TEMPLATE             = google_compute_instance_template.this.id
     # SMBW
     CREATE_CONFIG_FS = (var.smbw_enabled && var.smb_setup_protocol) || var.s3_setup_protocol
     # Weka proxy url

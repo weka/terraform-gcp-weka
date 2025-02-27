@@ -7,21 +7,23 @@ if [ "${proxy_url}" ] ; then
 	sudo sed -i "/distroverpkg=centos-release/a proxy=${proxy_url}" /etc/yum.conf
 fi
 
-if [ "${yum_repo_server}" ] ; then
+if [ "${yum_repository_baseos_url}" ] ; then
 	mkdir /tmp/yum.repos.d
 	mv /etc/yum.repos.d/*.repo /tmp/yum.repos.d/
 
 	cat >/etc/yum.repos.d/local.repo <<EOL
 [localrepo-base]
 name=RockyLinux Base
-baseurl=${yum_repo_server}/baseos/
+baseurl=${yum_repository_baseos_url}
 gpgcheck=0
 enabled=1
+module_hotfixes=1
 [localrepo-appstream]
-name=RockyLinux Base
-baseurl=${yum_repo_server}/appstream/
+name=RockyLinux AppStream
+baseurl=${yum_repository_appstream_url}
 gpgcheck=0
 enabled=1
+module_hotfixes=1
 EOL
 fi
 

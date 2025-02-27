@@ -3,7 +3,8 @@ module "clients" {
   source                       = "./modules/clients"
   clients_number               = var.clients_number
   clients_use_dpdk             = var.clients_use_dpdk
-  yum_repo_server              = var.yum_repo_server
+  yum_repository_appstream_url = var.yum_repository_appstream_url
+  yum_repository_baseos_url    = var.yum_repository_baseos_url
   clients_name                 = "${var.prefix}-${var.cluster_name}-client"
   frontend_container_cores_num = var.clients_use_dpdk ? var.client_frontend_cores : 1
   machine_type                 = var.client_instance_type

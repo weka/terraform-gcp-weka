@@ -16,7 +16,8 @@ module "nfs_protocol_gateways" {
   protocol                     = "NFS"
   secondary_ips_per_nic        = var.nfs_protocol_gateway_secondary_ips_per_nic
   machine_type                 = var.nfs_protocol_gateway_machine_type
-  yum_repo_server              = var.yum_repo_server
+  yum_repository_appstream_url = var.yum_repository_appstream_url
+  yum_repository_baseos_url    = var.yum_repository_baseos_url
   sa_email                     = local.sa_email
   assign_public_ip             = local.assign_public_ip
   disk_size                    = var.nfs_protocol_gateway_disk_size
@@ -48,7 +49,8 @@ module "smb_protocol_gateways" {
   setup_protocol               = var.smb_setup_protocol
   secondary_ips_per_nic        = var.smb_protocol_gateway_secondary_ips_per_nic
   machine_type                 = var.smb_protocol_gateway_machine_type
-  yum_repo_server              = var.yum_repo_server
+  yum_repository_appstream_url = var.yum_repository_appstream_url
+  yum_repository_baseos_url    = var.yum_repository_baseos_url
   sa_email                     = local.sa_email
   assign_public_ip             = local.assign_public_ip
   disk_size                    = var.smb_protocol_gateway_disk_size
@@ -82,7 +84,8 @@ module "s3_protocol_gateways" {
   setup_protocol               = var.s3_setup_protocol
   secondary_ips_per_nic        = 0
   machine_type                 = var.s3_protocol_gateway_machine_type
-  yum_repo_server              = var.yum_repo_server
+  yum_repository_appstream_url = var.yum_repository_appstream_url
+  yum_repository_baseos_url    = var.yum_repository_baseos_url
   sa_email                     = local.sa_email
   assign_public_ip             = local.assign_public_ip
   disk_size                    = var.s3_protocol_gateway_disk_size
