@@ -403,7 +403,8 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 	nfsTemplateName := os.Getenv("NFS_GATEWAYS_TEMPLATE_NAME")
 	nfsInterfaceGroupName := os.Getenv("NFS_INTERFACE_GROUP_NAME")
 	nfsInstanceGroup := os.Getenv("NFS_INSTANCE_GROUP")
-	yumRepoServer := os.Getenv("YUM_REPO_SERVER")
+	yumRepositoryBaseosUrl := os.Getenv("YUM_REPOSITORY_BASEOS_URL")
+	yumRepositoryAppstreamUrl := os.Getenv("YUM_REPOSITORY_APPSTREAM_URL")
 	proxyUrl := os.Getenv("PROXY_URL")
 	functionRootUrl := fmt.Sprintf("https://%s", r.Host)
 	instanceGroup := os.Getenv("INSTANCE_GROUP")
@@ -439,7 +440,7 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 		for i := backendsNumber; i < state.DesiredSize; i++ {
 			instanceName := fmt.Sprintf("%s-%s%03d", clusterName, currentTime, i)
 			log.Info().Msgf("creating new backend instance: %s", instanceName)
-			if err := scale_up.CreateBackendInstance(ctx, project, zone, backendTemplate, instanceName, yumRepoServer, proxyUrl, functionRootUrl); err != nil {
+			if err := scale_up.CreateBackendInstance(ctx, project, zone, backendTemplate, instanceName, yumRepositoryBaseosUrl, yumRepositoryAppstreamUrl, proxyUrl, functionRootUrl); err != nil {
 				err = fmt.Errorf("instance %s creation failed %s.", instanceName, err)
 				log.Error().Err(err).Send()
 				respondWithErr(w, err, http.StatusBadRequest)
@@ -498,7 +499,7 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 		for i := nfsGatewaysNumber; i < nfsDesiredSize; i++ {
 			instanceName := fmt.Sprintf("%s-%s%03d", nfsGatewaysName, currentTime, i)
 			log.Info().Msgf("creating new NFS instance: %s", instanceName)
-			if err := scale_up.CreateNFSInstance(ctx, project, zone, nfsTemplateName, instanceName, yumRepoServer, proxyUrl, functionRootUrl); err != nil {
+			if err := scale_up.CreateNFSInstance(ctx, project, zone, nfsTemplateName, instanceName, yumRepositoryBaseosUrl, yumRepositoryAppstreamUrl, proxyUrl, functionRootUrl); err != nil {
 				err = fmt.Errorf("instance %s creation failed %s", instanceName, err)
 				log.Error().Err(err).Send()
 				respondWithErr(w, err, http.StatusBadRequest)

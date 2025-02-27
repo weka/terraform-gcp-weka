@@ -24,9 +24,15 @@ variable "subnets_list" {
   description = "list of subnet names"
 }
 
-variable "yum_repo_server" {
+variable "yum_repository_baseos_url" {
   type        = string
-  description = "yum repo server address"
+  description = "URL of the AppStream repository for baseos. Leave blank to use the default repositories."
+  default     = ""
+}
+
+variable "yum_repository_appstream_url" {
+  type        = string
+  description = "URL of the AppStream repository for appstream. Leave blank to use the default repositories."
   default     = ""
 }
 

@@ -9,7 +9,8 @@ locals {
   network_project_id      = var.network_project_id != "" ? var.network_project_id : var.project_id
   private_nic_first_index = var.assign_public_ip ? 1 : 0
   preparation_script = templatefile("${path.module}/init.sh", {
-    yum_repo_server = var.yum_repo_server
+    yum_repository_appstream_url = var.yum_repository_appstream_url
+    yum_repository_baseos_url    = var.yum_repository_baseos_url
   })
   nics_num = var.clients_use_dpdk ? var.frontend_container_cores_num + 1 : 1
   mount_wekafs_script = templatefile("${path.module}/mount_wekafs.sh", {

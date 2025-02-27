@@ -11,12 +11,13 @@ locals {
   private_nic_first_index = var.assign_public_ip ? 1 : 0
   nics_numbers            = var.frontend_container_cores_num + 1
   init_script = templatefile("${path.module}/init.sh", {
-    yum_repo_server     = var.yum_repo_server
-    disk_size           = local.disk_size
-    proxy_url           = var.proxy_url
-    deploy_function_url = var.deploy_function_url
-    report_function_url = var.report_function_url
-    protocol            = lower(var.protocol)
+    yum_repository_appstream_url = var.yum_repository_appstream_url
+    yum_repository_baseos_url    = var.yum_repository_baseos_url
+    disk_size                    = local.disk_size
+    proxy_url                    = var.proxy_url
+    deploy_function_url          = var.deploy_function_url
+    report_function_url          = var.report_function_url
+    protocol                     = lower(var.protocol)
   })
 
   setup_smb_protocol_script = templatefile("${path.module}/setup_smb.sh", {
