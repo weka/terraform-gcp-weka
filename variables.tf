@@ -165,9 +165,15 @@ variable "create_cloudscheduler_sa" {
   default     = true
 }
 
-variable "yum_repo_server" {
+variable "yum_repository_baseos_url" {
   type        = string
-  description = "URL of a Yum repository server for package installation. Leave blank to use the default repositories."
+  description = "URL of the AppStream repository for baseos. Leave blank to use the default repositories."
+  default     = ""
+}
+
+variable "yum_repository_appstream_url" {
+  type        = string
+  description = "URL of the AppStream repository for appstream. Leave blank to use the default repositories."
   default     = ""
 }
 
