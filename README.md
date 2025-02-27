@@ -61,31 +61,26 @@ In GCP, external IP addresses are always public and can be assigned to instances
 assign_public_ip   = true
 ```
 
-### Yum Repository
+### Yum Artifact Registry
 WEKA seamlessly integrates with Artifact Registry, offering support for three types of repositories:
 - Artifact Registry remote repository
 - Artifact Registry standard repository
-- Private yum repository
 
 we need two upstream urls: BaseOs,AppStream
 - **Upstream** → http://dl.rockylinux.org/pub/rocky/8.10/BaseOS/x86_64/os
 - **Upstream** → http://dl.rockylinux.org/pub/rocky/8.10/AppStream/x86_64/os
+
+<br>
 To support remote repository, add the following:
 ```hcl
 yum_repository_baseos_url     = "https://<region>-yum.pkg.dev/remote/<project-id>/<artifact-registry-name>"
 yum_repository_appstream_url  = "https://<region>-yum.pkg.dev/remote/<project-id>/<artifact-registry-name>"
 ```
-
+<br>
 To support standard repository, add the following:
 ```hcl
 yum_repository_baseos_url     = "https://<region>-yum.pkg.dev/projects/<project-id>/<artifact-registry-name>"
 yum_repository_appstream_url  = "https://<region>-yum.pkg.dev/projects/<project-id>/<artifact-registry-name>"
-```
-
-To support private yum repository, add the following:
-```hcl
-yum_repository_baseos_url     = "http://<yum repo ip>/baseos"
-yum_repository_appstream_url  = "http://<yum repo ip>/appstream"
 ```
 
 ### Create cloud NAT
