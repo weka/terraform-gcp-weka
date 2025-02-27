@@ -85,3 +85,10 @@ resource "google_project_iam_member" "weka_tar_object_iam_member" {
   }
   depends_on = [google_service_account.sa]
 }
+
+resource "google_project_iam_member" "artifactregistry_sa_member_role" {
+  count   = var.allow_artifactregistry_role ? 1 : 0
+  role    = "roles/artifactregistry.serviceAgent"
+  member  = "serviceAccount:${google_service_account.sa.email}"
+  project = var.project_id
+}

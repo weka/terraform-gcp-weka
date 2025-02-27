@@ -558,3 +558,40 @@ resource "google_dns_record_set" "apis_endpoint_record" {
   rrdatas      = [google_compute_global_address.apis_ip[0].address]
   depends_on   = [google_dns_managed_zone.googleapis_zone, google_compute_global_address.apis_ip, google_compute_network.vpc_network]
 }
+
+
+##### Private zone for pkg.dev #####
+resource "google_dns_managed_zone" "artifact_registry" {
+  count       = var.subnet_autocreate_as_private && var.pkg_dev_dns_zone_name == "" ? 1 : 0
+  name        = "${var.prefix}-registry"
+  dns_name    = "pkg.dev."
+  description = "Allow connect to artifact registry"
+  visibility  = "private"
+
+  private_visibility_config {
+    dynamic "networks" {
+      for_each = local.network_self_link
+      content {
+        network_url = networks.value
+      }
+    }
+  }
+}
+
+resource "google_dns_record_set" "artifact_cname_record" {
+  count        = var.subnet_autocreate_as_private ? 1 : 0
+  name         = "*.pkg.dev."
+  type         = "CNAME"
+  ttl          = 300
+  managed_zone = var.pkg_dev_dns_zone_name == "" ? google_dns_managed_zone.artifact_registry[0].name : var.pkg_dev_dns_zone_name
+  rrdatas      = ["pkg.dev."]
+}
+
+resource "google_dns_record_set" "artifact_a_record" {
+  count        = var.subnet_autocreate_as_private ? 1 : 0
+  name         = "pkg.dev."
+  type         = "A"
+  ttl          = 300
+  managed_zone = var.pkg_dev_dns_zone_name == "" ? google_dns_managed_zone.artifact_registry[0].name : var.pkg_dev_dns_zone_name
+  rrdatas      = ["199.36.153.4", "199.36.153.5", "199.36.153.6", "199.36.153.7"]
+}

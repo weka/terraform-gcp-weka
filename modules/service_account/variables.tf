@@ -53,3 +53,10 @@ variable "network_project_id" {
   default     = ""
   description = "Network project id"
 }
+
+
+variable "allow_artifactregistry_role" {
+  type        = bool
+  default     = false
+  description = "Role to allow artifact registry"
+}

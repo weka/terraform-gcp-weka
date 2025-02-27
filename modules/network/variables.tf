@@ -173,3 +173,10 @@ variable "labels_map" {
   default     = {}
   description = "A map of labels to assign the same metadata to all resources in the environment. Format: key:value."
 }
+
+
+variable "pkg_dev_dns_zone_name" {
+  default     = ""
+  type        = string
+  description = "Name of existing Private dns zone for domain pkg.dev."
+}

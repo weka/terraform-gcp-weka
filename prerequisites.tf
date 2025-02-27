@@ -1,14 +1,15 @@
 module "service_account" {
-  count                = var.sa_email == "" ? 1 : 0
-  source               = "./modules/service_account"
-  project_id           = var.project_id
-  prefix               = var.prefix
-  cluster_name         = var.cluster_name
-  tiering_obs_name     = var.tiering_obs_name
-  state_bucket_name    = var.state_bucket_name
-  weka_tar_bucket_name = var.weka_tar_bucket_name
-  weka_tar_project_id  = var.weka_tar_project_id
-  network_project_id   = var.network_project_id
+  count                       = var.sa_email == "" ? 1 : 0
+  source                      = "./modules/service_account"
+  project_id                  = var.project_id
+  prefix                      = var.prefix
+  cluster_name                = var.cluster_name
+  tiering_obs_name            = var.tiering_obs_name
+  state_bucket_name           = var.state_bucket_name
+  weka_tar_bucket_name        = var.weka_tar_bucket_name
+  weka_tar_project_id         = var.weka_tar_project_id
+  network_project_id          = var.network_project_id
+  allow_artifactregistry_role = var.yum_repository_appstream_url != "" || var.yum_repository_baseos_url != "" ? true : false
 }
 
 module "network" {
@@ -107,4 +108,21 @@ module "shared_vpc_peering" {
   host_shared_range              = var.host_shared_range
   enable_shared_vpc_host_project = var.enable_shared_vpc_host_project
   depends_on                     = [module.network]
+}
+
+
+resource "google_artifact_registry_repository_iam_member" "repo_appstream" {
+  count      = var.yum_repository_appstream_url != "" ? 1 : 0
+  location   = var.region
+  repository = split("/", var.yum_repository_appstream_url)[length(split("/", var.yum_repository_appstream_url)) - 1]
+  role       = "roles/artifactregistry.reader"
+  member     = "serviceAccount:${local.sa_email}"
+}
+
+resource "google_artifact_registry_repository_iam_member" "repo_baseos" {
+  count      = var.yum_repository_baseos_url != "" ? 1 : 0
+  location   = var.region
+  repository = split("/", var.yum_repository_baseos_url)[length(split("/", var.yum_repository_baseos_url)) - 1]
+  role       = "roles/artifactregistry.reader"
+  member     = "serviceAccount:${local.sa_email}"
 }
