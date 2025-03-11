@@ -412,7 +412,8 @@ set_shared_vpc_peering = true
 | <a name="input_worker_pool_address_cidr"></a> [worker\_pool\_address\_cidr](#input\_worker\_pool\_address\_cidr) | The address range for worker machines within a Cloud Build Private Pool. It follows CIDR notation excluding the prefix length. | `string` | `"10.37.0.0"` | no |
 | <a name="input_worker_pool_id"></a> [worker\_pool\_id](#input\_worker\_pool\_id) | The unique identifier for the worker pool. The worker pool must belong to the same project and region. If left empty, the default worker pool is used. | `string` | `""` | no |
 | <a name="input_workflow_map_region"></a> [workflow\_map\_region](#input\_workflow\_map\_region) | Defines a mapping between regions lacking Cloud Workflows functionality and alternative regions. It ensures Cloud Workflows functionality by redirecting workflows to supported regions when necessary. | `map(string)` | <pre>{<br>  "southamerica-west1": "southamerica-east1"<br>}</pre> | no |
-| <a name="input_yum_repo_server"></a> [yum\_repo\_server](#input\_yum\_repo\_server) | URL of a Yum repository server for package installation. Leave blank to use the default repositories. | `string` | `""` | no |
+| <a name="input_yum_repository_appstream_url"></a> [yum\_repository\_appstream\_url](#input\_yum\_repository\_appstream\_url) | URL of the AppStream repository for appstream. Leave blank to use the default repositories. | `string` | `""` | no |
+| <a name="input_yum_repository_baseos_url"></a> [yum\_repository\_baseos\_url](#input\_yum\_repository\_baseos\_url) | URL of the AppStream repository for baseos. Leave blank to use the default repositories. | `string` | `""` | no |
 | <a name="input_zone"></a> [zone](#input\_zone) | GCP zone, which is a deployment area within a region, providing physical separation for your resources. | `string` | n/a | yes |
 
 ## Outputs
