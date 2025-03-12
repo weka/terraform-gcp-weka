@@ -2,7 +2,7 @@ variable "cluster_name" {
   type        = string
   description = "Cluster name prefix for all resources."
   validation {
-    condition     = length(var.cluster_name) <= 13
+    condition     = length(var.cluster_name) <= 37
     error_message = "The cluster name must not exceed 37 characters."
   }
 }
@@ -45,7 +45,7 @@ variable "prefix" {
   default     = "weka"
 
   validation {
-    condition     = length(var.prefix) <= 10
+    condition     = length(var.prefix) <= 15
     error_message = "The prefix must not exceed 15 characters."
   }
 }
