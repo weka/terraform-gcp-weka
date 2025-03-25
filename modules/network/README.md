@@ -64,10 +64,13 @@ No modules.
 | [google_compute_subnetwork.connector_subnet](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_subnetwork) | resource |
 | [google_compute_subnetwork.psc_subnetwork](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_subnetwork) | resource |
 | [google_compute_subnetwork.subnetwork](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_subnetwork) | resource |
+| [google_dns_managed_zone.artifact_registry](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dns_managed_zone) | resource |
 | [google_dns_managed_zone.cloud_run_zone](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dns_managed_zone) | resource |
 | [google_dns_managed_zone.googleapis_zone](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dns_managed_zone) | resource |
 | [google_dns_managed_zone.private_zone](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dns_managed_zone) | resource |
 | [google_dns_record_set.apis_endpoint_record](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dns_record_set) | resource |
+| [google_dns_record_set.artifact_a_record](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dns_record_set) | resource |
+| [google_dns_record_set.artifact_cname_record](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dns_record_set) | resource |
 | [google_dns_record_set.cloud_run_endpoint_record](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dns_record_set) | resource |
 | [google_project_iam_member.cloudservices_network_user](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_member) | resource |
 | [google_project_iam_member.vpcaccess_network_user](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_member) | resource |
@@ -95,6 +98,7 @@ No modules.
 | <a name="input_labels_map"></a> [labels\_map](#input\_labels\_map) | A map of labels to assign the same metadata to all resources in the environment. Format: key:value. | `map(string)` | `{}` | no |
 | <a name="input_mtu_size"></a> [mtu\_size](#input\_mtu\_size) | mtu size | `number` | n/a | yes |
 | <a name="input_network_project_id"></a> [network\_project\_id](#input\_network\_project\_id) | Network project id | `string` | `""` | no |
+| <a name="input_pkg_dev_dns_zone_name"></a> [pkg\_dev\_dns\_zone\_name](#input\_pkg\_dev\_dns\_zone\_name) | Name of existing Private dns zone for domain pkg.dev. | `string` | `""` | no |
 | <a name="input_prefix"></a> [prefix](#input\_prefix) | prefix for all resources | `string` | `"weka"` | no |
 | <a name="input_private_dns_name"></a> [private\_dns\_name](#input\_private\_dns\_name) | Private dns name | `string` | `""` | no |
 | <a name="input_private_zone_name"></a> [private\_zone\_name](#input\_private\_zone\_name) | Private zone name | `string` | `""` | no |
