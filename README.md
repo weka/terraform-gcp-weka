@@ -70,14 +70,12 @@ we need two upstream urls: BaseOs,AppStream
 - **Upstream** → http://dl.rockylinux.org/pub/rocky/8.10/BaseOS/x86_64/os
 - **Upstream** → http://dl.rockylinux.org/pub/rocky/8.10/AppStream/x86_64/os
 
-<br>
-To support remote repository, add the following:
+<br>To support remote repository, add the following:
 ```hcl
 yum_repository_baseos_url     = "https://<region>-yum.pkg.dev/remote/<project-id>/<artifact-registry-name>"
 yum_repository_appstream_url  = "https://<region>-yum.pkg.dev/remote/<project-id>/<artifact-registry-name>"
 ```
-<br>
-To support standard repository, add the following:
+<br>To support standard repository, add the following:
 ```hcl
 yum_repository_baseos_url     = "https://<region>-yum.pkg.dev/projects/<project-id>/<artifact-registry-name>"
 yum_repository_appstream_url  = "https://<region>-yum.pkg.dev/projects/<project-id>/<artifact-registry-name>"
