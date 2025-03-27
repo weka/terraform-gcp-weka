@@ -18,16 +18,8 @@ fi
 git checkout "$base_branch"
 git pull
 git checkout -b "$base_branch-$new_tag"
-
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  sed -i '' 's/= "dev"/= "release"/' variables.tf
-else
-  sed -i 's/= "dev"/= "release"/' variables.tf
-fi
-git add variables.tf
-git commit -m "chore: update function app distribution to release" || true
-
 git push --set-upstream origin "$base_branch-$new_tag"
+
 capitalized_base_branch=$(echo "$base_branch" | awk '{print toupper(substr($0, 1, 1)) tolower(substr($0, 2))}')
 gh pr create --base main --title "$capitalized_base_branch $new_tag" --body ""
 gh pr view --web
