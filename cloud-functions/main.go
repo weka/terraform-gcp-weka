@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/weka_api"
+
 	"cloud.google.com/go/storage"
 	"github.com/rs/zerolog/log"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
@@ -739,9 +741,6 @@ func Status(w http.ResponseWriter, r *http.Request) {
 	bucket := os.Getenv("BUCKET")
 	stateObject := os.Getenv("STATE_OBJ_NAME")
 	instanceGroup := os.Getenv("INSTANCE_GROUP")
-	usernameId := os.Getenv("USER_NAME_ID")
-	adminPasswordId := os.Getenv("ADMIN_PASSWORD_ID")
-	deploymentPasswordId := os.Getenv("DEPLOYMENT_PASSWORD_ID")
 	nfsStateObject := os.Getenv("NFS_STATE_OBJ_NAME")
 	nfsInstanceGroup := os.Getenv("NFS_INSTANCE_GROUP")
 
@@ -759,7 +758,7 @@ func Status(w http.ResponseWriter, r *http.Request) {
 	var clusterStatus interface{}
 	var err error
 	if requestBody.Type == "" || requestBody.Type == "status" {
-		clusterStatus, err = status.GetClusterStatus(ctx, project, zone, bucket, stateObject, instanceGroup, usernameId, deploymentPasswordId, adminPasswordId)
+		clusterStatus, err = status.GetClusterStatus(ctx, bucket, stateObject)
 	} else if requestBody.Type == "progress" && requestBody.Protocol == "" {
 		clusterStatus, err = status.GetReports(ctx, project, zone, bucket, stateObject, instanceGroup)
 	} else if requestBody.Type == "progress" && requestBody.Protocol == "nfs" {
@@ -779,6 +778,31 @@ func Status(w http.ResponseWriter, r *http.Request) {
 	err = json.NewEncoder(w).Encode(clusterStatus)
 	if err != nil {
 		err = fmt.Errorf("failed decoding status: %s", err)
+		log.Error().Err(err).Send()
+		respondWithErr(w, err, http.StatusBadRequest)
+		return
+	}
+}
+
+func WekaApi(w http.ResponseWriter, r *http.Request) {
+	var wekaRequest weka_api.WekaApiRequest
+	if err := json.NewDecoder(r.Body).Decode(&wekaRequest); err != nil {
+		failedDecodingReqBody(w, err)
+		return
+	}
+
+	res, err := weka_api.RunWekaApi(r.Context(), &wekaRequest)
+	if err != nil {
+		err = fmt.Errorf("failed running weka-api[%s] request: %v", wekaRequest.Method, err)
+		log.Error().Err(err).Send()
+		respondWithErr(w, err, http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(res)
+	if err != nil {
+		err = fmt.Errorf("failed decoding request: %s", err)
 		log.Error().Err(err).Send()
 		respondWithErr(w, err, http.StatusBadRequest)
 		return

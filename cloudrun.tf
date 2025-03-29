@@ -162,6 +162,55 @@ resource "google_cloud_run_v2_service" "status" {
   depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, google_project_service.run_api]
 }
 
+# ======================== weka_api ============================
+resource "google_cloud_run_v2_service" "weka_api" {
+  count               = local.is_using_cloudfunctions ? 0 : 1
+  name                = "${var.prefix}-${var.cluster_name}-weka-api"
+  description         = "weka-api request"
+  location            = lookup(var.cloud_functions_region_map, var.region, var.region)
+  ingress             = local.cloudrun_ingress_map[local.function_ingress_settings]
+  deletion_protection = false
+  traffic {
+    type    = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
+    percent = 100
+  }
+
+  template {
+    timeout = "540s"
+    scaling {
+      max_instance_count = 3
+      min_instance_count = 1
+    }
+    service_account = local.sa_email
+    vpc_access {
+      connector = local.vpc_connector_id
+      egress    = "ALL_TRAFFIC"
+    }
+    containers {
+      image = "${var.cloud_run_image_prefix}-weka-api"
+      resources {
+        limits = {
+          cpu    = "1"
+          memory = "512Mi"
+        }
+      }
+      dynamic "env" {
+        for_each = local.status_function_environment
+        content {
+          name  = env.key
+          value = env.value
+        }
+
+      }
+    }
+  }
+  labels = {
+    goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
+  }
+  depends_on = [module.network, module.worker_pool, module.shared_vpc_peering, google_project_service.run_api]
+}
+
+
 # IAM entry for all users to invoke the function
 resource "google_cloud_run_v2_service_iam_member" "status_invoker" {
   count    = local.is_using_cloudfunctions ? 0 : length(local.cloud_function_invoker_allowed_members)
