@@ -80,7 +80,7 @@ fi
 
 cluster_size="${gateways_number}"
 
-current_mngmnt_ip=$(weka local resources | grep 'Management IPs' | awk '{print $NF}')
+current_mngmnt_ip=$(weka local ps -v | grep -v STATUS | awk '{for(i=1;i<=NF;i++) if (i == 11) print $i}')
 # get container id
 for ((i=0; i<20; i++)); do
   container_id=$(weka cluster container | grep frontend0 | grep ${gateways_name} | grep $current_mngmnt_ip | grep UP | awk '{print $1}')
