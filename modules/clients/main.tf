@@ -14,8 +14,6 @@ locals {
   })
   nics_num = var.clients_use_dpdk ? var.frontend_container_cores_num + 1 : 1
   mount_wekafs_script = templatefile("${path.module}/mount_wekafs.sh", {
-    all_subnets                  = split("\n", replace(join("\n", data.google_compute_subnetwork.this.*.ip_cidr_range), "/\\S+//", ""))[0]
-    all_gateways                 = join(" ", data.google_compute_subnetwork.this.*.gateway_address)
     frontend_container_cores_num = var.frontend_container_cores_num
     backend_lb_ip                = var.backend_lb_ip
     clients_use_dpdk             = var.clients_use_dpdk
