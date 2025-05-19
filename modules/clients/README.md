@@ -41,6 +41,7 @@ No modules.
 | <a name="input_nic_type"></a> [nic\_type](#input\_nic\_type) | The type of vNIC. Possible values: GVNIC, VIRTIO\_NET. | `string` | `null` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | project name | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | region name | `string` | n/a | yes |
+| <a name="input_root_volume_size"></a> [root\_volume\_size](#input\_root\_volume\_size) | The client's root volume size in GB | `number` | `null` | no |
 | <a name="input_sa_email"></a> [sa\_email](#input\_sa\_email) | service account email | `string` | n/a | yes |
 | <a name="input_source_image_id"></a> [source\_image\_id](#input\_source\_image\_id) | os of image | `string` | `"rocky-linux-8-v20240910"` | no |
 | <a name="input_ssh_public_key"></a> [ssh\_public\_key](#input\_ssh\_public\_key) | Ssh public key to pass to vms. | `string` | n/a | yes |
