@@ -19,7 +19,7 @@ resource "google_storage_bucket" "weka_deployment" {
 locals {
   private_nic_first_index = local.assign_public_ip ? 1 : 0
   nics_number             = var.nic_number != -1 ? var.nic_number : var.containers_config_map[var.machine_type].nics
-  disk_size               = var.default_disk_size + var.traces_per_ionode * (var.containers_config_map[var.machine_type].compute + var.containers_config_map[var.machine_type].drive + var.containers_config_map[var.machine_type].frontend)
+  disk_size               = var.backends_weka_volume_size + var.traces_per_ionode * (var.containers_config_map[var.machine_type].compute + var.containers_config_map[var.machine_type].drive + var.containers_config_map[var.machine_type].frontend)
 }
 
 resource "google_compute_instance_template" "this" {
@@ -40,6 +40,7 @@ resource "google_compute_instance_template" "this" {
     source_image = var.source_image_id
     boot         = true
     disk_type    = var.boot_disk_type
+    disk_size_gb = var.backends_root_volume_size
   }
 
   disk {

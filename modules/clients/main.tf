@@ -33,6 +33,7 @@ resource "google_compute_instance" "this" {
   boot_disk {
     initialize_params {
       image = var.source_image_id
+      size  = var.root_volume_size
     }
   }
 
