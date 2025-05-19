@@ -377,10 +377,16 @@ variable "hotspare" {
   description = "A hot spare is the system's ability to withstand the loss of a defined number of failure domains, rebuild data completely, and maintain original net capacity."
 }
 
-variable "default_disk_size" {
+variable "backends_weka_volume_size" {
   type        = number
   default     = 48
   description = "The default disk size."
+}
+
+variable "backends_root_volume_size" {
+  type        = number
+  default     = null
+  description = "The backends' root disk size."
 }
 
 variable "default_disk_name" {
@@ -520,6 +526,12 @@ variable "clients_custom_data" {
   type        = string
   description = "Custom data to pass to the client instances"
   default     = ""
+}
+
+variable "clients_root_volume_size" {
+  type        = number
+  description = "The client's root volume size in GB"
+  default     = null
 }
 
 ############################################### nfs protocol gateways variables ###################################################
