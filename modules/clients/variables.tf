@@ -184,3 +184,9 @@ variable "labels_map" {
   default     = {}
   description = "A map of labels to assign the same metadata to all resources in the environment. Format: key:value."
 }
+
+variable "root_volume_size" {
+  type        = number
+  description = "The client's root volume size in GB"
+  default     = null
+}
