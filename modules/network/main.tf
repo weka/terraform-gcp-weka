@@ -36,6 +36,7 @@ data "google_compute_subnetwork" "subnets_list_ids" {
   count   = length(var.subnets)
   name    = var.subnets[count.index]
   project = local.network_project_id
+  region  = var.region
 }
 
 # ====================== vpc ==============================
@@ -406,7 +407,7 @@ resource "google_project_service" "psc" {
   project                    = local.network_project_id
   service                    = "servicenetworking.googleapis.com"
   disable_dependent_services = false
-  disable_on_destroy         = true
+  disable_on_destroy         = false
 }
 
 resource "google_compute_route" "restricted_googleapis_route" {

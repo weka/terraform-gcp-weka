@@ -24,6 +24,7 @@ locals {
 
 resource "google_compute_instance_template" "this" {
   name           = "${var.prefix}-${var.cluster_name}-backends"
+  region         = var.region
   machine_type   = var.machine_type
   can_ip_forward = false
 

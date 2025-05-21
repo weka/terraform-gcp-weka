@@ -53,6 +53,7 @@ locals {
 # ======================== instance ============================
 resource "google_compute_instance_template" "this" {
   name                    = var.gateways_name
+  region                  = var.region
   machine_type            = var.machine_type
   project                 = var.project_id
   tags                    = [var.gateways_name]
