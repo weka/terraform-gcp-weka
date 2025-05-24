@@ -247,16 +247,11 @@ func Test_resize(t *testing.T) {
 
 func Test_status(t *testing.T) {
 	// This will pass only before clusterization, after clusterization it will fail trying to fetch weka status
-	project := "wekaio-rnd"
-	zone := "europe-west1-b"
 	bucket := "weka-poc-wekaio-rnd"
 	stateName := "state"
-	instanceGroup := "weka-poc-instance-group"
-	usernameId := "projects/896245720241/secrets/weka-poc-username/versions/1"
-	passwordId := "projects/896245720241/secrets/weka-poc-password/versions/1"
 
 	ctx := context.TODO()
-	clusterStatus, err := status.GetClusterStatus(ctx, project, zone, bucket, stateName, instanceGroup, usernameId, passwordId, "")
+	clusterStatus, err := status.GetClusterStatus(ctx, bucket, stateName)
 	if err != nil {
 		t.Logf("Failed getting status %s", err)
 	} else {
