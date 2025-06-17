@@ -66,7 +66,7 @@ if [[ ${clients_use_dpdk} == true ]]; then
   if [ ${dpdk_base_memory_mb} -gt 0 ]; then
       mount_dpdk_base_memory_mb="-o dpdk_base_memory_mb=${dpdk_base_memory_mb}"
   fi
-  mount_command="mount -t wekafs -o num_cores=$FRONTEND_CONTAINER_CORES_NUM -o mgmt_ip=$first_interface_ip ${backend_lb_ip}/$FILESYSTEM_NAME $MOUNT_POINT $mount_dpdk_base_memory_mb"
+  mount_command="mount -t wekafs -o debug -o num_cores=$FRONTEND_CONTAINER_CORES_NUM -o mgmt_ip=$first_interface_ip ${backend_lb_ip}/$FILESYSTEM_NAME $MOUNT_POINT $mount_dpdk_base_memory_mb"
 fi
 
 retry 60 45 $mount_command
