@@ -54,6 +54,7 @@ type GCPDeploymentParams struct {
 	SMBDiskSize           int
 	S3GatewayFeCoresNum   int
 	S3DiskSize            int
+	CgroupsMode           string
 }
 
 func GetBackendsDeployScript(ctx context.Context, p GCPDeploymentParams) (bashScript string, err error) {
@@ -91,6 +92,7 @@ func GetBackendsDeployScript(ctx context.Context, p GCPDeploymentParams) (bashSc
 			ProxyUrl:         p.ProxyUrl,
 			NvmesNum:         p.NvmesNum,
 			FindDrivesScript: dedent.Dedent(common.FindDrivesScript),
+			CgroupsMode:      p.CgroupsMode,
 		}
 		deployScriptGenerator := deploy.DeployScriptGenerator{
 			FuncDef:       funcDef,
@@ -118,6 +120,7 @@ func GetBackendsDeployScript(ctx context.Context, p GCPDeploymentParams) (bashSc
 			InstanceParams: instanceParams,
 			Gateways:       p.Gateways,
 			ProxyUrl:       p.ProxyUrl,
+			CgroupsMode:    p.CgroupsMode,
 		}
 
 		scriptBase := `

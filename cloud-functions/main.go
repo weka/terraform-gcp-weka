@@ -305,6 +305,7 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 	smbDiskSize, _ := strconv.Atoi(os.Getenv("SMB_DISK_SIZE"))
 	s3DiskSize, _ := strconv.Atoi(os.Getenv("S3_DISK_SIZE"))
 	tracesPerFrontend, _ := strconv.Atoi(os.Getenv("TRACES_PER_FRONTEND"))
+	cgroupsMode := os.Getenv("CGROUPS_MODE")
 
 	var vm protocol.Vm
 	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
@@ -346,6 +347,7 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 		SMBDiskSize:           smbDiskSize + tracesPerFrontend*smbProtocolGatewayFeCoresNum,
 		S3GatewayFeCoresNum:   s3ProtocolGatewayFeCoresNum,
 		S3DiskSize:            s3DiskSize + tracesPerFrontend*s3ProtocolGatewayFeCoresNum,
+		CgroupsMode:           cgroupsMode,
 	}
 
 	var bashScript string

@@ -190,3 +190,13 @@ variable "root_volume_size" {
   description = "The client's root volume size in GB"
   default     = null
 }
+
+variable "weka_cgroups_mode" {
+  type        = string
+  description = "Weka cgroups mode, valid values are 'auto' and 'force_v2'"
+  default     = "auto"
+  validation {
+    condition     = var.weka_cgroups_mode == "auto" || var.weka_cgroups_mode == "force_v2"
+    error_message = "Allowed weka_cgroups_mode values: [\"auto\", \"force_v2\"]."
+  }
+}

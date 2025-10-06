@@ -18,6 +18,7 @@ locals {
     backend_lb_ip                = var.backend_lb_ip
     clients_use_dpdk             = var.clients_use_dpdk
     dpdk_base_memory_mb          = try(var.instance_config_overrides[var.machine_type].dpdk_base_memory_mb, 0)
+    weka_cgroups_mode            = var.weka_cgroups_mode
   })
 
   custom_data_parts = [local.preparation_script, local.mount_wekafs_script, "${var.custom_data}\n"]

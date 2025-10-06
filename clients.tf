@@ -23,6 +23,7 @@ module "clients" {
   custom_data                  = var.clients_custom_data
   labels_map                   = var.labels_map
   root_volume_size             = var.clients_root_volume_size
+  weka_cgroups_mode            = var.clients_weka_cgroups_mode
   depends_on = [
     google_compute_forwarding_rule.google_compute_forwarding_rule, google_workflows_workflow.scale_up,
     google_cloudfunctions2_function.cloud_internal_function, module.shared_vpc_peering, module.peering,
