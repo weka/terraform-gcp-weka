@@ -88,6 +88,7 @@ locals {
     S3_PROTOCOL_GATEWAY_FE_CORES_NUM  = var.s3_protocol_gateway_fe_cores_num
     SET_DEFAULT_FS                    = var.set_default_fs
     POST_CLUSTER_SETUP_SCRIPT         = var.post_cluster_setup_script
+    CGROUPS_MODE                      = var.weka_cgroups_mode
   }
 
   status_function_environment = {
