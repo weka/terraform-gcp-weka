@@ -534,6 +534,16 @@ variable "clients_root_volume_size" {
   default     = null
 }
 
+variable "clients_weka_cgroups_mode" {
+  type        = string
+  description = "Weka cgroups mode, valid values are 'auto' and 'force_v2'"
+  default     = "auto"
+  validation {
+    condition     = var.clients_weka_cgroups_mode == "auto" || var.clients_weka_cgroups_mode == "force_v2"
+    error_message = "Allowed weka_cgroups_mode values: [\"auto\", \"force_v2\"]."
+  }
+}
+
 ############################################### nfs protocol gateways variables ###################################################
 variable "nfs_protocol_gateways_number" {
   type        = number
@@ -826,4 +836,14 @@ variable "labels_map" {
   type        = map(string)
   default     = {}
   description = "A map of labels to assign the same metadata to all resources in the environment. Format: key:value."
+}
+
+variable "weka_cgroups_mode" {
+  type        = string
+  description = "Weka cgroups mode, valid values are 'auto' and 'force_v2'"
+  default     = "auto"
+  validation {
+    condition     = var.weka_cgroups_mode == "auto" || var.weka_cgroups_mode == "force_v2"
+    error_message = "Allowed weka_cgroups_mode values: [\"auto\", \"force_v2\"]."
+  }
 }
