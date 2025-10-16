@@ -41,6 +41,13 @@ fi
 
 os=$(awk -F= '/^NAME/{print $2}' /etc/os-release)
 if [[ "$os" = *"Rocky"* ]]; then
+    # Use direct Rocky Linux baseurl to avoid mirror sync issues when not using custom repos
+    if [ -z "${yum_repository_baseos_url}" ]; then
+        rocky_version=$(awk -F= '/^VERSION_ID/{print $2}' /etc/os-release | tr -d '"')
+        sed -i 's|^mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/Rocky-*.repo
+        sed -i "s|^#baseurl=http://dl.rockylinux.org/\$contentdir/\$releasever|baseurl=https://dl.rockylinux.org/pub/rocky/$rocky_version|g" /etc/yum.repos.d/Rocky-*.repo
+        yum clean all
+    fi
     yum install -y kernel-devel-$(uname -r)
 fi
 
