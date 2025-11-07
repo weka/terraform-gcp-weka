@@ -1,6 +1,6 @@
 module github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions
 
-go 1.24.1
+go 1.25.4
 
 require (
 	cloud.google.com/go/compute v1.27.0
@@ -9,7 +9,7 @@ require (
 	github.com/googleapis/gax-go/v2 v2.12.5
 	github.com/lithammer/dedent v1.1.0
 	github.com/rs/zerolog v1.29.1
-	github.com/weka/go-cloud-lib v0.0.0-20251005174936-43b5c97bf3bc
+	github.com/weka/go-cloud-lib v0.0.0-20251107070512-1f7dc8743491
 	google.golang.org/api v0.186.0
 	google.golang.org/protobuf v1.34.2
 )
