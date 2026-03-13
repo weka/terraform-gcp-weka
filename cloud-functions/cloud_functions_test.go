@@ -195,10 +195,11 @@ func Test_scaleUp(t *testing.T) {
 	instanceName := "weka-poc-vm-test"
 	backendTemplate := "projects/wekaio-rnd/global/instanceTemplates/weka-poc-backends"
 	functionRootUrl := "https://europe-west1-wekaio-rnd.cloudfunctions.net"
-	yumRepoServer := ""
+	yumRepositoryBaseosUrl := ""
+	yumRepositoryAppstreamUrl := ""
 	proxyUrl := ""
 	ctx := context.TODO()
-	scale_up.CreateBackendInstance(ctx, project, zone, backendTemplate, instanceName, yumRepoServer, proxyUrl, functionRootUrl)
+	scale_up.CreateBackendInstance(ctx, project, zone, backendTemplate, instanceName, yumRepositoryBaseosUrl, yumRepositoryAppstreamUrl, proxyUrl, functionRootUrl)
 	instances, _ := common.GetInstancesByClusterLabel(ctx, project, zone, clusterName)
 	instanceGroupSize := len(instances)
 	t.Logf("Instance group size is: %d", instanceGroupSize)
