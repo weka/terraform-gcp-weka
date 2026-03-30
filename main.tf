@@ -88,6 +88,10 @@ resource "google_compute_instance_template" "this" {
     ssh-keys = "${var.vm_username}:${local.ssh_public_key}"
   }
 
+  scheduling {
+    on_host_maintenance = contains(["z3-highmem-88-highlssd"], var.machine_type) ? "TERMINATE" : "MIGRATE"
+  }
+
   lifecycle {
     ignore_changes        = [network_interface]
     create_before_destroy = false
