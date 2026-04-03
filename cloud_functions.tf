@@ -44,7 +44,7 @@ locals {
     DRIVE_CONTAINER_CORES_NUM    = var.containers_config_map[var.machine_type].drive
     COMPUTE_CONTAINER_CORES_NUM  = var.set_dedicated_fe_container ? var.containers_config_map[var.machine_type].compute : var.containers_config_map[var.machine_type].compute + 1
     FRONTEND_CONTAINER_CORES_NUM = var.set_dedicated_fe_container ? var.containers_config_map[var.machine_type].frontend : 0
-    NVMES_NUM                    = var.nvmes_number
+    NVMES_NUM                    = local.effective_nvmes_number
     HOSTS_NUM                    = var.cluster_size
     NICS_NUM                     = local.nics_number
     CLUSTER_NAME                 = var.cluster_name
