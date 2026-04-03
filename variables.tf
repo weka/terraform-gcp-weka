@@ -69,7 +69,7 @@ variable "region" {
 variable "nvmes_number" {
   type        = number
   description = "Number of NVMe disks to attach to each host."
-  default     = 2
+  default     = null
 }
 
 variable "assign_public_ip" {
@@ -383,11 +383,11 @@ variable "containers_config_map" {
 
 variable "nic_type" {
   type        = string
-  default     = "VIRTIO_NET"
+  default     = null
   description = "The type of vNIC. Possible values: GVNIC, VIRTIO_NET."
 
   validation {
-    condition     = var.nic_type == "GVNIC" || var.nic_type == "VIRTIO_NET"
+    condition     = var.nic_type == null || var.nic_type == "GVNIC" || var.nic_type == "VIRTIO_NET"
     error_message = "The vNIC type must be either GVNIC or VIRTIO_NET."
   }
 }
@@ -438,7 +438,7 @@ variable "default_disk_name" {
 
 variable "boot_disk_type" {
   type        = string
-  default     = "pd-standard"
+  default     = null
   description = "The boot disk type."
 }
 

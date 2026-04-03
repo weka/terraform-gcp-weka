@@ -17,6 +17,31 @@ resource "google_storage_bucket" "weka_deployment" {
 
 # ======================== instances ============================
 locals {
+  # Machine family-specific defaults
+  machine_defaults = {
+    "z3-highmem" = {
+      nvmes_number   = 0
+      boot_disk_type = "pd-ssd"
+      nic_type       = "GVNIC"
+    }
+    "default" = {
+      nvmes_number   = 2
+      boot_disk_type = "pd-standard"
+      nic_type       = "VIRTIO_NET"
+    }
+  }
+
+  # Extract machine family prefix (e.g., "z3-highmem" from "z3-highmem-8-highlssd")
+  machine_family = join("-", slice(split("-", var.machine_type), 0, 2))
+
+  # Get machine-specific defaults, fallback to global defaults
+  machine_defaults_for_machine_type = contains(keys(local.machine_defaults), local.machine_family) ? local.machine_defaults[local.machine_family] : local.machine_defaults["default"]
+
+  # Effective values: use user-provided or machine defaults
+  effective_nvmes_number   = local.machine_family == "z3-highmem" ? local.machine_defaults_for_machine_type.nvmes_number : (var.nvmes_number != null ? var.nvmes_number : local.machine_defaults_for_machine_type.nvmes_number)
+  effective_boot_disk_type = var.boot_disk_type != null ? var.boot_disk_type : local.machine_defaults_for_machine_type.boot_disk_type
+  effective_nic_type       = var.nic_type != null ? var.nic_type : local.machine_defaults_for_machine_type.nic_type
+
   private_nic_first_index = local.assign_public_ip ? 1 : 0
   nics_number             = var.nic_number != -1 ? var.nic_number : var.containers_config_map[var.machine_type].nics
   disk_size               = var.backends_weka_volume_size + var.traces_per_ionode * (var.containers_config_map[var.machine_type].compute + var.containers_config_map[var.machine_type].drive + var.containers_config_map[var.machine_type].frontend)
@@ -40,7 +65,7 @@ resource "google_compute_instance_template" "this" {
   disk {
     source_image = var.source_image_id
     boot         = true
-    disk_type    = var.boot_disk_type
+    disk_type    = local.effective_boot_disk_type
     disk_size_gb = var.backends_root_volume_size
   }
 
@@ -52,7 +77,7 @@ resource "google_compute_instance_template" "this" {
   }
 
   dynamic "disk" {
-    for_each = range(var.nvmes_number)
+    for_each = range(local.effective_nvmes_number)
     content {
       interface    = "NVME"
       boot         = false
@@ -66,7 +91,7 @@ resource "google_compute_instance_template" "this" {
   dynamic "network_interface" {
     for_each = range(local.private_nic_first_index)
     content {
-      nic_type           = var.nic_type
+      nic_type           = local.effective_nic_type
       subnetwork         = data.google_compute_subnetwork.this[network_interface.value].name
       subnetwork_project = local.network_project_id
       access_config {}
@@ -78,7 +103,7 @@ resource "google_compute_instance_template" "this" {
   dynamic "network_interface" {
     for_each = range(local.private_nic_first_index, local.nics_number)
     content {
-      nic_type           = var.nic_type
+      nic_type           = local.effective_nic_type
       subnetwork_project = local.network_project_id
       subnetwork         = data.google_compute_subnetwork.this[network_interface.value].name
     }
