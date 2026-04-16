@@ -136,7 +136,7 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 	hotspare, _ := strconv.Atoi(os.Getenv("HOTSPARE"))
 	setObs, _ := strconv.ParseBool(os.Getenv("SET_OBS"))
 	obsName := os.Getenv("OBS_NAME")
-	tieringSsdPercent := os.Getenv("OBS_TIERING_SSD_PERCENT")
+	tieringSsdPercent, _ := strconv.Atoi(os.Getenv("OBS_TIERING_SSD_PERCENT"))
 	tieringTargetSsdRetention, _ := strconv.Atoi(os.Getenv("TIERING_TARGET_SSD_RETENTION"))
 	tieringStartDemote, _ := strconv.Atoi(os.Getenv("TIERING_START_DEMOTE"))
 	addFrontendNum, _ := strconv.Atoi(os.Getenv("FRONTEND_CONTAINER_CORES_NUM"))
@@ -192,14 +192,14 @@ func Clusterize(w http.ResponseWriter, r *http.Request) {
 			AddFrontend:               addFrontend,
 			WekaHomeUrl:               wekaHomeUrl,
 			InstallDpdk:               installDpdk,
+			TieringSSDPercent:         tieringSsdPercent,
 			TieringTargetSSDRetention: tieringTargetSsdRetention,
 			TieringStartDemote:        tieringStartDemote,
 			SetDefaultFs:              setDefaultFs,
 			PostClusterSetupScript:    postClusterSetupScript,
 		},
 		Obs: protocol.ObsParams{
-			Name:              obsName,
-			TieringSsdPercent: tieringSsdPercent,
+			Name: obsName,
 		},
 		CloudFuncRootUrl: functionRootUrl,
 		NvmesNum:         nvmesNum,
