@@ -338,41 +338,41 @@ variable "containers_config_map" {
       drive    = 1
       frontend = 1
       nics     = 4
-    memory = ["30GB", "30GB"] },
+    memory = ["33.9GB", "34.2GB"] },
     z3-highmem-16-highlssd = {
       compute  = 3
       drive    = 2
       frontend = 1
       nics     = 7
-      memory   = ["60GB", "60GB"]
+      memory   = ["85GB", "85.3GB"]
     },
     z3-highmem-22-highlssd = {
       compute  = 4
       drive    = 1
       frontend = 1
       nics     = 7
-      memory   = ["60GB", "60GB"]
+      memory   = ["131.9GB", "132.2GB"]
     },
     z3-highmem-32-highlssd = {
       compute  = 3
       drive    = 2
       frontend = 1
       nics     = 7
-      memory   = ["60GB", "60GB"]
+      memory   = ["211.1GB", "211.4GB"]
     },
     z3-highmem-44-highlssd = {
       compute  = 3
       drive    = 2
       frontend = 1
       nics     = 7
-      memory   = ["60GB", "60GB"]
+      memory   = ["305.6GB", "305.9GB"]
     },
     z3-highmem-88-highlssd = {
       compute  = 3
       drive    = 2
       frontend = 1
       nics     = 7
-      memory   = ["128GB", "128GB"]
+      memory   = ["384GB", "384GB"]
     }
   }
   validation {
