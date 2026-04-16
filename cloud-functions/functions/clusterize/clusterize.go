@@ -257,16 +257,13 @@ func Clusterize(ctx context.Context, p ClusterizationParams) (clusterizeScript s
 
 func GetObsScript(obsParams protocol.ObsParams) string {
 	template := `
-	OBS_TIERING_SSD_PERCENT=%s
 	OBS_NAME="%s"
 
 	weka fs tier s3 add gcp-bucket --hostname storage.googleapis.com --port 443 --bucket "$OBS_NAME" --protocol https --auth-method AWSSignature4
 	weka fs tier s3 attach default gcp-bucket
-	tiering_percent=$(($full_capacity * 100 / $OBS_TIERING_SSD_PERCENT))
-	weka fs update default --total-capacity "$tiering_percent"B
 	`
 	return fmt.Sprintf(
-		dedent.Dedent(template), obsParams.TieringSsdPercent, obsParams.Name,
+		dedent.Dedent(template), obsParams.Name,
 	)
 }
 
