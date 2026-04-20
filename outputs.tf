@@ -96,6 +96,11 @@ curl -m 70 -X POST "${local.status_function_uri}" \
   -H "Authorization:bearer $(gcloud auth print-identity-token)" \
   -H "Content-Type:application/json" -d '{"type":"progress"}'
 EOT
+    weka_api              = <<EOT
+curl -m 70 -X POST "${local.weka_api_function_uri}" \
+  -H "Authorization:bearer $(gcloud auth print-identity-token)" \
+  -H "Content-Type:application/json" -d '{"Method":"status"}'
+EOT
     resize_cluster        = <<EOT
 curl -m 70 -X POST "${local.resize_cluster_uri}" \
   -H "Authorization:bearer $(gcloud auth print-identity-token)" \
