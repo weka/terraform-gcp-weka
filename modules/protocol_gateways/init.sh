@@ -35,6 +35,7 @@ type=rpm-md
 username=oauth2accesstoken
 password=TOKEN
 EOL
+sed -i "s|^password=.*|password=$(gcloud auth print-access-token)|" /etc/yum.repos.d/local.repo
 CRON_JOB="* * * * * gcloud auth print-access-token | sed -i \"s|^password=.*|password=\$(gcloud auth print-access-token)|\" /etc/yum.repos.d/local.repo"
 (crontab -l 2>/dev/null | grep -Fq "$CRON_JOB") || (crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
 fi
