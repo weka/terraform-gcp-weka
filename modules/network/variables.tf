@@ -13,14 +13,14 @@ variable "vpcs" {
   description = "List of vpcs name"
   default     = []
   validation {
-    condition     = length(var.vpcs) == 0 || length(var.vpcs) == 4 || length(var.vpcs) == 7
-    error_message = "The allowed amount of vpcs are 0, 4 and 7"
+    condition     = length(var.vpcs) == 0 || length(var.vpcs) == 1
+    error_message = "The allowed amount of vpcs are 0 or 1"
   }
 }
 
 variable "subnets_range" {
   type        = list(string)
-  description = "list of subnets to use for creating the cluster, the number of subnets must be 'vpcs_number'"
+  description = "list of subnet CIDR ranges to use for creating the cluster"
   default     = []
   validation {
     condition     = length(var.subnets_range) == 0 || length(var.subnets_range) == 4 || length(var.subnets_range) == 7
@@ -49,13 +49,6 @@ variable "prefix" {
   description = "prefix for all resources"
   default     = "weka"
 }
-
-variable "set_peering" {
-  type        = bool
-  description = "apply peering connection between subnets and subnets "
-  default     = true
-}
-
 
 variable "vpc_connector_range" {
   type        = string
@@ -160,12 +153,6 @@ variable "vpc_connector_region_map" {
     southamerica-west1 = "northamerica-northeast1",
     asia-south2        = "asia-south1",
   }
-}
-
-variable "vpc_number" {
-  type        = number
-  default     = 0
-  description = "Number of vpcs, should be passed only when not creating subnets."
 }
 
 variable "labels_map" {

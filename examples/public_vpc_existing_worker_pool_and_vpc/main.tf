@@ -8,7 +8,7 @@ module "weka_deployment" {
   cluster_name                   = "poc"
   prefix                         = "weka"
   project_id                     = var.project_id
-  vpcs_name                      = ["weka-vpc-0", "weka-vpc-1", "weka-vpc-2", "weka-vpc-3"]
+  vpcs_name                      = ["weka-vpc"]
   subnets_name                   = ["weka-subnet-0", "weka-subnet-1", "weka-subnet-2", "weka-subnet-3"]
   region                         = var.region
   zone                           = "europe-west1-b"

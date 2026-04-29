@@ -33,7 +33,6 @@ module "network" {
   googleapis_dns_zone_name           = var.googleapis_dns_zone_name
   psc_subnet_cidr                    = var.psc_subnet_cidr
   network_project_id                 = var.network_project_id
-  set_peering                        = var.set_peering
   vpcs                               = var.vpcs_name
   create_nat_gateway                 = var.create_nat_gateway
   labels_map                         = var.labels_map

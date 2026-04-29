@@ -31,11 +31,11 @@ variable "mtu_size" {
 
 variable "vpcs_name" {
   type        = list(string)
-  description = "Names of VPC networks to associate with the resource. Depending on your configuration, you can specify 0, 4, or 7 VPC networks."
+  description = "Name of the VPC network to associate with the resource. Specify 0 or 1 VPC network."
   default     = []
   validation {
-    condition     = length(var.vpcs_name) == 0 || length(var.vpcs_name) == 4 || length(var.vpcs_name) == 7
-    error_message = "The provided list of VPC networks is invalid. You can specify 0, 4, or 7 VPC networks."
+    condition     = length(var.vpcs_name) == 0 || length(var.vpcs_name) == 1
+    error_message = "The provided list of VPC networks is invalid. You can specify 0 or 1 VPC network."
   }
 }
 
@@ -828,12 +828,6 @@ variable "set_shared_vpc_peering" {
 variable "enable_shared_vpc_host_project" {
   description = "Specifies whether the created project functions as a Shared VPC host project. If true, ensure the shared_vpc variable remains disabled (set to false)."
   type        = bool
-  default     = true
-}
-
-variable "set_peering" {
-  type        = bool
-  description = "Specifies whether to apply peering connection between subnets."
   default     = true
 }
 
