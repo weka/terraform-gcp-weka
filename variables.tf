@@ -113,21 +113,21 @@ variable "cluster_size" {
 
 variable "subnets_range" {
   type        = list(string)
-  description = "List of subnet CIDRs (0, 4, or 7) for cluster creation. 0: No subnets (for single-node testing). 4: Common setup for production (spread across AZs for redundancy). 7: Less common deployments with specific needs."
-  default     = ["10.0.0.0/24", "10.1.0.0/24", "10.2.0.0/24", "10.3.0.0/24"]
+  description = "Subnet CIDR range for cluster creation. A single subnet is used for all NICs."
+  default     = ["10.0.0.0/24"]
   validation {
-    condition     = length(var.subnets_range) == 0 || length(var.subnets_range) == 4 || length(var.subnets_range) == 7
-    error_message = "Invalid number of subnets. Valid options: 0, 4, or 7."
+    condition     = length(var.subnets_range) == 0 || length(var.subnets_range) == 1
+    error_message = "Invalid number of subnets. Valid options: 0 or 1."
   }
 }
 
 variable "subnets_name" {
   type        = list(string)
-  description = "List of names (0, 4, or 7) for subnets defined in the subnets_range variable."
+  description = "Name of an existing subnet to use. A single subnet is used for all NICs."
   default     = []
   validation {
-    condition     = length(var.subnets_name) == 0 || length(var.subnets_name) == 4 || length(var.subnets_name) == 7
-    error_message = "Invalid number of subnet names. Set according to subnets_range."
+    condition     = length(var.subnets_name) == 0 || length(var.subnets_name) == 1
+    error_message = "Invalid number of subnet names. Valid options: 0 or 1."
   }
 }
 

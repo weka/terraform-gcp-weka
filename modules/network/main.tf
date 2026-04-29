@@ -15,8 +15,8 @@ data "google_compute_network" "vpc_list_ids" {
 }
 
 data "google_compute_subnetwork" "subnets_list_ids" {
-  count   = length(var.subnets)
-  name    = var.subnets[count.index]
+  count   = length(var.subnets) > 0 ? 1 : 0
+  name    = var.subnets[0]
   project = local.network_project_id
   region  = var.region
 }
@@ -60,10 +60,10 @@ resource "google_compute_network" "vpc_network" {
 
 # ======================= subnet ==========================
 resource "google_compute_subnetwork" "subnetwork" {
-  count                    = length(var.subnets) == 0 && length(var.subnets_range) > 0 ? local.subnets_number : 0
+  count                    = length(var.subnets) == 0 && length(var.subnets_range) > 0 ? 1 : 0
   project                  = local.network_project_id
-  name                     = "${var.prefix}-subnet-${count.index}"
-  ip_cidr_range            = var.subnets_range[count.index]
+  name                     = "${var.prefix}-subnet"
+  ip_cidr_range            = var.subnets_range[0]
   region                   = var.region
   network                  = local.vpcs_name[0]
   private_ip_google_access = true
@@ -156,7 +156,7 @@ resource "google_compute_firewall" "sg_private" {
   name          = "${var.prefix}-sg-all"
   project       = local.network_project_id
   network       = local.vpcs_name[0]
-  source_ranges = length(var.subnets) == 0 ? var.subnets_range : data.google_compute_subnetwork.subnets_list_ids.*.ip_cidr_range
+  source_ranges = length(var.subnets) == 0 ? var.subnets_range : [data.google_compute_subnetwork.subnets_list_ids[0].ip_cidr_range]
   allow {
     protocol = "all"
   }
@@ -333,7 +333,7 @@ resource "google_compute_firewall" "fw_ilb_to_backends" {
   project       = local.network_project_id
   direction     = "INGRESS"
   network       = local.vpcs_name[0]
-  source_ranges = length(var.subnets) == 0 ? [var.subnets_range[0]] : [data.google_compute_subnetwork.subnets_list_ids[0].ip_cidr_range]
+  source_ranges = length(var.subnets) == 0 ? var.subnets_range : [data.google_compute_subnetwork.subnets_list_ids[0].ip_cidr_range]
   allow {
     protocol = "tcp"
   }

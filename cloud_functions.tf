@@ -28,8 +28,8 @@ locals {
     CLOUD_FUNCTION_NAME    = local.cloud_internal_function_name
     INSTANCE_GROUP         = google_compute_instance_group.this.name
     NFS_INSTANCE_GROUP     = var.nfs_setup_protocol ? google_compute_instance_group.nfs[0].name : ""
-    GATEWAYS               = join(",", [for s in data.google_compute_subnetwork.this : s.gateway_address])
-    SUBNETS                = format("(%s)", join(" ", [for s in data.google_compute_subnetwork.this : s.ip_cidr_range]))
+    GATEWAYS               = data.google_compute_subnetwork.this[0].gateway_address
+    SUBNETS                = format("(%s)", data.google_compute_subnetwork.this[0].ip_cidr_range)
     USER_NAME_ID           = google_secret_manager_secret.secret_weka_username.id
     ADMIN_PASSWORD_ID      = google_secret_manager_secret.secret_weka_password.id
     DEPLOYMENT_PASSWORD_ID = google_secret_manager_secret.weka_deployment_password.id

@@ -92,7 +92,7 @@ resource "google_compute_instance_template" "this" {
     for_each = range(local.private_nic_first_index)
     content {
       nic_type           = local.effective_nic_type
-      subnetwork         = data.google_compute_subnetwork.this[network_interface.value].name
+      subnetwork         = data.google_compute_subnetwork.this[0].name
       subnetwork_project = local.network_project_id
       access_config {}
     }
@@ -105,7 +105,7 @@ resource "google_compute_instance_template" "this" {
     content {
       nic_type           = local.effective_nic_type
       subnetwork_project = local.network_project_id
-      subnetwork         = data.google_compute_subnetwork.this[network_interface.value].name
+      subnetwork         = data.google_compute_subnetwork.this[0].name
     }
   }
 

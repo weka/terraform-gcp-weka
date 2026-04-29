@@ -1,6 +1,5 @@
 data "google_compute_subnetwork" "this" {
-  count   = length(var.subnets_list)
-  name    = var.subnets_list[count.index]
+  name    = var.subnets_list[0]
   project = local.network_project_id
   region  = var.region
 }
@@ -44,7 +43,7 @@ resource "google_compute_instance" "this" {
     content {
       nic_type           = var.nic_type
       subnetwork_project = local.network_project_id
-      subnetwork         = data.google_compute_subnetwork.this[network_interface.value].name
+      subnetwork         = data.google_compute_subnetwork.this.name
       access_config {}
     }
   }
@@ -55,7 +54,7 @@ resource "google_compute_instance" "this" {
     content {
       nic_type           = var.nic_type
       subnetwork_project = local.network_project_id
-      subnetwork         = data.google_compute_subnetwork.this[network_interface.value].name
+      subnetwork         = data.google_compute_subnetwork.this.name
     }
   }
 

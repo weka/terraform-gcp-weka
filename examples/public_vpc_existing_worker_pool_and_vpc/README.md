@@ -7,8 +7,8 @@ This example creates service account for weka deployment,
 
 In order to create worker pool, you must supply the following variable:
 ```hcl
-vpcs_name           = ["vpc-0","vpc-1","vpc-2","vpc-3"]
-subnets_name        = ["subnet-0","subnet-1","subnet-2","subnet-3"]
+vpcs_name           = ["vpc-0"]
+subnets_name        = ["subnet-0"]
 private_dns_name    = "existing.private.net."
 private_zone_name   = "existing-private-zone"
 vpc_connector_name  = "existing-connector"

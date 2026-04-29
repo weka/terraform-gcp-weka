@@ -20,11 +20,11 @@ variable "vpcs" {
 
 variable "subnets_range" {
   type        = list(string)
-  description = "list of subnet CIDR ranges to use for creating the cluster"
+  description = "Subnet CIDR range to use for creating the cluster"
   default     = []
   validation {
-    condition     = length(var.subnets_range) == 0 || length(var.subnets_range) == 4 || length(var.subnets_range) == 7
-    error_message = "The allowed amount of subnet ranges are 0, 4 and 7"
+    condition     = length(var.subnets_range) == 0 || length(var.subnets_range) == 1
+    error_message = "The allowed amount of subnet ranges are 0 or 1"
   }
 }
 
@@ -33,8 +33,8 @@ variable "subnets" {
   description = "List of subnets name"
   default     = []
   validation {
-    condition     = length(var.subnets) == 0 || length(var.subnets) == 4 || length(var.subnets) == 7
-    error_message = "The allowed amount of subnets are 0, 4 and 7"
+    condition     = length(var.subnets) == 0 || length(var.subnets) == 1
+    error_message = "The allowed amount of subnets are 0 or 1"
   }
 }
 

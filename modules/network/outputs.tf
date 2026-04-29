@@ -9,18 +9,18 @@ output "vpc_self_links" {
 }
 
 output "gateway_address" {
-  value       = length(var.subnets) == 0 ? length(var.subnets_range) > 0 ? [for g in google_compute_subnetwork.subnetwork : g.gateway_address] : [] : [for g in data.google_compute_subnetwork.subnets_list_ids : g.gateway_address]
+  value       = length(var.subnets) == 0 ? length(var.subnets_range) > 0 ? [google_compute_subnetwork.subnetwork[0].gateway_address] : [] : [data.google_compute_subnetwork.subnets_list_ids[0].gateway_address]
   description = "List of vpcs gateway addresses"
 }
 
 output "subnetwork_name" {
-  value       = length(var.subnets) == 0 ? length(var.subnets_range) > 0 ? [for s in google_compute_subnetwork.subnetwork : s.name] : [] : [for s in data.google_compute_subnetwork.subnets_list_ids : s.name]
-  description = "List of vpcs subnets names"
+  value       = length(var.subnets) == 0 ? length(var.subnets_range) > 0 ? [google_compute_subnetwork.subnetwork[0].name] : [] : [data.google_compute_subnetwork.subnets_list_ids[0].name]
+  description = "Subnet name"
 }
 
 output "subnets_range" {
-  value       = length(var.subnets) == 0 ? length(var.subnets_range) > 0 ? var.subnets_range : [] : [for i in data.google_compute_subnetwork.subnets_list_ids : i.ip_cidr_range]
-  description = "List of vpcs subnets ranges"
+  value       = length(var.subnets) == 0 ? length(var.subnets_range) > 0 ? var.subnets_range : [] : [data.google_compute_subnetwork.subnets_list_ids[0].ip_cidr_range]
+  description = "Subnet range"
 }
 
 output "vpc_connector_id" {

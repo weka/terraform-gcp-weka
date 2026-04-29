@@ -78,10 +78,10 @@ data "google_compute_network" "this" {
 }
 
 data "google_compute_subnetwork" "this" {
-  count      = length(local.subnets_name)
+  count      = length(local.subnets_name) > 0 ? 1 : 0
   project    = local.network_project_id
   region     = var.region
-  name       = local.subnets_name[count.index]
+  name       = local.subnets_name[0]
   depends_on = [module.network]
 }
 
