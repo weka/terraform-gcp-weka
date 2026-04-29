@@ -7,7 +7,7 @@ module "create_worker_pool" {
   source              = "../../modules/worker_pool"
   project             = "myProject"
   region              = "europe-west1"
-  vpcs                = ["weka-vpc-0", "weka-vpc-1", "weka-vpc-2", "weka-vpc-3"]
+  vpc_name            = "weka-vpc"
   cluster_name        = "myCluster"
   sa_email            = "weka-deploy-sa@myProject.iam.gserviceaccount.com"
 }

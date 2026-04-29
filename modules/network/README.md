@@ -1,5 +1,5 @@
 # GCP network setup Terraform module
-Terraform module which sets up all network resources needed for weka deployment: vpcs, subnets, peering,
+Terraform module which sets up all network resources needed for weka deployment: VPC, subnets, peering,
 security groups, vpc connector, health checks and dns.
 
 ## Usage
@@ -56,7 +56,6 @@ No modules.
 | [google_compute_global_forwarding_rule.apis_forwarding_rule](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_global_forwarding_rule) | resource |
 | [google_compute_global_forwarding_rule.vpcsc_forwarding_rule](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_global_forwarding_rule) | resource |
 | [google_compute_network.vpc_network](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_network) | resource |
-| [google_compute_network_peering.peering](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_network_peering) | resource |
 | [google_compute_route.private_googleapis_route](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_route) | resource |
 | [google_compute_route.restricted_googleapis_route](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_route) | resource |
 | [google_compute_router.router](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_router) | resource |
@@ -105,27 +104,25 @@ No modules.
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | project id | `string` | n/a | yes |
 | <a name="input_psc_subnet_cidr"></a> [psc\_subnet\_cidr](#input\_psc\_subnet\_cidr) | Cidr range for private service connection subnet | `string` | `"10.9.0.0/28"` | no |
 | <a name="input_region"></a> [region](#input\_region) | region name | `string` | n/a | yes |
-| <a name="input_set_peering"></a> [set\_peering](#input\_set\_peering) | apply peering connection between subnets and subnets | `bool` | `true` | no |
 | <a name="input_sg_custom_ingress_rules"></a> [sg\_custom\_ingress\_rules](#input\_sg\_custom\_ingress\_rules) | Custom inbound rules to be added to the security group. | <pre>list(object({<br>    to_port     = number<br>    protocol    = string<br>    cidr_blocks = list(string)<br>  }))</pre> | `[]` | no |
 | <a name="input_subnet_autocreate_as_private"></a> [subnet\_autocreate\_as\_private](#input\_subnet\_autocreate\_as\_private) | Create private subnet using nat gateway to route traffic. The default is public network. Relevant only when subnet\_ids is empty. | `bool` | `false` | no |
 | <a name="input_subnets"></a> [subnets](#input\_subnets) | List of subnets name | `list(string)` | `[]` | no |
-| <a name="input_subnets_range"></a> [subnets\_range](#input\_subnets\_range) | list of subnets to use for creating the cluster, the number of subnets must be 'vpcs\_number' | `list(string)` | `[]` | no |
+| <a name="input_subnets_range"></a> [subnets\_range](#input\_subnets\_range) | list of subnet CIDR ranges to use for creating the cluster | `list(string)` | `[]` | no |
 | <a name="input_vpc_connector_id"></a> [vpc\_connector\_id](#input\_vpc\_connector\_id) | exiting vpc connector id to use for cloud functions | `string` | `""` | no |
 | <a name="input_vpc_connector_range"></a> [vpc\_connector\_range](#input\_vpc\_connector\_range) | list of connector to use for serverless vpc access | `string` | `""` | no |
 | <a name="input_vpc_connector_region_map"></a> [vpc\_connector\_region\_map](#input\_vpc\_connector\_region\_map) | Map of region to use for vpc connector, as some regions do not have cloud functions enabled, and vpc connector needs to be in the same region | `map(string)` | <pre>{<br>  "asia-south2": "asia-south1",<br>  "europe-north1": "europe-west1",<br>  "europe-west4": "europe-west1",<br>  "southamerica-west1": "northamerica-northeast1",<br>  "us-east5": "us-east1"<br>}</pre> | no |
-| <a name="input_vpc_number"></a> [vpc\_number](#input\_vpc\_number) | Number of vpcs, should be passed only when not creating subnets. | `number` | `0` | no |
-| <a name="input_vpcs"></a> [vpcs](#input\_vpcs) | List of vpcs name | `list(string)` | `[]` | no |
+| <a name="input_vpc_name"></a> [vpc\_name](#input\_vpc\_name) | Vpc name. If empty, a new vpc will be created. | `string` | `""` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_gateway_address"></a> [gateway\_address](#output\_gateway\_address) | List of vpcs gateway addresses |
+| <a name="output_gateway_address"></a> [gateway\_address](#output\_gateway\_address) | List of subnets gateway addresses |
 | <a name="output_private_dns_name"></a> [private\_dns\_name](#output\_private\_dns\_name) | Private zone dns name |
 | <a name="output_private_zone_name"></a> [private\_zone\_name](#output\_private\_zone\_name) | Private zone name |
-| <a name="output_subnets_range"></a> [subnets\_range](#output\_subnets\_range) | List of vpcs subnets ranges |
-| <a name="output_subnetwork_name"></a> [subnetwork\_name](#output\_subnetwork\_name) | List of vpcs subnets names |
+| <a name="output_subnets_range"></a> [subnets\_range](#output\_subnets\_range) | List of subnets ranges |
+| <a name="output_subnetwork_name"></a> [subnetwork\_name](#output\_subnetwork\_name) | List of subnets names |
 | <a name="output_vpc_connector_id"></a> [vpc\_connector\_id](#output\_vpc\_connector\_id) | Vpc connector id |
-| <a name="output_vpc_self_links"></a> [vpc\_self\_links](#output\_vpc\_self\_links) | List of VPC self-links |
-| <a name="output_vpcs_names"></a> [vpcs\_names](#output\_vpcs\_names) | List of vpcs names |
+| <a name="output_vpc_name"></a> [vpc\_name](#output\_vpc\_name) | Vpc name |
+| <a name="output_vpc_self_link"></a> [vpc\_self\_link](#output\_vpc\_self\_link) | VPC self-link |
 <!-- END_TF_DOCS -->

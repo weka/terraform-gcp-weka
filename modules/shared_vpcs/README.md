@@ -8,7 +8,7 @@ module "shared_vpc" {
   project             = "myProject"
   host_project        = "myHostProject"
   shared_vpcs         = ["shared-vpc"]
-  vpcs                = ["weka-vpc-0", "weka-vpc-1", "weka-vpc-2", "weka-vpc-3"]
+  vpc_name            = "weka-vpc"
   sa_email            = "weka-deploy-sa@myProject.iam.gserviceaccount.com"
   host_shared_range   = ["10.26.1.0/24"]
   providers = {
@@ -45,7 +45,7 @@ No modules.
 | [google_compute_network_peering.peering_service](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_network_peering) | resource |
 | [google_compute_shared_vpc_host_project.shared_vpc_host](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_shared_vpc_host_project) | resource |
 | [google_compute_shared_vpc_service_project.shared_vpc_service](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_shared_vpc_service_project) | resource |
-| [google_compute_network.vpc_list_ids](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_network) | data source |
+| [google_compute_network.vpc](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_network) | data source |
 
 ## Inputs
 
@@ -60,7 +60,7 @@ No modules.
 | <a name="input_set_shared_vpc_peering"></a> [set\_shared\_vpc\_peering](#input\_set\_shared\_vpc\_peering) | n/a | `bool` | `false` | no |
 | <a name="input_shared_vpc_project_id"></a> [shared\_vpc\_project\_id](#input\_shared\_vpc\_project\_id) | Shared vpc project id | `string` | n/a | yes |
 | <a name="input_shared_vpcs"></a> [shared\_vpcs](#input\_shared\_vpcs) | list of shared vpc name | `list(string)` | n/a | yes |
-| <a name="input_vpcs_name"></a> [vpcs\_name](#input\_vpcs\_name) | list of vpcs name | `list(string)` | n/a | yes |
+| <a name="input_vpc_name"></a> [vpc\_name](#input\_vpc\_name) | vpc name | `string` | n/a | yes |
 
 ## Outputs
 

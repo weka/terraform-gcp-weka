@@ -8,18 +8,18 @@ When deploying WEKA on GCP, you have two options for network configuration:
 
 * Use an existing network:
 <br>If you choose this option, WEKA uses your existing network resources.
-These resources include Virtual Private Clouds (VPCs), subnets, security groups (firewalls), private DNS zones, and VPC access connectors.
+These resources include a Virtual Private Cloud (VPC), subnets, security groups (firewalls), private DNS zones, and VPC access connectors.
 Ensure that you provide the necessary network parameters when using an existing network.
 
 * Automatically create network resources:
 <br>Alternatively, WEKA can create the required network resources for you.
-This includes setting up VPCs, subnets, security groups, private DNS zones, and VPC access connectors.
+This includes setting up a VPC, subnets, security groups, private DNS zones, and VPC access connectors.
 
 <br>Refer to the [examples](examples) for guidance.
 
 <br>**Example of using an existing network**:
 ```hcl
-vpcs_name           = ["vpc-0","vpc-1","vpc-2","vpc-3"]
+vpc_name            = "vpc-0"
 subnets_name        = ["subnet-0","subnet-1","subnet-2","subnet-3"]
 private_dns_name    = "existing.private.net."
 private_zone_name   = "existing-private-zone"
@@ -33,7 +33,7 @@ module "weka_deployment" {
   version                  = "3.0.2"
   cluster_name             = "myCluster"
   project_id               = "myProject"
-  vpcs_name                = ["weka-vpc-0", "weka-vpc-1", "weka-vpc-2", "weka-vpc-3"]
+  vpc_name                 = "weka-vpc"
   region                   = "europe-west1"
   subnets_name             = ["weka-subnet-0","weka-subnet-1","weka-subnet-2","weka-subnet-3"]
   zone                     = "europe-west1-b"
@@ -366,7 +366,6 @@ set_shared_vpc_peering = true
 | <a name="input_sa_email"></a> [sa\_email](#input\_sa\_email) | Email address of an existing service account to be used. Leave blank to create a new service account during deployment. | `string` | `""` | no |
 | <a name="input_set_dedicated_fe_container"></a> [set\_dedicated\_fe\_container](#input\_set\_dedicated\_fe\_container) | Creates a cluster with dedicated frontend containers. | `bool` | `false` | no |
 | <a name="input_set_default_fs"></a> [set\_default\_fs](#input\_set\_default\_fs) | Set the default filesystem which will use the full available capacity | `bool` | `true` | no |
-| <a name="input_set_peering"></a> [set\_peering](#input\_set\_peering) | Specifies whether to apply peering connection between subnets. | `bool` | `true` | no |
 | <a name="input_set_shared_vpc_peering"></a> [set\_shared\_vpc\_peering](#input\_set\_shared\_vpc\_peering) | Enables peering for shared VPC. | `bool` | `true` | no |
 | <a name="input_sg_custom_ingress_rules"></a> [sg\_custom\_ingress\_rules](#input\_sg\_custom\_ingress\_rules) | Custom inbound rules to be added to the security group. | <pre>list(object({<br>    to_port     = number<br>    protocol    = string<br>    cidr_blocks = list(string)<br>  }))</pre> | `[]` | no |
 | <a name="input_shared_vpc_project_id"></a> [shared\_vpc\_project\_id](#input\_shared\_vpc\_project\_id) | The project ID for the shared VPC. | `string` | `""` | no |
@@ -397,7 +396,7 @@ set_shared_vpc_peering = true
 | <a name="input_vpc_connector_egress_settings"></a> [vpc\_connector\_egress\_settings](#input\_vpc\_connector\_egress\_settings) | Egress settings for the VPC connector. Possible values: ALL\_TRAFFIC, PRIVATE\_RANGES\_ONLY. | `string` | `"PRIVATE_RANGES_ONLY"` | no |
 | <a name="input_vpc_connector_id"></a> [vpc\_connector\_id](#input\_vpc\_connector\_id) | ID of an existing VPC connector for serverless VPC access in the format: projects/<project-id>/locations/<region>/connectors/<connector-name>. Leave blank to create a new VPC connector during deployment. | `string` | `""` | no |
 | <a name="input_vpc_connector_range"></a> [vpc\_connector\_range](#input\_vpc\_connector\_range) | VPC connector CIDR block for serverless VPC access. | `string` | `"10.8.0.0/28"` | no |
-| <a name="input_vpcs_name"></a> [vpcs\_name](#input\_vpcs\_name) | Names of VPC networks to associate with the resource. Depending on your configuration, you can specify 0, 4, or 7 VPC networks. | `list(string)` | `[]` | no |
+| <a name="input_vpc_name"></a> [vpc\_name](#input\_vpc\_name) | Name of the VPC network to associate with the resource. If left empty, a new VPC network will be created. | `string` | `""` | no |
 | <a name="input_vpcs_range_to_peer_to_deployment_vpc"></a> [vpcs\_range\_to\_peer\_to\_deployment\_vpc](#input\_vpcs\_range\_to\_peer\_to\_deployment\_vpc) | The list of VPC ranges to peer in CIDR format. | `list(string)` | `[]` | no |
 | <a name="input_vpcs_to_peer_to_deployment_vpc"></a> [vpcs\_to\_peer\_to\_deployment\_vpc](#input\_vpcs\_to\_peer\_to\_deployment\_vpc) | The list of VPC names to peer. | `list(string)` | `[]` | no |
 | <a name="input_weka_cgroups_mode"></a> [weka\_cgroups\_mode](#input\_weka\_cgroups\_mode) | Weka cgroups mode, valid values are 'auto' and 'force\_v2' | `string` | `"auto"` | no |
@@ -434,6 +433,6 @@ set_shared_vpc_peering = true
 | <a name="output_smb_protocol_gateways_ips"></a> [smb\_protocol\_gateways\_ips](#output\_smb\_protocol\_gateways\_ips) | Ips of SMB protocol gateways |
 | <a name="output_terminate_cluster_uri"></a> [terminate\_cluster\_uri](#output\_terminate\_cluster\_uri) | URL of terminate function |
 | <a name="output_vm_username"></a> [vm\_username](#output\_vm\_username) | Provided as part of output for automated use of terraform, ssh user to weka cluster vm |
-| <a name="output_vpc_self_links"></a> [vpc\_self\_links](#output\_vpc\_self\_links) | List of VPC self-links |
+| <a name="output_vpc_self_link"></a> [vpc\_self\_link](#output\_vpc\_self\_link) | VPC self-link |
 | <a name="output_weka_cluster_admin_password_secret_id"></a> [weka\_cluster\_admin\_password\_secret\_id](#output\_weka\_cluster\_admin\_password\_secret\_id) | Secret id of weka cluster admin password |
 <!-- END_TF_DOCS -->

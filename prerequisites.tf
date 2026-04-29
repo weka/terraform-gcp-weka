@@ -33,8 +33,7 @@ module "network" {
   googleapis_dns_zone_name           = var.googleapis_dns_zone_name
   psc_subnet_cidr                    = var.psc_subnet_cidr
   network_project_id                 = var.network_project_id
-  set_peering                        = var.set_peering
-  vpcs                               = var.vpcs_name
+  vpc_name                           = var.vpc_name
   create_nat_gateway                 = var.create_nat_gateway
   labels_map                         = var.labels_map
   depends_on                         = [module.service_account]
@@ -45,7 +44,7 @@ locals {
   subnets_name        = length(var.subnets_name) == 0 ? module.network[0].subnetwork_name : var.subnets_name
   private_zone_name   = var.private_zone_name == "" ? module.network[0].private_zone_name : var.private_zone_name
   private_dns_name    = var.private_dns_name == "" ? module.network[0].private_dns_name : var.private_dns_name
-  vpcs_name           = length(var.vpcs_name) == 0 ? module.network[0].vpcs_names : var.vpcs_name
+  vpc_name            = var.vpc_name == "" ? module.network[0].vpc_name : var.vpc_name
   network_project_id  = var.network_project_id != "" ? var.network_project_id : var.project_id
   vpc_connector_id    = var.vpc_connector_id == "" ? module.network[0].vpc_connector_id : var.vpc_connector_id
   dns_zone_project_id = var.dns_zone_project_id != "" ? var.dns_zone_project_id : local.network_project_id
@@ -60,7 +59,7 @@ module "worker_pool" {
   worker_machine_type          = var.worker_machine_type
   worker_disk_size             = var.worker_disk_size
   region                       = var.region
-  vpc_name                     = local.vpcs_name[0]
+  vpc_name                     = local.vpc_name
   cluster_name                 = var.cluster_name
   worker_address               = var.worker_pool_address_cidr
   worker_pool_id               = var.worker_pool_id
@@ -72,9 +71,8 @@ module "worker_pool" {
 }
 
 data "google_compute_network" "this" {
-  count      = length(local.vpcs_name)
   project    = local.network_project_id
-  name       = local.vpcs_name[count.index]
+  name       = local.vpc_name
   depends_on = [module.network]
 }
 
@@ -89,7 +87,7 @@ data "google_compute_subnetwork" "this" {
 module "peering" {
   count                                = length(var.vpcs_to_peer_to_deployment_vpc) > 0 ? 1 : 0
   source                               = "./modules/vpc_peering"
-  vpcs_name                            = local.vpcs_name
+  vpc_name                             = local.vpc_name
   vpcs_to_peer_to_deployment_vpc       = var.vpcs_to_peer_to_deployment_vpc
   vpcs_range_to_peer_to_deployment_vpc = var.vpcs_range_to_peer_to_deployment_vpc
   network_project_id                   = local.network_project_id
@@ -104,7 +102,7 @@ module "shared_vpc_peering" {
   shared_vpc_project_id          = var.shared_vpc_project_id
   host_project                   = var.host_project
   shared_vpcs                    = var.shared_vpcs
-  vpcs_name                      = local.vpcs_name
+  vpc_name                       = local.vpc_name
   set_shared_vpc_peering         = var.set_shared_vpc_peering
   host_shared_range              = var.host_shared_range
   enable_shared_vpc_host_project = var.enable_shared_vpc_host_project

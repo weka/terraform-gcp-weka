@@ -121,7 +121,7 @@ output "client_ips" {
   description = "If 'assign_public_ip' is set to true, it will output clients public ips, otherwise private ips."
 }
 
-output "vpc_self_links" {
-  value       = length(var.subnets_name) == 0 ? module.network[0].vpc_self_links : null
-  description = "List of VPC self-links"
+output "vpc_self_link" {
+  value       = length(var.subnets_name) == 0 ? module.network[0].vpc_self_link : null
+  description = "VPC self-link"
 }

@@ -1,13 +1,13 @@
-# Public VPC with exiting VPCs and subnets and worker pool
+# Public VPC with existing VPC and subnets and worker pool
 This example creates service account for weka deployment,
-<br>It will use existing vpcs and subnets, but will create all the necessary peering and worker-pool etc.
+<br>It will use an existing VPC and subnets, but will create all the necessary peering and worker-pool etc.
 <br>and weka cluster with internet access.
 <br>The cloud functions will be built by exiting worker pool that is passed given to weka deployment module.
 
 
 In order to create worker pool, you must supply the following variable:
 ```hcl
-vpcs_name           = ["vpc-0","vpc-1","vpc-2","vpc-3"]
+vpc_name            = "vpc-0"
 subnets_name        = ["subnet-0","subnet-1","subnet-2","subnet-3"]
 private_dns_name    = "existing.private.net."
 private_zone_name   = "existing-private-zone"
