@@ -19,7 +19,7 @@ resource "google_compute_region_backend_service" "backend_service" {
   protocol              = "TCP"
   load_balancing_scheme = "INTERNAL"
   health_checks         = [google_compute_region_health_check.health_check.id]
-  network               = data.google_compute_network.this[0].self_link
+  network               = data.google_compute_network.this.self_link
   backend {
     group          = google_compute_instance_group.this.self_link
     balancing_mode = "CONNECTION"
@@ -35,7 +35,7 @@ resource "google_compute_forwarding_rule" "google_compute_forwarding_rule" {
   load_balancing_scheme = "INTERNAL"
   all_ports             = true
   allow_global_access   = var.lb_allow_global_access
-  network               = data.google_compute_network.this[0].self_link
+  network               = data.google_compute_network.this.self_link
   subnetwork            = data.google_compute_subnetwork.this[0].self_link
   labels = merge(var.labels_map, {
     goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"
@@ -80,7 +80,7 @@ resource "google_compute_region_backend_service" "ui_backend_service" {
   protocol              = "TCP"
   load_balancing_scheme = "INTERNAL"
   health_checks         = [google_compute_region_health_check.ui_check.id]
-  network               = data.google_compute_network.this[0].self_link
+  network               = data.google_compute_network.this.self_link
   backend {
     group          = google_compute_instance_group.this.self_link
     balancing_mode = "CONNECTION"
@@ -96,7 +96,7 @@ resource "google_compute_forwarding_rule" "ui_forwarding_rule" {
   load_balancing_scheme = "INTERNAL"
   all_ports             = true
   allow_global_access   = var.lb_allow_global_access
-  network               = data.google_compute_network.this[0].self_link
+  network               = data.google_compute_network.this.self_link
   subnetwork            = data.google_compute_subnetwork.this[0].self_link
   labels = merge(var.labels_map, {
     goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"

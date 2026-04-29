@@ -129,7 +129,7 @@ resource "google_compute_instance_template" "this" {
 resource "google_compute_instance_group" "this" {
   name       = "${var.prefix}-${var.cluster_name}-instance-group"
   zone       = var.zone
-  network    = data.google_compute_network.this[0].self_link
+  network    = data.google_compute_network.this.self_link
   depends_on = [google_compute_region_health_check.health_check, module.network, module.shared_vpc_peering]
   lifecycle {
     ignore_changes = [network]
@@ -140,7 +140,7 @@ resource "google_compute_instance_group" "nfs" {
   count      = var.nfs_setup_protocol ? 1 : 0
   name       = "${var.prefix}-${var.cluster_name}-nfs-group"
   zone       = var.zone
-  network    = data.google_compute_network.this[0].self_link
+  network    = data.google_compute_network.this.self_link
   depends_on = [google_compute_region_health_check.health_check, module.network, module.shared_vpc_peering]
   lifecycle {
     ignore_changes = [network]
