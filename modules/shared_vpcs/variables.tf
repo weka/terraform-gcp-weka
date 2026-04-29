@@ -19,9 +19,9 @@ variable "shared_vpcs" {
   description = "list of shared vpc name"
 }
 
-variable "vpcs_name" {
-  type        = list(string)
-  description = "list of vpcs name"
+variable "vpc_name" {
+  type        = string
+  description = "vpc name"
 }
 
 variable "host_shared_range" {

@@ -1,11 +1,11 @@
 variable "vpcs_to_peer_to_deployment_vpc" {
   type        = list(string)
-  description = "list of vpcs name to peering"
+  description = "The list of VPC names to peer to the deployment VPC."
 }
 
-variable "vpcs_name" {
-  type        = list(string)
-  description = "list of backend vpcs name"
+variable "vpc_name" {
+  type        = string
+  description = "backend vpc name"
 }
 
 variable "network_project_id" {
@@ -16,7 +16,7 @@ variable "network_project_id" {
 
 variable "vpcs_range_to_peer_to_deployment_vpc" {
   type        = list(string)
-  description = "list of vpcs range to peer"
+  description = "The list of VPC ranges to peer to the deployment VPC, in CIDR format."
   default     = []
 }
 

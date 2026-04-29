@@ -1,26 +1,26 @@
-output "vpcs_names" {
-  value       = length(var.vpcs) == 0 ? [for v in google_compute_network.vpc_network : v.name] : var.vpcs
-  description = "List of vpcs names"
+output "vpc_name" {
+  value       = local.vpc_name
+  description = "Vpc name"
 }
 
-output "vpc_self_links" {
-  value       = [for v in google_compute_network.vpc_network : v.self_link]
-  description = "List of VPC self-links"
+output "vpc_self_link" {
+  value       = one(google_compute_network.vpc_network.*.self_link)
+  description = "VPC self-link"
 }
 
 output "gateway_address" {
   value       = length(var.subnets) == 0 ? length(var.subnets_range) > 0 ? [for g in google_compute_subnetwork.subnetwork : g.gateway_address] : [] : [for g in data.google_compute_subnetwork.subnets_list_ids : g.gateway_address]
-  description = "List of vpcs gateway addresses"
+  description = "List of subnets gateway addresses"
 }
 
 output "subnetwork_name" {
   value       = length(var.subnets) == 0 ? length(var.subnets_range) > 0 ? [for s in google_compute_subnetwork.subnetwork : s.name] : [] : [for s in data.google_compute_subnetwork.subnets_list_ids : s.name]
-  description = "List of vpcs subnets names"
+  description = "List of subnets names"
 }
 
 output "subnets_range" {
   value       = length(var.subnets) == 0 ? length(var.subnets_range) > 0 ? var.subnets_range : [] : [for i in data.google_compute_subnetwork.subnets_list_ids : i.ip_cidr_range]
-  description = "List of vpcs subnets ranges"
+  description = "List of subnets ranges"
 }
 
 output "vpc_connector_id" {

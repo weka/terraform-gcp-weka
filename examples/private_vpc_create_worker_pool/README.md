@@ -1,6 +1,6 @@
 # Private VPC that creates worker pool and uses it
 This example creates service account for weka deployment,
-<br>all the network resources needed for weka deployment, including vpcs, peering, etc.
+<br>all the network resources needed for weka deployment, including VPC, subnets, peering, etc.
 <br>and weka cluster with no internet access.
 <br>In addition it creates worker pool for building all the cloud functions.
 

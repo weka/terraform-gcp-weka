@@ -1,10 +1,10 @@
-# Public VPC with exiting VPCs and subnets
-This example using exiting vpcs, subnets, service account, private DNS zone, vpc connector
-<br>It will use existing vpcs and subnets, but will create all the necessary peering etc.
+# Public VPC with existing VPC and subnets
+This example uses an existing VPC, subnets, service account, private DNS zone, vpc connector
+<br>It will use an existing VPC and subnets, but will create all the necessary peering etc.
 <br>It will create weka cluster with internet access.
 #### You **must** provide network params:
 ```hcl
-vpcs_name           = ["vpc-0","vpc-1","vpc-2","vpc-3"]
+vpc_name            = "vpc-0"
 subnets_name        = ["subnet-0","subnet-1","subnet-2","subnet-3"]
 private_dns_name    = "existing.private.net."
 private_zone_name   = "existing-private-zone"
