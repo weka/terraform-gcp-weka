@@ -289,7 +289,6 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 	installUrl := os.Getenv("INSTALL_URL")
 	proxyUrl := os.Getenv("PROXY_URL")
 	nicsNumStr := os.Getenv("NICS_NUM")
-	nvmesNum, _ := strconv.Atoi(os.Getenv("NVMES_NUM"))
 	diskName := os.Getenv("DISK_NAME")
 	installDpdk, _ := strconv.ParseBool(os.Getenv("INSTALL_DPDK"))
 
@@ -324,7 +323,6 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 		StateObject:           stateObject,
 		InstanceName:          vm.Name,
 		NicsNumStr:            nicsNumStr,
-		NvmesNum:              nvmesNum,
 		ComputeMemory:         computeMemory,
 		InstallUrl:            installUrl,
 		ProxyUrl:              proxyUrl,

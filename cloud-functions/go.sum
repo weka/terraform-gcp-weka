@@ -107,8 +107,8 @@ github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=
 github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
-github.com/weka/go-cloud-lib v0.0.0-20260415115736-e133223cb079 h1:ZbWaXajp3ZAeqrl8mFWWh2tjITD04+yq/6CBdqLHKOI=
-github.com/weka/go-cloud-lib v0.0.0-20260415115736-e133223cb079/go.mod h1:jGhUxgxC+ALaN9PCZx+ZqQk+lxkd8JcLorpBXwxFyHU=
+github.com/weka/go-cloud-lib v0.0.0-20260720055256-2878cba391ba h1:Q25Tkvq7AyKWOHdiN/m3bt77VTmXbEHlVrSLP4dOS7o=
+github.com/weka/go-cloud-lib v0.0.0-20260720055256-2878cba391ba/go.mod h1:jGhUxgxC+ALaN9PCZx+ZqQk+lxkd8JcLorpBXwxFyHU=
 go.opencensus.io v0.24.0 h1:y73uSU6J157QMP2kn2r30vwW1A2W2WFwSCGnAVxeaD0=
 go.opencensus.io v0.24.0/go.mod h1:vNK8G9p7aAivkbmorf4v+7Hgx+Zs0yY+0fOtgBfjQKo=
 go.opentelemetry.io/auto/sdk v1.2.1 h1:jXsnJ4Lmnqd11kwkBV2LgLoFMZKizbCi5fNZ/ipaZ64=
