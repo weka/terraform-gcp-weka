@@ -9,7 +9,7 @@ require (
 	github.com/googleapis/gax-go/v2 v2.12.5
 	github.com/lithammer/dedent v1.1.0
 	github.com/rs/zerolog v1.29.1
-	github.com/weka/go-cloud-lib v0.0.0-20260415115736-e133223cb079
+	github.com/weka/go-cloud-lib v0.0.0-20260720055256-2878cba391ba
 	google.golang.org/api v0.186.0
 	google.golang.org/protobuf v1.36.10
 )
