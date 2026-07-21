@@ -31,7 +31,6 @@ type GCPDeploymentParams struct {
 	StateObject           string
 	InstanceName          string
 	NicsNumStr            string
-	NvmesNum              int
 	ComputeMemory         string
 	InstallUrl            string
 	ProxyUrl              string
@@ -90,7 +89,6 @@ func GetBackendsDeployScript(ctx context.Context, p GCPDeploymentParams) (bashSc
 			InstallDpdk:      p.InstallDpdk,
 			Gateways:         p.Gateways,
 			ProxyUrl:         p.ProxyUrl,
-			NvmesNum:         p.NvmesNum,
 			FindDrivesScript: dedent.Dedent(common.FindDrivesScript),
 			CgroupsMode:      p.CgroupsMode,
 		}

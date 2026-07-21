@@ -7,10 +7,12 @@ function report {
 cluster_size="${gateways_number}"
 max_retries=60
 for (( retry=1; retry<=max_retries; retry++ )); do
-    # get all UP gateway container ids
-    all_container_ids=$(weka cluster container | grep frontend0 | grep ${gateways_name} | grep UP | awk '{print $1}')
+    # get all UP frontend container ids running on the protocol gateways
+    all_container_ids=$(weka cluster container -J | jq -r \
+        --arg gw "${gateways_name}" \
+        '.[] | select(.name == "frontend0" and .status == "UP" and (.hostname | startswith($gw))) | .id')
     # if number of all_container_ids < cluster_size, do nothing
-    all_container_ids_number=$(echo "$all_container_ids" | wc -l)
+    all_container_ids_number=$(echo "$all_container_ids" | grep -c . || true)
     if (( all_container_ids_number < cluster_size )); then
         echo "$(date -u): not all containers are ready - do retry $retry of $max_retries"
         sleep 20
