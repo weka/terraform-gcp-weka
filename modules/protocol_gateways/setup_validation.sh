@@ -8,9 +8,12 @@ cluster_size="${gateways_number}"
 max_retries=60
 for (( retry=1; retry<=max_retries; retry++ )); do
     # get all UP frontend container ids running on the protocol gateways
+    # tolerate CLI schema differences across weka versions:
+    #   container name field: .container_name (older) or .name (newer)
+    #   container id field:    .host_id "HostId<N>" (older) or .id (newer)
     all_container_ids=$(weka cluster container -J | jq -r \
         --arg gw "${gateways_name}" \
-        '.[] | select(.name == "frontend0" and .status == "UP" and (.hostname | startswith($gw))) | .id')
+        '.[] | select(((.container_name // .name) == "frontend0") and .status == "UP" and ((.hostname // "") | startswith($gw))) | (.id // (.host_id | ltrimstr("HostId<") | rtrimstr(">")))')
     # if number of all_container_ids < cluster_size, do nothing
     all_container_ids_number=$(echo "$all_container_ids" | grep -c . || true)
     if (( all_container_ids_number < cluster_size )); then
