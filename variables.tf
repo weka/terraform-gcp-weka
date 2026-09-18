@@ -725,6 +725,41 @@ variable "s3_setup_protocol" {
   default     = false
 }
 
+############################################### data services variables ###################################################
+variable "data_services_number" {
+  type        = number
+  description = "The number of data services instances to deploy."
+  default     = 0
+}
+
+variable "data_services_instance_type" {
+  type        = string
+  description = "The virtual machine type (SKU) for deploying data services instances."
+  default     = "n2d-standard-4"
+}
+
+variable "data_services_weka_volume_size" {
+  type        = number
+  default     = 48
+  description = "The data services' default disk size."
+}
+
+variable "data_services_root_volume_size" {
+  type        = number
+  default     = null
+  description = "The data services' root volume size in GB."
+}
+
+variable "data_services_weka_cgroups_mode" {
+  type        = string
+  description = "Weka cgroups mode, valid values are 'auto' and 'force_v2'"
+  default     = "auto"
+  validation {
+    condition     = var.data_services_weka_cgroups_mode == "auto" || var.data_services_weka_cgroups_mode == "force_v2"
+    error_message = "Allowed weka_cgroups_mode values: [\"auto\", \"force_v2\"]."
+  }
+}
+
 variable "weka_home_url" {
   type        = string
   description = "The URL for WEKA Home."

@@ -23,37 +23,39 @@ func getWekaIoToken(ctx context.Context, tokenId string) (token string, err erro
 }
 
 type GCPDeploymentParams struct {
-	Project               string
-	Zone                  string
-	InstanceGroup         string
-	TokenId               string // we allow empty token id for private network installation
-	Bucket                string
-	StateObject           string
-	InstanceName          string
-	NicsNumStr            string
-	ComputeMemory         string
-	InstallUrl            string
-	ProxyUrl              string
-	FunctionRootUrl       string
-	DiskName              string
-	ComputeContainerNum   int
-	FrontendContainerNum  int
-	DriveContainerNum     int
-	InstallDpdk           bool
-	Gateways              []string
-	BackendLbIp           string
-	NFSStateObject        string
-	NFSInstanceGroup      string
-	NFSInterfaceGroupName string
-	NFSProtocolGWsNum     int
-	NFSGatewayFeCoresNum  int
-	NFSSecondaryIpsNum    int
-	NFSDiskSize           int
-	SMBGatewayFeCoresNum  int
-	SMBDiskSize           int
-	S3GatewayFeCoresNum   int
-	S3DiskSize            int
-	CgroupsMode           string
+	Project                 string
+	Zone                    string
+	InstanceGroup           string
+	TokenId                 string // we allow empty token id for private network installation
+	Bucket                  string
+	StateObject             string
+	InstanceName            string
+	NicsNumStr              string
+	ComputeMemory           string
+	InstallUrl              string
+	ProxyUrl                string
+	FunctionRootUrl         string
+	DiskName                string
+	ComputeContainerNum     int
+	FrontendContainerNum    int
+	DriveContainerNum       int
+	InstallDpdk             bool
+	Gateways                []string
+	BackendLbIp             string
+	NFSStateObject          string
+	NFSInstanceGroup        string
+	NFSInterfaceGroupName   string
+	NFSProtocolGWsNum       int
+	NFSGatewayFeCoresNum    int
+	NFSSecondaryIpsNum      int
+	NFSDiskSize             int
+	SMBGatewayFeCoresNum    int
+	SMBDiskSize             int
+	S3GatewayFeCoresNum     int
+	S3DiskSize              int
+	CgroupsMode             string
+	DataServicesDiskSize    int
+	DataServicesCgroupsMode string
 }
 
 func GetBackendsDeployScript(ctx context.Context, p GCPDeploymentParams) (bashScript string, err error) {
@@ -236,6 +238,40 @@ func GetProtocolDeployScript(ctx context.Context, p GCPDeploymentParams, protoco
 		FuncDef:       funcDef,
 		Params:        deploymentParams,
 		DeviceNameCmd: GetDeviceNameFromDiskSize(diskSize),
+	}
+	bashScript = deployScriptGenerator.GetDeployScript()
+	return
+}
+
+func GetDataServicesDeployScript(ctx context.Context, p GCPDeploymentParams) (bashScript string, err error) {
+	log.Info().Msgf("Getting data services deploy script")
+
+	var token string
+	// we allow empty token id for private network installation
+	if p.TokenId != "" {
+		token, err = getWekaIoToken(ctx, p.TokenId)
+		if err != nil {
+			return
+		}
+	}
+
+	deploymentParams := deploy.DeploymentParams{
+		VMName:         p.InstanceName,
+		WekaInstallUrl: p.InstallUrl,
+		WekaToken:      token,
+		ProxyUrl:       p.ProxyUrl,
+		Gateways:       p.Gateways,
+		LoadBalancerIP: p.BackendLbIp,
+		Protocol:       protocol.DATA,
+		CgroupsMode:    p.DataServicesCgroupsMode,
+	}
+
+	funcDef := gcp_functions_def.NewFuncDef(p.FunctionRootUrl)
+
+	deployScriptGenerator := deploy.DeployScriptGenerator{
+		FuncDef:       funcDef,
+		Params:        deploymentParams,
+		DeviceNameCmd: GetDeviceNameFromDiskSize(p.DataServicesDiskSize),
 	}
 	bashScript = deployScriptGenerator.GetDeployScript()
 	return
