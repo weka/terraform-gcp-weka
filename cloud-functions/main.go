@@ -305,6 +305,9 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 	s3DiskSize, _ := strconv.Atoi(os.Getenv("S3_DISK_SIZE"))
 	tracesPerFrontend, _ := strconv.Atoi(os.Getenv("TRACES_PER_FRONTEND"))
 	cgroupsMode := os.Getenv("CGROUPS_MODE")
+	// data services params
+	dataServicesDiskSize, _ := strconv.Atoi(os.Getenv("DATA_SERVICES_DISK_SIZE"))
+	dataServicesCgroupsMode := os.Getenv("DATA_SERVICES_CGROUPS_MODE")
 
 	var vm protocol.Vm
 	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
@@ -315,37 +318,39 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	params := deploy.GCPDeploymentParams{
-		Project:               project,
-		Zone:                  zone,
-		InstanceGroup:         instanceGroup,
-		TokenId:               tokenId,
-		Bucket:                bucket,
-		StateObject:           stateObject,
-		InstanceName:          vm.Name,
-		NicsNumStr:            nicsNumStr,
-		ComputeMemory:         computeMemory,
-		InstallUrl:            installUrl,
-		ProxyUrl:              proxyUrl,
-		FunctionRootUrl:       functionRootUrl,
-		DiskName:              diskName,
-		ComputeContainerNum:   computeContainerNum,
-		FrontendContainerNum:  frontendContainerNum,
-		DriveContainerNum:     driveContainerNum,
-		InstallDpdk:           installDpdk,
-		Gateways:              gateways,
-		BackendLbIp:           backendLbIp,
-		NFSInstanceGroup:      nfsInstanceGroup,
-		NFSStateObject:        nfsStateObject,
-		NFSInterfaceGroupName: nfsInterfaceGroupName,
-		NFSProtocolGWsNum:     nfsProtocolgwsNum,
-		NFSGatewayFeCoresNum:  nfsProtocolGatewayFeCoresNum,
-		NFSSecondaryIpsNum:    nfsSecondaryIpsNum,
-		NFSDiskSize:           nfsDiskSize + tracesPerFrontend*nfsProtocolGatewayFeCoresNum,
-		SMBGatewayFeCoresNum:  smbProtocolGatewayFeCoresNum,
-		SMBDiskSize:           smbDiskSize + tracesPerFrontend*smbProtocolGatewayFeCoresNum,
-		S3GatewayFeCoresNum:   s3ProtocolGatewayFeCoresNum,
-		S3DiskSize:            s3DiskSize + tracesPerFrontend*s3ProtocolGatewayFeCoresNum,
-		CgroupsMode:           cgroupsMode,
+		Project:                 project,
+		Zone:                    zone,
+		InstanceGroup:           instanceGroup,
+		TokenId:                 tokenId,
+		Bucket:                  bucket,
+		StateObject:             stateObject,
+		InstanceName:            vm.Name,
+		NicsNumStr:              nicsNumStr,
+		ComputeMemory:           computeMemory,
+		InstallUrl:              installUrl,
+		ProxyUrl:                proxyUrl,
+		FunctionRootUrl:         functionRootUrl,
+		DiskName:                diskName,
+		ComputeContainerNum:     computeContainerNum,
+		FrontendContainerNum:    frontendContainerNum,
+		DriveContainerNum:       driveContainerNum,
+		InstallDpdk:             installDpdk,
+		Gateways:                gateways,
+		BackendLbIp:             backendLbIp,
+		NFSInstanceGroup:        nfsInstanceGroup,
+		NFSStateObject:          nfsStateObject,
+		NFSInterfaceGroupName:   nfsInterfaceGroupName,
+		NFSProtocolGWsNum:       nfsProtocolgwsNum,
+		NFSGatewayFeCoresNum:    nfsProtocolGatewayFeCoresNum,
+		NFSSecondaryIpsNum:      nfsSecondaryIpsNum,
+		NFSDiskSize:             nfsDiskSize + tracesPerFrontend*nfsProtocolGatewayFeCoresNum,
+		SMBGatewayFeCoresNum:    smbProtocolGatewayFeCoresNum,
+		SMBDiskSize:             smbDiskSize + tracesPerFrontend*smbProtocolGatewayFeCoresNum,
+		S3GatewayFeCoresNum:     s3ProtocolGatewayFeCoresNum,
+		S3DiskSize:              s3DiskSize + tracesPerFrontend*s3ProtocolGatewayFeCoresNum,
+		CgroupsMode:             cgroupsMode,
+		DataServicesDiskSize:    dataServicesDiskSize,
+		DataServicesCgroupsMode: dataServicesCgroupsMode,
 	}
 
 	var bashScript string
@@ -354,6 +359,8 @@ func Deploy(w http.ResponseWriter, r *http.Request) {
 		bashScript, err = deploy.GetNfsDeployScript(ctx, params)
 	} else if vm.Protocol == protocol.SMB || vm.Protocol == protocol.SMBW || vm.Protocol == protocol.S3 {
 		bashScript, err = deploy.GetProtocolDeployScript(ctx, params, vm.Protocol)
+	} else if vm.Protocol == protocol.DATA {
+		bashScript, err = deploy.GetDataServicesDeployScript(ctx, params)
 	} else if vm.Protocol != "" {
 		err = fmt.Errorf("unsupported protocol: %s", vm.Protocol)
 	} else {

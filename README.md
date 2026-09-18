@@ -167,6 +167,22 @@ smb_domain_name                     = ""
 To join an SMB cluster in the Active Directory, run this command manually:
 `weka smb domain join <smb_domain_username> <smb_domain_password> [--server smb_server_name]`.
 
+## Data services
+Data services instances are optional instances that can be deployed alongside the WEKA cluster for handling data-related operations. They join the cluster as `dataserv` containers once the cluster is clusterized. Specify the number of instances (default is 0).
+
+Example:
+```hcl
+data_services_number = 2
+```
+
+<br>Additional optional variables include:
+```hcl
+data_services_instance_type     = "n2-standard-4"
+data_services_weka_volume_size  = 48
+data_services_root_volume_size  = null
+data_services_weka_cgroups_mode = "auto"
+```
+
 ## Shared project configuration
 Shared VPC (Virtual Private Cloud) lets you connect resources from multiple projects to a common VPC network. It’s a way to share network resources securely and efficiently. The host project defines the network and service projects attached to it, allowing eligible resources to use the shared network.
 <br>To enable the use of Shared VPC, provide the following variables:
@@ -214,6 +230,7 @@ set_shared_vpc_peering = true
 | Name | Source | Version |
 |------|--------|---------|
 | <a name="module_clients"></a> [clients](#module\_clients) | ./modules/clients | n/a |
+| <a name="module_data_services"></a> [data\_services](#module\_data\_services) | ./modules/data_services | n/a |
 | <a name="module_network"></a> [network](#module\_network) | ./modules/network | n/a |
 | <a name="module_nfs_protocol_gateways"></a> [nfs\_protocol\_gateways](#module\_nfs\_protocol\_gateways) | ./modules/protocol_gateways | n/a |
 | <a name="module_peering"></a> [peering](#module\_peering) | ./modules/vpc_peering | n/a |
@@ -321,6 +338,11 @@ set_shared_vpc_peering = true
 | <a name="input_create_cloudscheduler_sa"></a> [create\_cloudscheduler\_sa](#input\_create\_cloudscheduler\_sa) | Enables creation of a Cloud Scheduler service account. Set this to false to reuse an existing service account for Cloud Scheduler jobs. | `bool` | `true` | no |
 | <a name="input_create_nat_gateway"></a> [create\_nat\_gateway](#input\_create\_nat\_gateway) | Specifies whether to create a NAT gateway when no public IP is assigned to the backend, allowing internet access. | `bool` | `false` | no |
 | <a name="input_create_worker_pool"></a> [create\_worker\_pool](#input\_create\_worker\_pool) | Determines whether to create a worker pool. Set to true if a worker pool is needed. | `bool` | `false` | no |
+| <a name="input_data_services_instance_type"></a> [data\_services\_instance\_type](#input\_data\_services\_instance\_type) | The virtual machine type (SKU) for deploying data services instances. | `string` | `"c2-standard-4"` | no |
+| <a name="input_data_services_number"></a> [data\_services\_number](#input\_data\_services\_number) | The number of data services instances to deploy. | `number` | `0` | no |
+| <a name="input_data_services_root_volume_size"></a> [data\_services\_root\_volume\_size](#input\_data\_services\_root\_volume\_size) | The data services' root volume size in GB. | `number` | `null` | no |
+| <a name="input_data_services_weka_cgroups_mode"></a> [data\_services\_weka\_cgroups\_mode](#input\_data\_services\_weka\_cgroups\_mode) | Weka cgroups mode, valid values are 'auto' and 'force\_v2' | `string` | `"auto"` | no |
+| <a name="input_data_services_weka_volume_size"></a> [data\_services\_weka\_volume\_size](#input\_data\_services\_weka\_volume\_size) | The data services' default disk size. | `number` | `48` | no |
 | <a name="input_debug_down_backends_removal_timeout"></a> [debug\_down\_backends\_removal\_timeout](#input\_debug\_down\_backends\_removal\_timeout) | Timeout duration for removing non-functional backends. Specify the timeout period in time units: ns, us (or µs), ms, s, m, h. This parameter is critical for managing the removal of non-operational backend resources. Consult with the WEKA Success Team before making any changes. | `string` | `"3h"` | no |
 | <a name="input_default_disk_name"></a> [default\_disk\_name](#input\_default\_disk\_name) | The default disk name. | `string` | `"wekaio-volume"` | no |
 | <a name="input_dns_zone_project_id"></a> [dns\_zone\_project\_id](#input\_dns\_zone\_project\_id) | Project ID for the DNS zone. If omitted, it uses network project ID or falls back to project ID. | `string` | `""` | no |
@@ -422,6 +444,7 @@ set_shared_vpc_peering = true
 | <a name="output_client_ips"></a> [client\_ips](#output\_client\_ips) | If 'assign\_public\_ip' is set to true, it will output clients public ips, otherwise private ips. |
 | <a name="output_cluster_helper_commands"></a> [cluster\_helper\_commands](#output\_cluster\_helper\_commands) | Useful commands and script to interact with weka cluster |
 | <a name="output_cluster_name"></a> [cluster\_name](#output\_cluster\_name) | The cluster name |
+| <a name="output_data_services_ips"></a> [data\_services\_ips](#output\_data\_services\_ips) | Ips of the data services instances |
 | <a name="output_functions_url"></a> [functions\_url](#output\_functions\_url) | Functions url and body for api request |
 | <a name="output_get_cluster_status_uri"></a> [get\_cluster\_status\_uri](#output\_get\_cluster\_status\_uri) | URL of status function |
 | <a name="output_lb_url"></a> [lb\_url](#output\_lb\_url) | URL of LB |

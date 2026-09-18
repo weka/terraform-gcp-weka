@@ -89,6 +89,9 @@ locals {
     SET_DEFAULT_FS                    = var.set_default_fs
     POST_CLUSTER_SETUP_SCRIPT         = var.post_cluster_setup_script
     CGROUPS_MODE                      = var.weka_cgroups_mode
+    # data services vars
+    DATA_SERVICES_DISK_SIZE    = var.data_services_weka_volume_size
+    DATA_SERVICES_CGROUPS_MODE = var.data_services_weka_cgroups_mode
   }
 
   status_function_environment = {
