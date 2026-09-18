@@ -88,6 +88,13 @@ EOT
   description = "Ips of S3 protocol gateways"
 }
 
+output "data_services_ips" {
+  value       = var.data_services_number == 0 ? null : <<EOT
+gcloud compute instances list --filter="name~'${module.data_services[0].data_services_name}'" --format "get(networkInterfaces[0].${local.ips_type})" --project ${var.project_id}
+EOT
+  description = "Ips of the data services instances"
+}
+
 output "cluster_helper_commands" {
   value = {
     get_status            = <<EOT
