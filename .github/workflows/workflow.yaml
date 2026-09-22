@@ -13,6 +13,9 @@ on:
 
 concurrency: ci
 
+permissions:
+  contents: read
+
 jobs:
   terraform:
     name: Terraform
