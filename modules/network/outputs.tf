@@ -4,7 +4,7 @@ output "vpc_name" {
 }
 
 output "vpc_self_link" {
-  value       = one(google_compute_network.vpc_network.*.self_link)
+  value       = local.network_self_link
   description = "VPC self-link"
 }
 

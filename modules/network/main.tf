@@ -77,7 +77,7 @@ resource "google_compute_subnetwork" "psc_subnetwork" {
   purpose                  = "PRIVATE_SERVICE_CONNECT"
   ip_cidr_range            = var.psc_subnet_cidr
   region                   = var.region
-  network                  = google_compute_network.vpc_network[0].name
+  network                  = local.vpc_name
   private_ip_google_access = true
   depends_on               = [google_compute_network.vpc_network]
 }
@@ -87,7 +87,7 @@ resource "google_compute_router" "router" {
   count      = var.create_nat_gateway ? 1 : 0
   project    = local.network_project_id
   name       = "${var.prefix}-nat-router"
-  network    = google_compute_network.vpc_network[0].name
+  network    = local.vpc_name
   region     = var.region
   depends_on = [google_compute_network.vpc_network]
 }
@@ -386,7 +386,7 @@ resource "google_compute_route" "restricted_googleapis_route" {
   project          = local.network_project_id
   name             = "${var.prefix}-restricted-googleapis-route"
   dest_range       = "199.36.153.4/30"
-  network          = google_compute_network.vpc_network[0].name
+  network          = local.vpc_name
   next_hop_gateway = "projects/${local.network_project_id}/global/gateways/default-internet-gateway"
   priority         = 1000
 }
@@ -396,7 +396,7 @@ resource "google_compute_route" "private_googleapis_route" {
   project          = local.network_project_id
   name             = "${var.prefix}-private-googleapis-route"
   dest_range       = "199.36.153.8/30"
-  network          = google_compute_network.vpc_network[0].name
+  network          = local.vpc_name
   next_hop_gateway = "projects/${local.network_project_id}/global/gateways/default-internet-gateway"
   priority         = 1000
 }
@@ -407,7 +407,7 @@ resource "google_compute_global_address" "vpcsc_ip" {
   name         = "${var.prefix}-vpcsc-ip"
   address_type = "INTERNAL"
   purpose      = "PRIVATE_SERVICE_CONNECT"
-  network      = google_compute_network.vpc_network[0].self_link
+  network      = local.network_self_link
   address      = var.endpoint_vpcsc_internal_ip_address
   depends_on   = [google_compute_network.vpc_network]
 }
@@ -418,7 +418,7 @@ resource "google_compute_global_address" "apis_ip" {
   name         = "${var.prefix}-apis-ip"
   address_type = "INTERNAL"
   purpose      = "PRIVATE_SERVICE_CONNECT"
-  network      = google_compute_network.vpc_network[0].self_link
+  network      = local.network_self_link
   address      = var.endpoint_apis_internal_ip_address
   depends_on   = [google_compute_network.vpc_network]
 }
@@ -428,7 +428,7 @@ resource "google_compute_global_forwarding_rule" "apis_forwarding_rule" {
   project               = var.project_id
   name                  = "${var.prefix}apis"
   target                = "all-apis"
-  network               = google_compute_network.vpc_network[0].self_link
+  network               = local.network_self_link
   ip_address            = google_compute_global_address.apis_ip[0].id
   load_balancing_scheme = ""
   labels = merge(var.labels_map, {
@@ -442,7 +442,7 @@ resource "google_compute_global_forwarding_rule" "vpcsc_forwarding_rule" {
   project               = var.project_id
   name                  = "${var.prefix}vpcsc"
   target                = "vpc-sc"
-  network               = google_compute_network.vpc_network[0].self_link
+  network               = local.network_self_link
   ip_address            = google_compute_global_address.vpcsc_ip[0].id
   load_balancing_scheme = ""
   labels = merge(var.labels_map, {
