@@ -40,6 +40,15 @@ func respondWithErr(w http.ResponseWriter, err error, status int) {
 	w.Write(responseJson)
 }
 
+// respondWithText writes a plain-text response. Use it whenever the body echoes
+// caller-provided input: the explicit content type and nosniff header keep the
+// response from ever being interpreted as HTML by a browser.
+func respondWithText(w http.ResponseWriter, format string, a ...any) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	fmt.Fprintf(w, format, a...)
+}
+
 func failedDecodingReqBody(w http.ResponseWriter, err error) {
 	err = fmt.Errorf("failed decoding request body: %w", err)
 	log.Error().Err(err).Send()
@@ -112,7 +121,7 @@ func CloudInternal(w http.ResponseWriter, r *http.Request) {
 	case "scale_up":
 		ScaleUp(w, r)
 	default:
-		fmt.Fprintf(w, "Unknown action: %s", action)
+		respondWithText(w, "Unknown action: %s", action)
 	}
 }
 
@@ -590,7 +599,8 @@ func Transient(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Debug().Msgf("result: %s", output)
 	fmt.Println("Writing Transient result")
-	fmt.Fprint(w, output)
+	// output echoes request-provided instance ids/errors
+	respondWithText(w, "%s", output)
 }
 
 func Resize(w http.ResponseWriter, r *http.Request) {
