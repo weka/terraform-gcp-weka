@@ -16,10 +16,9 @@ module "weka_deployment" {
   get_weka_io_token              = var.get_weka_io_token
   private_dns_name               = "weka.private.net."
   private_zone_name              = "weka-private-zone"
-  vpc_connector_name             = "weka-connector"
+  vpc_connector_id               = "projects/${var.project_id}/locations/${var.region}/connectors/weka-connector"
   create_worker_pool             = false
   tiering_enable_obs_integration = true
-  worker_pool_name               = "weka-worker-pool"
-  worker_pool_network            = ""
+  worker_pool_id                 = "projects/${var.project_id}/locations/${var.region}/workerPools/weka-worker-pool"
   assign_public_ip               = true
 }

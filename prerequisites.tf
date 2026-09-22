@@ -40,13 +40,15 @@ module "network" {
 }
 
 locals {
-  sa_email            = var.sa_email == "" ? module.service_account[0].service_account_email : var.sa_email
-  subnets_name        = length(var.subnets_name) == 0 ? module.network[0].subnetwork_name : var.subnets_name
-  private_zone_name   = var.private_zone_name == "" ? module.network[0].private_zone_name : var.private_zone_name
-  private_dns_name    = var.private_dns_name == "" ? module.network[0].private_dns_name : var.private_dns_name
-  vpc_name            = var.vpc_name == "" ? module.network[0].vpc_name : var.vpc_name
+  sa_email     = var.sa_email == "" ? module.service_account[0].service_account_email : var.sa_email
+  subnets_name = length(var.subnets_name) == 0 ? module.network[0].subnetwork_name : var.subnets_name
+  # module.network only exists when subnets_name is empty, so fall back through
+  # the splat (null when the module is absent) rather than indexing it directly.
+  private_zone_name   = var.private_zone_name != "" ? var.private_zone_name : one(module.network[*].private_zone_name)
+  private_dns_name    = var.private_dns_name != "" ? var.private_dns_name : one(module.network[*].private_dns_name)
+  vpc_name            = var.vpc_name != "" ? var.vpc_name : one(module.network[*].vpc_name)
   network_project_id  = var.network_project_id != "" ? var.network_project_id : var.project_id
-  vpc_connector_id    = var.vpc_connector_id == "" ? module.network[0].vpc_connector_id : var.vpc_connector_id
+  vpc_connector_id    = var.vpc_connector_id != "" ? var.vpc_connector_id : length(module.network) > 0 ? module.network[0].vpc_connector_id : ""
   dns_zone_project_id = var.dns_zone_project_id != "" ? var.dns_zone_project_id : local.network_project_id
   assign_public_ip    = var.assign_public_ip != "auto" ? var.assign_public_ip : length(var.subnets_name) == 0
 }
@@ -74,6 +76,23 @@ data "google_compute_network" "this" {
   project    = local.network_project_id
   name       = local.vpc_name
   depends_on = [module.network]
+
+  # When subnets_name is set the network module is not created, so these values
+  # have no source to fall back to and must be supplied by the caller.
+  lifecycle {
+    precondition {
+      condition     = length(var.subnets_name) == 0 || var.vpc_name != ""
+      error_message = "vpc_name must be set when subnets_name is provided, since no VPC is created in that case."
+    }
+    precondition {
+      condition     = length(var.subnets_name) == 0 || var.private_zone_name != ""
+      error_message = "private_zone_name must be set when subnets_name is provided, since no private DNS zone is created in that case."
+    }
+    precondition {
+      condition     = length(var.subnets_name) == 0 || var.private_dns_name != ""
+      error_message = "private_dns_name must be set when subnets_name is provided, since no private DNS zone is created in that case."
+    }
+  }
 }
 
 data "google_compute_subnetwork" "this" {
