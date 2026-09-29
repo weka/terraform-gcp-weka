@@ -92,8 +92,8 @@ github.com/spiffe/go-spiffe/v2 v2.8.1 h1:eXZMLsu+3MLEPJyGJkolqtVrteZfQdUpOWj6LTi
 github.com/spiffe/go-spiffe/v2 v2.8.1/go.mod h1:47Q0Q9/AqGha8QLHp+kxpH4Wca7X7EnOtlIJy3mxZ3U=
 github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=
 github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
-github.com/weka/go-cloud-lib v0.0.0-20260720055256-2878cba391ba h1:Q25Tkvq7AyKWOHdiN/m3bt77VTmXbEHlVrSLP4dOS7o=
-github.com/weka/go-cloud-lib v0.0.0-20260720055256-2878cba391ba/go.mod h1:jGhUxgxC+ALaN9PCZx+ZqQk+lxkd8JcLorpBXwxFyHU=
+github.com/weka/go-cloud-lib v0.0.0-20260918051110-474205f8ecc0 h1:fil/W/mI1wV0rSSAGS9WrLzhR02CU2cKCH9RuEa6d34=
+github.com/weka/go-cloud-lib v0.0.0-20260918051110-474205f8ecc0/go.mod h1:jGhUxgxC+ALaN9PCZx+ZqQk+lxkd8JcLorpBXwxFyHU=
 go.opentelemetry.io/auto/sdk v1.2.1 h1:jXsnJ4Lmnqd11kwkBV2LgLoFMZKizbCi5fNZ/ipaZ64=
 go.opentelemetry.io/auto/sdk v1.2.1/go.mod h1:KRTj+aOaElaLi+wW1kO/DZRXwkF4C5xPbEe3ZiIhN7Y=
 go.opentelemetry.io/contrib/detectors/gcp v1.44.0 h1:NmLfL734pJhM0JKaYd2Y28+nY9dPRWYAAbxhRCrKXPw=
