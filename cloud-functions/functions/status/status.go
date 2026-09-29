@@ -3,12 +3,12 @@ package status
 import (
 	"context"
 	"encoding/json"
-
+	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/weka_api"
 	cloudLibCommon "github.com/weka/go-cloud-lib/common"
+	"github.com/weka/go-cloud-lib/lib/weka"
 	"github.com/weka/go-cloud-lib/logging"
 
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
-	"github.com/weka/go-cloud-lib/lib/weka"
 	"github.com/weka/go-cloud-lib/protocol"
 )
 
@@ -63,7 +63,7 @@ func GetReports(ctx context.Context, project, zone, bucket, object, instanceGrou
 	return
 }
 
-func GetClusterStatus(ctx context.Context, project, zone, bucket, object, instanceGroup, usernameId, passwordId, adminPasswordId string) (clusterStatus protocol.ClusterStatus, err error) {
+func GetClusterStatus(ctx context.Context, bucket, object string) (clusterStatus protocol.ClusterStatus, err error) {
 	state, err := common.GetClusterState(ctx, bucket, object)
 	if err != nil {
 		return
@@ -76,14 +76,11 @@ func GetClusterStatus(ctx context.Context, project, zone, bucket, object, instan
 		return
 	}
 
-	jpool, err := common.GetWekaJrpcPool(ctx, project, zone, instanceGroup, usernameId, passwordId, adminPasswordId)
-	if err != nil {
-		return
+	wekaApi := weka_api.WekaApiRequest{
+		Method: weka.JrpcStatus,
+		Params: nil,
 	}
-
-	var rawWekaStatus json.RawMessage
-
-	err = jpool.Call(weka.JrpcStatus, struct{}{}, &rawWekaStatus)
+	rawWekaStatus, err := weka_api.RunWekaApi(ctx, &wekaApi)
 	if err != nil {
 		return
 	}
