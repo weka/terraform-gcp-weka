@@ -31,6 +31,7 @@ module "nfs_protocol_gateways" {
   deploy_function_url          = format("%s%s", local.internal_function_uri, "?action=deploy")
   report_function_url          = format("%s%s", local.internal_function_uri, "?action=report")
   labels_map                   = var.labels_map
+  placement_policies           = local.placement_policies
   depends_on                   = [module.network, module.peering, module.shared_vpc_peering, time_sleep.wait_120_seconds, google_compute_forwarding_rule.google_compute_forwarding_rule, google_secret_manager_secret.secret_token, google_cloudfunctions2_function.cloud_internal_function, google_cloud_run_v2_service.cloud_internal]
 }
 
@@ -66,6 +67,7 @@ module "smb_protocol_gateways" {
   deploy_function_url          = format("%s%s", local.internal_function_uri, "?action=deploy")
   report_function_url          = format("%s%s", local.internal_function_uri, "?action=report")
   labels_map                   = var.labels_map
+  placement_policies           = local.placement_policies
   depends_on                   = [module.network, module.peering, module.shared_vpc_peering, time_sleep.wait_120_seconds, google_compute_forwarding_rule.google_compute_forwarding_rule, google_secret_manager_secret.secret_token, google_cloudfunctions2_function.cloud_internal_function, google_cloud_run_v2_service.cloud_internal]
 }
 
@@ -98,5 +100,6 @@ module "s3_protocol_gateways" {
   deploy_function_url          = format("%s%s", local.internal_function_uri, "?action=deploy")
   report_function_url          = format("%s%s", local.internal_function_uri, "?action=report")
   labels_map                   = var.labels_map
+  placement_policies           = local.placement_policies
   depends_on                   = [module.network, module.peering, module.shared_vpc_peering, time_sleep.wait_120_seconds, google_compute_forwarding_rule.google_compute_forwarding_rule, google_secret_manager_secret.secret_token, google_cloudfunctions2_function.cloud_internal_function, google_cloud_run_v2_service.cloud_internal]
 }

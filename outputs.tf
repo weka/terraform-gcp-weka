@@ -132,3 +132,8 @@ output "vpc_self_link" {
   value       = length(var.subnets_name) == 0 ? module.network[0].vpc_self_link : null
   description = "VPC self-link"
 }
+
+output "placement_policy_self_link" {
+  value       = local.placement_policy_self_link != "" ? local.placement_policy_self_link : null
+  description = "Self-link of the compact (COLLOCATED) placement policy attached to the deployed instances, or null when use_placement_policy is false."
+}

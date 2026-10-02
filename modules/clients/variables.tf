@@ -200,3 +200,9 @@ variable "weka_cgroups_mode" {
     error_message = "Allowed weka_cgroups_mode values: [\"auto\", \"force_v2\"]."
   }
 }
+
+variable "placement_policies" {
+  type        = list(string)
+  default     = []
+  description = "Self links of the placement resource policies to attach to the instances. GCP supports at most one policy per instance."
+}

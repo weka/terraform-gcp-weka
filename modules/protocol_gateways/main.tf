@@ -58,6 +58,7 @@ resource "google_compute_instance_template" "this" {
   project                 = var.project_id
   tags                    = [var.gateways_name]
   metadata_startup_script = local.custom_data
+  resource_policies       = var.placement_policies
 
   labels = merge(var.labels_map, {
     weka_protocol_gateway = var.gateways_name
@@ -84,6 +85,14 @@ resource "google_compute_instance_template" "this" {
   service_account {
     email  = var.sa_email
     scopes = ["cloud-platform"]
+  }
+
+  dynamic "scheduling" {
+    # instances attached to a placement policy cannot live-migrate
+    for_each = length(var.placement_policies) > 0 ? [1] : []
+    content {
+      on_host_maintenance = "TERMINATE"
+    }
   }
 
   # nic with external ip
