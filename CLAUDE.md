@@ -26,8 +26,7 @@ more words than a single subject line, those words belong in the PR description,
 the code, or a comment, not in the commit.
 
 Existing history is the bar: `fix: add pre-conditions when subnets name are
-provided`. Keep the conventional prefix (`feat:`, `fix:`, `chore:`, `refactor:`)
-— release-drafter builds the release notes from it.
+provided`. Keep the conventional prefix (`feat:`, `fix:`, `chore:`, `refactor:`).
 
 `terraform-docs: automated action` commits are CI's. Never write one by hand.
 
