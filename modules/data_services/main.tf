@@ -6,6 +6,12 @@ data "google_compute_subnetwork" "this" {
 }
 
 locals {
+  # a specific reservation is pinned to one machine shape, so instances with no name of their own are
+  # left with no affinity rather than pointed at another consumer's reservation
+  reservation_affinity_type = (
+    var.reservation_consume_type == "SPECIFIC_RESERVATION" && var.reservation_name == null
+  ) ? null : var.reservation_consume_type
+
   network_project_id      = var.network_project_id != "" ? var.network_project_id : var.project_id
   private_nic_first_index = var.assign_public_ip ? 1 : 0
   init_script = templatefile("${path.module}/init.sh", {
@@ -62,6 +68,20 @@ resource "google_compute_instance_template" "this" {
     for_each = length(var.placement_policies) > 0 ? [1] : []
     content {
       on_host_maintenance = "TERMINATE"
+    }
+  }
+
+  dynamic "reservation_affinity" {
+    for_each = local.reservation_affinity_type == null ? [] : [1]
+    content {
+      type = local.reservation_affinity_type
+      dynamic "specific_reservation" {
+        for_each = local.reservation_affinity_type == "SPECIFIC_RESERVATION" ? [1] : []
+        content {
+          key    = "compute.googleapis.com/reservation-name"
+          values = [var.reservation_name]
+        }
+      }
     }
   }
 

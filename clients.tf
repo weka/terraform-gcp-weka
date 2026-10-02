@@ -25,6 +25,8 @@ module "clients" {
   root_volume_size             = var.clients_root_volume_size
   weka_cgroups_mode            = var.clients_weka_cgroups_mode
   placement_policies           = local.placement_policies
+  reservation_consume_type     = var.reservation_consume_type
+  reservation_name             = var.client_reservation_name
   depends_on = [
     google_compute_forwarding_rule.google_compute_forwarding_rule, google_workflows_workflow.scale_up,
     google_cloudfunctions2_function.cloud_internal_function, module.shared_vpc_peering, module.peering,
