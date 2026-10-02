@@ -169,3 +169,9 @@ variable "labels_map" {
   default     = {}
   description = "A map of labels to assign the same metadata to all resources in the environment. Format: key:value."
 }
+
+variable "placement_policies" {
+  type        = list(string)
+  default     = []
+  description = "Self links of the placement resource policies to attach to the instances. GCP supports at most one policy per instance."
+}

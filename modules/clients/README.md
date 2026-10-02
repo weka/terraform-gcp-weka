@@ -39,6 +39,7 @@ No modules.
 | <a name="input_machine_type"></a> [machine\_type](#input\_machine\_type) | weka cluster clients machines type | `string` | n/a | yes |
 | <a name="input_network_project_id"></a> [network\_project\_id](#input\_network\_project\_id) | Network project id | `string` | `""` | no |
 | <a name="input_nic_type"></a> [nic\_type](#input\_nic\_type) | The type of vNIC. Possible values: GVNIC, VIRTIO\_NET. | `string` | `null` | no |
+| <a name="input_placement_policies"></a> [placement\_policies](#input\_placement\_policies) | Self links of the placement resource policies to attach to the instances. GCP supports at most one policy per instance. | `list(string)` | `[]` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | project name | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | region name | `string` | n/a | yes |
 | <a name="input_root_volume_size"></a> [root\_volume\_size](#input\_root\_volume\_size) | The client's root volume size in GB | `number` | `null` | no |
