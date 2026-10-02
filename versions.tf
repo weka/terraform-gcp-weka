@@ -2,13 +2,13 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = ">=6.21.0"
+      version = ">=6.23.0"
     }
     # the compact placement policy sets max_distance, which is a GCP Preview field that only
     # the beta provider exposes
     google-beta = {
       source  = "hashicorp/google-beta"
-      version = ">=6.21.0"
+      version = ">=6.23.0"
     }
     archive = {
       source  = "hashicorp/archive"
@@ -27,5 +27,6 @@ terraform {
       version = "~>2.4.0"
     }
   }
-  required_version = ">=1.3.1"
+  # the secret versions pass their payload through secret_data_wo, a write-only attribute
+  required_version = ">=1.11.0"
 }
