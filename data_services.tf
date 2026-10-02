@@ -23,5 +23,7 @@ module "data_services" {
   report_function_url          = format("%s%s", local.internal_function_uri, "?action=report")
   labels_map                   = var.labels_map
   placement_policies           = local.placement_policies
+  reservation_consume_type     = var.reservation_consume_type
+  reservation_name             = var.data_services_reservation_name
   depends_on                   = [module.network, module.peering, module.shared_vpc_peering, time_sleep.wait_120_seconds, google_compute_forwarding_rule.google_compute_forwarding_rule, google_secret_manager_secret.secret_token, google_cloudfunctions2_function.cloud_internal_function, google_cloud_run_v2_service.cloud_internal]
 }

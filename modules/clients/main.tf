@@ -6,6 +6,12 @@ data "google_compute_subnetwork" "this" {
 }
 
 locals {
+  # a specific reservation is pinned to one machine shape, so instances with no name of their own are
+  # left with no affinity rather than pointed at another consumer's reservation
+  reservation_affinity_type = (
+    var.reservation_consume_type == "SPECIFIC_RESERVATION" && var.reservation_name == null
+  ) ? null : var.reservation_consume_type
+
   network_project_id      = var.network_project_id != "" ? var.network_project_id : var.project_id
   private_nic_first_index = var.assign_public_ip ? 1 : 0
   preparation_script = templatefile("${path.module}/init.sh", {
@@ -73,6 +79,19 @@ resource "google_compute_instance" "this" {
   scheduling {
     # instances attached to a placement policy cannot live-migrate
     on_host_maintenance = length(var.placement_policies) > 0 ? "TERMINATE" : try(var.instance_config_overrides[var.machine_type].host_maintenance, "MIGRATE")
+  }
+  dynamic "reservation_affinity" {
+    for_each = local.reservation_affinity_type == null ? [] : [1]
+    content {
+      type = local.reservation_affinity_type
+      dynamic "specific_reservation" {
+        for_each = local.reservation_affinity_type == "SPECIFIC_RESERVATION" ? [1] : []
+        content {
+          key    = "compute.googleapis.com/reservation-name"
+          values = [var.reservation_name]
+        }
+      }
+    }
   }
   labels = merge(var.labels_map, {
     goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"

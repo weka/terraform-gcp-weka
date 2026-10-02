@@ -104,6 +104,12 @@ locals {
   effective_boot_disk_type = var.boot_disk_type != null ? var.boot_disk_type : local.machine_defaults_for_machine_type.boot_disk_type
   effective_nic_type       = var.nic_type != null ? var.nic_type : local.machine_defaults_for_machine_type.nic_type
 
+  # a specific reservation is pinned to one machine shape, so a consumer with no name of its own is
+  # left with no affinity rather than pointed at another consumer's reservation
+  reservation_affinity_type = (
+    var.reservation_consume_type == "SPECIFIC_RESERVATION" && var.reservation_name == null
+  ) ? null : var.reservation_consume_type
+
   private_nic_first_index = local.assign_public_ip ? 1 : 0
   nics_number             = var.nic_number != -1 ? var.nic_number : var.containers_config_map[var.machine_type].nics
   disk_size               = var.backends_weka_volume_size + var.traces_per_ionode * (var.containers_config_map[var.machine_type].compute + var.containers_config_map[var.machine_type].drive + var.containers_config_map[var.machine_type].frontend)
@@ -181,6 +187,27 @@ resource "google_compute_instance_template" "this" {
     on_host_maintenance = length(local.placement_policies) > 0 || contains(["z3-highmem-88-highlssd"], var.machine_type) ? "TERMINATE" : "MIGRATE"
   }
 
+  # unset omits the block: an instance template is immutable, so writing any type here would replace
+  # the template of every existing deployment. unset is not NO_RESERVATION either -- with no affinity
+  # at all GCP still consumes any matching reservation.
+  # the scale-up function never sets reservationAffinity on its insert request, so the backends it
+  # creates inherit this. that it does set resourcePolicies explicitly is not an inconsistency: a
+  # template stores a policy as a bare name while instances.insert wants a URL, whereas a reservation
+  # name is spelled the same in both.
+  dynamic "reservation_affinity" {
+    for_each = local.reservation_affinity_type == null ? [] : [1]
+    content {
+      type = local.reservation_affinity_type
+      dynamic "specific_reservation" {
+        for_each = local.reservation_affinity_type == "SPECIFIC_RESERVATION" ? [1] : []
+        content {
+          key    = "compute.googleapis.com/reservation-name"
+          values = [var.reservation_name]
+        }
+      }
+    }
+  }
+
   lifecycle {
     ignore_changes        = [network_interface]
     create_before_destroy = false
@@ -188,6 +215,14 @@ resource "google_compute_instance_template" "this" {
       # only checked for the policy this module creates, whose cap is known
       condition     = !local.create_placement_policy || local.placement_policy_instances_count <= local.created_placement_policy_max_instances
       error_message = "The placement policy supports at most ${local.created_placement_policy_max_instances} instances at max distance ${var.placement_policy_max_distance == null ? "unset" : tostring(var.placement_policy_max_distance)}, but this deployment attaches ${local.placement_policy_instances_count} (backends, clients, protocol gateways and data services). Reduce the instance counts, raise placement_policy_max_distance, or set use_placement_policy to false."
+    }
+    precondition {
+      # GCP refuses an instance that carries a resource policy its target reservation was not created
+      # with, and a policy created here cannot be one an existing reservation already names. caught at
+      # plan because the backends are created by the scale-up function: apply would report success and
+      # the rejection would only ever appear in that function's logs.
+      condition     = var.reservation_consume_type != "SPECIFIC_RESERVATION" || !local.create_placement_policy
+      error_message = "Targeting a specific reservation requires placement_policy_name to name the placement policy the reservation was created with, or use_placement_policy to be false when the reservation has no placement policy. Leaving placement_policy_name empty makes this module create its own policy, which no pre-existing reservation can match."
     }
   }
   depends_on = [module.network, module.shared_vpc_peering]

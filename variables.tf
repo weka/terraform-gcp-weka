@@ -79,6 +79,74 @@ variable "placement_policy_max_distance" {
   }
 }
 
+variable "reservation_consume_type" {
+  type        = string
+  default     = null
+  description = "Reservation affinity of the backends, clients, protocol gateways and data services. ANY_RESERVATION and NO_RESERVATION apply to all of them alike. SPECIFIC_RESERVATION targets one reservation per consumer, named by the *_reservation_name variables: a reservation is pinned to a single machine shape and each consumer has its own machine type, so one reservation cannot serve them all. A consumer left unnamed gets no affinity at all. SPECIFIC_RESERVATION additionally requires the instances and the reservation to carry the same placement policy, so set placement_policy_name to the policy the reservation was created with, or use_placement_policy to false when the reservation has none. Leave null to omit the affinity and keep the GCP default of consuming any matching reservation. Changing this on a live deployment recreates every client VM; for the other three it replaces only the instance template, so their running instances keep their current affinity until they are recreated. Creating the reservations is out of this module's scope."
+  validation {
+    condition     = var.reservation_consume_type == null || contains(["NO_RESERVATION", "ANY_RESERVATION", "SPECIFIC_RESERVATION"], var.reservation_consume_type)
+    error_message = "The reservation consume type must be NO_RESERVATION, ANY_RESERVATION or SPECIFIC_RESERVATION, or null to omit the reservation affinity."
+  }
+  validation {
+    # the other consume types carry no selector, so names left set would be dropped without a word
+    condition = var.reservation_consume_type == "SPECIFIC_RESERVATION" || length([
+      for n in [
+        var.reservation_name, var.client_reservation_name, var.data_services_reservation_name,
+        var.nfs_protocol_gateway_reservation_name, var.smb_protocol_gateway_reservation_name,
+        var.s3_protocol_gateway_reservation_name
+      ] : n if n != null
+    ]) == 0
+    error_message = "The *_reservation_name variables can only be set when reservation_consume_type is SPECIFIC_RESERVATION."
+  }
+  validation {
+    # naming nothing leaves every consumer on the GCP default, so the setting would do nothing at all
+    condition = var.reservation_consume_type != "SPECIFIC_RESERVATION" || length([
+      for n in [
+        var.reservation_name, var.client_reservation_name, var.data_services_reservation_name,
+        var.nfs_protocol_gateway_reservation_name, var.smb_protocol_gateway_reservation_name,
+        var.s3_protocol_gateway_reservation_name
+      ] : n if n != null
+    ]) > 0
+    error_message = "reservation_consume_type SPECIFIC_RESERVATION requires at least one of the *_reservation_name variables to be set."
+  }
+}
+
+variable "reservation_name" {
+  type        = string
+  default     = null
+  description = "Name of the reservation the backends consume when reservation_consume_type is SPECIFIC_RESERVATION. A reservation owned by the deployment project is named by its bare name; one owned by another project and shared with this one is named projects/<owner-project-id>/reservations/<reservation-name>. The reservation only accepts instances whose machine type, min CPU platform, GPUs and local SSDs match it exactly, so it has to match machine_type. Leave null to give the backends no reservation affinity."
+}
+
+variable "client_reservation_name" {
+  type        = string
+  default     = null
+  description = "Name of the reservation the clients consume when reservation_consume_type is SPECIFIC_RESERVATION. Must match client_instance_type exactly. See reservation_name for the naming format. Leave null to give the clients no reservation affinity."
+}
+
+variable "nfs_protocol_gateway_reservation_name" {
+  type        = string
+  default     = null
+  description = "Name of the reservation the NFS protocol gateways consume when reservation_consume_type is SPECIFIC_RESERVATION. Must match nfs_protocol_gateway_machine_type exactly. See reservation_name for the naming format. Leave null to give them no reservation affinity."
+}
+
+variable "smb_protocol_gateway_reservation_name" {
+  type        = string
+  default     = null
+  description = "Name of the reservation the SMB protocol gateways consume when reservation_consume_type is SPECIFIC_RESERVATION. Must match smb_protocol_gateway_machine_type exactly. See reservation_name for the naming format. Leave null to give them no reservation affinity."
+}
+
+variable "s3_protocol_gateway_reservation_name" {
+  type        = string
+  default     = null
+  description = "Name of the reservation the S3 protocol gateways consume when reservation_consume_type is SPECIFIC_RESERVATION. Must match s3_protocol_gateway_machine_type exactly. See reservation_name for the naming format. Leave null to give them no reservation affinity."
+}
+
+variable "data_services_reservation_name" {
+  type        = string
+  default     = null
+  description = "Name of the reservation the data services consume when reservation_consume_type is SPECIFIC_RESERVATION. Must match data_services_instance_type exactly. See reservation_name for the naming format. Leave null to give them no reservation affinity."
+}
+
 variable "region" {
   type        = string
   description = "GCP region, a broader geographic area within GCP that houses your resources. It encompasses multiple zones."
