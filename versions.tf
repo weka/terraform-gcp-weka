@@ -4,6 +4,12 @@ terraform {
       source  = "hashicorp/google"
       version = ">=6.21.0"
     }
+    # the compact placement policy sets max_distance, which is a GCP Preview field that only
+    # the beta provider exposes
+    google-beta = {
+      source  = "hashicorp/google-beta"
+      version = ">=6.21.0"
+    }
     archive = {
       source  = "hashicorp/archive"
       version = "~>2.4.0"

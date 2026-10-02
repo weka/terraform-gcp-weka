@@ -15,6 +15,68 @@ resource "google_storage_bucket" "weka_deployment" {
   }
 }
 
+# ======================== placement policy ============================
+locals {
+  created_placement_policy_name = "${var.prefix}-${var.cluster_name}-placement-policy"
+  # the module creates the policy itself unless an existing one is named
+  create_placement_policy = var.use_placement_policy && var.placement_policy_name == ""
+  # a single compact placement policy is shared by the backends, clients, protocol gateways and data
+  # services, so that all of them are placed close to each other. GCP allows at most one policy per instance.
+  placement_policy_self_link = var.use_placement_policy ? (
+    var.placement_policy_name != "" ?
+    "projects/${var.project_id}/regions/${var.region}/resourcePolicies/${var.placement_policy_name}" :
+    google_compute_resource_policy.placement_policy[0].self_link
+  ) : ""
+  placement_policies = local.placement_policy_self_link != "" ? [local.placement_policy_self_link] : []
+
+  # every instance attached to the policy counts against its instance cap, not just the backends
+  placement_policy_instances_count = (
+    var.cluster_size + var.clients_number + var.data_services_number +
+    var.nfs_protocol_gateways_number + var.smb_protocol_gateways_number + var.s3_protocol_gateways_number
+  )
+  # GCP derives the cap from the policy's max distance. the 150 at max distance 2 is the cap for the
+  # machine series this module deploys; the A3 GPU series, which it does not deploy, gets 256 there.
+  placement_policy_max_instances_by_distance = {
+    1 = 22
+    2 = 150
+    3 = 1500
+  }
+  # max distance left unset bounds the distance by nothing at all, which takes the same 1500 cap as 3.
+  # the cap of an existing policy passed through placement_policy_name is a property of that policy,
+  # which the provider can neither set nor read, so GCP enforces it when the instances are created.
+  created_placement_policy_max_instances = (
+    var.placement_policy_max_distance == null ? 1500 :
+    local.placement_policy_max_instances_by_distance[var.placement_policy_max_distance]
+  )
+}
+
+resource "google_compute_resource_policy" "placement_policy" {
+  # max_distance is a GCP Preview field that only the beta provider exposes
+  provider = google-beta
+  count    = local.create_placement_policy ? 1 : 0
+  # callers configure only the google provider, so the implicit google-beta one has no project
+  project = var.project_id
+  name    = local.created_placement_policy_name
+  region  = var.region
+
+  # COLLOCATED places the instances on physically close hosts, which lowers the inter-node latency
+  # and raises the available bandwidth. vm_count is intentionally left unset: the cluster is resized
+  # by the scale-up/scale-down functions, and setting it would pin the policy to a fixed size.
+  # max distance 1 and 2 additionally require TERMINATE host maintenance, which every instance
+  # attached to the policy already gets, here and in the clients, gateways and data services modules.
+  group_placement_policy {
+    collocation  = "COLLOCATED"
+    max_distance = var.placement_policy_max_distance
+  }
+
+  lifecycle {
+    precondition {
+      condition     = length(local.created_placement_policy_name) <= 63
+      error_message = "The placement policy name maximum allowed length is 63."
+    }
+  }
+}
+
 # ======================== instances ============================
 locals {
   # Machine family-specific defaults
@@ -48,10 +110,11 @@ locals {
 }
 
 resource "google_compute_instance_template" "this" {
-  name           = "${var.prefix}-${var.cluster_name}-backends"
-  region         = var.region
-  machine_type   = var.machine_type
-  can_ip_forward = false
+  name              = "${var.prefix}-${var.cluster_name}-backends"
+  region            = var.region
+  machine_type      = var.machine_type
+  can_ip_forward    = false
+  resource_policies = local.placement_policies
 
   tags = ["${var.prefix}-${var.cluster_name}-backends", "allow-health-check", "backends", "all-apis"]
   labels = merge(var.labels_map, {
@@ -114,12 +177,18 @@ resource "google_compute_instance_template" "this" {
   }
 
   scheduling {
-    on_host_maintenance = contains(["z3-highmem-88-highlssd"], var.machine_type) ? "TERMINATE" : "MIGRATE"
+    # instances attached to a placement policy cannot live-migrate
+    on_host_maintenance = length(local.placement_policies) > 0 || contains(["z3-highmem-88-highlssd"], var.machine_type) ? "TERMINATE" : "MIGRATE"
   }
 
   lifecycle {
     ignore_changes        = [network_interface]
     create_before_destroy = false
+    precondition {
+      # only checked for the policy this module creates, whose cap is known
+      condition     = !local.create_placement_policy || local.placement_policy_instances_count <= local.created_placement_policy_max_instances
+      error_message = "The placement policy supports at most ${local.created_placement_policy_max_instances} instances at max distance ${var.placement_policy_max_distance == null ? "unset" : tostring(var.placement_policy_max_distance)}, but this deployment attaches ${local.placement_policy_instances_count} (backends, clients, protocol gateways and data services). Reduce the instance counts, raise placement_policy_max_distance, or set use_placement_policy to false."
+    }
   }
   depends_on = [module.network, module.shared_vpc_peering]
 }

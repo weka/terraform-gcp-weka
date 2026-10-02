@@ -26,11 +26,12 @@ locals {
 }
 
 resource "google_compute_instance" "this" {
-  count        = var.clients_number
-  name         = "${var.clients_name}-${count.index}"
-  machine_type = var.machine_type
-  zone         = var.zone
-  tags         = [var.clients_name]
+  count             = var.clients_number
+  name              = "${var.clients_name}-${count.index}"
+  machine_type      = var.machine_type
+  zone              = var.zone
+  tags              = [var.clients_name]
+  resource_policies = var.placement_policies
   boot_disk {
     initialize_params {
       image = var.source_image_id
@@ -70,7 +71,8 @@ resource "google_compute_instance" "this" {
     scopes = ["cloud-platform"]
   }
   scheduling {
-    on_host_maintenance = try(var.instance_config_overrides[var.machine_type].host_maintenance, "MIGRATE")
+    # instances attached to a placement policy cannot live-migrate
+    on_host_maintenance = length(var.placement_policies) > 0 ? "TERMINATE" : try(var.instance_config_overrides[var.machine_type].host_maintenance, "MIGRATE")
   }
   labels = merge(var.labels_map, {
     goog-partner-solution = "isol_plb32_0014m00001h34hnqai_by7vmugtismizv6y46toim6jigajtrwh"

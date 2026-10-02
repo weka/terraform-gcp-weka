@@ -39,7 +39,7 @@ func getInstanceTemplate(ctx context.Context, project, template string) (*comput
 	return getInstanceTemplateByName(ctx, project, templateName)
 }
 
-func CreateBackendInstance(ctx context.Context, project, zone, template, instanceName, yumRepositoryBaseosUrl, yumRepositoryAppstreamUrl, proxyUrl, functionRootUrl string) (err error) {
+func CreateBackendInstance(ctx context.Context, project, zone, template, resourcePolicy, instanceName, yumRepositoryBaseosUrl, yumRepositoryAppstreamUrl, proxyUrl, functionRootUrl string) (err error) {
 	instancesClient, err := compute.NewInstancesRESTClient(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create instances client")
@@ -149,15 +149,23 @@ func CreateBackendInstance(ctx context.Context, project, zone, template, instanc
 		})
 	}
 
-	req := &computepb.InsertInstanceRequest{
-		Project: project,
-		Zone:    zone,
-		InstanceResource: &computepb.Instance{
-			Name: proto.String(instanceName),
-			Metadata: &computepb.Metadata{
-				Items: items,
-			},
+	instanceResource := &computepb.Instance{
+		Name: proto.String(instanceName),
+		Metadata: &computepb.Metadata{
+			Items: items,
 		},
+	}
+
+	// Compact placement policy: explicitly attach the resource policy so collocation is
+	// guaranteed even when the instance is created from the template with field overrides.
+	if resourcePolicy != "" {
+		instanceResource.ResourcePolicies = []string{resourcePolicy}
+	}
+
+	req := &computepb.InsertInstanceRequest{
+		Project:                project,
+		Zone:                   zone,
+		InstanceResource:       instanceResource,
 		SourceInstanceTemplate: &template,
 	}
 
@@ -170,7 +178,7 @@ func CreateBackendInstance(ctx context.Context, project, zone, template, instanc
 	return
 }
 
-func CreateNFSInstance(ctx context.Context, project, zone, templateName, instanceName, yumRepositoryBaseosUrl, yumRepositoryAppstreamUrl, proxyUrl, functionRootUrl string) (err error) {
+func CreateNFSInstance(ctx context.Context, project, zone, templateName, resourcePolicy, instanceName, yumRepositoryBaseosUrl, yumRepositoryAppstreamUrl, proxyUrl, functionRootUrl string) (err error) {
 	instancesClient, err := compute.NewInstancesRESTClient(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create instances client")
@@ -184,12 +192,20 @@ func CreateNFSInstance(ctx context.Context, project, zone, templateName, instanc
 		return
 	}
 
+	instanceResource := &computepb.Instance{
+		Name: proto.String(instanceName),
+	}
+
+	// Compact placement policy: explicitly attach the resource policy so collocation is
+	// guaranteed even when the instance is created from the template with field overrides.
+	if resourcePolicy != "" {
+		instanceResource.ResourcePolicies = []string{resourcePolicy}
+	}
+
 	req := &computepb.InsertInstanceRequest{
-		Project: project,
-		Zone:    zone,
-		InstanceResource: &computepb.Instance{
-			Name: proto.String(instanceName),
-		},
+		Project:                project,
+		Zone:                   zone,
+		InstanceResource:       instanceResource,
 		SourceInstanceTemplate: instanceTemplate.SelfLink,
 	}
 

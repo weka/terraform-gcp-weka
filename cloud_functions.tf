@@ -65,6 +65,7 @@ locals {
     YUM_REPOSITORY_BASEOS_URL    = var.yum_repository_baseos_url
     YUM_REPOSITORY_APPSTREAM_URL = var.yum_repository_appstream_url
     BACKEND_TEMPLATE             = google_compute_instance_template.this.id
+    RESOURCE_POLICY              = local.placement_policy_self_link
     # SMBW
     CREATE_CONFIG_FS = (var.smbw_enabled && var.smb_setup_protocol) || var.s3_setup_protocol
     # Weka proxy url

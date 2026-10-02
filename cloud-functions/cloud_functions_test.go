@@ -199,7 +199,7 @@ func Test_scaleUp(t *testing.T) {
 	yumRepositoryAppstreamUrl := ""
 	proxyUrl := ""
 	ctx := context.TODO()
-	scale_up.CreateBackendInstance(ctx, project, zone, backendTemplate, instanceName, yumRepositoryBaseosUrl, yumRepositoryAppstreamUrl, proxyUrl, functionRootUrl)
+	scale_up.CreateBackendInstance(ctx, project, zone, backendTemplate, "", instanceName, yumRepositoryBaseosUrl, yumRepositoryAppstreamUrl, proxyUrl, functionRootUrl)
 	instances, _ := common.GetInstancesByClusterLabel(ctx, project, zone, clusterName)
 	instanceGroupSize := len(instances)
 	t.Logf("Instance group size is: %d", instanceGroupSize)

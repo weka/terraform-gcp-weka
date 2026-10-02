@@ -412,6 +412,7 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 	zone := os.Getenv("ZONE")
 	clusterName := os.Getenv("CLUSTER_NAME")
 	backendTemplate := os.Getenv("BACKEND_TEMPLATE")
+	resourcePolicy := os.Getenv("RESOURCE_POLICY")
 	bucket := os.Getenv("BUCKET")
 	stateObject := os.Getenv("STATE_OBJ_NAME")
 	nfsStateObject := os.Getenv("NFS_STATE_OBJ_NAME")
@@ -456,7 +457,7 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 		for i := backendsNumber; i < state.DesiredSize; i++ {
 			instanceName := fmt.Sprintf("%s-%s%03d", clusterName, currentTime, i)
 			log.Info().Msgf("creating new backend instance: %s", instanceName)
-			if err := scale_up.CreateBackendInstance(ctx, project, zone, backendTemplate, instanceName, yumRepositoryBaseosUrl, yumRepositoryAppstreamUrl, proxyUrl, functionRootUrl); err != nil {
+			if err := scale_up.CreateBackendInstance(ctx, project, zone, backendTemplate, resourcePolicy, instanceName, yumRepositoryBaseosUrl, yumRepositoryAppstreamUrl, proxyUrl, functionRootUrl); err != nil {
 				err = fmt.Errorf("instance %s creation failed %s.", instanceName, err)
 				log.Error().Err(err).Send()
 				respondWithErr(w, err, http.StatusBadRequest)
@@ -515,7 +516,7 @@ func ScaleUp(w http.ResponseWriter, r *http.Request) {
 		for i := nfsGatewaysNumber; i < nfsDesiredSize; i++ {
 			instanceName := fmt.Sprintf("%s-%s%03d", nfsGatewaysName, currentTime, i)
 			log.Info().Msgf("creating new NFS instance: %s", instanceName)
-			if err := scale_up.CreateNFSInstance(ctx, project, zone, nfsTemplateName, instanceName, yumRepositoryBaseosUrl, yumRepositoryAppstreamUrl, proxyUrl, functionRootUrl); err != nil {
+			if err := scale_up.CreateNFSInstance(ctx, project, zone, nfsTemplateName, resourcePolicy, instanceName, yumRepositoryBaseosUrl, yumRepositoryAppstreamUrl, proxyUrl, functionRootUrl); err != nil {
 				err = fmt.Errorf("instance %s creation failed %s", instanceName, err)
 				log.Error().Err(err).Send()
 				respondWithErr(w, err, http.StatusBadRequest)

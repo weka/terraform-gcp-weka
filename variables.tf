@@ -57,6 +57,28 @@ variable "machine_type" {
   default     = "c2-standard-8"
 }
 
+variable "use_placement_policy" {
+  type        = bool
+  default     = true
+  description = "Use a compact placement policy (COLLOCATED) for the backends, clients, protocol gateways and data services. Note: without a placement policy the instances will most likely be spread out across the underlying GCP infrastructure, resulting in not getting the maximum performance from the WEKA cluster. Instances attached to a placement policy cannot live-migrate, so on_host_maintenance is forced to TERMINATE. Collocation is best effort: instances created in separate scale-up waves may end up outside the tight placement domain."
+}
+
+variable "placement_policy_name" {
+  type        = string
+  default     = ""
+  description = "Name of an existing compute resource policy (group placement) in the deployment region to attach to the instances. Leave empty to have the module create a COLLOCATED policy when use_placement_policy is true."
+}
+
+variable "placement_policy_max_distance" {
+  type        = number
+  default     = null
+  description = "Maximum distance (GCP Preview) for the compact placement policy this module creates: 1 places the instances in the same sub-block, 2 in adjacent blocks within a cluster, 3 in adjacent clusters. Lower values place the instances closer together but shrink both the pool of candidate hosts and the number of instances the policy accepts (22 with 1, 150 with 2, 1500 with 3). Leave null to leave max distance unset, which places the instances on a best-effort basis with no distance bound and takes the 1500 cap. Ignored when an existing policy is attached through placement_policy_name."
+  validation {
+    condition     = var.placement_policy_max_distance == null || contains([1, 2, 3], var.placement_policy_max_distance)
+    error_message = "The placement policy max distance must be 1, 2 or 3, or null to leave it unset."
+  }
+}
+
 variable "region" {
   type        = string
   description = "GCP region, a broader geographic area within GCP that houses your resources. It encompasses multiple zones."
