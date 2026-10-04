@@ -42,6 +42,8 @@ No modules.
 | <a name="input_placement_policies"></a> [placement\_policies](#input\_placement\_policies) | Self links of the placement resource policies to attach to the instances. GCP supports at most one policy per instance. | `list(string)` | `[]` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | project name | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | region name | `string` | n/a | yes |
+| <a name="input_reservation_consume_type"></a> [reservation\_consume\_type](#input\_reservation\_consume\_type) | Reservation affinity consume type of the instances: NO\_RESERVATION, ANY\_RESERVATION or SPECIFIC\_RESERVATION. Leave null to omit the reservation affinity, which keeps the GCP default of consuming any matching reservation. | `string` | `null` | no |
+| <a name="input_reservation_name"></a> [reservation\_name](#input\_reservation\_name) | Name of the reservation the instances consume when reservation\_consume\_type is SPECIFIC\_RESERVATION. A reservation owned by another project and shared with this one is named projects/<owner-project-id>/reservations/<reservation-name>. It only accepts instances whose machine type, min CPU platform, GPUs and local SSDs match it exactly. Leave null to give the instances no reservation affinity. | `string` | `null` | no |
 | <a name="input_root_volume_size"></a> [root\_volume\_size](#input\_root\_volume\_size) | The client's root volume size in GB | `number` | `null` | no |
 | <a name="input_sa_email"></a> [sa\_email](#input\_sa\_email) | service account email | `string` | n/a | yes |
 | <a name="input_source_image_id"></a> [source\_image\_id](#input\_source\_image\_id) | os of image | `string` | `"rocky-linux-8-v20240910"` | no |
