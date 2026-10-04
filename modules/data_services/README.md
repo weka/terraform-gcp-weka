@@ -40,6 +40,8 @@ No modules.
 | <a name="input_proxy_url"></a> [proxy\_url](#input\_proxy\_url) | Weka home proxy url | `string` | `""` | no |
 | <a name="input_region"></a> [region](#input\_region) | Region name | `string` | n/a | yes |
 | <a name="input_report_function_url"></a> [report\_function\_url](#input\_report\_function\_url) | The URL of report function from cloud functions. | `string` | n/a | yes |
+| <a name="input_reservation_consume_type"></a> [reservation\_consume\_type](#input\_reservation\_consume\_type) | Reservation affinity consume type of the instances: NO\_RESERVATION, ANY\_RESERVATION or SPECIFIC\_RESERVATION. Leave null to omit the reservation affinity, which keeps the GCP default of consuming any matching reservation. | `string` | `null` | no |
+| <a name="input_reservation_name"></a> [reservation\_name](#input\_reservation\_name) | Name of the reservation the instances consume when reservation\_consume\_type is SPECIFIC\_RESERVATION. A reservation owned by another project and shared with this one is named projects/<owner-project-id>/reservations/<reservation-name>. It only accepts instances whose machine type, min CPU platform, GPUs and local SSDs match it exactly. Leave null to give the instances no reservation affinity. | `string` | `null` | no |
 | <a name="input_root_volume_size"></a> [root\_volume\_size](#input\_root\_volume\_size) | The root volume size in GB. | `number` | `null` | no |
 | <a name="input_sa_email"></a> [sa\_email](#input\_sa\_email) | service account email | `string` | n/a | yes |
 | <a name="input_source_image_id"></a> [source\_image\_id](#input\_source\_image\_id) | Source image id | `string` | n/a | yes |
