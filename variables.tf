@@ -554,14 +554,14 @@ variable "tiering_enable_ssd_percent" {
 
 variable "tiering_obs_target_ssd_retention" {
   type        = number
-  description = "Target retention period (in seconds) before tiering to OBS (how long data will stay in SSD). Default is 86400 seconds (24 hours)."
-  default     = 86400
+  description = "Target retention period (in seconds) before tiering to OBS (how long data will stay in SSD). Default is 259200 seconds (3 days)."
+  default     = 259200
 }
 
 variable "tiering_obs_start_demote" {
   type        = number
-  description = "Target tiering cue (in seconds) before starting upload data to OBS (turning it into read cache). Default is 10 seconds."
-  default     = 10
+  description = "Target tiering cue (in seconds) before starting upload data to OBS (turning it into read cache). Default is 86400 seconds (1 day)."
+  default     = 86400
 }
 
 variable "set_dedicated_fe_container" {
