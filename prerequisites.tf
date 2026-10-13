@@ -40,8 +40,9 @@ module "network" {
 }
 
 locals {
-  sa_email     = var.sa_email == "" ? module.service_account[0].service_account_email : var.sa_email
-  subnets_name = length(var.subnets_name) == 0 ? module.network[0].subnetwork_name : var.subnets_name
+  sa_email      = var.sa_email == "" ? module.service_account[0].service_account_email : var.sa_email
+  subnets_name  = length(var.subnets_name) == 0 ? module.network[0].subnetwork_name : var.subnets_name
+  subnets_count = length(var.subnets_name) == 0 ? length(var.subnets_range) : length(var.subnets_name)
   # module.network only exists when subnets_name is empty, so fall back through
   # the splat (null when the module is absent) rather than indexing it directly.
   private_zone_name   = var.private_zone_name != "" ? var.private_zone_name : one(module.network[*].private_zone_name)

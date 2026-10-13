@@ -80,16 +80,33 @@ resource "google_compute_resource_policy" "placement_policy" {
 # ======================== instances ============================
 locals {
   # Machine family-specific defaults
+  # allow_nvmes_override is false for the families that carry their own local SSDs: the count is a
+  # property of the shape, so var.nvmes_number is ignored rather than silently attaching scratch disks
   machine_defaults = {
     "z3-highmem" = {
-      nvmes_number   = 0
-      boot_disk_type = "pd-ssd"
-      nic_type       = "GVNIC"
+      nvmes_number         = 0
+      allow_nvmes_override = false
+      boot_disk_type       = "pd-ssd"
+      data_disk_type       = "pd-ssd"
+      nic_type             = "GVNIC"
+      host_maintenance     = "MIGRATE"
+    }
+    # z4m does not support pd-* disks; hyperdisk-balanced is required, and it cannot live-migrate
+    "z4m-highmem" = {
+      nvmes_number         = 0
+      allow_nvmes_override = false
+      boot_disk_type       = "hyperdisk-balanced"
+      data_disk_type       = "hyperdisk-balanced"
+      nic_type             = "GVNIC"
+      host_maintenance     = "TERMINATE"
     }
     "default" = {
-      nvmes_number   = 2
-      boot_disk_type = "pd-standard"
-      nic_type       = "VIRTIO_NET"
+      nvmes_number         = 2
+      allow_nvmes_override = true
+      boot_disk_type       = "pd-standard"
+      data_disk_type       = "pd-ssd"
+      nic_type             = "VIRTIO_NET"
+      host_maintenance     = "MIGRATE"
     }
   }
 
@@ -100,7 +117,7 @@ locals {
   machine_defaults_for_machine_type = contains(keys(local.machine_defaults), local.machine_family) ? local.machine_defaults[local.machine_family] : local.machine_defaults["default"]
 
   # Effective values: use user-provided or machine defaults
-  effective_nvmes_number   = local.machine_family == "z3-highmem" ? local.machine_defaults_for_machine_type.nvmes_number : (var.nvmes_number != null ? var.nvmes_number : local.machine_defaults_for_machine_type.nvmes_number)
+  effective_nvmes_number   = var.nvmes_number != null && local.machine_defaults_for_machine_type.allow_nvmes_override ? var.nvmes_number : local.machine_defaults_for_machine_type.nvmes_number
   effective_boot_disk_type = var.boot_disk_type != null ? var.boot_disk_type : local.machine_defaults_for_machine_type.boot_disk_type
   effective_nic_type       = var.nic_type != null ? var.nic_type : local.machine_defaults_for_machine_type.nic_type
 
@@ -111,8 +128,11 @@ locals {
   ) ? null : var.reservation_consume_type
 
   private_nic_first_index = local.assign_public_ip ? 1 : 0
-  nics_number             = var.nic_number != -1 ? var.nic_number : var.containers_config_map[var.machine_type].nics
-  disk_size               = var.backends_weka_volume_size + var.traces_per_ionode * (var.containers_config_map[var.machine_type].compute + var.containers_config_map[var.machine_type].drive + var.containers_config_map[var.machine_type].frontend)
+  containers              = var.containers_config_map[var.machine_type]
+  containers_number       = local.containers.compute + local.containers.drive + local.containers.frontend
+  # one NIC per container, plus one for management
+  nics_number = var.nic_number != -1 ? var.nic_number : local.containers_number + 1
+  disk_size   = var.backends_weka_volume_size + var.traces_per_ionode * local.containers_number
 }
 
 resource "google_compute_instance_template" "this" {
@@ -142,7 +162,7 @@ resource "google_compute_instance_template" "this" {
     device_name  = var.default_disk_name
     mode         = "READ_WRITE"
     disk_size_gb = local.disk_size
-    disk_type    = "pd-ssd" # https://cloud.google.com/compute/docs/disks#disk-types
+    disk_type    = local.machine_defaults_for_machine_type.data_disk_type # https://cloud.google.com/compute/docs/disks#disk-types
   }
 
   dynamic "disk" {
@@ -183,8 +203,12 @@ resource "google_compute_instance_template" "this" {
   }
 
   scheduling {
-    # instances attached to a placement policy cannot live-migrate
-    on_host_maintenance = length(local.placement_policies) > 0 || contains(["z3-highmem-88-highlssd"], var.machine_type) ? "TERMINATE" : "MIGRATE"
+    # instances attached to a placement policy cannot live-migrate. z3-highmem-88-highlssd is the one
+    # shape whose maintenance behaviour differs from the rest of its family, so it stays a machine
+    # type exception rather than a machine_defaults entry.
+    on_host_maintenance = (
+      length(local.placement_policies) > 0 || var.machine_type == "z3-highmem-88-highlssd"
+    ) ? "TERMINATE" : local.machine_defaults_for_machine_type.host_maintenance
   }
 
   # unset omits the block: an instance template is immutable, so writing any type here would replace
@@ -211,6 +235,10 @@ resource "google_compute_instance_template" "this" {
   lifecycle {
     ignore_changes        = [network_interface]
     create_before_destroy = false
+    precondition {
+      condition     = local.subnets_count == local.nics_number
+      error_message = "machine_type ${var.machine_type} attaches ${local.nics_number} NICs and needs one subnet each, but ${local.subnets_count} were provided."
+    }
     precondition {
       # only checked for the policy this module creates, whose cap is known
       condition     = !local.create_placement_policy || local.placement_policy_instances_count <= local.created_placement_policy_max_instances
