@@ -59,7 +59,7 @@ variable "machine_type" {
 
 variable "use_placement_policy" {
   type        = bool
-  default     = true
+  default     = false
   description = "Use a compact placement policy (COLLOCATED) for the backends, clients, protocol gateways and data services. Note: without a placement policy the instances will most likely be spread out across the underlying GCP infrastructure, resulting in not getting the maximum performance from the WEKA cluster. Instances attached to a placement policy cannot live-migrate, so on_host_maintenance is forced to TERMINATE. Collocation is best effort: instances created in separate scale-up waves may end up outside the tight placement domain."
 }
 
