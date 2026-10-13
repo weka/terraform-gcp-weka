@@ -199,22 +199,14 @@ variable "cluster_size" {
 
 variable "subnets_range" {
   type        = list(string)
-  description = "List of subnet CIDRs (0, 4, or 7) for cluster creation. 0: No subnets (for single-node testing). 4: Common setup for production (spread across AZs for redundancy). 7: Less common deployments with specific needs."
+  description = "List of subnet CIDRs to create for the cluster, one per NIC. The count must equal the NICs the machine type attaches (one per container plus one for management), which is 4, 7 or 10 for the supported types. Leave empty when supplying existing subnets through subnets_name."
   default     = ["10.0.0.0/24", "10.1.0.0/24", "10.2.0.0/24", "10.3.0.0/24"]
-  validation {
-    condition     = length(var.subnets_range) == 0 || length(var.subnets_range) == 4 || length(var.subnets_range) == 7
-    error_message = "Invalid number of subnets. Valid options: 0, 4, or 7."
-  }
 }
 
 variable "subnets_name" {
   type        = list(string)
-  description = "List of names (0, 4, or 7) for subnets defined in the subnets_range variable."
+  description = "List of existing subnet names to use instead of creating subnets, one per NIC. The count must equal the NICs the machine type attaches. Leave empty to create subnets from subnets_range."
   default     = []
-  validation {
-    condition     = length(var.subnets_name) == 0 || length(var.subnets_name) == 4 || length(var.subnets_name) == 7
-    error_message = "Invalid number of subnet names. Set according to subnets_range."
-  }
 }
 
 variable "vpc_connector_range" {
@@ -378,7 +370,6 @@ variable "worker_disk_size" {
 }
 
 variable "containers_config_map" {
-  # NOTE: compute = nics-drive-frontend-1
   # To calculate memory, weka resource generator was used:
   # https://github.com/weka/tools/blob/master/install/resources_generator.py
   # e.g., for 'c2-standard-8': python3 gen.py --net eth0 --compute-dedicated-cores 1 --drive-dedicated-cores 1
@@ -386,8 +377,10 @@ variable "containers_config_map" {
     compute  = number
     drive    = number
     frontend = number
-    nics     = number
-    memory   = list(string)
+    # nothing reads this: the NIC count is derived as compute + drive + frontend + 1. kept so that
+    # callers overriding the map are not broken by its removal.
+    nics   = number
+    memory = list(string)
   }))
   description = "Defines a mapping of WEKA processes, NICs, and memory specifications for machine types."
   default = {
@@ -458,6 +451,41 @@ variable "containers_config_map" {
       drive    = 2
       frontend = 1
       nics     = 7
+      memory   = ["384GB", "384GB"]
+    },
+    z4m-highmem-16 = {
+      compute  = 4
+      drive    = 1
+      frontend = 1
+      nics     = 7
+      memory   = ["78GB", "78.3GB"]
+    },
+    z4m-highmem-32 = {
+      compute  = 3
+      drive    = 2
+      frontend = 1
+      nics     = 7
+      memory   = ["199GB", "199.3GB"]
+    },
+    z4m-highmem-48 = {
+      compute  = 5
+      drive    = 3
+      frontend = 1
+      nics     = 10
+      memory   = ["321GB", "321.3GB"]
+    },
+    z4m-highmem-96 = {
+      compute  = 5
+      drive    = 3
+      frontend = 1
+      nics     = 10
+      memory   = ["384GB", "384GB"]
+    },
+    z4m-highmem-192 = {
+      compute  = 4
+      drive    = 4
+      frontend = 1
+      nics     = 10
       memory   = ["384GB", "384GB"]
     }
   }
