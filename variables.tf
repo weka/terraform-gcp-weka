@@ -54,7 +54,7 @@ variable "zone" {
 variable "machine_type" {
   type        = string
   description = "The machine type for the WEKA backend instance."
-  default     = "c2-standard-8"
+  default     = "z3-highmem-8-highlssd"
 }
 
 variable "use_placement_policy" {
