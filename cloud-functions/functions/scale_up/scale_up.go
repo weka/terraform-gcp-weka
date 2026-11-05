@@ -11,6 +11,8 @@ import (
 	"github.com/lithammer/dedent"
 	"github.com/rs/zerolog/log"
 	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/common"
+	"github.com/weka/gcp-tf/modules/deploy_weka/cloud-functions/functions/gcp_functions_def"
+	"github.com/weka/go-cloud-lib/functions_def"
 	"github.com/weka/go-cloud-lib/lib/jrpc"
 	"github.com/weka/go-cloud-lib/lib/weka"
 	"github.com/weka/go-cloud-lib/protocol"
@@ -47,6 +49,9 @@ func CreateBackendInstance(ctx context.Context, project, zone, template, resourc
 	}
 	defer instancesClient.Close()
 
+	funcDef := gcp_functions_def.NewFuncDef(functionRootUrl)
+	reportFunctionDef := funcDef.GetFunctionCmdDefinition(functions_def.Report)
+
 	startUpScript := `
 	#!/bin/bash
 	set -ex
@@ -55,6 +60,14 @@ func CreateBackendInstance(ctx context.Context, project, zone, template, resourc
 	yumRepositoryBaseosUrl=%s
 	yumRepositoryAppstreamUrl=%s
 	proxy_url=%s
+
+	# report function definition
+	%s
+
+	report_failure() {
+		report "{\"hostname\": \"$HOSTNAME\", \"type\": \"error\", \"message\": \"$1\"}" || true
+		exit 1
+	}
 
 	if [ "$proxy_url" ] ; then
 		sudo sed -i "/distroverpkg=centos-release/a proxy=$proxy_url" /etc/yum.conf
@@ -90,6 +103,7 @@ func CreateBackendInstance(ctx context.Context, project, zone, template, resourc
 	username=oauth2accesstoken
 	password=TOKEN
 	EOL
+	yum_source="$yumRepositoryBaseosUrl"
 	sed -i "s|^password=.*|password=$(gcloud auth print-access-token)|" /etc/yum.repos.d/local.repo
 	CRON_JOB="* * * * * gcloud auth print-access-token | sed -i \"s|^password=.*|password=\$(gcloud auth print-access-token)|\" /etc/yum.repos.d/local.repo"
 	(crontab -l 2>/dev/null | grep -Fq "$CRON_JOB") || (crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
@@ -102,14 +116,16 @@ func CreateBackendInstance(ctx context.Context, project, zone, template, resourc
 		# Use direct Rocky Linux baseurl to avoid mirror sync issues when not using custom repos
 		if [ -z "$yumRepositoryBaseosUrl" ]; then
 			rocky_version=$(awk -F= '/^VERSION_ID/{print $2}' /etc/os-release | tr -d '"')
+			# The mirrorlist is turned off below, so this is the only origin the packages can come from.
+			yum_source="https://dl.rockylinux.org/pub/rocky/$rocky_version"
 			sed -i 's|^mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/Rocky-*.repo
-			sed -i "s|^#baseurl=http://dl.rockylinux.org/\$contentdir/\$releasever|baseurl=https://dl.rockylinux.org/pub/rocky/$rocky_version|g" /etc/yum.repos.d/Rocky-*.repo
+			sed -i "s|^#baseurl=http://dl.rockylinux.org/\$contentdir/\$releasever|baseurl=$yum_source|g" /etc/yum.repos.d/Rocky-*.repo
 			yum clean all
 		fi
-		yum install -y kernel-devel-$(uname -r)
+		yum install -y kernel-devel-$(uname -r) || report_failure "failed to install kernel-devel-$(uname -r) from $yum_source"
 	fi
 
-	yum install -y jq || (echo "Failed to install jq" && exit 1)
+	yum install -y jq || report_failure "failed to install jq"
 
 	gcloud config set functions/gen2 true
 
@@ -121,13 +137,15 @@ func CreateBackendInstance(ctx context.Context, project, zone, template, resourc
 	}
 
 	echo "Generating weka deploy script..."
-	curl "$function_url?action=deploy" --fail -H "Authorization:bearer $(gcloud auth print-identity-token)" -d "{\"name\": \"$instance_name\"}" > /tmp/deploy.sh
+	curl "$function_url?action=deploy" --fail -H "Authorization:bearer $(gcloud auth print-identity-token)" -d "{\"name\": \"$instance_name\"}" > /tmp/deploy.sh || report_failure "failed to fetch the weka deploy script from $function_url"
 	chmod +x /tmp/deploy.sh
 	echo "Running weka deploy script..."
 	(/tmp/deploy.sh 2>&1 | tee /tmp/weka_deploy.log) || self_deleting || shutdown -P
 	`
-	startUpScript = fmt.Sprintf(startUpScript, instanceName, functionRootUrl, yumRepositoryBaseosUrl, yumRepositoryAppstreamUrl, proxyUrl)
-	startUpScript = dedent.Dedent(startUpScript)
+	// Dedent before substituting: reportFunctionDef comes in already dedented, so interpolating it
+	// first would leave no common indent for Dedent to strip, and the <<EOL heredoc above would
+	// stop terminating. Same order as clusterize.GetSelfDeletingScriptWithReport.
+	startUpScript = fmt.Sprintf(dedent.Dedent(startUpScript), instanceName, functionRootUrl, yumRepositoryBaseosUrl, yumRepositoryAppstreamUrl, proxyUrl, reportFunctionDef)
 
 	instanceTemplate, err := getInstanceTemplate(ctx, project, template)
 	if err != nil {
